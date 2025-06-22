@@ -1,0 +1,56 @@
+seo_audit_task:
+  description: >
+    Perform a full SEO audit on the website at {url}. Check technical SEO, on-page elements, metadata, structure, and authority signals.
+    Return a prioritized list of issues with actionable recommendations.
+  expected_output: >
+    An ordered list of SEO issues, each with a short explanation and clear fix.
+  agent: seo_agent
+
+performance_audit_task:
+  description: >
+    Measure and analyze the website performance at {url}. Include load speed, Core Web Vitals, bottlenecks, and opportunities for optimization.
+  expected_output: >
+    Key performance metrics and a prioritized list of recommendations to improve load speed and user experience.
+  agent: performance_agent
+
+accessibility_audit_task:
+  description: >
+    Audit the website at {url} for accessibility issues according to WCAG guidelines. Identify missing ARIA labels, navigation issues, color contrast, etc.
+  expected_output: >
+    A list of accessibility violations and suggestions to make the site more inclusive.
+  agent: accessibility_agent
+
+security_audit_task:
+  description: >
+    Scan {url} for security vulnerabilities. Check for SSL, security headers, exposed admin panels, and other common issues.
+  expected_output: >
+    Security findings, severity level, and actionable recommendations for each issue.
+  agent: security_agent
+
+content_audit_task:
+  description: >
+    Review the website content at {url}. Analyze for grammar, keyword distribution, clarity, and user engagement. Highlight strengths and weaknesses.
+  expected_output: >
+    Summary of content quality, including specific suggestions to improve SEO and user trust.
+  agent: content_agent
+
+affiliate_expansion_task:
+  description: >
+    Research affiliate and SaaS expansion opportunities for the business at {url}. Suggest partnership types, integration strategies, and white-label opportunities.
+  expected_output: >
+    Top 3 affiliate/SaaS partnership recommendations, with a brief strategy for each.
+  agent: affiliate_agent
+
+scheduling_task:
+  description: >
+    Plan and automate periodic website audits for {url}. Suggest optimal audit frequency and describe how ongoing monitoring will be maintained.
+  expected_output: >
+    Audit schedule with recommended intervals and notification strategies.
+  agent: scheduler_agent
+
+reporting_task:
+  description: >
+    Collect and synthesize all audit findings for {url}. Create a clear, well-organized markdown report with sections for SEO, performance, accessibility, security, content, and business growth.
+  expected_output: >
+    A comprehensive markdown report ready for clients and stakeholders, with summaries, key findings, and next steps for each category.
+  agent: reporting_analyst
