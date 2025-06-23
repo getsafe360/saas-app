@@ -2,9 +2,6 @@ import sys
 import os
 import json
 import enum
-# --- ENV VARS ---
-os.environ["OPENAI_API_KEY"] = "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"
-print("OPENAI_API_KEY =", os.environ.get("OPENAI_API_KEY"))
 
 # --- FIX IMPORT PATHS ---
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'latest_ai_development', 'src')))
