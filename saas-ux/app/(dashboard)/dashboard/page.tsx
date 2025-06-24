@@ -60,11 +60,6 @@ function ManageSubscription() {
                   : 'No active subscription'}
               </p>
             </div>
-            <form action={customerPortalAction}>
-              <Button type="submit" variant="outline">
-                Manage Subscription
-              </Button>
-            </form>
           </div>
         </div>
       </CardContent>
