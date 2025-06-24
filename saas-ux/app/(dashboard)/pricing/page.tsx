@@ -47,7 +47,7 @@ export default function PricingPage() {
     );
 }
 
-// Pure display card – no form, no async, no return value!
+// Pure display card, no form, no async, no return value!
 function PricingCard({
     name,
     price,
