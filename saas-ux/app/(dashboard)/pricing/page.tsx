@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signIn, signOut } from "react";
 
 const ALL_AGENTS = [
     { key: "seo", label: "SEO" },
