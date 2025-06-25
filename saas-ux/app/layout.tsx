@@ -6,7 +6,7 @@ import { SWRConfig } from 'swr';
 
 export const metadata: Metadata = {
     title: 'GetSafe 360 AI-driven Website optimization',
-    description: 'GetSafe 360° empowers website owners and developers with AI-driven tools for real-time SEO & performance optimization & monitoring.'
+    description: 'GetSafe 360Â° empowers website owners and developers with AI-driven tools for real-time SEO & performance optimization & monitoring.'
 };
 
 export const viewport: Viewport = {
