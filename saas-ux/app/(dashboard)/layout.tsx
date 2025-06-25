@@ -83,7 +83,7 @@ function Header() {
     <header className="border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link title="GetSafe" href="/" className="flex items-center">
-        <img id="logo-getsafe" decoding="async" fetchpriority="high" width="150" height="50" src="https://getsafe360.de/wp-content/uploads/2023/11/getsafe.svg" alt="GetSafe" title="GetSafe" />
+        <img id="logo-getsafe" decoding="async" fetchPriority="high" width="150" height="50" src="https://getsafe360.de/wp-content/uploads/2023/11/getsafe.svg" alt="GetSafe" title="GetSafe" />
         <span className="ml-2 text-xl font-semibold text-gray-900">GetSafe 360°</span>
         </Link>
         <div className="flex items-center space-x-4">
