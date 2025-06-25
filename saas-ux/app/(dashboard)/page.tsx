@@ -9,10 +9,15 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
-              <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-5xl md:text-6xl">
+            <h1 className="text-3xl font-bold mt-6 mb-2">
+                <span className="bg-gradient-to-r from-sky-500 via-purple-800 to-red-600 bg-clip-text text-transparent">
+                    GetSafe360 Website Optimizer
+                </span>
+            </h1>
+              <h2 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-5xl md:text-6xl">
                 Optimize Your Website
                 <span className="block text-orange-500">Faster Than Ever</span>
-              </h1>
+              </h2>
               <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
                 We empower website owners and developers with AI-driven tools for real-time optimization, performance testing, and ongoing compliance with evolving SEO and accessibility standards.
                 Packed with modern technologies and essential integrations.

@@ -159,12 +159,12 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-white text-black dark:bg-neutral-900 dark:text-white;
   }
 }
 
 /*
-  ---break---
+  ---break---@apply bg-background text-foreground;
 */
 
 :root {
