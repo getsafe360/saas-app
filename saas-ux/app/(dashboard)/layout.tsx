@@ -1,15 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useState, Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CircleIcon, Home, LogOut } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+import { Home, LogOut } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Logo } from "@/components/ui/logo";
+import { BgColorSelector } from "@/components/ui/bg-color-selector";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { signOut } from '@/app/(login)/actions';
 import { useRouter } from 'next/navigation';
@@ -83,12 +80,13 @@ function Header() {
     <header className="border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link title="GetSafe" href="/" className="flex items-center">
-        <img id="logo-getsafe" decoding="async" fetchPriority="high" width="150" height="50" src="https://getsafe360.de/wp-content/uploads/2023/11/getsafe.svg" alt="GetSafe" title="GetSafe" />
-        <span className="ml-2 text-xl font-semibold text-gray-900">GetSafe 360°</span>
+          <Logo size={48} />
+          <span className="ml-2 text-xl font-semibold text-gray-900">GetSafe 360°</span>
         </Link>
         <div className="flex items-center space-x-4">
+          <BgColorSelector />
           <Suspense fallback={<div className="h-9" />}>
-            <UserMenu />
+          <UserMenu />
           </Suspense>
         </div>
       </div>
