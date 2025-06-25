@@ -1,65 +1,69 @@
+import { checkoutAction } from '@/lib/payments/actions';
 import { Check } from 'lucide-react';
+import { getStripePrices, getStripeProducts } from '@/lib/payments/stripe';
+import { SubmitButton } from './submit-button';
 
+// Prices are fresh for one hour max
 export const revalidate = 3600;
 
-// Static pricing data
-const pricingPlans = [
-    {
-        name: "Base",
-        price: 800,
-        interval: "month",
-        trialDays: 7,
-        features: [
-            "Unlimited Usage",
-            "Unlimited Workspace Members",
-            "Email Support",
-        ],
-    },
-    {
-        name: "Plus",
-        price: 1200,
-        interval: "month",
-        trialDays: 7,
-        features: [
-            "Everything in Base, and:",
-            "Early Access to New Features",
-            "24/7 Support + Slack Access",
-        ],
-    },
-];
+export default async function PricingPage() {
+    const [prices, products] = await Promise.all([
+        getStripePrices(),
+        getStripeProducts(),
+    ]);
 
-export default function PricingPage() {
+    const basePlan = products.find((product) => product.name === 'Base');
+    const plusPlan = products.find((product) => product.name === 'Plus');
+
+    const basePrice = prices.find((price) => price.productId === basePlan?.id);
+    const plusPrice = prices.find((price) => price.productId === plusPlan?.id);
+
     return (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="grid md:grid-cols-2 gap-8 max-w-xl mx-auto">
-                {pricingPlans.map((plan) => (
-                    <PricingCard
-                        key={plan.name}
-                        name={plan.name}
-                        price={plan.price}
-                        interval={plan.interval}
-                        trialDays={plan.trialDays}
-                        features={plan.features}
-                    />
-                ))}
+                <PricingCard
+                    name={basePlan?.name || 'Base'}
+                    price={basePrice?.unitAmount || 800}
+                    interval={basePrice?.interval || 'month'}
+                    trialDays={basePrice?.trialPeriodDays || 7}
+                    features={[
+                        'Unlimited Usage',
+                        'Unlimited Workspace Members',
+                        'Email Support',
+                    ]}
+                    priceId={basePrice?.id}
+                />
+                <PricingCard
+                    name={plusPlan?.name || 'Plus'}
+                    price={plusPrice?.unitAmount || 1200}
+                    interval={plusPrice?.interval || 'month'}
+                    trialDays={plusPrice?.trialPeriodDays || 7}
+                    features={[
+                        'Everything in Base, and:',
+                        'Early Access to New Features',
+                        '24/7 Support + Slack Access',
+                    ]}
+                    priceId={plusPrice?.id}
+                />
             </div>
         </main>
     );
 }
 
-// Pure display card, no form, no async, no return value!
 function PricingCard({
     name,
     price,
     interval,
     trialDays,
     features,
+    priceId,
 }: {
     name: string;
     price: number;
     interval: string;
     trialDays: number;
     features: string[];
+    priceId?: string;
 }) {
     return (
         <div className="pt-6">
@@ -68,7 +72,7 @@ function PricingCard({
                 with {trialDays} day free trial
             </p>
             <p className="text-4xl font-medium text-gray-900 mb-6">
-                ${price / 100}{" "}
+                ${price / 100}{' '}
                 <span className="text-xl font-normal text-gray-600">
                     per user / {interval}
                 </span>
@@ -81,12 +85,10 @@ function PricingCard({
                     </li>
                 ))}
             </ul>
-            <button
-                className="bg-gray-400 text-white py-2 px-4 rounded cursor-not-allowed"
-                disabled
-            >
-                Checkout coming soon!
-            </button>
+            <form action={checkoutAction}>
+                <input type="hidden" name="priceId" value={priceId} />
+                <SubmitButton />
+            </form>
         </div>
     );
 }
