@@ -1,0 +1,16 @@
+{
+  "home": {
+    "title": "Bienvenido a GetSafe 360°",
+    "description": "Optimización de sitios web impulsada por IA para todos"
+  },
+  "header": {
+    "optimizer": "Optimizador",
+    "pricing": "Precios",
+    "faq": "Preguntas frecuentes",
+    "signIn": "Iniciar sesión",
+    "signOut": "Cerrar sesión"
+  },
+  "footer": {
+    "copyright": "© {year} GetSafe 360° – Todos los derechos reservados."
+  }
+}

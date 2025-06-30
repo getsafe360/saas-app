@@ -5,6 +5,10 @@ import enum
 
 # --- FIX IMPORT PATHS ---
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'latest_ai_development', 'src')))
+from dotenv import load_dotenv
+load_dotenv()
+print("About to call LLM with model:", os.environ.get("MODEL"))
+print("API Key loaded:", bool(os.environ.get("OPENAI_API_KEY")))
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -57,4 +61,4 @@ def analyze():
     return jsonify(to_serializable(result))
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    app.run(port=5555, debug=True)

@@ -1,4 +1,19 @@
-node_modules/
-.next/
-.env*
+# Environment variables
+.env
+.env.*
+flask_app/.env
+saas-ux/.env
+
+# Clerk secrets
+saas-ux/.clerk
+
+# Build artifacts
+saas-ux/.next
+saas-ux/node_modules
+
+# VS Code/IDE
+.vscode/
 .vs/
+
+# Python cache
+__pycache__/

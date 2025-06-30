@@ -1,26 +1,29 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CreditCard, Database } from 'lucide-react';
 import { Terminal } from './terminal';
-
+import { useTranslations } from 'next-intl';
 export default function HomePage() {
-  return (
+   const t = useTranslations('home');
+   return (
     <main>
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
             <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
-            <h1 className="text-3xl font-bold mt-6 mb-2">
+            <h1 className="text-6xl font-bold mt-6 mb-2">
                 <span className="bg-gradient-to-r from-sky-500 via-purple-800 to-red-600 bg-clip-text text-transparent">
-                    GetSafe360 Website Optimizer
+                    {t('title')}
                 </span>
             </h1>
-              <h2 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-5xl md:text-6xl">
-                Optimize Your Website
-                <span className="block text-orange-500">Faster Than Ever</span>
-              </h2>
-              <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
-                We empower website owners and developers with AI-driven tools for real-time optimization, performance testing, and ongoing compliance with evolving SEO and accessibility standards.
-                Packed with modern technologies and essential integrations.
+            <h2 className="text-4xl font-bold tracking-tight sm:text-6xl md:text-5xl">
+                {t.rich("optimize", {
+                    span: (chunks) => <span className="text-yellow-600">{chunks}</span>
+                })}
+            </h2>
+               <p className="mt-3 text-base sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
+                {t.rich("details", {
+                    b: (chunks) => <span className="font-semibold text-sky-500 dark:text-yellow-600">{chunks}</span>
+                })}
               </p>
               <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
                 <a
@@ -44,7 +47,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-white w-full">
+      <section className="py-16 w-full border-t dark:border-[#1b2430]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
             <div>
@@ -57,10 +60,10 @@ export default function HomePage() {
                 </svg>
               </div>
               <div className="mt-5">
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="text-2xl font-bold dark:text-slate-300">
                   Next.js and React
                 </h2>
-                <p className="mt-2 text-base text-gray-500">
+                <p className="mt-2 text-base">
                   Leverage the power of modern web technologies for optimal
                   performance and developer experience.
                 </p>
@@ -72,10 +75,10 @@ export default function HomePage() {
                 <Database className="h-6 w-6" />
               </div>
               <div className="mt-5">
-                <h2 className="text-lg font-medium text-gray-900">
+                 <h2 className="text-2xl font-bold dark:text-slate-300">
                   Postgres and Drizzle ORM
                 </h2>
-                <p className="mt-2 text-base text-gray-500">
+                <p className="mt-2 text-base">
                   Robust database solution with an intuitive ORM for efficient
                   data management and scalability.
                 </p>
@@ -87,10 +90,10 @@ export default function HomePage() {
                 <CreditCard className="h-6 w-6" />
               </div>
               <div className="mt-5">
-                <h2 className="text-lg font-medium text-gray-900">
+                 <h2 className="text-2xl font-bold dark:text-slate-300">
                   Stripe Integration
                 </h2>
-                <p className="mt-2 text-base text-gray-500">
+                <p className="mt-2 text-base">
                   Seamless payment processing and subscription management with
                   industry-leading Stripe integration.
                 </p>
@@ -100,21 +103,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 border-t dark:border-[#1b2430]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-                Ready to launch your SaaS?
+              <h2 className="text-4xl font-bold dark:text-slate-300 sm:text-6xl">
+                Ready to optimize your Website?
               </h2>
-              <p className="mt-3 max-w-3xl text-lg text-gray-500">
+              <p className="mt-3 max-w-3xl text-lg">
                 Our template provides everything you need to get your SaaS up
                 and running quickly. Don't waste time on boilerplate - focus on
                 what makes your product unique.
               </p>
             </div>
             <div className="mt-8 lg:mt-0 flex justify-center lg:justify-end">
-              <a href="https://github.com/nextjs/saas-starter" target="_blank">
+              <a href="https://github.com/getsafe360/saas-app" target="_blank">
                 <Button
                   size="lg"
                   variant="outline"

@@ -11,6 +11,8 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.23.1",
+    "@headlessui/react": "^2.2.4",
     "@tailwindcss/postcss": "4.1.7",
     "@types/node": "^22.15.18",
     "@types/react": "19.1.4",
@@ -25,6 +27,7 @@
     "jose": "^6.0.11",
     "lucide-react": "^0.511.0",
     "next": "15.4.0-canary.47",
+    "next-intl": "^4.3.1",
     "postcss": "^8.5.3",
     "postgres": "^3.4.5",
     "radix-ui": "^1.4.2",

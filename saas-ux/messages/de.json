@@ -1,0 +1,19 @@
+{
+  "home": {
+    "title": "Willkommen bei GetSafe 360°",
+    "description": "KI-gesteuerte Website-Optimierung für alle"
+  },
+  "header": {
+    "optimizer": "Optimierer",
+    "pricing": "Preise",
+    "faq": "FAQ",
+    "signIn": "Anmelden",
+    "signOut": "Abmelden"
+  },
+  "footer": {
+    "copyright": "© {year} GetSafe 360° – Alle Rechte vorbehalten.",
+    "privacy": "Datenschutz",
+    "terms": "AGBs",
+    "contact": "Kontakt"
+  }
+}

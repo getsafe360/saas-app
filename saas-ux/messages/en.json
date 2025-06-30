@@ -1,0 +1,21 @@
+{
+  "home": {
+    "title": "Welcome to GetSafe 360°",
+    "optimize": "Optimize Your Website <span>Faster Than Ever</span>",
+    "description": "AI-driven Website Optimization for your website",
+    "details": "We empower website owners and developers with AI-driven tools for <b>real-time optimization</b>, performance testing, and ongoing compliance with <b>evolving SEO and accessibility standards</b>. Packed with the latest technologies for the <b>best website performance</b> and <b>highest possible rankings</b>."
+  },
+  "header": {
+    "optimizer": "Optimizer",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "signIn": "Sign In",
+    "signOut": "Sign Out"
+  },
+  "footer": {
+    "copyright": "© {year} GetSafe 360° – All rights reserved.",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact"
+  }
+}
