@@ -1,6 +1,7 @@
 'use client';
 
 import { SignedIn, SignedOut, SignUpButton } from "@clerk/clerk-react";
+import { UserGreeting } from "@/components/ui/user-greeting";
 import { useTranslations } from 'next-intl';
 import { PricingTable } from "@/components/ui/pricing-table";
 
@@ -11,9 +12,10 @@ export default function PricingPage() {
     <main className="flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-[90vh] bg-[--page-bg] transition-colors">
       <div className="max-w-5xl w-full mx-auto">
         {/* Headline Section */}
-        <SignedIn>
-        <SignedInContent />
-        </SignedIn>
+      <>
+      <SignedIn>
+        <UserGreeting />
+      </SignedIn>
         <SignedOut>
         <section className="mb-10">
           <h1 className="tracking-tight text-center mb-4">
@@ -32,23 +34,8 @@ export default function PricingPage() {
         </section>
         <PricingTable />
         </SignedOut>
+        </>
       </div>
     </main>
-  );
-}
-
-import { useUser } from "@clerk/clerk-react";
-function SignedInContent() {
-  const { isSignedIn, user, isLoaded } = useUser();
-  return (
-    <div className="text-center my-6 flex flex-col items-center gap-4">
-      <p className="text-xl font-semibold">Welcome back, {user.firstName}!</p>
-      <a
-        href="/dashboard"
-        className="px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold shadow-lg hover:from-purple-600 hover:to-blue-600 transition"
-      >
-        Go to your Dashboard
-      </a>
-    </div>
   );
 }
