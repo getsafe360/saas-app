@@ -1,16 +1,18 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
 import { useClerk } from "@clerk/clerk-react";
+import type { VariantProps } from "class-variance-authority";
 
-type SubmitButtonProps = {
-  variant?: string;
-  size?: string;
-};
+type SubmitButtonProps = VariantProps<typeof buttonVariants>;
 
-export function SubmitButton({ variant = "default", size = "lg" }: SubmitButtonProps) {
+export function SubmitButton({
+  variant = "default",
+  size = "lg",
+  ...props
+}: SubmitButtonProps) {
   const { pending } = useFormStatus();
   const { openSignUp } = useClerk();
 
@@ -18,7 +20,7 @@ export function SubmitButton({ variant = "default", size = "lg" }: SubmitButtonP
     e.preventDefault();
     openSignUp();
   };
-  
+
   return (
     <Button
       type="submit"
@@ -26,6 +28,7 @@ export function SubmitButton({ variant = "default", size = "lg" }: SubmitButtonP
       variant={variant}
       size={size}
       onClick={handleClick}
+      {...props}
     >
       {pending ? (
         <>
