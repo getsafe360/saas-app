@@ -3,13 +3,18 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
-import { useSignUp, useClerk } from "@clerk/clerk-react";
+import { useClerk } from "@clerk/clerk-react";
 
-export function SubmitButton({ variant = "default", size = "lg"}) {
+type SubmitButtonProps = {
+  variant?: string;
+  size?: string;
+};
+
+export function SubmitButton({ variant = "default", size = "lg" }: SubmitButtonProps) {
   const { pending } = useFormStatus();
   const { openSignUp } = useClerk();
 
-  const handleClick = (e) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     openSignUp();
   };
