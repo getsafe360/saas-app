@@ -17,11 +17,13 @@ export function Header() {
       <header className="border-b dark:bg-[#080B0E] dark:border-[#1b2430]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         {/* Logo and App Name */}
-        <Link title="GetSafe" href="/" className="flex items-center">
-          <Logo size={48} />
-            <span className="ml-2 text-base antialiased font-semibold">
-                      GetSafe <span className="font-normal text-sm text-blue-950 dark:text-blue-400">360°</span>
+        <Link title="GetSafe" href="/" className="min-w-md flex items-center">
+          <Logo size={38} />
+            <span className="ml-2 text-xl antialiased">Get<span className="ml-0.5">Safe</span>
             </span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 133 134" className="max-w-[20px] max-h-[20px] ml-1">
+            <path fill="currentColor" d="M133 67C96.282 67 66.5 36.994 66.5 0c0 36.994-29.782 67-66.5 67 36.718 0 66.5 30.006 66.5 67 0-36.994 29.782-67 66.5-67"></path>
+            </svg>
         </Link>
 
         {/* Navigation links */}

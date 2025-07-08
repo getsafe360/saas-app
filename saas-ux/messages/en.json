@@ -3,8 +3,10 @@
     "title": "Welcome to GetSafe 360°",
     "optimize": "Optimize Your Website <span>Faster Than Ever</span>",
     "description": "AI-driven Website Optimization for your website",
-    "details": "We empower website owners and developers with AI-driven tools for <b>real-time optimization</b>, performance testing, and ongoing compliance with <b>evolving SEO and accessibility standards</b>. Packed with the latest technologies for the <b>best website performance</b> and <b>highest possible rankings</b>."
-  },
+    "details": "We empower website owners and developers with AI-driven tools for <b>real-time optimization</b>, performance testing, and ongoing compliance with <b>evolving SEO and accessibility standards</b>. Packed with the latest technologies for the <b>best website performance</b> and <b>highest possible rankings</b>.",
+    "intro_left": "Instantly analyze and optimize any website. SEO, performance, security, accessability, and legal compliance included.",
+    "intro_right": "Actionable insights. Instant optimization. Keep every website at peak performance. Get started for free!"
+ },
   "header": {
     "optimizer": "Optimizer",
     "pricing": "Pricing",
@@ -17,5 +19,10 @@
     "privacy": "Privacy",
     "terms": "Terms",
     "contact": "Contact"
+  },
+  "pricing": {
+    "headline1": "One Click. One Run.",
+    "headline2": "Any Website, Perfected.",
+    "subheadline": "Meet your new AI website co-pilot.<span>So you can focus on clients, not code.</span>"
   }
 }

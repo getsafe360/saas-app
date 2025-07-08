@@ -11,6 +11,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.32.4",
     "@clerk/nextjs": "^6.23.1",
     "@headlessui/react": "^2.2.4",
     "@tailwindcss/postcss": "4.1.7",

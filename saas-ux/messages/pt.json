@@ -1,0 +1,23 @@
+{
+  "home": {
+    "title": "Bienvenue chez GetSafe 360°",
+    "description": "Optimisation de sites web par IA pour tous"
+  },
+  "header": {
+    "optimizer": "Optimiseur",
+    "pricing": "Tarifs",
+    "faq": "FAQ",
+    "signIn": "Se connecter",
+    "signOut": "Se déconnecter"
+  },
+  "footer": {
+    "copyright": "© {year} GetSafe 360° – Tous droits réservés."
+  },
+"pricing": {
+"headline1": "Um clique. Uma análise.",
+"headline2": "Qualquer site, perfeito.",
+"subheadline": "Conheça seu novo copiloto de site com IA.<span>Assim você foca nos clientes, não no código.</span>",
+"intro_left": "Analise e otimize qualquer site instantaneamente. SEO, performance, segurança, acessibilidade e conformidade legal incluídos.",
+"intro_right": "Insights acionáveis. Otimização instantânea. Mantenha seu site sempre no melhor desempenho. Comece grátis!"
+}
+}

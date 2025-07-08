@@ -1,94 +1,222 @@
-import { checkoutAction } from '@/lib/payments/actions';
-import { Check } from 'lucide-react';
-import { getStripePrices, getStripeProducts } from '@/lib/payments/stripe';
-import { SubmitButton } from './submit-button';
+'use client';
 
-// Prices are fresh for one hour max
-export const revalidate = 3600;
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SubmitButton } from "@/components/ui/submit-button";
+import { SignedIn, SignedOut, SignUpButton } from "@clerk/clerk-react";
+import { CheckCircle2, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { useTranslations } from 'next-intl';
 
-export default async function PricingPage() {
-    const [prices, products] = await Promise.all([
-        getStripePrices(),
-        getStripeProducts(),
-    ]);
+const featureGroups = [
+  {
+    group: "SEO",
+    items: [
+      "Auto meta tags & descriptions",
+      "OpenGraph & Twitter cards",
+      "Sitemap.xml generation",
+      "SEO health monitoring",
+    ],
+  },
+  {
+    group: "Performance",
+    items: [
+      "AI image optimization",
+      "Instant page load",
+      "Advanced caching",
+      "Performance analytics",
+    ],
+  },
+  {
+    group: "Security",
+    items: [
+      "Auto SSL certificates",
+      "AI-powered threat detection",
+      "Rate limiting",
+      "Daily security audits",
+    ],
+  },
+  {
+    group: "Accessibility",
+    items: [
+      "WCAG 2.2 compliance",
+      "AI accessibility checker",
+      "Keyboard nav support",
+      "Screen reader optimizations",
+    ],
+  },
+];
 
-    const basePlan = products.find((product) => product.name === 'Base');
-    const plusPlan = products.find((product) => product.name === 'Plus');
+const freeFeatures = [
+  "Unlimited pages",
+  "Basic AI page creation",
+  "Basic site analytics",
+  "Email support",
+];
 
-    const basePrice = prices.find((price) => price.productId === basePlan?.id);
-    const plusPrice = prices.find((price) => price.productId === plusPlan?.id);
+const agentExtraFeatures = [
+  "AI content rewriting",
+  "Automated SEO improvements",
+  "Real-time security monitoring",
+  "Priority email & chat support",
+];
 
-    return (
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid md:grid-cols-2 gap-8 max-w-xl mx-auto">
-                <PricingCard
-                    name={basePlan?.name || 'Base'}
-                    price={basePrice?.unitAmount || 800}
-                    interval={basePrice?.interval || 'month'}
-                    trialDays={basePrice?.trialPeriodDays || 7}
-                    features={[
-                        'Unlimited Usage',
-                        'Unlimited Workspace Members',
-                        'Email Support',
-                    ]}
-                    priceId={basePrice?.id}
-                />
-                <PricingCard
-                    name={plusPlan?.name || 'Plus'}
-                    price={plusPrice?.unitAmount || 1200}
-                    interval={plusPrice?.interval || 'month'}
-                    trialDays={plusPrice?.trialPeriodDays || 7}
-                    features={[
-                        'Everything in Base, and:',
-                        'Early Access to New Features',
-                        '24/7 Support + Slack Access',
-                    ]}
-                    priceId={plusPrice?.id}
-                />
-            </div>
-        </main>
-    );
+export default function PricingPage() {
+  const t = useTranslations('pricing');
+
+  return (
+    <main className="flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-[90vh] bg-[--page-bg] transition-colors">
+      <div className="max-w-5xl w-full mx-auto">
+        {/* Headline Section */}
+        <SignedIn>
+        <SignedInContent />
+        </SignedIn>
+        <SignedOut>
+        <section className="mb-10">
+          <h1 className="tracking-tight text-center mb-4">
+            <span className="text-5xl sm:text-6xl font-extrabold bg-gradient-to-r from-sky-500 via-purple-800 to-red-600 bg-clip-text text-transparent">
+              {t('headline1')}
+            </span>
+            <span className="font-extrabold text-6xl text-yellow-600 block">
+              {t('headline2')}
+            </span>
+          </h1>
+          <h2 className="text-xl font-semibold sm:text-2xl text-center mb-8">
+            {t.rich('subheadline', {
+              span: (chunks) => <span className="block font-bold">{chunks}</span>,
+            })}
+          </h2>
+        </section>
+        <PricingTable />
+        </SignedOut>
+      </div>
+    </main>
+  );
 }
 
-function PricingCard({
-    name,
-    price,
-    interval,
-    trialDays,
-    features,
-    priceId,
-}: {
-    name: string;
-    price: number;
-    interval: string;
-    trialDays: number;
-    features: string[];
-    priceId?: string;
-}) {
-    return (
-        <div className="pt-6">
-            <h2 className="text-2xl font-medium text-gray-900 mb-2">{name}</h2>
-            <p className="text-sm text-gray-600 mb-4">
-                with {trialDays} day free trial
-            </p>
-            <p className="text-4xl font-medium text-gray-900 mb-6">
-                ${price / 100}{' '}
-                <span className="text-xl font-normal text-gray-600">
-                    per user / {interval}
-                </span>
-            </p>
-            <ul className="space-y-4 mb-8">
-                {features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                        <Check className="h-5 w-5 text-orange-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700">{feature}</span>
-                    </li>
-                ))}
+export function PricingTable() {
+  // For mobile: collapse feature groups if needed
+  const [open, setOpen] = useState<string | null>(null);
+
+  return (
+    <section className="max-w-5xl mx-auto py-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Free Plan */}
+        <Card className="dark:bg-[#1f2123] border-[--thin-border] border-green-700 rounded-xl shadow-xl flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-4xl mb-1">Starter</CardTitle>
+            <div className="text-3xl font-bold mb-2">Free</div>
+            <div className="text-muted-foreground mb-2">Forever free</div>
+          </CardHeader>
+
+            <div className="flex justify-center mt-6">
+            <SignUpButton mode="modal">
+                <SubmitButton variant="green" />
+            </SignUpButton>
+            </div>
+
+          <CardContent className="flex-1 flex flex-col gap-2">
+            <ul className="mb-6">
+              {freeFeatures.map((f) => (
+                <li key={f} className="flex items-center gap-2 mb-1">
+                  <CheckCircle2 className="text-green-500 w-5 h-5" />
+                  <span>{f}</span>
+                </li>
+              ))}
             </ul>
-            <form action={checkoutAction}>
-                <input type="hidden" name="priceId" value={priceId} />
-                <SubmitButton />
-            </form>
+            <hr className="border-[--thin-border] border-gray-600/60 mb-4" />
+            <div className="flex-1">
+              {featureGroups.map(({ group, items }) => (
+                <div key={group} className="mb-2">
+                  <div className="font-semibold text-base">{group}</div>
+                  <ul className="pl-4">
+                    {items.slice(0, 1).map((item) => ( // Only show one per group in Free
+                      <li key={item} className="text-sm text-muted-foreground">{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-center mt-6">
+            <SignUpButton mode="modal">
+                <SubmitButton variant="green" />
+            </SignUpButton>
+            </div>
+
+          </CardContent>
+        </Card>
+
+        {/* Agent Plan */}
+        <Card className="dark:bg-[#1f2123] border-[--thin-border] border-blue-800 rounded-xl shadow-xl flex flex-col relative">
+          <span className="absolute -top-4 right-6 bg-blue-800 text-white px-4 py-1 rounded-xl text-xs font-bold shadow">Best Value</span>
+          <CardHeader>
+            <CardTitle className="text-2xl mb-1">Agent</CardTitle>
+            <div className="text-3xl font-bold mb-2">
+              $49
+              <span className="text-base font-normal text-muted-foreground">/mo</span>
+            </div>
+            <div className="text-muted-foreground mb-2">
+              or <span className="font-semibold">$40/mo</span> billed yearly
+            </div>
+          </CardHeader>
+
+        <div className="flex justify-center mt-6">
+        <SignUpButton mode="modal">
+            <SubmitButton variant="blue" />
+        </SignUpButton>
         </div>
-    );
+
+          <CardContent className="flex-1 flex flex-col gap-2">
+            <div className="mb-3 text-base text-muted-foreground">Everything in Free, plus:</div>
+            <ul className="mb-4">
+              {agentExtraFeatures.map((f) => (
+                <li key={f} className="flex items-center gap-2 mb-1">
+                  <CheckCircle2 className="text-blue-600 w-5 h-5" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+            <hr className="border-[--thin-border] border-gray-600/60 mb-4" />
+            {/* Feature Groups */}
+            {featureGroups.map(({ group, items }) => (
+              <div key={group} className="mb-2">
+                <div className="flex items-center cursor-pointer font-semibold text-base" onClick={() => setOpen(open === group ? null : group)}>
+                  <span>{group}</span>
+                  <ChevronDown className={`ml-2 w-4 h-4 transition-transform ${open === group ? "rotate-180" : ""}`} />
+                </div>
+                <ul className={`pl-4 transition-all overflow-hidden ${open === group ? "max-h-40" : "max-h-6"} duration-300`}>
+                  {items.map((item) => (
+                    <li key={item} className="text-sm text-muted-foreground">{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+ 
+            <div className="flex justify-center mt-6">
+            <SignUpButton mode="modal">
+                <SubmitButton variant="blue" />
+            </SignUpButton>
+            </div>
+ 
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  );
+}
+
+import { useUser } from "@clerk/clerk-react";
+function SignedInContent() {
+  const { user } = useUser();
+  return (
+    <div className="text-center my-6 flex flex-col items-center gap-4">
+      <p className="text-xl font-semibold">You're already signed in, {user.firstName}!</p>
+      <a
+        href="/dashboard"
+        className="px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold shadow-lg hover:from-purple-600 hover:to-blue-600 transition"
+      >
+        Go to Dashboard
+      </a>
+    </div>
+  );
 }

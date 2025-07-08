@@ -1,7 +1,9 @@
 {
   "home": {
-    "title": "Willkommen bei GetSafe 360°",
-    "description": "KI-gesteuerte Website-Optimierung für alle"
+  "title": "Willkommen bei GetSafe 360°",
+  "description": "KI-gesteuerte Website-Optimierung für alle",
+  "intro_left": "Analysieren und optimieren Sie jede Website in Sekunden. SEO, Performance, Sicherheit, Barrierefreiheit und rechtliche Anforderungen inklusive.",
+  "intro_right": "Handfeste Einblicke. Sofortige Optimierung. Ihre Website bleibt immer auf Top-Niveau. Jetzt kostenlos starten!"
   },
   "header": {
     "optimizer": "Optimierer",
@@ -15,5 +17,10 @@
     "privacy": "Datenschutz",
     "terms": "AGBs",
     "contact": "Kontakt"
-  }
+  },
+  "pricing": {
+  "headline1": "Ein Klick. Ein Scan.",
+  "headline2": "Jede Website, perfektioniert.",
+  "subheadline": "Lernen Sie Ihren neuen KI-Website-Co-Piloten kennen.<span>So können Sie sich auf Ihre Kunden konzentrieren, nicht auf den Code.</span>"
+   }
 }

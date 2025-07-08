@@ -47,6 +47,16 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* 2-Column Intro */}
+      <section className="grid md:grid-cols-2 gap-8 mb-10">
+        <div className="dark:bg-[#1f2123] rounded-xl p-5 shadow-xl border border-[--thin-border] border-gray-700 text-lg leading-relaxed">
+          {t('intro_left')}
+        </div>
+        <div className="dark:bg-[#1f2123] rounded-xl p-5 shadow-xl border border-[--thin-border] border-gray-700 text-lg leading-relaxed">
+          {t('intro_right')}
+        </div>
+      </section>
+
       <section className="py-16 w-full border-t dark:border-[#1b2430]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">

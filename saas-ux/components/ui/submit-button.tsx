@@ -3,16 +3,24 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
+import { useSignUp, useClerk } from "@clerk/clerk-react";
 
-export function SubmitButton() {
+export function SubmitButton({ variant = "default", size = "lg"}) {
   const { pending } = useFormStatus();
+  const { openSignUp } = useClerk();
 
+  const handleClick = (e) => {
+    e.preventDefault();
+    openSignUp();
+  };
+  
   return (
     <Button
       type="submit"
       disabled={pending}
-      variant="outline"
-      className="w-full rounded-full"
+      variant={variant}
+      size={size}
+      onClick={handleClick}
     >
       {pending ? (
         <>

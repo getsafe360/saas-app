@@ -1,14 +1,20 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 /*
   ---break---
 */
 html, body {
     transition: background-color 0.3s, color 0.3s;
 }
+:root {
+  --thin-border: 1px;
+  --border: 2px;
+  --thick-border: 3px;
+  --extra-thick-border: 4px;
+  --ultra-border: 6px;
+}
 
 @custom-variant dark (&:is(.dark *));
-
-@import "tw-animate-css";
 
 @variant dark (&:is(.dark *));
 

@@ -12,5 +12,12 @@
   },
   "footer": {
     "copyright": "© {year} GetSafe 360° – Todos los derechos reservados."
+  },
+  "pricing": {
+  "headline1": "Un clic. Un análisis.",
+  "headline2": "Cualquier sitio web, perfecto.",
+  "subheadline": "Conoce a tu nuevo copiloto web con IA.<span>Así puedes centrarte en tus clientes, no en el código.</span>",
+  "intro_left": "Analiza y optimiza cualquier sitio web al instante. Incluye SEO, rendimiento, seguridad, accesibilidad y cumplimiento legal.",
+  "intro_right": "Información accionable. Optimización instantánea. Mantén tu sitio web siempre al máximo rendimiento. ¡Empieza gratis!"
   }
 }
