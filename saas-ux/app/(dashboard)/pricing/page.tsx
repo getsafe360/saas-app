@@ -12,7 +12,6 @@ export default function PricingPage() {
     <main className="flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-[90vh] bg-[--page-bg] transition-colors">
       <div className="max-w-5xl w-full mx-auto">
         {/* Headline Section */}
-      <>
       <SignedIn>
         <UserGreeting />
       </SignedIn>
@@ -34,7 +33,6 @@ export default function PricingPage() {
         </section>
         <PricingTable />
         </SignedOut>
-        </>
       </div>
     </main>
   );
