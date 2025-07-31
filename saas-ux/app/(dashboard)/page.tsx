@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CreditCard, Database } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import Mindmap from "@/components/ui/mindmap";
+import Mindmap from '@/components/ui/mindmap';
 import { mindMapData } from "@/components/ui/mindmap-data";
 import { useTranslations } from 'next-intl';
 

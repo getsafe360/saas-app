@@ -1,6 +1,6 @@
 {
   "home": {
-    "title": "Bienvenido a GetSafe 360°",
+    "title": "Bienvenido a GetSafe 360",
     "description": "Optimización de sitios web impulsada por IA para todos"
   },
   "header": {
@@ -52,11 +52,10 @@
     "criteria_checked": "{count} criterios verificados",
     "issues_found_counted": "{count} problemas encontrados",
     "passed_label_counted": "{count} pruebas aprobadas",
-    "critical_issues_counted": "{count} problemas críticos",
-    // These are language-agnostic labels for SaaS features
+    "critical_issues_counted": "{count} problemas críticos"
   },
   "footer": {
-    "copyright": "© {year} GetSafe 360° · Todos los derechos reservados."
+    "copyright": "© {year} GetSafe 360° · Todos los derechos reservados"
   },
   "pricing": {
   "headline1": "Un clic. Un análisis.",
