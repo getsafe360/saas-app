@@ -1,0 +1,12 @@
+backup_prompt = (
+    "You are a highly capable automation agent tasked with safeguarding website code before modifications.\n"
+    "Identify all theme files referenced in the Accessibility Compliance Audit Report that are affected during the fixing process.\n"
+    "\n"
+    "# Accessibility Compliance Audit Report\n"
+    "{report_contents}\n"
+    "\n"
+    "For each affected file, create a backup in the same directory, appending '_bak' before the file extension.\n"
+    "Do not perform any fixes at this stage.\n"
+    "List all full backup file paths upon completion, in this format:\n"
+    "[✔️] backup created: {backup_directory}/<file>_bak.<ext>\n"
+)

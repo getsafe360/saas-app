@@ -1,38 +1,39 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CreditCard, Database } from 'lucide-react';
-import { Terminal } from './terminal';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Mindmap from "@/components/ui/mindmap";
+import { mindMapData } from "@/components/ui/mindmap-data";
 import { useTranslations } from 'next-intl';
+
+
 export default function HomePage() {
    const t = useTranslations('home');
    return (
     <main>
       <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-            <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left">
-            <h1 className="text-6xl font-bold mt-6 mb-2">
-                <span className="bg-gradient-to-r from-sky-500 via-purple-800 to-red-600 bg-clip-text text-transparent">
-                    {t('title')}
+        <div className="w-full h-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center md:w-full md:mx-auto lg:w-full lg:mx-0">
+            <h1 className="text-7xl font-bold tracking-tight mb-6">
+                <span className="bg-gradient-to-r from-white via-blue-300 to-blue-900/80 bg-clip-text text-transparent">
+                    {t.rich("title", {
+                        span: (chunks: React.ReactNode) => <span className="font-extrabold tracking-tighter">{chunks}</span>
+                    })}
                 </span>
             </h1>
-            <h2 className="text-4xl font-bold tracking-tight sm:text-6xl md:text-5xl">
+            <h2 className="text-5xl font-thin tracking-tight sm:text-6xl md:text-5xl mb-4">
                 {t.rich("optimize", {
-                    span: (chunks) => <span className="text-yellow-600">{chunks}</span>
+                    span: (chunks) => <span className="font-bold font-blue-500/60 text-white tracking-tight">{chunks}</span>
                 })}
             </h2>
-               <p className="mt-3 text-base sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
-                {t.rich("details", {
-                    b: (chunks) => <span className="font-semibold text-sky-500 dark:text-yellow-600">{chunks}</span>
-                })}
-              </p>
-              <div className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left lg:mx-0">
+              <Mindmap data={mindMapData} />
+              <div className="mt-8 sm:max-w-lg sm:mx-auto text-center lg:mx-0">
                 <a
                   href="/"
                 >
                   <Button
                     size="lg"
                     variant="outline"
-                    className="text-lg rounded-full"
+                    className="text-lg rounded-full border border-blue-500/50 rounded-md hover:bg-blue-500/10 hover:border-blue-500/70 transition-colors duration-300"
                   >
                     Get started now
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -40,13 +41,9 @@ export default function HomePage() {
                 </a>
               </div>
             </div>
-            <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
-              <Terminal />
-            </div>
-          </div>
         </div>
       </section>
-
+ 
       {/* 2-Column Intro */}
       <section className="grid md:grid-cols-2 gap-8 mb-10">
         <div className="dark:bg-[#1f2123] rounded-xl p-5 shadow-xl border border-[--thin-border] border-gray-700 text-lg leading-relaxed">
@@ -120,11 +117,18 @@ export default function HomePage() {
               <h2 className="text-4xl font-bold dark:text-slate-300 sm:text-6xl">
                 Ready to optimize your Website?
               </h2>
-              <p className="mt-3 max-w-3xl text-lg">
-                Our template provides everything you need to get your SaaS up
-                and running quickly. Don't waste time on boilerplate - focus on
-                what makes your product unique.
+       <Card className="w-80 mb-4">
+        <CardContent>
+      <p className="mt-3 text-base sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
+                {t.rich("details", {
+                    b: (chunks) => <span className="font-semibold text-sky-500 dark:text-yellow-600">{chunks}</span>
+                })}
               </p>
+              <p className="mt-3 text-base sm:mt-5 sm:text-lg lg:text-base xl:text-lg">
+                {t('description')}
+              </p>
+        </CardContent>
+      </Card>
             </div>
             <div className="mt-8 lg:mt-0 flex justify-center lg:justify-end">
               <a href="https://github.com/getsafe360/saas-app" target="_blank">

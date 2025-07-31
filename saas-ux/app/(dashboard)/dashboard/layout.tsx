@@ -3,33 +3,39 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  Users, Settings, Shield, Activity, Menu, Globe, BarChart2, Clock, Coins, UserCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Activity, Menu } from 'lucide-react';
+import { SignedIn, useUser } from '@clerk/nextjs';
+import { useTranslations } from 'next-intl';
+import { UserGreeting } from "@/components/ui/user-greeting"; // Adjust path as needed
 
-export default function DashboardLayout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const t = useTranslations('dashboard');
+  const { user } = useUser();
 
+  // Main nav items language-agnostic
   const navItems = [
-    { href: '/dashboard', icon: Users, label: 'Team' },
-    { href: '/dashboard/general', icon: Settings, label: 'General' },
-    { href: '/dashboard/activity', icon: Activity, label: 'Activity' },
-    { href: '/dashboard/security', icon: Shield, label: 'Security' }
+    { href: '/dashboard/sites', icon: Globe, label: 'websites' },
+    { href: '/dashboard/analysis', icon: BarChart2, label: 'analysis' },
+    { href: '/dashboard/history', icon: Clock, label: 'history' },
+    { href: '/dashboard/tokens', icon: Coins, label: 'tokens' },
+    { href: '/dashboard/team', icon: Users, label: 'team' },
+    { href: '/dashboard/activity', icon: Activity, label: 'activity' },
+    { href: '/dashboard/security', icon: Shield, label: 'security' },
+    { href: '/dashboard/settings', icon: Settings, label: 'settings' },
   ];
 
   return (
     <div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
-      {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center">
-          <span className="font-medium">Settings</span>
-        </div>
+      {/* Mobile header (no navItems loop here!) */}
+      <div className="lg:hidden flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
+        <span className="font-semibold text-lg text-gray-900 dark:text-gray-100">Dashboard</span>
         <Button
-          className="-mr-3"
           variant="ghost"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
@@ -41,24 +47,34 @@ export default function DashboardLayout({
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
         <aside
-          className={`w-64 bg-white lg:bg-gray-50 border-r border-gray-200 lg:block ${
-            isSidebarOpen ? 'block' : 'hidden'
-          } lg:relative absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+          className={`w-64 border-r border-gray-200 dark:border-gray-800
+            lg:block ${isSidebarOpen ? 'block' : 'hidden'}
+            lg:relative absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out
+            lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          `}
         >
-          <nav className="h-full overflow-y-auto p-4">
+          {/* User info / branding */}
+          <div className="flex items-center gap-3 mb-6 px-2 pt-3">
+           <UserGreeting />
+          </div>
+          {/* Navigation items */}
+          <nav className="h-full overflow-y-auto p-2">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} passHref>
                 <Button
-                  variant={pathname === item.href ? 'secondary' : 'ghost'}
-                  className={`shadow-none my-1 w-full justify-start ${
-                    pathname === item.href ? 'bg-gray-100' : ''
-                  }`}
+                  variant="ghost"
+                  className={`
+                    shadow-none my-1 w-full justify-start gap-3 rounded-xl transition
+                    border
+                    ${pathname === item.href
+                      ? 'border-[--thin-border] border-blue-500 dark:border-blue-400 font-bold text-blue-700 dark:text-blue-200 bg-white dark:bg-gray-950'
+                      : 'border-transparent text-gray-700 dark:text-gray-300'
+                    }
+                  `}
                   onClick={() => setIsSidebarOpen(false)}
                 >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
+                  <item.icon className="h-5 w-5" />
+                  <span>{t(item.label)}</span>
                 </Button>
               </Link>
             ))}
@@ -66,7 +82,9 @@ export default function DashboardLayout({
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-0 lg:p-4">{children}</main>
+        <main className="flex-1 overflow-y-auto p-0 lg:p-6 bg-gray-50 dark:bg-[#10131a] min-h-screen transition-colors">
+          {children}
+        </main>
       </div>
     </div>
   );

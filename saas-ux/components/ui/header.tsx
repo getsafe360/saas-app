@@ -18,33 +18,35 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         {/* Logo and App Name */}
         <Link title="GetSafe" href="/" className="min-w-md flex items-center">
-          <Logo size={38} />
-            <span className="ml-2 text-xl antialiased">Get<span className="ml-0.5">Safe</span>
+          <Logo size={35} />
+            <span className="ml-2 text-xl subpixel-antialiased">Get<span className="ml-0.5">Safe</span>
             </span>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 133 134" className="max-w-[20px] max-h-[20px] ml-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 133 134" className="max-w-[12px] max-h-[12px] -mt-2.5">
             <path fill="currentColor" d="M133 67C96.282 67 66.5 36.994 66.5 0c0 36.994-29.782 67-66.5 67 36.718 0 66.5 30.006 66.5 67 0-36.994 29.782-67 66.5-67"></path>
             </svg>
         </Link>
 
         {/* Navigation links */}
-        <nav className="flex items-center gap-6">
+        <nav className="flex items-center gap-6 text-lg uppercase font-light tracking-wide">
           <Link
             href="/optimizer"
-            className="text-sm font-semibold text-sky-600 hover:underline"
+            title="Optimizer"
+            className="hover:underline hover:decoration-sky-600"
           >
             Optimizer
           </Link>
           <Link
             href="/pricing"
-            className="text-sm font-semibold text-sky-600 hover:underline"
+            className="hover:underline hover:decoration-sky-600"
           >
             Pricing
           </Link>
           <Link
-            href="/"
-            className="text-sm font-semibold text-sky-600 hover:underline"
+            href="/accessibility"
+            title="Accessibility Audit"
+            className="hover:underline hover:decoration-sky-600"
           >
-            FAQ
+            Accessibility
           </Link>
             <BgColorSelector />
             <LanguageSwitcher />

@@ -63,9 +63,9 @@ export function PricingTable() {
 
   return (
     <section className="max-w-5xl mx-auto py-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Free Plan */}
-        <Card className="dark:bg-[#1f2123] border-[--thin-border] border-green-700 rounded-xl shadow-xl flex flex-col">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        {/* Free Plan shadow-[0_35px_35px_rgba(0,0,0,0.25)] */}
+        <Card className="shadow-xl shadow-green-500/30 dark:bg-[#1f2123] border-[--thin-border] border-green-700 rounded-xl flex flex-col">
           <CardHeader>
             <CardTitle className="text-4xl mb-1">Starter</CardTitle>
             <div className="text-3xl font-bold mb-2">Free</div>
@@ -88,19 +88,20 @@ export function PricingTable() {
               ))}
             </ul>
             <hr className="border-[--thin-border] border-gray-600/60 mb-4" />
-            <div className="flex-1">
-              {featureGroups.map(({ group, items }) => (
-                <div key={group} className="mb-2">
-                  <div className="font-semibold text-base">{group}</div>
-                  <ul className="pl-4">
-                    {items.slice(0, 1).map((item) => ( // Only show one per group in Free
-                      <li key={item} className="text-sm text-muted-foreground">{item}</li>
-                    ))}
-                  </ul>
+            {/* Feature Groups */}
+            {featureGroups.map(({ group, items }) => (
+              <div key={group} className="mb-2">
+                <div className="flex items-center cursor-pointer font-semibold text-base" onClick={() => setOpen(open === group ? null : group)}>
+                  <span>{group}</span>
+                  <ChevronDown className={`ml-2 w-4 h-4 transition-transform ${open === group ? "rotate-180" : ""}`} />
                 </div>
-              ))}
-            </div>
-
+                <ul className={`pl-4 transition-all overflow-hidden ${open === group ? "max-h-40" : "max-h-6"} duration-300`}>
+                  {items.map((item) => (
+                    <li key={item} className="text-sm text-muted-foreground">{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
             <div className="flex justify-center mt-6">
             <SignUpButton mode="modal">
                 <SubmitButton variant="green" />
@@ -111,7 +112,7 @@ export function PricingTable() {
         </Card>
 
         {/* Agent Plan */}
-        <Card className="dark:bg-[#1f2123] border-[--thin-border] border-blue-800 rounded-xl shadow-xl flex flex-col relative">
+        <Card className="shadow-xl shadow-blue-500/30 dark:bg-[#1f2123] border-[--thin-border] border-blue-800 rounded-xl flex flex-col relative">
           <span className="absolute -top-4 right-6 bg-blue-800 text-white px-4 py-1 rounded-xl text-xs font-bold shadow">Best Value</span>
           <CardHeader>
             <CardTitle className="text-2xl mb-1">Agent</CardTitle>

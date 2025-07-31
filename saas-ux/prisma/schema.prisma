@@ -1,0 +1,131 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("GS_PRISMA_DATABASE_URL") // or POSTGRES_URL
+}
+
+model User {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  name              String?
+  image             String?
+  // Clerk authentication fields
+  clerkUserId       String   @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // SaaS fields
+  tokenBalance      Int      @default(0)
+  tokenUsed         Int      @default(0)
+  language          String?  // User's preferred language
+  plan              Plan     @default(FREE)
+
+  // Relations
+  websites          Website[]
+  analysisJobs      AnalysisJob[]
+  payments          Payment[]
+  subscriptions     Subscription[]
+}
+
+model Website {
+  id           String   @id @default(uuid())
+  userId       String
+  url          String   @unique
+  name         String?
+  faviconUrl   String?
+  screenshotUrl String?
+  lastStatus   String?    // "healthy", "issues", "pending", etc.
+  lastScore    Int?       // Last analysis score
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  user         User      @relation(fields: [userId], references: [id])
+  analysisJobs AnalysisJob[]
+}
+
+model AnalysisJob {
+  id           String   @id @default(uuid())
+  websiteId    String
+  userId       String
+  type         AnalysisType   // "accessibility", "seo", "performance", etc.
+  status       JobStatus      // "pending", "completed", "error"
+  result       Json?
+  reportUrl    String?    // For downloadable report/screenshot, optional
+  inputTokens  Int?       // For cost calculation
+  outputTokens Int?
+  createdAt    DateTime   @default(now())
+  finishedAt   DateTime?
+
+  // Relations
+  website      Website   @relation(fields: [websiteId], references: [id])
+  user         User      @relation(fields: [userId], references: [id])
+  payment      Payment?
+}
+
+model Payment {
+  id           String   @id @default(uuid())
+  userId       String
+  analysisJobId String? @unique
+  provider     String   // "stripe", "paypal"
+  providerId   String   // Stripe/Paypal payment ID
+  amount       Float
+  currency     String   @default("EUR")
+  status       PaymentStatus // "pending", "paid", "failed"
+  createdAt    DateTime @default(now())
+
+  // Relations
+  user         User     @relation(fields: [userId], references: [id])
+  analysisJob  AnalysisJob? @relation(fields: [analysisJobId], references: [id])
+}
+
+model Subscription {
+  id           String   @id @default(uuid())
+  userId       String
+  plan         Plan
+  status       SubscriptionStatus
+  startDate    DateTime
+  endDate      DateTime?
+  providerId   String?  // Stripe/Paypal subscription ID
+  createdAt    DateTime @default(now())
+
+  // Relations
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+enum Plan {
+  FREE
+  AGENT
+  PRO
+}
+
+enum AnalysisType {
+  accessibility
+  seo
+  performance
+  security
+}
+
+enum JobStatus {
+  pending
+  running
+  completed
+  error
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+}
+
+enum SubscriptionStatus {
+  active
+  canceled
+  expired
+}

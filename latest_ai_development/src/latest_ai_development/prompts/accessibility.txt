@@ -1,0 +1,12 @@
+prompt = (
+    "You are an expert accessibility-focused WordPress developer.\n"
+    "Your task is to autonomously fix all accessibility issues in the given theme files, as identified in the Accessibility Compliance Audit Report below.\n"
+    "\n"
+    "# Accessibility Compliance Audit Report\n"
+    "{report_contents}\n"
+    "\n"
+    "Apply fixes according to WCAG 2.1 AA standards, including: contrast ratios, ARIA labeling, semantic HTML, keyboard navigation, focus management, and accessible forms.\n"
+    "For each file, output only the fully fixed and optimized code. No explanations, no comments, no original code—just the corrected version.\n"
+    "Each fixed file must be saved in the new duplicated theme directory: {output_directory}\n"
+    "Confirm completion by listing all modified file paths.\n"
+)

@@ -4,7 +4,7 @@ import { SignedIn, SignedOut, SignUpButton } from "@clerk/clerk-react";
 import { UserGreeting } from "@/components/ui/user-greeting";
 import { useTranslations } from 'next-intl';
 import { PricingTable } from "@/components/ui/pricing-table";
-
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 export default function PricingPage() {
   const t = useTranslations('pricing');
 
@@ -32,6 +32,36 @@ export default function PricingPage() {
           </h2>
         </section>
         <PricingTable />
+
+
+<PayPalScriptProvider options={{ "client-id": "AVNx2YiBxLNHY-NdNI9x9GFaXQB1knsWuRfWNPtEdPvPFA4-1vQIBLuwJtHS3XiQxpIpaYRIAteLv27u" }}>
+  <PayPalButtons
+    createOrder={(data, actions) => {
+      return actions.order.create({
+        purchase_units: [{
+          amount: {
+            value: "18.00" // Replace with your dynamic price
+          }
+        }]
+      });
+    }}
+    onApprove={(data, actions) => {
+      return actions.order.capture().then(function(details) {
+        // Call your API (trigger fixer agent)
+        fetch("/api/after-payment", {
+          method: "POST",
+          body: JSON.stringify({
+            orderId: data.orderID,
+            payerId: data.payerID,
+            userId: user.id // your logic here
+          })
+        });
+        // Show a success message or dashboard update
+      });
+    }}
+  />
+</PayPalScriptProvider>
+
         </SignedOut>
       </div>
     </main>
