@@ -9,15 +9,15 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
-import { streamText } from "ai";
+import { useState } from 'react';
 
 // Dummy data for plan/token; replace with real DB values!
 const userPlan = 'Free';
 const tokenBalance = 20;
-const [streaming, setStreaming] = useState(false);
 
 export default function DashboardHome() {
   const t = useTranslations('dashboard');
+  const [someState, setSomeState] = useState(false);
 
   return (
     <section className="flex-1 p-4 lg:p-8">
