@@ -33,8 +33,7 @@ export default function PricingPage() {
         </section>
         <PricingTable />
 
-
-<PayPalScriptProvider options={{ "client-id": "AVNx2YiBxLNHY-NdNI9x9GFaXQB1knsWuRfWNPtEdPvPFA4-1vQIBLuwJtHS3XiQxpIpaYRIAteLv27u" }}>
+<PayPalScriptProvider options={{ clientId: "AVNx2YiBxLNHY-NdNI9x9GFaXQB1knsWuRfWNPtEdPvPFA4-1vQIBLuwJtHS3XiQxpIpaYRIAteLv27u" }}>
   <PayPalButtons
     createOrder={(data, actions) => {
       return actions.order.create({
