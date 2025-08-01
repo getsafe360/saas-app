@@ -59,19 +59,17 @@ function calculateAuditCost(input = 0, output = 0, level = "all") {
   };
 }
 
-export default function AccessibilityResultPage({
-  result = mockResult,
-  auditTokens = mockAuditTokens
-}: {
-  result?: typeof mockResult;
-  auditTokens?: typeof mockAuditTokens;
-}) {
+export default function AccessibilityResultPage() {
   const t = useTranslations('ux');
   const [processing, setProcessing] = useState<"critical" | "all" | null>(null);
 
-  // For demo, just use mock data
-  const inputTokens = auditTokens?.input ?? 0;
-  const outputTokens = auditTokens?.output ?? 0;
+  // Use the mock data here directly
+  const result = mockResult;
+  const auditTokens = mockAuditTokens;
+
+  // Use the correct mock values
+  const inputTokens = auditTokens.input;
+  const outputTokens = auditTokens.output;
   const costCritical = calculateAuditCost(inputTokens, outputTokens, "critical");
   const costAll = calculateAuditCost(inputTokens, outputTokens, "all");
 
@@ -89,27 +87,27 @@ export default function AccessibilityResultPage({
       <section className="rounded-3xl bg-[#191b21] shadow-2xl p-8 w-full max-w-3xl border border-[#23282f]">
         {/* Header & Score */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6 mb-6">
-        <div>
+          <div>
             <div className="text-4xl sm:text-5xl font-extrabold mb-1 text-blue-200 leading-tight drop-shadow-lg">
-            {t('score_label')}:
+              {t('score_label')}:
             </div>
             <div className="text-lg text-gray-300">
-            {t('criteria_checked')}: <b>{checks}</b>
+              {t('criteria_checked')}: <b>{checks}</b>
             </div>
             <div className="text-lg text-gray-300">
-            {t('issues_found')}: <b>{issuesCount}</b>
+              {t('issues_found')}: <b>{issuesCount}</b>
             </div>
-        </div>
-        {/* Pie chart for Accessibility Score */}
-        <div className="flex flex-col items-center">
+          </div>
+          {/* Pie chart for Accessibility Score */}
+          <div className="flex flex-col items-center">
             <svg width={96} height={96} viewBox="0 0 36 36" className="mb-2">
-            <circle
+              <circle
                 cx="18" cy="18" r="16"
                 fill="none"
                 stroke="#21232a"
                 strokeWidth="4"
-            />
-            <circle
+              />
+              <circle
                 cx="18" cy="18" r="16"
                 fill="none"
                 stroke="#60a5fa"
@@ -117,15 +115,15 @@ export default function AccessibilityResultPage({
                 strokeDasharray={`${result?.score ?? 0}, 100`}
                 strokeDashoffset="25"
                 style={{ transition: "stroke-dasharray 1s" }}
-            />
-            <text x="18" y="22" textAnchor="middle" fontSize="1em" fill="#fbbf24" fontWeight={700}>
+              />
+              <text x="18" y="22" textAnchor="middle" fontSize="1em" fill="#fbbf24" fontWeight={700}>
                 {result?.score ?? "--"}%
-            </text>
+              </text>
             </svg>
             <div className="text-gray-300 text-xs text-center" style={{ lineHeight: 1.1 }}>
-            {t('score_label_short')}
+              {t('score_label_short')}
             </div>
-        </div>
+          </div>
         </div>
 
         {/* Passed Checks */}
@@ -215,3 +213,4 @@ export default function AccessibilityResultPage({
     </main>
   );
 }
+// Note: This code is a mockup and does not include real data fetching or processing logic.
