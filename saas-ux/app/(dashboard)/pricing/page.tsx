@@ -8,13 +8,13 @@ import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 export default function PricingPage() {
   const t = useTranslations('pricing');
-  const { user } = useUser(); // ✅ Safely fetch current user (for user?.id)
+  const { user } = useUser(); // Safely fetch current user (for user?.id)
   
-  // ✅ Example dynamic price (replace with your own logic)
+  // Example dynamic price (replace with your own logic)
   const price = "18.00";
   const currency = "USD";
 
-  // ✅ Get PayPal clientId from env (best practice)
+  // Get PayPal clientId from env
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
 
   if (!clientId) {
@@ -49,12 +49,13 @@ export default function PricingPage() {
 
           <PricingTable />
 
-          {/* ✅ PayPal Buttons */}
+          {/* PayPal Buttons */}
           {clientId && (
             <PayPalScriptProvider options={{ clientId }}>
               <PayPalButtons
                 createOrder={(data, actions) => {
                   return actions.order.create({
+                    intent: "CAPTURE",
                     purchase_units: [{
                       amount: {
                         currency_code: currency,
@@ -64,8 +65,12 @@ export default function PricingPage() {
                   });
                 }}
                 onApprove={(data, actions) => {
+                  if (!actions.order) {
+                    console.error("PayPal actions.order is undefined.");
+                    return Promise.reject(new Error("PayPal actions.order is undefined."));
+                  }
                   return actions.order.capture().then(function(details) {
-                    // ✅ Call your API after payment
+                    // Call your API after payment
                     fetch("/api/after-payment", {
                       method: "POST",
                       headers: {
@@ -74,7 +79,7 @@ export default function PricingPage() {
                       body: JSON.stringify({
                         orderId: data.orderID,
                         payerId: data.payerID,
-                        userId: user?.id || null, // ✅ safe fallback
+                        userId: user?.id || null, // safe fallback
                         details
                       })
                     });
