@@ -1,5 +1,5 @@
 export const mindMapData = {
-  core: "GetSafe360 AI Suite",
+  core: "GetSafe 360",
    branches: [
     {
       id: "seo",
