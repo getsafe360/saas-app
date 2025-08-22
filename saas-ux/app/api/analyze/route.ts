@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from "next/server";
 import chromium from "@sparticuz/chromium";
 import puppeteerCore from "puppeteer-core";
-import type { Browser } from "puppeteer-core";
+// Do not import Browser globally, import it conditionally below
 import { put } from "@vercel/blob";
 
 export const runtime = "nodejs";
@@ -83,7 +83,7 @@ async function takeScreenshotFlexible(
   const isProd = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
   const hasBlobToken = !!process.env.BLOB_READ_WRITE_TOKEN;
 
-  let browser: Browser | null = null;
+  let browser: any = null;
 
   try {
     if (isProd) {
@@ -93,7 +93,7 @@ async function takeScreenshotFlexible(
         args: chromium.args,
         defaultViewport: { width: 1280, height: 800 },
         executablePath,
-        headless: chromium.headless,
+        headless: true,
       });
     } else {
       // Local dev: full puppeteer to avoid executablePath headaches
