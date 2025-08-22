@@ -4,8 +4,6 @@ import React from "react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Globe } from "lucide-react";
-import { mindMapI18n } from "@/components/ui/MindMapI18n";
-
 import UrlAnalyzeForm from "@/components/analyzer/UrlAnalyzeForm";
 import StreamingReportShell from "@/components/analyzer/StreamingReportShell";
 
