@@ -13,14 +13,10 @@ type FindingChunk = {
   screenshotUrl?: string; // if backend emits a URL when ready
 };
 
-const CATS: FindingChunk["category"][] = [
-  "SEO",
-  "Accessibility",
-  "Performance",
-  "Security",
-];
+const CATS = ["SEO", "Accessibility", "Performance", "Security"] as const;
+type Category = typeof CATS[number];
 
-const CAT_ICON: Record<string, React.ReactNode> = {
+const CAT_ICON: Record<Category, React.ReactNode> = {
   SEO: <Search className="w-4 h-4" />,
   Accessibility: <Accessibility className="w-4 h-4" />,
   Performance: <Gauge className="w-4 h-4" />,
@@ -29,12 +25,14 @@ const CAT_ICON: Record<string, React.ReactNode> = {
 
 export default function StreamingReportShell({ url }: { url: string }) {
   // state buckets
-  const [scores, setScores] = useState<Record<string, number>>({
-    SEO: 0,
-    Accessibility: 0,
-    Performance: 0,
-    Security: 0,
-  });
+const [scores, setScores] = useState<Record<Category, number>>({
+  SEO: 0,
+  Accessibility: 0,
+  Performance: 0,
+  Security: 0,
+});
+  // findings are live updates from the backend
+  // we’ll show them in a feed as they come in
   const [findings, setFindings] = useState<
     { category: string; severity: FindingChunk["severity"]; message: string }[]
   >([]);
@@ -131,7 +129,7 @@ useEffect(() => {
         {/* Category scores */}
         <div className="grid sm:grid-cols-2 gap-4">
           {CATS.map((c) => (
-            <CategoryScore key={c} label={c} score={scores[c]} icon={CAT_ICON[c as string]} />
+            <CategoryScore key={c} label={c} score={scores[c]} icon={CAT_ICON[c]} />
           ))}
         </div>
 
@@ -176,7 +174,7 @@ function CategoryScore({
   score,
   icon,
 }: {
-  label: string;
+  label: FindingChunk["category"];
   score: number;
   icon: React.ReactNode;
 }) {
