@@ -4,8 +4,6 @@ import React from "react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Globe } from "lucide-react";
-
-import Mindmap from "@/components/ui/mindmap";
 import { mindMapI18n } from "@/components/ui/MindMapI18n";
 
 import UrlAnalyzeForm from "@/components/analyzer/UrlAnalyzeForm";
@@ -81,11 +79,6 @@ export default function HomePage() {
           <StreamingReportShell url={pendingUrl} />
         </section>
       )}
-
-      {/* Mindmap */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mb-14">
-        <Mindmap i18n={mindMapI18n} locale={activeLocale} mode={mode} />
-      </section>
 
       {/* One-liner feature detail */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mb-20 border-t border-white/10 pt-12">
