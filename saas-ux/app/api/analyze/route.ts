@@ -107,7 +107,7 @@ async function takeScreenshotFlexible(
         args: chromium.args,
         defaultViewport: { width: 1280, height: 800 },
         executablePath,
-        headless: chromium.headless,
+        headless: true,
       });
     } else {
       // Local dev: full puppeteer (downloads Chrome/Chromium automatically)
