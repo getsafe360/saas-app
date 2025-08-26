@@ -88,7 +88,10 @@ useEffect(() => {
             ]);
           } else if (chunk.event === "screenshot" && chunk.screenshotUrl) {
             setScreenshot(chunk.screenshotUrl);
-          } else if (chunk.event === "done") {
+          } else if (chunk.event === "status" && chunk.message) {
+            setFindings((f) => [{ category: "System", severity: "info", message: chunk.message }, ...f]);
+          }
+          else if (chunk.event === "done") {
             setStatus("done");
           } else if (chunk.event === "error") {
             setStatus("error");
