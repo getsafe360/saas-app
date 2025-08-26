@@ -102,9 +102,9 @@ async function takeScreenshotFlexible(targetUrl: string, write: (c: any) => Prom
           "--no-zygote",
           "--single-process",
         ],
-        defaultViewport: chromium.defaultViewport ?? { width: 1280, height: 800 },
+        defaultViewport: { width: 1280, height: 800 },
         executablePath,
-        headless: true, // <-- stick to true (you confirmed this works best)
+        headless: true,
       });
     } else {
       const puppeteer = (await import("puppeteer")).default;
