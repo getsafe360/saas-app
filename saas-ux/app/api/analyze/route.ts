@@ -145,7 +145,7 @@ async function takeScreenshotFlexible(targetUrl: string, write: (c: any) => Prom
     }
 
     // small settle delay for lazy content
-    await page.waitForTimeout(900);
+    await new Promise(res => setTimeout(res, 900));
 
     // Try fullPage screenshot; if it fails, fall back to viewport
     await write({ event: "status", message: "taking screenshot" });
