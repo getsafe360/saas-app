@@ -6,7 +6,11 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 type Category = "SEO" | "Accessibility" | "Performance" | "Security";
-function ndjson(obj: any) { return JSON.stringify(obj) + "\n"; }
+type Severity = "info" | "warn" | "error";
+
+function ndjson(obj: any) {
+  return JSON.stringify(obj) + "\n";
+}
 
 // ---------------------------
 // GET /api/analyze?url=...
@@ -36,20 +40,21 @@ export async function GET(req: Request) {
         });
 
         // --- DEMO STREAM (replace with WebsiteAnalyzerCrew) ---
-        const early: { cat: Category; score: number; msg: string; sev: "info"|"warn"|"error" }[] = [
-          { cat: "SEO", score: 64, msg: "Missing meta description", sev: "warn" },
-          { cat: "Performance", score: 58, msg: "LCP above 4s on mobile", sev: "error" },
-          { cat: "Accessibility", score: 79, msg: "Buttons have insufficient contrast", sev: "warn" },
-          { cat: "Security", score: 72, msg: "No HSTS header found", sev: "warn" },
+        const early: { cat: Category; score: number; msg: string; sev: Severity }[] = [
+          { cat: "SEO",           score: 64, msg: "Missing meta description",            sev: "warn" },
+          { cat: "Performance",   score: 58, msg: "LCP above 4s on mobile",              sev: "error" },
+          { cat: "Accessibility", score: 79, msg: "Buttons have insufficient contrast",  sev: "warn" },
+          { cat: "Security",      score: 72, msg: "No HSTS header found",                sev: "warn" },
         ];
         for (const e of early) {
-          await write({ event: "score", category: e.cat, score: e.score });
+          await write({ event: "score",    category: e.cat, score: e.score });
           await new Promise((r) => setTimeout(r, 180));
-          await write({ event: "finding", category: e.cat, severity: e.sev, message: e.msg });
+          await write({ event: "finding",  category: e.cat, severity: e.sev, message: e.msg });
           await new Promise((r) => setTimeout(r, 120));
         }
         // --- /DEMO ---
 
+        // Wait for screenshot completion
         const shot = await screenshotPromise;
         if (shot) {
           await write({ event: "screenshot", screenshotUrl: shot });
@@ -77,10 +82,10 @@ export async function GET(req: Request) {
 
 /** Dev uses `puppeteer` (auto Chrome), Prod uses `puppeteer-core` + `@sparticuz/chromium`. */
 type PBrowser = import("puppeteer-core").Browser | import("puppeteer").Browser;
-type PPage = import("puppeteer-core").Page | import("puppeteer").Page;
+type PPage    = import("puppeteer-core").Page    | import("puppeteer").Page;
 
 async function takeScreenshotFlexible(targetUrl: string, write: (c: any) => Promise<void>): Promise<string | null> {
-  const isProd = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+  const isProd      = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
   const hasBlobToken = !!process.env.BLOB_READ_WRITE_TOKEN;
 
   let browser: PBrowser | null = null;
@@ -89,7 +94,7 @@ async function takeScreenshotFlexible(targetUrl: string, write: (c: any) => Prom
     await write({ event: "status", message: "launching browser" });
 
     if (isProd) {
-      const chromium = (await import("@sparticuz/chromium")).default;
+      const chromium      = (await import("@sparticuz/chromium")).default;
       const puppeteerCore = (await import("puppeteer-core")).default;
 
       const executablePath = await chromium.executablePath();
@@ -104,7 +109,7 @@ async function takeScreenshotFlexible(targetUrl: string, write: (c: any) => Prom
         ],
         defaultViewport: { width: 1280, height: 800 },
         executablePath,
-        headless: true,
+        headless: true, // important for Vercel lambdas
       });
     } else {
       const puppeteer = (await import("puppeteer")).default;
@@ -123,7 +128,8 @@ async function takeScreenshotFlexible(targetUrl: string, write: (c: any) => Prom
     await page.setUserAgent(UA).catch(() => {});
     await page.setBypassCSP(true).catch(() => {});
     await page.emulateMediaType("screen").catch(() => {});
-    // Block heavy resources to improve reliability
+
+    // Block heavy resources to improve reliability and cost
     try {
       await page.setRequestInterception(true);
       page.on("request", (req: any) => {
@@ -135,26 +141,51 @@ async function takeScreenshotFlexible(targetUrl: string, write: (c: any) => Prom
 
     await write({ event: "status", message: "navigating" });
 
-    // Phase 1: try networkidle2 (best case)
+    // Phase 1: networkidle2; Phase 2: domcontentloaded fallback
     try {
       await page.goto(targetUrl, { waitUntil: "networkidle2", timeout: 30000 });
-    } catch (e) {
-      // Phase 2: fall back to DOMContentLoaded
+    } catch {
       await write({ event: "status", message: "networkidle2 timed out; trying domcontentloaded" });
       await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
     }
 
-    // small settle delay for lazy content
-    await new Promise(res => setTimeout(res, 900));
+    // tiny settle for lazy UI (kept brief to control TTFB/cost)
+    await new Promise((res) => setTimeout(res, 900));
 
-    // Try fullPage screenshot; if it fails, fall back to viewport
+    // --- CMS Detection (WordPress) ---
+    await write({ event: "status", message: "detecting CMS" });
+    try {
+      const cmsFinding = await detectCMS(page, targetUrl);
+      if (cmsFinding) {
+        const { name, details, severity = "info" } = cmsFinding;
+        await write({
+          event: "finding",
+          category: "SEO",
+          severity,
+          message: `Site appears to be ${name}${details ? ` (${details})` : ""}`,
+        });
+      }
+    } catch (e) {
+      await write({ event: "status", message: `cms detection skipped: ${String(e)}` });
+    }
+    // --- /CMS Detection ---
+
+    // --- Screenshot refinement: consistent hero-shot like Lighthouse ---
+    // Standard viewport: 1280 × 800, above-the-fold only
+    await page.setViewport({ width: 1280, height: 800 }).catch(() => {});
     await write({ event: "status", message: "taking screenshot" });
+
     let buf: Buffer | null = null;
     try {
-      buf = (await page.screenshot({ type: "webp", fullPage: true, quality: 80 })) as Buffer;
+      buf = (await page.screenshot({
+        type: "webp",
+        quality: 72,            // ~100–200 KB typical
+        fullPage: false,        // only above-the-fold (cost control)
+        clip: { x: 0, y: 0, width: 1280, height: 800 },
+      })) as Buffer;
     } catch {
-      await write({ event: "status", message: "fullPage failed; taking viewport screenshot" });
-      buf = (await page.screenshot({ type: "webp", fullPage: false, quality: 80 })) as Buffer;
+      // Fallback: simple viewport capture without clip
+      buf = (await page.screenshot({ type: "webp", fullPage: false, quality: 72 })) as Buffer;
     }
 
     if (!buf) {
@@ -184,4 +215,60 @@ function hash(s: string) {
   let h = 0, i = 0;
   while (i < s.length) h = ((h << 5) - h + s.charCodeAt(i++)) | 0;
   return (h >>> 0).toString(36);
+}
+
+/* ------------------------- CMS Detection ------------------------- */
+/**
+ * Tries to detect common CMS (WordPress first) quickly and cheaply.
+ * - meta[name="generator"] includes "WordPress"
+ * - Markup hints: wp-content / wp-includes
+ * - <link rel="https://api.w.org/"> present
+ * - /wp-json endpoint responds OK
+ */
+async function detectCMS(page: PPage, targetUrl: string): Promise<{ name: string; details?: string; severity?: Severity } | null> {
+  // 1) Read generator meta & REST link in the DOM
+  const metaInfo = await (page as any).evaluate(() => {
+    const meta = document.querySelector('meta[name="generator"]') as HTMLMetaElement | null;
+    const generator = meta?.content || "";
+    const hasWpRest = !!document.querySelector('link[rel="https://api.w.org/"]');
+    const html = document.documentElement?.outerHTML || "";
+    return { generator, hasWpRest, htmlSlice: html.slice(0, 250000) }; // cap to avoid huge serialization
+  });
+
+  const hints: string[] = [];
+
+  // 2) Generator meta
+  if (metaInfo.generator && /wordpress/i.test(metaInfo.generator)) {
+    hints.push(`generator:${metaInfo.generator}`);
+  }
+
+  // 3) Markup hints
+  if (/wp-content|wp-includes/i.test(metaInfo.htmlSlice)) {
+    hints.push("markup:wp-content/wp-includes");
+  }
+
+  // 4) REST link hint
+  if (metaInfo.hasWpRest) {
+    hints.push("link:api.w.org");
+  }
+
+  // 5) Server-side probe to /wp-json
+  try {
+    const origin = new URL(targetUrl).origin;
+    const wpJson = await fetch(`${origin}/wp-json`, { method: "GET", redirect: "follow" });
+    if (wpJson.ok && wpJson.headers.get("content-type")?.includes("application/json")) {
+      hints.push("probe:/wp-json ok");
+    }
+  } catch {
+    // ignore
+  }
+
+  if (hints.length > 0) {
+    // Try to extract WordPress version if present
+    const versionMatch = metaInfo.generator.match(/WordPress\s*([0-9.]+)/i);
+    const version = versionMatch?.[1];
+    return { name: "WordPress", details: version ? `v${version}; ${hints.join(", ")}` : hints.join(", ") };
+  }
+
+  return null;
 }
