@@ -29,13 +29,6 @@ export function Header() {
         {/* Navigation links */}
         <nav className="flex items-center gap-6 text-lg uppercase font-light tracking-wide">
           <Link
-            href="/optimizer"
-            title="Optimizer"
-            className="hover:underline hover:decoration-sky-600"
-          >
-            Optimizer
-          </Link>
-          <Link
             href="/pricing"
             className="hover:underline hover:decoration-sky-600"
           >

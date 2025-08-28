@@ -18,3 +18,9 @@ saas-ux/node_modules
 # Python cache
 __pycache__/
 .vercel
+
+# local test routes (do not deploy)
+saas-ux/app/api/blobtest/
+saas-ux/app/api/bloblist/
+saas-ux/app/api/blobdelete/
+saas-ux/app/api/selftest/
