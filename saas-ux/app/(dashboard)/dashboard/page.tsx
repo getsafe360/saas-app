@@ -22,7 +22,6 @@ export default function DashboardHome() {
   return (
     <section className="flex-1 p-4 lg:p-8">
       <UserProfilePanel plan={userPlan} tokenBalance={tokenBalance} />
-
       {/* Onboarding / Welcome Section */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold my-4">{t('welcome_headline')}</h2>
@@ -38,7 +37,6 @@ export default function DashboardHome() {
           </Button>
         </div>
       </div>
-
       {/* Roadmap for next onboarding steps, visually grouped */}      
       <Card className="mb-8">
         <CardHeader>
@@ -48,17 +46,6 @@ export default function DashboardHome() {
           <p className="text-muted-foreground">No team members yet.</p>
         </CardContent>
       </Card>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="rounded-xl bg-gray-50 dark:bg-gray-800 border border-[--thin-border] p-4">
-          <h3 className="font-bold mb-1">{t('feature_1_headline')}</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t('feature_1_desc')}</p>
-        </div>
-        <div className="rounded-xl bg-gray-50 dark:bg-gray-800 border border-[--thin-border] p-4">
-          <h3 className="font-bold mb-1">{t('feature_2_headline')}</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t('feature_2_desc')}</p>
-        </div>
-        {/* Add more feature cards as needed */}
-      </div>
     </section>
   );
 }

@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Globe } from "lucide-react";
 import UrlAnalyzeForm from "@/components/analyzer/UrlAnalyzeForm";
 import StreamingReportShell from "@/components/analyzer/StreamingReportShell";
+import CTA from "@/components/ui/cta";
 
 export default function HomePage() {
   const t = useTranslations("home");
@@ -77,9 +78,11 @@ export default function HomePage() {
           <StreamingReportShell url={pendingUrl} />
         </section>
       )}
-
+        <section className="mt-12 flex justify-center">
+          <CTA />
+        </section>
       {/* One-liner feature detail */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mb-20 border-t border-white/10 pt-12">
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mb-20 pt-12">
         <div className="rounded-2xl p-6 shadow-xl border border-white/10 bg-white/[0.03] backdrop-blur">
           <p className="text-slate-200 text-lg leading-relaxed">
             {t.rich("details", {

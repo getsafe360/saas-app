@@ -67,7 +67,7 @@ export default function UrlAnalyzeForm({
         disabled={submitting}
         className={cn(
           "rounded-full px-5 py-2 text-sm sm:text-base font-semibold",
-          "bg-sky-500 hover:bg-sky-400 text-white transition",
+          "text-white bg-sky-600 hover:bg-sky-700 hover:cursor-pointer transition duration-300 ease-in-out",
           "disabled:opacity-60 disabled:cursor-not-allowed"
         )}
       >

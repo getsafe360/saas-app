@@ -49,7 +49,7 @@ export function Header() {
             </SignedIn>
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="bg-sky-600 text-white font-semibold px-4 py-2 rounded-full ml-2">
+                <button className="text-white font-semibold px-4 py-2 rounded-full ml-2 bg-sky-600 hover:bg-sky-700 hover:cursor-pointer transition duration-300 ease-in-out">
                   Sign In
                 </button>
               </SignInButton>
