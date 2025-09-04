@@ -1,18 +1,21 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ShieldCheck, Gauge, Search, Accessibility, ImageIcon } from "lucide-react";
+
+/* ---------- Public type you can reuse for CTA ---------- */
+export type AnalysisPayload = {
+  url: string;
+  scores: Record<"SEO" | "Accessibility" | "Performance" | "Security", number>;
+  screenshotUrl: string | null;
+  faviconUrl?: string | null;
+  cms: string | null;
+  findings: { category: string; severity: "info" | "warn" | "error"; message: string }[];
+};
 
 /* ---------- Streaming types ---------- */
 type FindingChunk = {
-  event:
-    | "finding"
-    | "score"
-    | "status"
-    | "screenshot"
-    | "favicon"
-    | "done"
-    | "error";
+  event: "finding" | "score" | "status" | "screenshot" | "favicon" | "cms" | "done" | "error";
   category?: "SEO" | "Accessibility" | "Performance" | "Security" | "CMS" | "System";
   severity?: "info" | "warn" | "error";
   message?: string;
@@ -33,13 +36,19 @@ const CAT_ICON: Record<Category, React.ReactNode> = {
 
 /* Per-category ring gradients (start, end) */
 const CAT_GRADIENT: Record<Category, { start: string; end: string }> = {
-  SEO: { start: "#60A5FA", end: "#2563EB" },           // blues
-  Accessibility: { start: "#34D399", end: "#059669" }, // greens
-  Performance: { start: "#FBBF24", end: "#F59E0B" },   // ambers
-  Security: { start: "#FB7185", end: "#F43F5E" },      // reds
+  SEO: { start: "#60A5FA", end: "#2563EB" },
+  Accessibility: { start: "#34D399", end: "#059669" },
+  Performance: { start: "#FBBF24", end: "#F59E0B" },
+  Security: { start: "#FB7185", end: "#F43F5E" },
 };
 
-export default function StreamingReportShell({ url }: { url: string }) {
+export default function StreamingReportShell({
+  url,
+  onComplete,
+}: {
+  url: string;
+  onComplete?: (analysis: AnalysisPayload) => void;
+}) {
   const [scores, setScores] = useState<Record<Category, number>>({
     SEO: 0,
     Accessibility: 0,
@@ -53,7 +62,14 @@ export default function StreamingReportShell({ url }: { url: string }) {
 
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [favicon, setFavicon] = useState<string | null>(null);
+  const [cms, setCms] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "streaming" | "done" | "error">("streaming");
+
+  // keep latest callback without retriggering the effect
+  const onCompleteRef = useRef<typeof onComplete>();
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,7 +79,15 @@ export default function StreamingReportShell({ url }: { url: string }) {
       setFindings([]);
       setScreenshot(null);
       setFavicon(null);
+      setCms(null);
       setScores({ SEO: 0, Accessibility: 0, Performance: 0, Security: 0 });
+
+      // local collectors (avoid stale state in closure)
+      let localScores: Record<Category, number> = { SEO: 0, Accessibility: 0, Performance: 0, Security: 0 };
+      let localFindings: { category: string; severity: "info" | "warn" | "error"; message: string }[] = [];
+      let localScreenshot: string | null = null;
+      let localFavicon: string | null = null;
+      let localCms: string | null = null;
 
       const res = await fetch(`/api/analyze?url=${encodeURIComponent(url)}`, {
         method: "GET",
@@ -97,21 +121,41 @@ export default function StreamingReportShell({ url }: { url: string }) {
             if (chunk.event === "score" && chunk.category && typeof chunk.score === "number") {
               const label = chunk.category as Category;
               if (CATS.includes(label)) {
-                setScores((s) => ({ ...s, [label]: Math.round(chunk.score!) }));
+                localScores = { ...localScores, [label]: Math.round(chunk.score) };
+                setScores(localScores);
               }
             } else if (chunk.event === "finding" && chunk.category && chunk.message) {
-              setFindings((f) => [
-                { category: chunk.category!, severity: chunk.severity || "info", message: chunk.message! },
-                ...f,
-              ]);
+              if (chunk.category === "CMS") localCms = chunk.message || "Unknown";
+              const entry = {
+                category: chunk.category!,
+                severity: chunk.severity || "info",
+                message: chunk.message!,
+              };
+              localFindings = [entry, ...localFindings];
+              setFindings((prev) => [entry, ...prev]);
             } else if (chunk.event === "status" && chunk.message) {
-              setFindings((f) => [{ category: "System", severity: "info", message: chunk.message! }, ...f]);
+              const entry = { category: "System", severity: "info" as const, message: chunk.message };
+              localFindings = [entry, ...localFindings];
+              setFindings((prev) => [entry, ...prev]);
             } else if (chunk.event === "screenshot" && chunk.screenshotUrl) {
+              localScreenshot = chunk.screenshotUrl;
               setScreenshot(chunk.screenshotUrl);
             } else if (chunk.event === "favicon" && chunk.faviconUrl) {
+              localFavicon = chunk.faviconUrl;
               setFavicon(chunk.faviconUrl);
             } else if (chunk.event === "done") {
               setStatus("done");
+              // call latest callback safely
+              if (onCompleteRef.current) {
+                onCompleteRef.current({
+                  url,
+                  scores: localScores,
+                  screenshotUrl: localScreenshot,
+                  faviconUrl: localFavicon,
+                  cms: localCms,
+                  findings: localFindings,
+                });
+              }
             } else if (chunk.event === "error") {
               setStatus("error");
             }
@@ -123,7 +167,10 @@ export default function StreamingReportShell({ url }: { url: string }) {
     }
 
     run();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
+    // IMPORTANT: only re-run on URL change, not on callback identity
   }, [url]);
 
   return (
@@ -144,17 +191,13 @@ export default function StreamingReportShell({ url }: { url: string }) {
         {/* favicon + URL */}
         <div className="mt-3 text-xs text-slate-400 break-all flex items-center gap-2">
           {favicon ? (
-            <img
-              src={favicon}
-              alt="favicon"
-              width={16}
-              height={16}
-              className="rounded-sm border border-white/10"
-            />
+            <img src={favicon} alt="favicon" width={16} height={16} className="rounded-sm border border-white/10" />
           ) : (
             <span className="inline-block w-4 h-4 rounded-sm bg-white/10" />
           )}
-          <span>Analyzing: <span className="text-slate-200">{url}</span></span>
+          <span>
+            Analyzing: <span className="text-slate-200">{url}</span>
+          </span>
         </div>
       </div>
 
@@ -163,13 +206,7 @@ export default function StreamingReportShell({ url }: { url: string }) {
         {/* Category scores */}
         <div className="grid sm:grid-cols-2 gap-4">
           {CATS.map((c) => (
-            <CategoryScore
-              key={c}
-              label={c}
-              score={scores[c]}
-              icon={CAT_ICON[c]}
-              gradient={CAT_GRADIENT[c]}
-            />
+            <CategoryScore key={c} label={c} score={scores[c]} icon={CAT_ICON[c]} gradient={CAT_GRADIENT[c]} />
           ))}
         </div>
 
@@ -242,7 +279,7 @@ function Ring({ value, gradient }: { value: number; gradient: { start: string; e
   const r = 28;
   const c = 2 * Math.PI * r;
   const offset = c - (value / 100) * c;
-  const id = `grad-${gradient.start.slice(1)}-${gradient.end.slice(1)}`; // stable-ish key
+  const id = `grad-${gradient.start.slice(1)}-${gradient.end.slice(1)}`;
 
   return (
     <svg width="72" height="72" viewBox="0 0 72 72">
