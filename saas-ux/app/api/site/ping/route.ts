@@ -2,11 +2,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
+// Define a Site type for clarity
+type Site = { siteId: string };
+
 // TODO: replace with a proper lookup from DB (or Blob index map)
-async function findSiteByToken(token: string) {
+async function findSiteByToken(token: string): Promise<Site | null> {
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
   // For MVP, you could keep a tiny map file 'sites/_index.json' => { [tokenHash]: siteId }
   // or scan 'sites/' blobs. We'll move this to Postgres in step 5.
+  // Example stub for demonstration:
+  if (tokenHash === "demo") {
+    return { siteId: "example-site-id" };
+  }
   return null;
 }
 
