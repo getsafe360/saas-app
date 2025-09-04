@@ -66,7 +66,7 @@ export default function StreamingReportShell({
   const [status, setStatus] = useState<"idle" | "streaming" | "done" | "error">("streaming");
 
   // keep latest callback without retriggering the effect
-  const onCompleteRef = useRef<typeof onComplete>();
+  const onCompleteRef = useRef<typeof onComplete>(undefined);
   useEffect(() => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
