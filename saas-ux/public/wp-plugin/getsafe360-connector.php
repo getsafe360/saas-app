@@ -39,8 +39,8 @@ class GetSafe360_Connector {
 
     // Add bypass header only for protected *.vercel.app previews AND when token is defined
     $host = parse_url(self::API_BASE, PHP_URL_HOST);
-    if ($host && $this->str_ends_with($host, '.vercel.app') && defined('GETSAFE360_BYPASS_TOKEN') && GETSAFE360_BYPASS_TOKEN) {
-      $headers['x-vercel-protection-bypass'] = GETSAFE360_BYPASS_TOKEN;
+    if ($host && $this->str_ends_with($host, '.vercel.app') && defined('VERCEL_AUTOMATION_BYPASS_SECRET') && VERCEL_AUTOMATION_BYPASS_SECRET) {
+      $headers['x-vercel-protection-bypass'] = VERCEL_AUTOMATION_BYPASS_SECRET;
     }
     return $headers;
   }

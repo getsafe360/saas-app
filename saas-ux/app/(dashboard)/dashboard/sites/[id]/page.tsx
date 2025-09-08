@@ -17,15 +17,12 @@ export default async function SiteDetail({
   params,
   searchParams,
 }: {
-  // works in both old/new Next versions
-  params: { id: string } | Promise<{ id: string }>;
-  searchParams?: Record<string, string | string[] | undefined> | Promise<Record<string, string | string[] | undefined>>;
+  params: { id: string };
+  searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  // ✅ await params (it might be a Promise)
-  const { id } = await params;
+  const { id } = params;
 
-  // ✅ searchParams may also be a Promise; normalize it to an object
-  const sp = await Promise.resolve(searchParams ?? {});
+  const sp = searchParams ?? {};
   const connectedParam = sp.connected;
   const justConnected = Array.isArray(connectedParam)
     ? connectedParam[0] === "1"
@@ -71,4 +68,3 @@ export default async function SiteDetail({
     </div>
   );
 }
-
