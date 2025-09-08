@@ -18,8 +18,8 @@ export default async function SiteDetail({
   searchParams,
 }: {
   // works in both old/new Next versions
-  params: { id: string };
-  searchParams?: Record<string, string | string[] | undefined>;
+  params: { id: string } | Promise<{ id: string }>;
+  searchParams?: Record<string, string | string[] | undefined> | Promise<Record<string, string | string[] | undefined>>;
 }) {
   // ✅ await params (it might be a Promise)
   const { id } = await params;
