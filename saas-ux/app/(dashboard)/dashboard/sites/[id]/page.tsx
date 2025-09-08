@@ -17,12 +17,13 @@ export default async function SiteDetail({
   params,
   searchParams,
 }: {
-  params: { id: string };
-  searchParams?: Record<string, string | string[] | undefined>;
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { id } = params;
+  // ✅ await both
+  const { id } = await params;
+  const sp = (searchParams ? await searchParams : {}) ?? {};
 
-  const sp = searchParams ?? {};
   const connectedParam = sp.connected;
   const justConnected = Array.isArray(connectedParam)
     ? connectedParam[0] === "1"
