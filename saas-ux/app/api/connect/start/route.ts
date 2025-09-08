@@ -6,10 +6,39 @@ import crypto from "crypto";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Normalize the user-supplied site URL so we store a consistent value.
+// - strips search + hash
+// - lowercases hostname
+// - collapses trailing slashes to exactly one (for roots)
+// - keeps protocol (http/https) as provided
+function normalizeInput(u: string): string {
+  try {
+    const url = new URL(u);
+
+    // remove query + hash noise
+    url.search = "";
+    url.hash = "";
+
+    // lowercase hostname for consistency
+    url.hostname = url.hostname.toLowerCase();
+
+    // ensure a single trailing slash for root paths
+    // (don't touch non-root paths; users should connect the site root)
+    if (url.pathname === "" || url.pathname === "/") {
+      url.pathname = "/";
+    }
+
+    return url.toString();
+  } catch {
+    // if it's not a valid URL, just return as-is; caller will validate
+    return u;
+  }
+}
+
 async function probePlugin(siteUrl: string): Promise<boolean> {
   const targets = [
-    "/wp-json/getsafe/v1/ping",          // pretty permalinks
-    "/?rest_route=/getsafe/v1/ping",     // plain permalinks
+    "/wp-json/getsafe/v1/ping",      // pretty permalinks
+    "/?rest_route=/getsafe/v1/ping", // plain permalinks
   ];
   for (const path of targets) {
     try {
@@ -36,9 +65,17 @@ async function probePlugin(siteUrl: string): Promise<boolean> {
 export async function POST(req: NextRequest) {
   const { siteUrl } = await req.json();
 
-  if (!/^https?:\/\/[^\s]+$/i.test(siteUrl || "")) {
+  // Validate using URL() (more reliable than regex)
+  let parsed: URL | null = null;
+  try {
+    parsed = new URL(siteUrl);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("bad scheme");
+  } catch {
     return NextResponse.json({ error: "Enter a valid site URL" }, { status: 400 });
   }
+
+  // Normalize before storing / probing
+  const normalizedUrl = normalizeInput(parsed.toString());
 
   // 6-digit pairing code
   const pairCode = String(Math.floor(100000 + Math.random() * 900000));
@@ -46,7 +83,7 @@ export async function POST(req: NextRequest) {
 
   const record = {
     id,
-    siteUrl,
+    siteUrl: normalizedUrl,
     pairCode,
     createdAt: Date.now(),
     expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
@@ -66,6 +103,6 @@ export async function POST(req: NextRequest) {
     contentType: "application/json",
   });
 
-  const pluginDetected = await probePlugin(siteUrl);
-  return NextResponse.json({ pairCode, pluginDetected });
+  const pluginDetected = await probePlugin(normalizedUrl);
+  return NextResponse.json({ pairCode, pluginDetected, recordedSiteUrl: normalizedUrl });
 }
