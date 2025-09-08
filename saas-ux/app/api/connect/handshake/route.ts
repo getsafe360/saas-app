@@ -15,6 +15,15 @@ async function readPairingByCode(pairCode: string) {
   return r.json();
 }
 
+async function readExistingSite(siteId: string) {
+  const { blobs } = await list({ prefix: `sites/${siteId}.json` });
+  const b = blobs[0];
+  if (!b) return null;
+  const r = await fetch(b.url, { cache: "no-store" });
+  if (!r.ok) return null;
+  return r.json();
+}
+
 function hostnameKey(u: string) {
   const url = new URL(u);
   return url.hostname.replace(/^www\./, "").toLowerCase();
@@ -75,34 +84,41 @@ export async function POST(req: NextRequest) {
       .digest("hex")
       .slice(0, 16);
 
+    // Preserve createdAt if the site already exists
+    const existing = await readExistingSite(siteId);
+    const createdAt =
+      typeof existing?.createdAt === "number" ? existing.createdAt : Date.now();
+
     const siteRecord = {
       siteId,
       siteUrl,
       tokenHash,
-      wpVersion: wpVersion ?? null,
-      pluginVersion: pluginVersion ?? null,
-      scopes: ["optimize:read", "optimize:write", "webhook:send"],
+      wpVersion: wpVersion ?? existing?.wpVersion ?? null,
+      pluginVersion: pluginVersion ?? existing?.pluginVersion ?? null,
+      scopes: existing?.scopes ?? ["optimize:read", "optimize:write", "webhook:send"],
       status: "connected",
-      createdAt: Date.now(),
+      createdAt,
       updatedAt: Date.now(),
     };
 
+    // ✅ allow overwrite of an existing record
     await put(`sites/${siteId}.json`, JSON.stringify(siteRecord), {
       access: "public",
       contentType: "application/json",
+      allowOverwrite: true,
     });
 
-    // mark pairing as used
+    // Mark pairing as used (overwrite the same pairing blob)
     rec.used = true;
     rec.usedAt = Date.now();
     await put(`pairings/code-${pairCode}.json`, JSON.stringify(rec), {
       access: "public",
       contentType: "application/json",
+      allowOverwrite: true,
     });
 
     return NextResponse.json({ siteId, siteToken });
   } catch (err: any) {
-    // Visible in Vercel Logs (Project → Functions)
     console.error("Handshake error:", err);
     return NextResponse.json(
       { error: `Server error: ${err?.message ?? "unknown"}` },
@@ -111,7 +127,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Optional: quick GET to verify the route is deployed at the expected domain
 export async function GET() {
   return NextResponse.json({ ok: true, expects: "POST" });
 }
