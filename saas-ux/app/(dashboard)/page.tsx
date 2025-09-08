@@ -73,7 +73,7 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Only show CTA after an analysis completed */}
+      {/* Only show CTA after an analysis completed -add if logged in link to sites */}
       {analysis && (
         <section className="mt-12 flex justify-center">
           <CTA analysis={analysis ?? undefined} />

@@ -6,6 +6,33 @@ import crypto from "crypto";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+async function probePlugin(siteUrl: string): Promise<boolean> {
+  const targets = [
+    "/wp-json/getsafe/v1/ping",          // pretty permalinks
+    "/?rest_route=/getsafe/v1/ping",     // plain permalinks
+  ];
+  for (const path of targets) {
+    try {
+      const url = new URL(path, siteUrl).toString();
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { "user-agent": "GetSafe360/0.1 (+connect-probe)" },
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      clearTimeout(t);
+      if (!res.ok) continue;
+      const json = await res.json().catch(() => null);
+      if (json && json.ok === true) return true; // plugin’s ping returns { ok: true }
+    } catch {
+      /* ignore and try next */
+    }
+  }
+  return false;
+}
+
 export async function POST(req: NextRequest) {
   const { siteUrl } = await req.json();
 
@@ -39,8 +66,6 @@ export async function POST(req: NextRequest) {
     contentType: "application/json",
   });
 
-  return NextResponse.json({
-    pairCode,
-    pluginDetected: false, // you can probe /wp-json/getsafe/v1/ping later
-  });
+  const pluginDetected = await probePlugin(siteUrl);
+  return NextResponse.json({ pairCode, pluginDetected });
 }
