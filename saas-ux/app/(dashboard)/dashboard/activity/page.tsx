@@ -14,6 +14,14 @@ import {
 import { ActivityType } from '@/lib/db/schema';
 import { getActivityLogs } from '@/lib/db/queries';
 
+// Minimal shape expected from getActivityLogs()
+type ActivityLog = {
+  id: string | number;
+  action: ActivityType | string;
+  ipAddress?: string | null;
+  timestamp: string | number | Date;
+};
+
 const iconMap: Record<ActivityType, LucideIcon> = {
   [ActivityType.SIGN_UP]: UserPlus,
   [ActivityType.SIGN_IN]: UserCog,
@@ -32,12 +40,9 @@ function getRelativeTime(date: Date) {
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) return 'just now';
-  if (diffInSeconds < 3600)
-    return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400)
-    return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  if (diffInSeconds < 604800)
-    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
   return date.toLocaleDateString();
 }
 
@@ -69,7 +74,7 @@ function formatAction(action: ActivityType): string {
 }
 
 export default async function ActivityPage() {
-  const logs = await getActivityLogs();
+  const logs = (await getActivityLogs()) as ActivityLog[];
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -83,21 +88,20 @@ export default async function ActivityPage() {
         <CardContent>
           {logs.length > 0 ? (
             <ul className="space-y-4">
-              {logs.map((log) => {
-                const Icon = iconMap[log.action as ActivityType] || Settings;
-                const formattedAction = formatAction(
-                  log.action as ActivityType
-                );
+              {logs.map((log: ActivityLog) => {
+                const icon = iconMap[log.action as ActivityType] || Settings;
+                const Icon = icon;
+                const formattedAction = formatAction(log.action as ActivityType);
 
                 return (
-                  <li key={log.id} className="flex items-center space-x-4">
+                  <li key={String(log.id)} className="flex items-center space-x-4">
                     <div className="bg-orange-100 rounded-full p-2">
                       <Icon className="w-5 h-5 text-orange-600" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">
                         {formattedAction}
-                        {log.ipAddress && ` from IP ${log.ipAddress}`}
+                        {log.ipAddress ? ` from IP ${log.ipAddress}` : null}
                       </p>
                       <p className="text-xs text-gray-500">
                         {getRelativeTime(new Date(log.timestamp))}
@@ -124,3 +128,4 @@ export default async function ActivityPage() {
     </section>
   );
 }
+// Note: This page is server-side rendered and fetches activity logs on each request.
