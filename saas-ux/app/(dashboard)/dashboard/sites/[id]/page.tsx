@@ -1,16 +1,60 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { list } from "@vercel/blob";
+import { list, type ListBlobResultBlob } from "@vercel/blob";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import StatusBadge from "@/components/ui/StatusBadge";
 
-async function getSite(id: string) {
+type SiteRecord = {
+  siteId: string;
+  siteUrl: string;
+  status: string;
+  wpVersion?: string | null;
+  pluginVersion?: string | null;
+  createdAt: number;
+  updatedAt: number;
+};
+
+async function getSite(id: string): Promise<SiteRecord | null> {
   const { blobs } = await list({ prefix: `sites/${id}.json` });
   const b = blobs[0];
   if (!b) return null;
   const r = await fetch(b.url, { cache: "no-store" });
-  return r.json().catch(() => null);
+  const j = await r.json().catch(() => null);
+  if (!j || !j.siteId || !j.siteUrl) return null;
+  return j as SiteRecord;
+}
+
+async function getFaviconUrl(siteId: string): Promise<string | null> {
+  const { blobs } = await list({ prefix: `favicons/${siteId}` });
+  const b = blobs[0] as ListBlobResultBlob | undefined;
+  return b?.url ?? null;
+}
+
+async function getRecentScreenshots(siteId: string): Promise<string[]> {
+  const { blobs } = await list({ prefix: `screenshots/${siteId}/` });
+  // newest first, take up to 4
+  const urls = blobs
+    .sort((a, b) => {
+      const ta = (a.uploadedAt instanceof Date ? a.uploadedAt.getTime() : Date.now());
+      const tb = (b.uploadedAt instanceof Date ? b.uploadedAt.getTime() : Date.now());
+      return tb - ta;
+    })
+    .slice(0, 4)
+    .map(b => b.url);
+  return urls;
+}
+
+function hostnameOf(u: string) {
+  try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return u; }
+}
+
+function initials(host: string) {
+  const parts = host.split(".");
+  const core = parts[parts.length - 2] || parts[0] || "";
+  const s = core.replace(/[^a-zA-Z0-9]/g, "");
+  return s.slice(0, 2).toUpperCase() || "S";
 }
 
 export default async function SiteDetail({
@@ -20,52 +64,110 @@ export default async function SiteDetail({
   params: Promise<{ id: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  // ✅ await both
   const { id } = await params;
   const sp = (searchParams ? await searchParams : {}) ?? {};
-
   const connectedParam = sp.connected;
-  const justConnected = Array.isArray(connectedParam)
-    ? connectedParam[0] === "1"
-    : connectedParam === "1";
+  const justConnected = Array.isArray(connectedParam) ? connectedParam[0] === "1" : connectedParam === "1";
 
   const site = await getSite(id);
   if (!site) return notFound();
 
+  const host = hostnameOf(site.siteUrl);
+  const fav = await getFaviconUrl(site.siteId);
+  const shots = await getRecentScreenshots(site.siteId);
+
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-6">
       {justConnected && (
         <div className="rounded-lg border p-3 bg-green-50 text-green-800">
           ✅ Connected! You can run a full scan now.
         </div>
       )}
+
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{site.siteUrl}</h1>
-          <div className="text-sm text-slate-500">Site ID: {site.siteId}</div>
+        <div className="flex items-center gap-3">
+          {fav ? (
+            <img src={fav} alt={`${host} favicon`} className="h-10 w-10 rounded-md border" />
+          ) : (
+            <div className="h-10 w-10 rounded-md border border-blue-500/50 bg-blue-800/90 flex items-center justify-center font-semibold">
+              {initials(host)}
+            </div>
+          )}
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold">{host}</h1>
+              <StatusBadge status={site.status} />
+            </div>
+            <div className="text-slate-500 text-sm">{site.siteUrl}</div>
+          </div>
         </div>
-        <Link
-          href={`/dashboard/sites/${site.siteId}/analyze`}
-          className="px-4 py-2 rounded-full bg-indigo-600 text-white"
-        >
-          Run full scan
-        </Link>
+
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/dashboard/sites/${site.siteId}/analyze`}
+            className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Run full scan
+          </Link>
+          <Link
+            href={`/dashboard/sites/connect?url=${encodeURIComponent(site.siteUrl)}`}
+            className="px-4 py-2 rounded-full border border-slate-300 hover:bg-white/50"
+          >
+            Reconnect
+          </Link>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="border rounded-lg p-4">
-          <div className="font-semibold mb-1">Connection</div>
-          <div className="text-sm">Status: {site.status}</div>
-          <div className="text-sm">WP Version: {site.wpVersion ?? "—"}</div>
-          <div className="text-sm">Plugin: {site.pluginVersion ?? "—"}</div>
+      {/* Cards */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="border rounded-lg p-4 md:col-span-2">
+          <div className="font-semibold mb-2">Connection</div>
+          <div className="grid grid-cols-2 gap-y-2 text-sm">
+            <div className="text-slate-500">Status</div>
+            <div>{site.status}</div>
+            <div className="text-slate-500">WP Version</div>
+            <div>{site.wpVersion ?? "—"}</div>
+            <div className="text-slate-500">Plugin</div>
+            <div>{site.pluginVersion ?? "—"}</div>
+            <div className="text-slate-500">Site ID</div>
+            <div className="font-mono">{site.siteId}</div>
+            <div className="text-slate-500">Connected</div>
+            <div>{new Date(site.createdAt).toLocaleString()}</div>
+            <div className="text-slate-500">Updated</div>
+            <div>{new Date(site.updatedAt).toLocaleString()}</div>
+          </div>
         </div>
+
         <div className="border rounded-lg p-4">
-          <div className="font-semibold mb-1">Next step</div>
-          <div className="text-sm">
+          <div className="font-semibold mb-2">Next step</div>
+          <p className="text-sm text-slate-600">
             We’ll pull a quick snapshot and then offer instant repairs with estimated token cost.
+          </p>
+          <div className="mt-3">
+            <Link
+              href={`/dashboard/sites/${site.siteId}/analyze`}
+              className="w-full inline-flex justify-center px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Start scan
+            </Link>
           </div>
         </div>
       </div>
+
+      {/* Recent screenshots (optional eye-candy) */}
+      {shots.length > 0 && (
+        <div>
+          <div className="font-semibold mb-2">Recent screenshots</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {shots.map((u, i) => (
+              <div key={`${u}::${i}`} className="rounded-lg overflow-hidden border">
+                <img src={u} alt={`Screenshot ${i + 1}`} className="w-full h-32 object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

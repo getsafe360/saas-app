@@ -1,13 +1,25 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from './schema';
-import dotenv from 'dotenv';
+// lib/db/drizzle.ts
+import "server-only";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
-dotenv.config();
+export const hasDb = !!process.env.POSTGRES_URL;
 
-if (!process.env.POSTGRES_URL) {
-  throw new Error('POSTGRES_URL environment variable is not set');
+let _db: ReturnType<typeof drizzle> | null = null;
+
+export function getDb() {
+  if (!_db) {
+    if (!hasDb) {
+      throw new Error("POSTGRES_URL is not set");
+    }
+    const pool = new Pool({
+      connectionString: process.env.POSTGRES_URL!,
+      max: 5,
+      // Helpful in serverless
+      idleTimeoutMillis: 10_000,
+      connectionTimeoutMillis: 5_000,
+    });
+    _db = drizzle(pool);
+  }
+  return _db!;
 }
-
-export const client = postgres(process.env.POSTGRES_URL);
-export const db = drizzle(client, { schema });
