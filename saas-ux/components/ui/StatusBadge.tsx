@@ -10,9 +10,9 @@ type Props = {
 const STATUS_THEME: Record<StatusKey, { badge: string; dot: string }> = {
   connected: {
     badge:
-      "bg-emerald-100 text-emerald-800 border-emerald-200 " +
-      "dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-900/60",
-    dot: "bg-emerald-500 dark:bg-emerald-400",
+      "bg-green-100 text-green-800 border-green-200 " +
+      "dark:bg-green-950/60 dark:text-green-300 dark:border-green-900/60",
+    dot: "bg-green-500 dark:bg-green-400",
   },
   pending: {
     badge:
