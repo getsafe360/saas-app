@@ -1,8 +1,12 @@
+// saas-ux/app/(login)/actions.ts
 'use server';
 
 import { z } from 'zod';
 import { and, eq, sql } from 'drizzle-orm';
-import { db } from '@/lib/db/drizzle';
+// FIX: import getDb, then create a db instance
+import { getDb } from '@/lib/db/drizzle';
+const db = getDb();
+
 import {
   User,
   users,
@@ -32,9 +36,7 @@ async function logActivity(
   type: ActivityType,
   ipAddress?: string
 ) {
-  if (teamId === null || teamId === undefined) {
-    return;
-  }
+  if (teamId === null || teamId === undefined) return;
   const newActivity: NewActivityLog = {
     teamId,
     userId,
@@ -225,7 +227,7 @@ export async function signOut() {
   const user = (await getUser()) as User;
   const userWithTeam = await getUserWithTeam(user.id);
   await logActivity(userWithTeam?.teamId, user.id, ActivityType.SIGN_OUT);
-  (await cookies()).delete('session');
+ (await cookies()).delete('session');
 }
 
 const updatePasswordSchema = z.object({

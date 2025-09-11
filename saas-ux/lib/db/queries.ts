@@ -1,5 +1,6 @@
 import { desc, and, eq, isNull } from 'drizzle-orm';
-import { db } from './drizzle';
+import { getDb } from './drizzle';
+const db = getDb();
 import { activityLogs, teamMembers, teams, users } from './schema';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth/session';
@@ -105,26 +106,17 @@ export async function getTeamForUser() {
     return null;
   }
 
-  const result = await db.query.teamMembers.findFirst({
-    where: eq(teamMembers.userId, user.id),
-    with: {
-      team: {
-        with: {
-          teamMembers: {
-            with: {
-              user: {
-                columns: {
-                  id: true,
-                  name: true,
-                  email: true
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  });
+  const result = await db
+    .select({
+      team: teams,
+      teamMember: teamMembers,
+      user: users
+    })
+    .from(teamMembers)
+    .leftJoin(teams, eq(teamMembers.teamId, teams.id))
+    .leftJoin(users, eq(teamMembers.userId, users.id))
+    .where(eq(teamMembers.userId, user.id))
+    .limit(1);
 
-  return result?.team || null;
+  return result.length > 0 ? result[0].team : null;
 }
