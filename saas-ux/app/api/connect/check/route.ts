@@ -1,11 +1,13 @@
 // app/api/connect/check/route.ts
 import { list } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
-
+import { getUser } from "@/lib/db/queries";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: "auth required" }, { status: 401 });
   const { searchParams } = new URL(req.url);
   const pairCode = searchParams.get("pairCode") || "";
   if (!pairCode) return NextResponse.json({ error: "pairCode required" }, { status: 400 });

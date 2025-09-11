@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import crypto from "crypto";
+import { getUser } from "@/lib/db/queries";
+import { rateLimit } from "@/lib/api/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,23 +16,14 @@ export const dynamic = "force-dynamic";
 function normalizeInput(u: string): string {
   try {
     const url = new URL(u);
-
-    // remove query + hash noise
     url.search = "";
     url.hash = "";
-
-    // lowercase hostname for consistency
     url.hostname = url.hostname.toLowerCase();
-
-    // ensure a single trailing slash for root paths
-    // (don't touch non-root paths; users should connect the site root)
     if (url.pathname === "" || url.pathname === "/") {
       url.pathname = "/";
     }
-
     return url.toString();
   } catch {
-    // if it's not a valid URL, just return as-is; caller will validate
     return u;
   }
 }
@@ -63,19 +56,46 @@ async function probePlugin(siteUrl: string): Promise<boolean> {
 }
 
 export async function POST(req: NextRequest) {
+  // ✅ Require auth
+  const user = await getUser();
+  if (!user) {
+    return NextResponse.json({ error: "auth required" }, { status: 401 });
+  }
+
   const { siteUrl } = await req.json();
 
   // Validate using URL() (more reliable than regex)
   let parsed: URL | null = null;
   try {
     parsed = new URL(siteUrl);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error("bad scheme");
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      throw new Error("bad scheme");
+    }
   } catch {
     return NextResponse.json({ error: "Enter a valid site URL" }, { status: 400 });
   }
 
   // Normalize before storing / probing
   const normalizedUrl = normalizeInput(parsed.toString());
+  const host = new URL(normalizedUrl).hostname.toLowerCase().replace(/^www\./, "");
+
+  // ✅ Optional allowlist (private beta)
+  const allowRx = process.env.ALLOWED_SITE_HOST_REGEX
+    ? new RegExp(process.env.ALLOWED_SITE_HOST_REGEX, "i")
+    : null;
+  if (allowRx && !allowRx.test(host)) {
+    return NextResponse.json({ error: "domain not allowed (private beta)" }, { status: 403 });
+  }
+
+  // ✅ Lightweight rate-limit (10 requests / 10 minutes per user+IP)
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const rl = await rateLimit(`pair-start:${user.id}:${ip}`, 10, 10 * 60 * 1000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "too many attempts, try again later", retryAt: rl.resetAt },
+      { status: 429 }
+    );
+  }
 
   // 6-digit pairing code
   const pairCode = String(Math.floor(100000 + Math.random() * 900000));
@@ -88,21 +108,27 @@ export async function POST(req: NextRequest) {
     createdAt: Date.now(),
     expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
     used: false,
+    userId: user.id, // ✅ link owner for handshake/DB upsert
   };
 
-  // store by code for easy lookup during handshake
+  // Store by code for easy lookup during handshake
   // NOTE: public is fine for MVP; we’re not storing secrets here.
   await put(`pairings/code-${pairCode}.json`, JSON.stringify(record), {
     access: "public",
     contentType: "application/json",
   });
 
-  // (optional) also store by id if you want backfill/debug later
+  // (Optional) also store by id if you want backfill/debug later
   await put(`pairings/id-${id}.json`, JSON.stringify(record), {
     access: "public",
     contentType: "application/json",
   });
 
   const pluginDetected = await probePlugin(normalizedUrl);
-  return NextResponse.json({ pairCode, pluginDetected, recordedSiteUrl: normalizedUrl });
+
+  return NextResponse.json({
+    pairCode,
+    pluginDetected,
+    recordedSiteUrl: normalizedUrl,
+  });
 }
