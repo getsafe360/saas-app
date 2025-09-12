@@ -20,9 +20,6 @@ importers:
       '@paypal/react-paypal-js':
         specifier: ^8.8.3
         version: 8.8.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@prisma/client':
-        specifier: 6.12.0
-        version: 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
       '@radix-ui/react-progress':
         specifier: ^1.1.7
         version: 1.1.7(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -141,9 +138,6 @@ importers:
       '@types/pg':
         specifier: ^8.15.5
         version: 8.15.5
-      prisma:
-        specifier: ^6.12.0
-        version: 6.12.0(typescript@5.8.3)
       puppeteer:
         specifier: ^24.17.0
         version: 24.17.0(typescript@5.8.3)
@@ -3509,14 +3503,18 @@ snapshots:
     optionalDependencies:
       prisma: 6.12.0(typescript@5.8.3)
       typescript: 5.8.3
+    optional: true
 
   '@prisma/config@6.12.0':
     dependencies:
       jiti: 2.4.2
+    optional: true
 
-  '@prisma/debug@6.12.0': {}
+  '@prisma/debug@6.12.0':
+    optional: true
 
-  '@prisma/engines-version@6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc': {}
+  '@prisma/engines-version@6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc':
+    optional: true
 
   '@prisma/engines@6.12.0':
     dependencies:
@@ -3524,16 +3522,19 @@ snapshots:
       '@prisma/engines-version': 6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc
       '@prisma/fetch-engine': 6.12.0
       '@prisma/get-platform': 6.12.0
+    optional: true
 
   '@prisma/fetch-engine@6.12.0':
     dependencies:
       '@prisma/debug': 6.12.0
       '@prisma/engines-version': 6.12.0-15.8047c96bbd92db98a2abc7c9323ce77c02c89dbc
       '@prisma/get-platform': 6.12.0
+    optional: true
 
   '@prisma/get-platform@6.12.0':
     dependencies:
       '@prisma/debug': 6.12.0
+    optional: true
 
   '@puppeteer/browsers@2.10.7':
     dependencies:
@@ -5397,6 +5398,7 @@ snapshots:
       '@prisma/engines': 6.12.0
     optionalDependencies:
       typescript: 5.8.3
+    optional: true
 
   progress@2.0.3: {}
 
