@@ -1,3 +1,9 @@
+// app/(dashboard)/dashboard/sites/[id]/page.tsx
+import type { Metadata } from 'next';
+import { getDb } from '@/lib/db/drizzle';
+import { sites } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { getTranslations } from 'next-intl/server';
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -15,6 +21,35 @@ type SiteRecord = {
   createdAt: number;
   updatedAt: number;
 };
+
+export async function generateMetadata(
+  { params }: { params: { id: string } }
+): Promise<Metadata> {
+  const db = getDb();
+  const [site] = await db.select().from(sites).where(eq(sites.id, params.id)).limit(1);
+  const t = await getTranslations('Sites');
+
+  const title = site
+    ? t('detailTitle', { url: site.siteUrl })
+    : t('notFoundTitle');
+
+  const description = site
+    ? t('detailDescription', { url: site.siteUrl })
+    : t('notFoundDescription');
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `/dashboard/sites/${params.id}`,
+    },
+    alternates: {
+      canonical: `/dashboard/sites/${params.id}`,
+    },
+  };
+}
 
 async function getSite(id: string): Promise<SiteRecord | null> {
   const { blobs } = await list({ prefix: `sites/${id}.json` });

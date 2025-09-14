@@ -4,7 +4,11 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Login } from "../login";
-
+import type { Metadata } from 'next';
+export const metadata: Metadata = {
+  title: 'Create your account',
+  description: 'Start your free onboarding in seconds'
+};
 export default function SignUpPage() {
   return (
     <div className="min-h-screen grid md:grid-cols-2 bg-gradient-to-b from-white to-slate-50 dark:from-slate-950 dark:to-slate-900">

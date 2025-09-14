@@ -1,4 +1,18 @@
 {
+  "Nav": {
+    "pricing": "Pricing",
+    "accessibility": "Accessibility",
+    "signIn": "Sign in",
+    "skipToContent": "Skip to content",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "Sites": {
+    "detailTitle": "Site · {url}",
+    "detailDescription": "Overview and scans for {url}",
+    "notFoundTitle": "Site not found",
+    "notFoundDescription": "This site does not exist or you do not have access."
+  },
   "home": {
     "title": "Meet your Website <span>Co-Pilot</span>",
     "optimize": "The <span>best assistant</span> you ever had!",

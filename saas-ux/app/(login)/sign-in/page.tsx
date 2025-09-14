@@ -4,7 +4,11 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Login } from "../login";
-
+import type { Metadata } from 'next';
+export const metadata: Metadata = {
+  title: 'Sign in',
+  description: 'Sign in to your GetSafe 360 account'
+};
 export default function SignInPage() {
   return (
     <div className="min-h-screen grid md:grid-cols-2 bg-gradient-to-b from-white to-slate-50 dark:from-slate-950 dark:to-slate-900">

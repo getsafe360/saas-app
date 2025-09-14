@@ -1,3 +1,4 @@
+// saas-ux/next.config.js
 const createNextIntlPlugin = require('next-intl/plugin');
 
 const withNextIntl = createNextIntlPlugin();
