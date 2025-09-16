@@ -8,7 +8,7 @@ const locales = ['en','de','es','fr','it','pt'] as const;
 const intl = createIntlMiddleware({
   locales,
   defaultLocale: 'en',
-  localePrefix: 'always' // always or 'as-needed' if you don't want /en/ prefix
+  localePrefix: 'as-needed' // always or 'as-needed' if you don't want /en/ prefix
 });
 
 // Combine: run Clerk, then delegate routing to next-intl where appropriate.

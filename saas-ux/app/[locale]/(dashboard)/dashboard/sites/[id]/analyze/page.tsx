@@ -1,6 +1,8 @@
+// saas-ux/app/(dashboard)/dashboard/sites/[id]/analyze/page.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import StatusBadge from "@/components/ui/StatusBadge";
 
@@ -30,8 +32,10 @@ type Report = {
   pagesAnalyzed: string[];
 };
 
-export default function AnalyzePage({ params }: { params: { id: string } }) {
-  const siteId = params.id;
+export default function AnalyzePage() {
+  const params = useParams(); // { id: string | string[] }
+  const siteId = Array.isArray(params.id) ? params.id[0] : (params.id as string);
+
   const [jobId, setJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<StatusResp | null>(null);
   const [report, setReport] = useState<Report | null>(null);
@@ -39,6 +43,7 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
 
   // Kick off a scan on first mount (only once)
   useEffect(() => {
+    if (!siteId) return;
     (async () => {
       const r = await fetch("/api/scan/start", {
         method: "POST",
@@ -50,7 +55,7 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
     })();
   }, [siteId]);
 
-  // Poll status; if queued, server will execute the scan in that call
+  // Poll status
   useEffect(() => {
     if (!jobId) return;
     const tick = async () => {
@@ -91,7 +96,7 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
 
       <div className="border rounded-lg p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <StatusBadge status={status?.status ?? "pending"} />
+          <StatusBadge status={status?.status ?? "pending" as any} />
           <div className="text-sm text-slate-600">
             {busy ? "Running analysis…" : status?.status === "done" ? "Complete" : "Error"}
           </div>
@@ -117,7 +122,6 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
 
       {report && (
         <div className="space-y-6">
-          {/* Summary */}
           <div className="grid md:grid-cols-4 gap-4">
             <SummaryCard label="Overall" value={`${report.summary.score}/100`} />
             <SummaryCard label="SEO" value={String(report.summary.counts.seo ?? 0)} />
@@ -125,7 +129,6 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
             <SummaryCard label="Accessibility" value={String(report.summary.counts.accessibility ?? 0)} />
           </div>
 
-          {/* Issues */}
           <div className="space-y-3">
             {report.issues.map((i) => (
               <div key={i.id} className="border rounded-lg p-4">
@@ -141,7 +144,8 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
                     {i.fixAvailable ? (
                       <button
                         className="px-3 py-1.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
-                        onClick={() => alert(`Would start fix for ${i.id} (est ${i.estTokens} tokens)`)}>
+                        onClick={() => alert(`Would start fix for ${i.id} (est ${i.estTokens} tokens)`)}
+                      >
                         Fix • ~{i.estTokens} tokens
                       </button>
                     ) : (
@@ -153,14 +157,9 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
             ))}
           </div>
 
-          {/* Cost footer */}
           <div className="border rounded-lg p-4 flex items-center justify-between">
-            <div className="text-sm text-slate-600">
-              Estimated total tokens to apply available fixes.
-            </div>
-            <div className="text-lg font-semibold">
-              ~{report.summary.estTotalTokens.toLocaleString()} tokens
-            </div>
+            <div className="text-sm text-slate-600">Estimated total tokens to apply available fixes.</div>
+            <div className="text-lg font-semibold">~{report.summary.estTotalTokens.toLocaleString()} tokens</div>
           </div>
         </div>
       )}

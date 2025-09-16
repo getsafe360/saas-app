@@ -32,13 +32,12 @@ export function LanguageSwitcher() {
     []
   );
   const active = languages.find(l => l.code === locale) ?? languages[0];
+  const DEFAULT_LOCALE = 'en';
 
-  // Build the destination path by swapping the leading /{locale}
   function pathWithLocale(code: string) {
-    // matches "/en", "/de", "/es", etc. at the start of the path
     const re = new RegExp(`^/(?:${LOCALES.join('|')})(?=/|$)`);
-    const suffix = pathname.replace(re, ''); // drop existing locale segment if present
-    return `/${code}${suffix || ''}`;        // prepend new locale
+    const suffix = pathname.replace(re, '') || '/';
+    return code === DEFAULT_LOCALE ? suffix : `/${code}${suffix === '/' ? '' : suffix}`;
   }
 
   async function changeLang(code: string) {
@@ -50,7 +49,7 @@ export function LanguageSwitcher() {
         await fetch('/api/user/language', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ locale: code }) // 🔧 FIX: use `locale`, not `language`
+          body: JSON.stringify({ locale: code })
         });
       } catch {
         // ignore; path navigation still applies the locale

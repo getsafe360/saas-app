@@ -21,6 +21,8 @@ export const users = pgTable('users', {
   passwordHash: text('password_hash').notNull(),
   role: varchar('role', { length: 20 }).notNull().default('member'),
   language: varchar('language', { length: 5 }).notNull().default('en'),
+  // Clerk integration
+  clerkUserId: varchar('clerk_user_id', { length: 255 }).notNull().unique(),
   // Stripe at user level (simple)
   stripeCustomerId: text('stripe_customer_id').unique(),
   stripeSubscriptionId: text('stripe_subscription_id').unique(),
