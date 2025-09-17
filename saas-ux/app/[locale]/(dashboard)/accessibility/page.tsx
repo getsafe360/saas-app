@@ -3,6 +3,9 @@
 import { useTranslations } from 'next-intl';
 import { CheckCircle, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
+import type { Metadata } from 'next';
+import type { LocaleParams } from '@/types/route-params';
+export const experimental_ppr = true;
 
 // --- MOCK DATA for design (replace with real data later) ---
 const mockResult = {

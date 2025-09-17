@@ -1,3 +1,4 @@
+// app/[locale]/(dashboard)/dashboard/activity/page.tsx
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Settings,
@@ -14,6 +15,7 @@ import {
 import { ActivityType } from '@/lib/db/schema';
 import { getActivityLogs } from '@/lib/db/queries';
 
+export const experimental_ppr = true; // Enable PPR for this page
 // Minimal shape expected from getActivityLogs()
 type ActivityLog = {
   id: string | number;

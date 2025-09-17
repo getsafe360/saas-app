@@ -12,7 +12,7 @@ import { relations } from 'drizzle-orm';
 import { sql } from "drizzle-orm";
 
 /**
- * USERS — single source of truth (no Clerk fields for now).
+ * USERS — single source of truth
  */
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
@@ -74,7 +74,8 @@ export const scanJobs = pgTable("scan_jobs", {
 export const activityLogs = pgTable('activity_logs', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').references(() => users.id),
-  siteId: text('site_id').references(() => sites.id), // optional context
+  teamId: integer('team_id').references(() => teams.id),
+  siteId: text('site_id').references(() => sites.id),
   action: text('action').notNull(),
   timestamp: timestamp('timestamp').notNull().defaultNow(),
   ipAddress: varchar('ip_address', { length: 45 }),

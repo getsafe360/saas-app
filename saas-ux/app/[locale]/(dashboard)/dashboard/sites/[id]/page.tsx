@@ -1,16 +1,19 @@
-// app/(dashboard)/dashboard/sites/[id]/page.tsx
+// app/[locale]/(dashboard)/dashboard/sites/[id]/page.tsx
 import type { Metadata } from 'next';
 import { getDb } from '@/lib/db/drizzle';
 import { sites } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { getTranslations } from 'next-intl/server';
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-import { list, type ListBlobResultBlob } from "@vercel/blob";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import StatusBadge from "@/components/ui/StatusBadge";
+import { list, type ListBlobResultBlob } from '@vercel/blob';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import StatusBadge from '@/components/ui/StatusBadge';
+import type { LocaleParams, SearchParams } from '@/types/route-params';
+
+const DEFAULT_LOCALE = 'en';
 
 type SiteRecord = {
   siteId: string;
@@ -22,20 +25,21 @@ type SiteRecord = {
   updatedAt: number;
 };
 
+// params is a Promise and contains both locale & id in this route
 export async function generateMetadata(
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ locale: string; id: string }> }
 ): Promise<Metadata> {
+  const { id, locale } = await params;
+
   const db = getDb();
-  const [site] = await db.select().from(sites).where(eq(sites.id, params.id)).limit(1);
+  const [site] = await db.select().from(sites).where(eq(sites.id, id)).limit(1);
   const t = await getTranslations('Sites');
 
-  const title = site
-    ? t('detailTitle', { url: site.siteUrl })
-    : t('notFoundTitle');
+  const title = site ? t('detailTitle', { url: site.siteUrl }) : t('notFoundTitle');
+  const description = site ? t('detailDescription', { url: site.siteUrl }) : t('notFoundDescription');
 
-  const description = site
-    ? t('detailDescription', { url: site.siteUrl })
-    : t('notFoundDescription');
+  const path = `/dashboard/sites/${id}`;
+  const canonicalPath = locale === DEFAULT_LOCALE ? path : `/${locale}${path}`;
 
   return {
     title,
@@ -43,11 +47,11 @@ export async function generateMetadata(
     openGraph: {
       title,
       description,
-      url: `/dashboard/sites/${params.id}`,
+      url: canonicalPath
     },
     alternates: {
-      canonical: `/dashboard/sites/${params.id}`,
-    },
+      canonical: canonicalPath
+    }
   };
 }
 
@@ -55,7 +59,7 @@ async function getSite(id: string): Promise<SiteRecord | null> {
   const { blobs } = await list({ prefix: `sites/${id}.json` });
   const b = blobs[0];
   if (!b) return null;
-  const r = await fetch(b.url, { cache: "no-store" });
+  const r = await fetch(b.url, { cache: 'no-store' });
   const j = await r.json().catch(() => null);
   if (!j || !j.siteId || !j.siteUrl) return null;
   return j as SiteRecord;
@@ -69,41 +73,37 @@ async function getFaviconUrl(siteId: string): Promise<string | null> {
 
 async function getRecentScreenshots(siteId: string): Promise<string[]> {
   const { blobs } = await list({ prefix: `screenshots/${siteId}/` });
-  // newest first, take up to 4
-  const urls = blobs
+  return blobs
     .sort((a, b) => {
-      const ta = (a.uploadedAt instanceof Date ? a.uploadedAt.getTime() : Date.now());
-      const tb = (b.uploadedAt instanceof Date ? b.uploadedAt.getTime() : Date.now());
+      const ta = a.uploadedAt instanceof Date ? a.uploadedAt.getTime() : Date.now();
+      const tb = b.uploadedAt instanceof Date ? b.uploadedAt.getTime() : Date.now();
       return tb - ta;
     })
     .slice(0, 4)
     .map(b => b.url);
-  return urls;
 }
 
 function hostnameOf(u: string) {
-  try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return u; }
+  try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; }
 }
-
 function initials(host: string) {
-  const parts = host.split(".");
-  const core = parts[parts.length - 2] || parts[0] || "";
-  const s = core.replace(/[^a-zA-Z0-9]/g, "");
-  return s.slice(0, 2).toUpperCase() || "S";
+  const parts = host.split('.');
+  const core = parts[parts.length - 2] || parts[0] || '';
+  const s = core.replace(/[^a-zA-Z0-9]/g, '');
+  return s.slice(0, 2).toUpperCase() || 'S';
 }
 
 export default async function SiteDetail({
   params,
-  searchParams,
+  searchParams
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
   const sp = (searchParams ? await searchParams : {}) ?? {};
-  const connectedParam = sp.connected;
-  const justConnected = Array.isArray(connectedParam) ? connectedParam[0] === "1" : connectedParam === "1";
-
+  const justConnected =
+    Array.isArray(sp.connected) ? sp.connected[0] === '1' : sp.connected === '1';
   const site = await getSite(id);
   if (!site) return notFound();
 

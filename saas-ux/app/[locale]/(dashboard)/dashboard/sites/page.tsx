@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { list, type ListBlobResultBlob } from "@vercel/blob";
 import Link from "next/link";
+export const experimental_ppr = true;
 
 type SiteRow = {
   siteId: string;

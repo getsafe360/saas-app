@@ -6,9 +6,11 @@
     "start": "next start",
     "db:setup": "npx tsx lib/db/setup.ts",
     "db:seed": "npx tsx lib/db/seed.ts",
+    "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:drop": "drizzle-kit drop"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.32.4",
@@ -30,7 +32,6 @@
     "clsx": "^2.1.1",
     "dotenv": "^16.5.0",
     "drizzle": "^1.4.0",
-    "drizzle-kit": "^0.31.1",
     "drizzle-orm": "^0.43.1",
     "jose": "^6.0.11",
     "lucide-react": "^0.511.0",
@@ -57,6 +58,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.31.1",
     "puppeteer": "^24.17.0"
   }
 }

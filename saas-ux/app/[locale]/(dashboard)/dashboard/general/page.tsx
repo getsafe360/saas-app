@@ -1,15 +1,19 @@
+// saas-ux/app/[locale]/(dashboard)/dashboard/general/page.tsx
 'use client';
-
 import { useActionState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
-import { updateAccount } from '@/app/(login)/actions';
+import { updateAccount } from '@/app/[locale]/(login)/actions';
 import { User } from '@/lib/db/schema';
 import useSWR from 'swr';
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
+import type { LocaleParams } from '@/types/route-params';
+export const experimental_ppr = true;
+
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 

@@ -1,10 +1,12 @@
-// saas-ux/app/(dashboard)/dashboard/sites/[id]/analyze/page.tsx
-"use client";
-
+// saas-ux/app/[locale]/(dashboard)/dashboard/sites/[id]/analyze/page.tsx
+'use client';
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import StatusBadge from "@/components/ui/StatusBadge";
+import type { Metadata } from 'next';
+import type { LocaleParams } from '@/types/route-params';
+export const experimental_ppr = true;
 
 type StatusResp = {
   id: string;

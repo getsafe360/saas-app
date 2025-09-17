@@ -1,6 +1,6 @@
 // saas-ux/app/(login)/actions.ts
 'use server';
-
+import { auth } from '@clerk/nextjs/server';
 import { z } from 'zod';
 import { and, eq, sql } from 'drizzle-orm';
 // FIX: import getDb, then create a db instance
@@ -38,10 +38,9 @@ async function logActivity(
 ) {
   if (teamId === null || teamId === undefined) return;
   const newActivity: NewActivityLog = {
-    teamId,
     userId,
     action: type,
-    ipAddress: ipAddress || ''
+    ipAddress: ipAddress ?? null
   };
   await db.insert(activityLogs).values(newActivity);
 }
@@ -126,13 +125,19 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   }
 
   const passwordHash = await hashPassword(password);
-
+  // Prefer Clerk's userId if available; otherwise generate a unique local surrogate
+  const clerkId = (await auth()).userId ?? `local-${crypto.randomUUID()}`;
   const newUser: NewUser = {
     email,
     passwordHash,
-    role: 'owner' // Default role, will be overridden if there's an invitation
+    // you can keep 'owner' here; schema default is 'member' if you omit it
+    role: 'owner',
+    // optional; schema default is 'en'
+    language: 'en',
+    // REQUIRED by your schema (notNull + unique)
+    clerkUserId: clerkId
   };
-
+  // Variable 'newUser' is used before being assigned.
   const [createdUser] = await db.insert(users).values(newUser).returning();
 
   if (!createdUser) {

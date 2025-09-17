@@ -1,8 +1,8 @@
 // app/(dashboard)/dashboard/welcome/page.tsx
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
-
 export const runtime = "nodejs";
+export const experimental_ppr = true;
 
 async function fetchStashViaUrl(publicUrl: string) {
   const r = await fetch(publicUrl, { cache: "no-store" });

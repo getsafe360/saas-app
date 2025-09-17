@@ -1,3 +1,4 @@
+// saas-ux/app/[locale]/(dashboard)/dashboard/page.tsx
 'use client';
 
 import { UserProfilePanel } from '@/components/ui/user-profile-panel';
@@ -10,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+export const experimental_ppr = true;
 
 // Dummy data for plan/token; replace with real DB values!
 const userPlan = 'Free';

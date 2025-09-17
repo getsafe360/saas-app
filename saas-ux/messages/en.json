@@ -7,6 +7,16 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
+    "DashboardNav": {
+    "websites": "Websites",
+    "activity": "Activity",
+    "security": "Security",
+    "settings": "Settings"
+  },
+  "DashboardMeta": {
+    "title": "Your Dashboard",
+    "description": "This page displays your dashboard."
+  },
   "Sites": {
     "detailTitle": "Site · {url}",
     "detailDescription": "Overview and scans for {url}",
@@ -92,7 +102,7 @@
   "loading": "Loading user profile…",
   "current_plan": "Aktueller Plan",
   "token_balance": "Token-Guthaben",
-  "welcome_headline": "Welcome to your 360 control panel.",
+  "welcome_headline": "Welcome to your control panel.",
   "welcome_text": "Here you can manage your websites, analytics, and optimizations. Add your website first or start an analysis directly.",
   "add_website": "Add website",
   "run_analysis": "Start analysis",

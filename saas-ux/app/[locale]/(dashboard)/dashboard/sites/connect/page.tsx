@@ -1,5 +1,6 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const experimental_ppr = true;
 
 import ConnectWordPress from "@/components/ConnectWordPress";
 

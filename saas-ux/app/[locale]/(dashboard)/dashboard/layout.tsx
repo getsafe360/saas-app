@@ -1,32 +1,26 @@
+// app/[locale]/(dashboard)/dashboard/layout.tsx  (CLIENT component)
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import {Link} from '@/navigation';
 import { usePathname } from 'next/navigation';
-import {
-  Users, Settings, Shield, Activity, Menu, Globe, BarChart2, Clock, Coins, UserCircle,
-} from 'lucide-react';
+import { Settings, Shield, Activity, Menu, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SignedIn, useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import { useTranslations } from 'next-intl';
-import { UserGreeting } from "@/components/ui/user-greeting"; // Adjust path as needed
-
+import { UserGreeting } from "@/components/ui/user-greeting";
+export const experimental_ppr = true;
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const t = useTranslations('dashboard');
+  const t = useTranslations('DashboardNav');
   const { user } = useUser();
 
-  // Main nav items language-agnostic
   const navItems = [
-    { href: '/dashboard/sites', icon: Globe, label: 'websites' },
-    { href: '/dashboard/analysis', icon: BarChart2, label: 'analysis' },
-    { href: '/dashboard/history', icon: Clock, label: 'history' },
-    { href: '/dashboard/tokens', icon: Coins, label: 'tokens' },
-    { href: '/dashboard/team', icon: Users, label: 'team' },
+    { href: '/dashboard/sites',    icon: Globe,    label: 'websites' },
     { href: '/dashboard/activity', icon: Activity, label: 'activity' },
-    { href: '/dashboard/security', icon: Shield, label: 'security' },
+    { href: '/dashboard/security', icon: Shield,   label: 'security' },
     { href: '/dashboard/settings', icon: Settings, label: 'settings' },
   ];
 
