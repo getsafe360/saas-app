@@ -7,6 +7,7 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig = {
   experimental: {
     ppr: 'incremental', // enable PPR feature on the project
+     // Add your allowed dev origin(s) here allowedDevOrigins: ['http://192.168.178.100'],
   },
 };
 

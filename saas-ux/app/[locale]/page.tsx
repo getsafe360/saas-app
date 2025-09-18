@@ -1,4 +1,5 @@
-"use client";
+// app/[locale]/page.tsx
+'use client';
 
 import React, { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";

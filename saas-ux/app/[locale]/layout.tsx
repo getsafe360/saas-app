@@ -1,4 +1,4 @@
-// app/[locale]/layout.tsx
+// app/[locale]/(dashboard)layout.tsx
 import '../globals.css';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
@@ -24,6 +24,8 @@ type Params = { locale: string };
 export function generateStaticParams() {
   return [{locale: 'en'}, {locale: 'de'}, {locale: 'es'}, {locale: 'fr'}, {locale: 'it'}, {locale: 'pt'}];
 }
+
+export const experimental_ppr = true; // boolean
 
 export default async function LocaleLayout({
   children,
