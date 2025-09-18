@@ -1,53 +1,22 @@
-// saas-ux/app/[locale]/(dashboard)/dashboard/page.tsx
-'use client';
+// app/[locale]/(dashboard)/dashboard/page.tsx  (SERVER)
+import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import DashboardClient from './DashboardClient';
 
-import { UserProfilePanel } from '@/components/ui/user-profile-panel';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import { useTranslations } from 'next-intl';
-import { useState } from 'react';
 export const experimental_ppr = true;
 
-// Dummy data for plan/token; replace with real DB values!
-const userPlan = 'Free';
-const tokenBalance = 20;
+export async function generateMetadata(
+  { params }: { params: Promise<{ locale: string }> }
+): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'DashboardMeta' });
 
-export default function DashboardHome() {
-  const t = useTranslations('dashboard');
-  const [someState, setSomeState] = useState(false);
+  return {
+    title: t('title'),
+    description: t('description')
+  };
+}
 
-  return (
-    <section className="flex-1 p-4 lg:p-8">
-      <UserProfilePanel plan={userPlan} tokenBalance={tokenBalance} />
-      {/* Onboarding / Welcome Section */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold my-4">{t('welcome_headline')}</h2>
-        <p className="text-base text-gray-700 dark:text-gray-300 mb-4">
-          {t('welcome_text')}
-        </p>
-        <div className="flex flex-wrap gap-4">
-          <Button asChild variant="outline" className="rounded-xl font-semibold">
-            <a href="/dashboard/sites">{t('add_website')}</a>
-          </Button>
-          <Button asChild variant="outline" className="rounded-xl font-semibold">
-            <a href="/dashboard/analysis">{t('run_analysis')}</a>
-          </Button>
-        </div>
-      </div>
-      {/* Roadmap for next onboarding steps, visually grouped */}      
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Team Members</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">No team members yet.</p>
-        </CardContent>
-      </Card>
-    </section>
-  );
+export default function Page() {
+  return <DashboardClient />;
 }

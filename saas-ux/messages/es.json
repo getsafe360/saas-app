@@ -1,67 +1,119 @@
 {
-  "home": {
-    "title": "Bienvenido a GetSafe 360",
-    "description": "Optimización de sitios web impulsada por IA para todos"
-  },
-  "header": {
-    "optimizer": "Optimizador",
+  "Nav": {
     "pricing": "Precios",
-    "faq": "Preguntas frecuentes",
+    "accessibility": "Accesibilidad",
+    "faq": "FAQ",
     "signIn": "Iniciar sesión",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "skipToContent": "Saltar al contenido",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
+  },
+  "DashboardNav": {
+    "websites": "Sitios web",
+    "activity": "Actividad",
+    "security": "Seguridad",
+    "settings": "Ajustes"
+  },
+  "DashboardMeta": {
+    "title": "Mi Panel - GetSafe 360",
+    "description": "Administra tus sitios web en tu panel."
   },
   "dashboard": {
-  "websites": "Sitios web",
-  "analysis": "Análisis",
-  "history": "Historial",
-  "tokens": "Tokens",
-  "team": "Equipo",
-  "activity": "Actividad",
-  "security": "Seguridad",
-  "settings": "Configuración"
-},
-  "ux": {
-    "headline1": "Haz que tu sitio web sea accesible y cumpla con la ley en 10 minutos",
-    "subheadline": "Auditoría gratuita BFSG/WCAG para todos los sitios web",
-    "placeholder_url": "Ingresa tu URL…",
+    "title": "Panel",
+    "subtitle": "Resumen de tus sitios y análisis",
+    "greeting": "Hola, {name}!",
+    "greeting_anon": "¡Hola, nueva persona usuaria!",
+    "websites": "Sitios web",
+    "analysis": "Análisis",
+    "history": "Historial",
+    "tokens": "Tokens",
+    "team": "Equipo",
+    "activity": "Actividad",
+    "security": "Seguridad",
+    "settings": "Ajustes",
+    "loading": "Cargando perfil…",
+    "welcome_headline": "Bienvenido/a a tu centro de control.",
+    "welcome_text": "Aquí gestionas sitios, analíticas y optimizaciones. Añade primero un sitio o comienza un análisis ahora.",
+    "add_website": "Añadir sitio",
+    "run_analysis": "Iniciar análisis",
+    "feature_1_headline": "Gestiona todos los sitios",
+    "feature_1_desc": "Mantén cada proyecto a la vista. Descarga análisis, informes de arreglos y progreso por sitio.",
+    "feature_2_headline": "Optimizaciones automáticas",
+    "feature_2_desc": "Correcciones e mejoras con IA en un solo clic.",
+    "current_plan": "Plan actual",
+    "token_balance": "Saldo de tokens"
+  },
+  "Sites": {
+    "detailTitle": "Sitio · {url}",
+    "detailDescription": "Resumen y escaneos para {url}",
+    "notFoundTitle": "Sitio no encontrado",
+    "notFoundDescription": "Este sitio no existe o no tienes acceso."
+  },
+  "home": {
+    "title": "Conoce a tu <span>Copiloto</span> web",
+    "optimize": "¡El <span>mejor asistente</span> que has tenido!",
+    "description": "Optimización web con IA para cualquier sitio",
+    "details": "Ofrecemos herramientas con IA para <b>optimización en tiempo real</b>, pruebas de rendimiento y cumplimiento continuo con <b>estándares de SEO y accesibilidad</b> en evolución. Todo para <b>el mejor rendimiento</b> y <b>máximos rankings</b>.",
+    "intro_left": "Analiza y optimiza cualquier sitio al instante. SEO, rendimiento, seguridad, accesibilidad y cumplimiento legal incluidos.",
+    "intro_right": "Insights accionables. Optimización instantánea. Mantén cada sitio al máximo rendimiento. ¡Empieza gratis!"
+  },
+  "footer": {
+    "copyright": "© {year} GetSafe 360 Limited. Todos los derechos reservados.",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "contact": "Contacto"
+  },
+  "actions": {
+    "learn_more": "Saber más",
+    "get_started": "Empezar",
+    "try_for_free": "Probar gratis",
+    "start_now": "Comenzar ahora",
+    "buy_now": "Comprar ahora",
+    "upgrade_plan": "Mejorar plan",
+    "view_pricing": "Ver precios",
+    "view_dashboard": "Abrir panel",
+    "add_website": "Añadir sitio",
+    "run_analysis": "Iniciar análisis"
+  },
+  "analysis": {
+    "headline1": "Haz tu sitio accesible y legal en 10 minutos",
+    "subheadline": "Auditoría BFSG/WCAG gratuita para todos los sitios",
+    "placeholder_url": "Introduce tu URL…",
     "analyzing": "Analizando…",
     "analyze_btn": "Analizar",
-    "audit_result": "Resultado de la auditoría",
-    "offer_headline": "Medidas inmediatas para tu sitio web:",
-    "level_mandatory_title": "1. Correcciones obligatorias",
+    "audit_result": "Resultado de auditoría",
+    "offer_headline": "Acciones inmediatas para tu sitio:",
+    "level_mandatory_title": "Correcciones obligatorias",
     "level_mandatory_desc": "Corrige problemas críticos de accesibilidad según BFSG/WCAG.",
-    "level_thorough_title": "2. Reparación exhaustiva",
-    "level_thorough_desc": "Mejora la accesibilidad para todos los usuarios.",
-    "level_all_title": "3. Todo corregido",
-    "level_all_desc": "Optimización completa: accesibilidad, rendimiento, SEO.",
-    "fixing_in_progress": "La reparación está en curso, por favor espera un momento…",
-    "fix_complete": "¡Todos los problemas han sido resueltos!",
+    "level_thorough_title": "Reparación a fondo",
+    "level_thorough_desc": "Mejora la accesibilidad de forma integral para todas las personas.",
+    "level_all_title": "Arreglar todo",
+    "level_all_desc": "Optimización completa: Accesibilidad, Rendimiento, SEO.",
+    "fixing_in_progress": "Reparando, espera un momento…",
+    "fix_complete": "¡Todo arreglado!",
     "accessibility_score": "Puntuación de accesibilidad",
-    "total_checks": "Criterios verificados",
+    "total_checks": "Criterios revisados",
     "issues_found": "Problemas encontrados",
     "critical_issues": "Problemas críticos",
     "no_critical_issues": "No se encontraron problemas críticos.",
-    "passed_checks": "Pruebas aprobadas",
+    "passed_checks": "Pruebas superadas",
     "elements": "Elementos",
-    "fix_critical": "Corregir solo problemas críticos (cumple con la ley)",
-    "supreme_repair": "Reparación suprema para la mejor experiencia de usuario",
-    "meta_title": "Verificar accesibilidad",
-    "meta_description": "Realiza una verificación completa de accesibilidad de tu sitio web.",
-    "score_label": "{score}%",
-    "score_label_short": "{score}%",
-    "criteria_checked": "{count} criterios verificados",
-    "issues_found_counted": "{count} problemas encontrados",
-    "passed_label_counted": "{count} pruebas aprobadas",
-    "critical_issues_counted": "{count} problemas críticos"
-  },
-  "footer": {
-    "copyright": "© {year} GetSafe 360° · Todos los derechos reservados"
+    "fix_critical": "Solo problemas críticos (cumplimiento legal)",
+    "supreme_repair": "Reparación completa para la mejor UX",
+    "score_label": "Puntuación de accesibilidad",
+    "score_label_short": "Puntuación",
+    "criteria_checked": "Criterios revisados",
+    "fix_critical_btn": "Solo problemas críticos (cumplimiento legal)",
+    "supreme_repair_btn": "Reparación completa para la mejor UX",
+    "processing": "Procesando…"
   },
   "pricing": {
-  "headline1": "Un clic. Un análisis.",
-  "headline2": "Cualquier sitio web, perfecto.",
-  "subheadline": "Conoce a tu nuevo copiloto web con IA.<span>Así puedes centrarte en tus clientes, no en el código.</span>",
-  "intro_left": "Analiza y optimiza cualquier sitio web al instante. Incluye SEO, rendimiento, seguridad, accesibilidad y cumplimiento legal.",
-  "intro_right": "Información accionable. Optimización instantánea. Mantén tu sitio web siempre al máximo rendimiento. ¡Empieza gratis!"
+    "headline1": "Planes para cada nivel de sitio",
+    "headline2": "Empieza gratis y paga conforme creces.",
+    "subheadline": "Nuestros planes incluyen tu Copiloto para analizar y optimizar flujos de trabajo end-to-end con IA."
+  },
+  "terms": {
+    "date": "Fecha de vigencia:"
   }
 }

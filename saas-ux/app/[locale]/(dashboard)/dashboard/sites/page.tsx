@@ -4,6 +4,11 @@ export const dynamic = "force-dynamic";
 
 import { list, type ListBlobResultBlob } from "@vercel/blob";
 import Link from "next/link";
+import type { Metadata } from 'next';
+export const metadata: Metadata = {
+  title: 'My Websites - GetSafe 360',
+  description: 'Manage your websites connected to GetSafe 360',
+};
 export const experimental_ppr = true;
 
 type SiteRow = {

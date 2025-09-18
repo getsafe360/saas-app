@@ -1,7 +1,6 @@
 'use client';
 
-import { SignedIn, SignedOut, SignUpButton, useUser } from "@clerk/clerk-react";
-import { UserGreeting } from "@/components/ui/user-greeting";
+import { useUser } from "@clerk/clerk-react";
 import { useTranslations } from 'next-intl';
 import { PricingTable } from "@/components/ui/pricing-table";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
@@ -26,25 +25,21 @@ export default function PricingPage() {
       <div className="max-w-5xl w-full mx-auto">
 
         {/* Headline Section */}
-        <SignedIn>
-          <UserGreeting />
-        </SignedIn>
 
-        <SignedOut>
           <section className="mb-10">
-            <h1 className="tracking-tight text-center mb-4">
-              <span className="text-5xl sm:text-6xl font-extrabold bg-gradient-to-r from-sky-500 via-purple-800 to-red-600 bg-clip-text text-transparent">
+            <h1 className="font-extrabold text-4xl sm:text-6xl tracking-tight text-center mb-6">
+              <span className="bg-gradient-to-r from-white via-sky-300/80 to-sky-400/70 bg-clip-text text-transparent">
                 {t('headline1')}
               </span>
-              <span className="font-extrabold text-6xl text-yellow-600 block">
+            </h1>
+            <h2 className="text-xl font-semibold sm:text-2xl text-center mb-6">
+             <span className="font-bold text-3xl sm:text-5xl text-blue-600 block">
                 {t('headline2')}
               </span>
-            </h1>
-            <h2 className="text-xl font-semibold sm:text-2xl text-center mb-8">
-              {t.rich('subheadline', {
-                span: (chunks) => <span className="block font-bold">{chunks}</span>,
-              })}
             </h2>
+            <h3 className="text-lg font-medium sm:text-xl text-center mb-6">
+              {t('subheadline')}
+            </h3>
           </section>
 
           <PricingTable />
@@ -88,7 +83,6 @@ export default function PricingPage() {
               />
             </PayPalScriptProvider>
           )}
-        </SignedOut>
       </div>
     </main>
   );

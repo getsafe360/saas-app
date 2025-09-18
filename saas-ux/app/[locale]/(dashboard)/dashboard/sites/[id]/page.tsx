@@ -1,5 +1,4 @@
 // app/[locale]/(dashboard)/dashboard/sites/[id]/page.tsx
-import type { Metadata } from 'next';
 import { getDb } from '@/lib/db/drizzle';
 import { sites } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
@@ -11,8 +10,7 @@ import { list, type ListBlobResultBlob } from '@vercel/blob';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import StatusBadge from '@/components/ui/StatusBadge';
-import type { LocaleParams, SearchParams } from '@/types/route-params';
-
+import type { Metadata } from 'next';
 const DEFAULT_LOCALE = 'en';
 
 type SiteRecord = {
@@ -31,12 +29,34 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { id, locale } = await params;
 
-  const db = getDb();
-  const [site] = await db.select().from(sites).where(eq(sites.id, id)).limit(1);
-  const t = await getTranslations('Sites');
+  // locale-aware translations
+  const t = await getTranslations({ locale, namespace: 'Sites' });
 
-  const title = site ? t('detailTitle', { url: site.siteUrl }) : t('notFoundTitle');
-  const description = site ? t('detailDescription', { url: site.siteUrl }) : t('notFoundDescription');
+  // Try DB first (good when your sites table is populated)
+  let siteUrl: string | null = null;
+  try {
+    const db = getDb();
+    // Select only the needed column to avoid accidental type issues
+    const [row] = await db
+      .select({ siteUrl: sites.siteUrl })
+      .from(sites)
+      .where(eq(sites.id, id))
+      .limit(1);
+    siteUrl = row?.siteUrl ?? null;
+  } catch {
+    // ignore DB errors in metadata
+  }
+
+  // Fallback to Blob if DB record is missing (keeps metadata in sync with the page)
+  if (!siteUrl) {
+    const blobSite = await getSite(id);
+    siteUrl = blobSite?.siteUrl ?? null;
+  }
+
+  const title = siteUrl ? t('detailTitle', { url: siteUrl }) : t('notFoundTitle');
+  const description = siteUrl
+    ? t('detailDescription', { url: siteUrl })
+    : t('notFoundDescription');
 
   const path = `/dashboard/sites/${id}`;
   const canonicalPath = locale === DEFAULT_LOCALE ? path : `/${locale}${path}`;

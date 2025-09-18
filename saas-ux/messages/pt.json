@@ -1,23 +1,119 @@
 {
-  "home": {
-    "title": "Bienvenue chez GetSafe 360°",
-    "description": "Optimisation de sites web par IA pour tous"
-  },
-  "header": {
-    "optimizer": "Optimiseur",
-    "pricing": "Tarifs",
+  "Nav": {
+    "pricing": "Preços",
+    "accessibility": "Acessibilidade",
     "faq": "FAQ",
-    "signIn": "Se connecter",
-    "signOut": "Se déconnecter"
+    "signIn": "Entrar",
+    "signOut": "Sair",
+    "skipToContent": "Ir para o conteúdo",
+    "openMenu": "Abrir menu",
+    "closeMenu": "Fechar menu"
+  },
+  "DashboardNav": {
+    "websites": "Sites",
+    "activity": "Atividade",
+    "security": "Segurança",
+    "settings": "Configurações"
+  },
+  "DashboardMeta": {
+    "title": "Meu Painel - GetSafe 360",
+    "description": "Gerencie seus sites no seu painel."
+  },
+  "dashboard": {
+    "title": "Painel",
+    "subtitle": "Visão geral dos seus sites e análises",
+    "greeting": "Olá, {name}!",
+    "greeting_anon": "Olá, novo usuário!",
+    "websites": "Sites",
+    "analysis": "Análises",
+    "history": "Histórico",
+    "tokens": "Tokens",
+    "team": "Equipe",
+    "activity": "Atividade",
+    "security": "Segurança",
+    "settings": "Configurações",
+    "loading": "Carregando perfil…",
+    "welcome_headline": "Bem-vindo ao seu centro de controle.",
+    "welcome_text": "Aqui você gerencia sites, métricas e otimizações. Adicione um site primeiro ou inicie uma análise agora.",
+    "add_website": "Adicionar site",
+    "run_analysis": "Iniciar análise",
+    "feature_1_headline": "Gerencie todos os sites",
+    "feature_1_desc": "Mantenha cada projeto à vista. Baixe análises, relatórios de correção e progresso por site.",
+    "feature_2_headline": "Otimizações automáticas",
+    "feature_2_desc": "Correções e melhorias com IA em um clique.",
+    "current_plan": "Plano atual",
+    "token_balance": "Saldo de tokens"
+  },
+  "Sites": {
+    "detailTitle": "Site · {url}",
+    "detailDescription": "Resumo e varreduras de {url}",
+    "notFoundTitle": "Site não encontrado",
+    "notFoundDescription": "Este site não existe ou você não tem acesso."
+  },
+  "home": {
+    "title": "Conheça seu <span>Co-Piloto</span> de site",
+    "optimize": "O <span>melhor assistente</span> que você já teve!",
+    "description": "Otimização de sites com IA para qualquer site",
+    "details": "Ferramentas com IA para <b>otimização em tempo real</b>, testes de desempenho e conformidade contínua com <b>padrões de SEO e acessibilidade</b>. Tudo para <b>melhor desempenho</b> e <b>maiores rankings</b>.",
+    "intro_left": "Analise e otimize qualquer site em instantes. SEO, desempenho, segurança, acessibilidade e conformidade legal incluídos.",
+    "intro_right": "Insights acionáveis. Otimização instantânea. Mantenha cada site no máximo. Comece grátis!"
   },
   "footer": {
-    "copyright": "© {year} GetSafe 360° · Tous droits réservés."
+    "copyright": "© {year} GetSafe 360 Limited. Todos os direitos reservados.",
+    "privacy": "Privacidade",
+    "terms": "Termos",
+    "contact": "Contato"
+  },
+  "actions": {
+    "learn_more": "Saiba mais",
+    "get_started": "Começar",
+    "try_for_free": "Testar grátis",
+    "start_now": "Começar agora",
+    "buy_now": "Comprar agora",
+    "upgrade_plan": "Atualizar plano",
+    "view_pricing": "Ver preços",
+    "view_dashboard": "Abrir painel",
+    "add_website": "Adicionar site",
+    "run_analysis": "Iniciar análise"
+  },
+  "analysis": {
+    "headline1": "Deixe seu site acessível e legal em 10 minutos",
+    "subheadline": "Auditoria BFSG/WCAG gratuita para todos os sites",
+    "placeholder_url": "Digite sua URL…",
+    "analyzing": "Analisando…",
+    "analyze_btn": "Analisar",
+    "audit_result": "Resultado da auditoria",
+    "offer_headline": "Ações imediatas para seu site:",
+    "level_mandatory_title": "Correções obrigatórias",
+    "level_mandatory_desc": "Corrija problemas críticos de acessibilidade conforme BFSG/WCAG.",
+    "level_thorough_title": "Reparo completo",
+    "level_thorough_desc": "Melhore a acessibilidade de forma abrangente para todas as pessoas.",
+    "level_all_title": "Corrigir tudo",
+    "level_all_desc": "Otimização completa: Acessibilidade, Desempenho, SEO.",
+    "fixing_in_progress": "Reparando, aguarde um momento…",
+    "fix_complete": "Tudo corrigido!",
+    "accessibility_score": "Pontuação de acessibilidade",
+    "total_checks": "Critérios verificados",
+    "issues_found": "Problemas encontrados",
+    "critical_issues": "Problemas críticos",
+    "no_critical_issues": "Nenhum problema crítico encontrado.",
+    "passed_checks": "Testes aprovados",
+    "elements": "Elementos",
+    "fix_critical": "Apenas problemas críticos (conformidade legal)",
+    "supreme_repair": "Reparo completo para a melhor UX",
+    "score_label": "Pontuação de acessibilidade",
+    "score_label_short": "Pontuação",
+    "criteria_checked": "Critérios verificados",
+    "fix_critical_btn": "Apenas problemas críticos (conformidade legal)",
+    "supreme_repair_btn": "Reparo completo para a melhor UX",
+    "processing": "Processando…"
   },
   "pricing": {
-  "headline1": "Um clique. Uma análise.",
-  "headline2": "Qualquer site, perfeito.",
-  "subheadline": "Conheça seu novo copiloto de site com IA.<span>Assim você foca nos clientes, não no código.</span>",
-  "intro_left": "Analise e otimize qualquer site instantaneamente. SEO, performance, segurança, acessibilidade e conformidade legal incluídos.",
-  "intro_right": "Insights acionáveis. Otimização instantânea. Mantenha seu site sempre no melhor desempenho. Comece grátis!"
+    "headline1": "Planos para cada nível de site",
+    "headline2": "Comece grátis e pague conforme crescer.",
+    "subheadline": "Nossos planos incluem seu Co-Piloto para analisar e otimizar fluxos end-to-end com IA."
+  },
+  "terms": {
+    "date": "Data de vigência:"
   }
 }

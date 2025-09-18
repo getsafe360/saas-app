@@ -1,33 +1,119 @@
 {
-  "home": {
-    "title": "Bienvenue chez GetSafe 360°",
-    "description": "Optimisation de sites web par IA pour tous"
-  },
-  "header": {
-    "optimizer": "Optimiseur",
+  "Nav": {
     "pricing": "Tarifs",
+    "accessibility": "Accessibilité",
     "faq": "FAQ",
     "signIn": "Se connecter",
-    "signOut": "Se déconnecter"
+    "signOut": "Se déconnecter",
+    "skipToContent": "Aller au contenu",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
   },
-  "footer": {
-    "copyright": "© {year} GetSafe 360° · Tous droits réservés."
+  "DashboardNav": {
+    "websites": "Sites web",
+    "activity": "Activité",
+    "security": "Sécurité",
+    "settings": "Paramètres"
   },
-  "pricing": {
-  "headline1": "Un clic. Un scan.",
-  "headline2": "N'importe quel site, perfectionné.",
-  "subheadline": "Voici votre nouveau copilote IA pour site web.<span>Concentrez-vous sur vos clients, pas sur le code.</span>",
-  "intro_left": "Analysez et optimisez instantanément n’importe quel site. SEO, performance, sécurité, accessibilité et conformité légale inclus.",
-  "intro_right": "Des analyses concrètes. Une optimisation immédiate. Gardez votre site toujours au meilleur niveau. Commencez gratuitement !"
+  "DashboardMeta": {
+    "title": "Mon Tableau de bord - GetSafe 360",
+    "description": "Gérez vos sites web depuis votre tableau de bord."
   },
   "dashboard": {
-  "websites": "Sites web",
-  "analysis": "Analyses",
-  "history": "Historique",
-  "tokens": "Jetons",
-  "team": "Équipe",
-  "activity": "Activité",
-  "security": "Sécurité",
-  "settings": "Paramètres"
+    "title": "Tableau de bord",
+    "subtitle": "Vue d’ensemble de vos sites et analyses",
+    "greeting": "Bonjour, {name} !",
+    "greeting_anon": "Bonjour, nouvel utilisateur !",
+    "websites": "Sites web",
+    "analysis": "Analyses",
+    "history": "Historique",
+    "tokens": "Jetons",
+    "team": "Équipe",
+    "activity": "Activité",
+    "security": "Sécurité",
+    "settings": "Paramètres",
+    "loading": "Chargement du profil…",
+    "welcome_headline": "Bienvenue dans votre centre de contrôle.",
+    "welcome_text": "Gérez ici vos sites, analyses et optimisations. Ajoutez un site d’abord ou lancez une analyse dès maintenant.",
+    "add_website": "Ajouter un site",
+    "run_analysis": "Lancer l’analyse",
+    "feature_1_headline": "Gérer tous les sites",
+    "feature_1_desc": "Gardez chaque projet en vue. Téléchargez analyses, rapports de corrections et progression par site.",
+    "feature_2_headline": "Optimisations automatiques",
+    "feature_2_desc": "Corrections et améliorations IA en un clic.",
+    "current_plan": "Offre actuelle",
+    "token_balance": "Solde de jetons"
+  },
+  "Sites": {
+    "detailTitle": "Site · {url}",
+    "detailDescription": "Aperçu et analyses pour {url}",
+    "notFoundTitle": "Site introuvable",
+    "notFoundDescription": "Ce site n’existe pas ou vous n’y avez pas accès."
+  },
+  "home": {
+    "title": "Découvrez votre <span>Co-pilote</span> web",
+    "optimize": "Le <span>meilleur assistant</span> que vous ayez eu !",
+    "description": "Optimisation de sites web par IA pour tous les sites",
+    "details": "Des outils IA pour <b>l’optimisation en temps réel</b>, les tests de performance et la conformité continue aux <b>normes SEO et d’accessibilité</b>. Le tout pour <b>de meilleures performances</b> et <b>des classements au top</b>.",
+    "intro_left": "Analysez et optimisez n’importe quel site instantanément. SEO, performance, sécurité, accessibilité et conformité légale inclus.",
+    "intro_right": "Insights actionnables. Optimisation instantanée. Maintenez chaque site à son meilleur niveau. Commencez gratuitement !"
+  },
+  "footer": {
+    "copyright": "© {year} GetSafe 360 Limited. Tous droits réservés.",
+    "privacy": "Confidentialité",
+    "terms": "Conditions",
+    "contact": "Contact"
+  },
+  "actions": {
+    "learn_more": "En savoir plus",
+    "get_started": "Commencer",
+    "try_for_free": "Essayer gratuitement",
+    "start_now": "Commencer maintenant",
+    "buy_now": "Acheter maintenant",
+    "upgrade_plan": "Mettre à niveau l’offre",
+    "view_pricing": "Voir les tarifs",
+    "view_dashboard": "Ouvrir le tableau de bord",
+    "add_website": "Ajouter un site",
+    "run_analysis": "Lancer l’analyse"
+  },
+  "analysis": {
+    "headline1": "Rendez votre site accessible et conforme en 10 minutes",
+    "subheadline": "Audit BFSG/WCAG gratuit pour tous les sites",
+    "placeholder_url": "Saisissez votre URL…",
+    "analyzing": "Analyse en cours…",
+    "analyze_btn": "Analyser",
+    "audit_result": "Résultat de l’audit",
+    "offer_headline": "Actions immédiates pour votre site :",
+    "level_mandatory_title": "Corrections obligatoires",
+    "level_mandatory_desc": "Corrigez les problèmes critiques d’accessibilité selon BFSG/WCAG.",
+    "level_thorough_title": "Réparation approfondie",
+    "level_thorough_desc": "Améliorez l’accessibilité de manière complète pour toutes et tous.",
+    "level_all_title": "Tout corriger",
+    "level_all_desc": "Optimisation complète : Accessibilité, Performance, SEO.",
+    "fixing_in_progress": "Réparation en cours, patientez…",
+    "fix_complete": "Tout est corrigé !",
+    "accessibility_score": "Score d’accessibilité",
+    "total_checks": "Critères vérifiés",
+    "issues_found": "Problèmes trouvés",
+    "critical_issues": "Problèmes critiques",
+    "no_critical_issues": "Aucun problème critique trouvé.",
+    "passed_checks": "Tests réussis",
+    "elements": "Éléments",
+    "fix_critical": "Seulement les problèmes critiques (conformité légale)",
+    "supreme_repair": "Réparation complète pour la meilleure UX",
+    "score_label": "Score d’accessibilité",
+    "score_label_short": "Score",
+    "criteria_checked": "Critères vérifiés",
+    "fix_critical_btn": "Seulement les problèmes critiques (conformité légale)",
+    "supreme_repair_btn": "Réparation complète pour la meilleure UX",
+    "processing": "Traitement…"
+  },
+  "pricing": {
+    "headline1": "Des offres pour tous les sites",
+    "headline2": "Commencez gratuitement et payez à mesure que vous évoluez.",
+    "subheadline": "Nos offres incluent votre Co-pilote pour analyser et optimiser des workflows de bout en bout grâce à l’IA."
+  },
+  "terms": {
+    "date": "Date d’effet :"
   }
 }
