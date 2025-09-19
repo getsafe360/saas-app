@@ -60,20 +60,19 @@ export async function POST(req: NextRequest) {
       siteUrl = blob.siteUrl;
 
       // OPTIONAL: if scanJobs.siteId has an FK to sites.id, upsert a stub site
-      // to satisfy the constraint. Uncomment if needed.
-      // try {
-      //   await db
-      //     .insert(sites)
-      //     .values({
-      //       id: siteId,
-      //       siteUrl: blob.siteUrl,
-      //       status: 'connected',
-      //       createdAt: new Date(),
-      //       updatedAt: new Date()
-      //     } as any)
-      //     // @ts-ignore drizzle onConflict target depends on your dialect
-      //     .onConflictDoNothing?.();
-      // } catch {}
+      try {
+        await db
+          .insert(sites)
+          .values({
+            id: siteId,
+            siteUrl: blob.siteUrl,
+            status: 'connected',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          } as any)
+          // @ts-ignore drizzle onConflict target depends on your dialect
+          .onConflictDoNothing?.();
+      } catch {}
     }
   }
 

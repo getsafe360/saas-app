@@ -6,9 +6,9 @@ import {Link} from '@/navigation';
 import { usePathname } from 'next/navigation';
 import { Settings, Shield, Activity, Menu, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useUser } from '@clerk/nextjs';
 import { useTranslations } from 'next-intl';
 import { UserGreeting } from "@/components/ui/user-greeting";
+import { SignedIn, SignedOut, SignUpButton, useUser } from "@clerk/clerk-react";
 export const experimental_ppr = true;
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const t = useTranslations('DashboardNav');
   const { user } = useUser();
-
+ 
   const navItems = [
     { href: '/dashboard/sites',    icon: Globe,    label: 'websites' },
     { href: '/dashboard/activity', icon: Activity, label: 'activity' },
@@ -25,6 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ];
 
   return (
+    
     <div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
       {/* Mobile header (no navItems loop here!) */}
       <div className="lg:hidden flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
@@ -76,10 +77,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </aside>
 
         {/* Main content */}
+        <SignedIn>
         <main className="flex-1 overflow-y-auto p-0 lg:p-6 bg-gray-50 dark:bg-[#10131a] min-h-screen transition-colors">
-          {children}
-        </main>
+          {children}       
+          </main>
+          </SignedIn>
+          <SignedOut>
+            <SignUpButton>
+              Sign Up
+            </SignUpButton>
+          </SignedOut>
       </div>
     </div>
+
+
   );
 }
