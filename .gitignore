@@ -24,3 +24,4 @@ saas-ux/app/api/blobtest/
 saas-ux/app/api/bloblist/
 saas-ux/app/api/blobdelete/
 saas-ux/app/api/selftest/
+node_modules
