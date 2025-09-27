@@ -2,6 +2,13 @@ onlyBuiltDependencies:
   - '@clerk/shared'
   - '@prisma/engines'
   - '@tailwindcss/oxide'
+  - core-js
   - esbuild
+  - keccak
   - prisma
+  - puppeteer
+  - scrypt
+  - secp256k1
+  - sha3
   - sharp
+  - websocket

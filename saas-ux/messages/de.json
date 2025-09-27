@@ -77,6 +77,11 @@
     "add_website": "Website hinzufügen",
     "run_analysis": "Analyse starten"
   },
+    "AnalyzeMeta": {
+    "title": "Website fixen - GetSafe 360 Co-Pilot",
+    "titleWithUrl": "{url} fixen - GetSafe 360 Co-Pilot",
+    "description": "Analysiere und optimiere deine Website mit einem KI-Co-Piloten - für gezieltes SEO, schnellere Performance, top Barrierefreiheit und starke Sicherheit."
+  },
   "analysis": {
     "headline1": "Mach deine Website in 10 Minuten barrierefrei und gesetzeskonform",
     "subheadline": "Kostenloser BFSG/WCAG-Audit für alle Websites",

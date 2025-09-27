@@ -1,8 +1,26 @@
 # Environment variables
 .env
 .env.*
+!.env.example
+.DS_Store
+Thumbs.db
 flask_app/.env
 saas-ux/.env
+saas-ux/.env.local
+saas-ux/.env.development.local
+README.md
+SECURITY.md
+
+# Node + Next
+node_modules/
+.next/
+.out/
+dist/
+build/
+saas-ux/.vercel/
+.turbo/
+.cache/
+.swc/
 
 # Clerk secrets
 saas-ux/.clerk
@@ -25,3 +43,15 @@ saas-ux/app/api/bloblist/
 saas-ux/app/api/blobdelete/
 saas-ux/app/api/selftest/
 node_modules
+
+# Tests/coverage
+coverage/
+
+# Drizzle — keep migrations, ignore meta
+saas-ux/drizzle/meta/
+saas-ux/drizzle/*.sqlite
+saas-ux/drizzle/*.json
+saas-ux/drizzle/*.sql
+
+# Puppeteer/sharp temps
+tmp/

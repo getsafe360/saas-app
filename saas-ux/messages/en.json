@@ -20,6 +20,7 @@
     "title": "My Dashboard - GetSafe 360",
     "description": "Manage your websites in your dashboard."
   },
+
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Overview of your websites and analyses",
@@ -76,6 +77,11 @@
     "view_dashboard": "View dashboard",
     "add_website": "Add website",
     "run_analysis": "Run analysis"
+  },
+    "AnalyzeMeta": {
+    "title": "Fix My Website - GetSafe 360 Co-Pilot",
+    "titleWithUrl": "Fix {url} - GetSafe 360 Co-Pilot",
+    "description": "Analyze and optimize your website with an AI co-pilot for targeted SEO, faster performance, best-in-class accessibility, and solid security."
   },
   "analysis": {
     "headline1": "Make your website accessible and legally compliant in 10 minutes",

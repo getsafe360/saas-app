@@ -1,5 +1,5 @@
 {
-  "id": "b41bc9ca-45c0-4093-9327-164405edb0a0",
+  "id": "cfd1bcbd-9004-485d-874d-44b40ed1a299",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -94,6 +94,88 @@
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fix_jobs": {
+      "name": "fix_jobs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "site_id": {
+          "name": "site_id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'queued'"
+        },
+        "issues": {
+          "name": "issues",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "est_tokens": {
+          "name": "est_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agent_used": {
+          "name": "agent_used",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "result_blob_key": {
+          "name": "result_blob_key",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -504,6 +586,13 @@
           "type": "varchar(20)",
           "primaryKey": false,
           "notNull": false
+        },
+        "tokens_remaining": {
+          "name": "tokens_remaining",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 25000
         }
       },
       "indexes": {},

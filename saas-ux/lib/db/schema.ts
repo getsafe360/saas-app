@@ -1,12 +1,6 @@
 // saas-ux/lib/db/schema.ts
 import {
-  pgTable,
-  serial,
-  varchar,
-  text,
-  timestamp,
-  boolean,
-  integer,
+pgTable, varchar, integer, text, timestamp, jsonb, serial
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { sql } from "drizzle-orm";
@@ -81,10 +75,20 @@ export const activityLogs = pgTable('activity_logs', {
   ipAddress: varchar('ip_address', { length: 45 }),
 });
 
-/**
- * (Optional / legacy) TEAMS — keep definitions so existing code compiles.
- * You don’t have to use them now. They can be removed later.
- */
+export const fixJobs = pgTable('fix_jobs', {
+  id: varchar('id', { length: 64 }).primaryKey(), // uuid
+  siteId: varchar('site_id', { length: 64 }).notNull(),
+  teamId: integer('team_id').notNull(),
+  status: varchar('status', { length: 16 }).notNull().default('queued'), // 'queued'|'running'|'done'|'error'
+  issues: jsonb('issues').$type<{ id: string; estTokens: number }[]>().notNull(),
+  estTokens: integer('est_tokens').notNull(),
+  agentUsed: varchar('agent_used', { length: 64 }),
+  resultBlobKey: varchar('result_blob_key', { length: 256 }),
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 export const teams = pgTable('teams', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
@@ -95,6 +99,7 @@ export const teams = pgTable('teams', {
   stripeProductId: text('stripe_product_id'),
   planName: varchar('plan_name', { length: 50 }),
   subscriptionStatus: varchar('subscription_status', { length: 20 }),
+  tokensRemaining: integer('tokens_remaining').notNull().default(50000), // starter quota
 });
 
 export const teamMembers = pgTable('team_members', {

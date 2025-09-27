@@ -103,7 +103,7 @@ export function Header() {
                 <SignedOut>
                   <SignInButton mode="modal">
                     <button
-                      className="ml-2 inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-600 dark:focus-visible:ring-offset-0 transition"
+                      className="button-shine hover:cursor-pointer ml-2 inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-600 dark:focus-visible:ring-offset-0 transition"
                     >
                       {t("signIn")}
                     </button>
