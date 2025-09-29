@@ -1,85 +1,130 @@
 // app/api/connect/start/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { put } from "@vercel/blob";
+import { auth } from "@clerk/nextjs/server";
+import { and, eq } from "drizzle-orm";
+import { list, put } from "@vercel/blob";
 import crypto from "crypto";
-import { getUser } from "@/lib/db/queries";
+
+import { getDb } from "@/lib/db/drizzle";
+import { users } from "@/lib/db/schema";
 import { rateLimit } from "@/lib/api/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Normalize the user-supplied site URL so we store a consistent value.
-// - strips search + hash
-// - lowercases hostname
-// - collapses trailing slashes to exactly one (for roots)
-// - keeps protocol (http/https) as provided
+// --- utils ---
 function normalizeInput(u: string): string {
   try {
     const url = new URL(u);
     url.search = "";
     url.hash = "";
     url.hostname = url.hostname.toLowerCase();
-    if (url.pathname === "" || url.pathname === "/") {
-      url.pathname = "/";
-    }
+    if (url.pathname === "" || url.pathname === "/") url.pathname = "/";
     return url.toString();
   } catch {
     return u;
   }
 }
 
+async function probeOnce(siteUrl: string, path: string) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 4000);
+  try {
+    const res = await fetch(new URL(path, siteUrl).toString(), {
+      method: "GET",
+      headers: { "user-agent": "GetSafe360/0.1 (+connect-probe)" },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) return false;
+    const j = await res.json().catch(() => null);
+    return !!(j && j.ok === true);
+  } catch {
+    clearTimeout(t);
+    return false;
+  }
+}
+
 async function probePlugin(siteUrl: string): Promise<boolean> {
-  const targets = [
-    "/wp-json/getsafe/v1/ping",      // pretty permalinks
-    "/?rest_route=/getsafe/v1/ping", // plain permalinks
-  ];
-  for (const path of targets) {
-    try {
-      const url = new URL(path, siteUrl).toString();
-      const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), 4000);
-      const res = await fetch(url, {
-        method: "GET",
-        headers: { "user-agent": "GetSafe360/0.1 (+connect-probe)" },
-        cache: "no-store",
-        signal: controller.signal,
-      });
-      clearTimeout(t);
-      if (!res.ok) continue;
-      const json = await res.json().catch(() => null);
-      if (json && json.ok === true) return true; // plugin’s ping returns { ok: true }
-    } catch {
-      /* ignore and try next */
+  // Try pretty + plain permalinks
+  const paths = ["/wp-json/getsafe/v1/ping", "/?rest_route=/getsafe/v1/ping"];
+  for (const p of paths) {
+    if (await probeOnce(siteUrl, p)) return true;
+  }
+
+  // If original was http, try https (and vice-versa) — some sites redirect weirdly
+  try {
+    const u = new URL(siteUrl);
+    const flipped = new URL(siteUrl);
+    flipped.protocol = u.protocol === "http:" ? "https:" : "http:";
+    for (const p of paths) {
+      if (await probeOnce(flipped.toString(), p)) return true;
     }
+  } catch {
+    /* ignore */
   }
   return false;
 }
 
+function sixDigitCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function ensureUniquePairCode(): Promise<string> {
+  // Collision is super unlikely, but let’s be perfect: re-roll up to 5 times.
+  for (let i = 0; i < 5; i++) {
+    const code = sixDigitCode();
+    const { blobs } = await list({ prefix: `pairings/code-${code}.json` });
+    if (blobs.length === 0) return code;
+  }
+  // Fallback to uuid segment if we somehow hit collisions repeatedly
+  return crypto.randomUUID().slice(0, 6);
+}
+
+// --- handler ---
 export async function POST(req: NextRequest) {
-  // ✅ Require auth
-  const user = await getUser();
-  if (!user) {
+  // 1) Auth (Clerk) → DB user
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) {
     return NextResponse.json({ error: "auth required" }, { status: 401 });
   }
 
-  const { siteUrl } = await req.json();
+  const db = getDb();
+  const [dbUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.clerkUserId, clerkUserId))
+    .limit(1);
 
-  // Validate using URL() (more reliable than regex)
-  let parsed: URL | null = null;
+  if (!dbUser) {
+    return NextResponse.json({ error: "user not found" }, { status: 401 });
+  }
+
+  // 2) Parse + validate JSON
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const siteUrl = (body as any)?.siteUrl as string | undefined;
+  if (!siteUrl) {
+    return NextResponse.json({ error: "siteUrl required" }, { status: 400 });
+  }
+
+  // 3) Validate URL + normalize
+  let parsed: URL;
   try {
     parsed = new URL(siteUrl);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      throw new Error("bad scheme");
-    }
+    if (!/^https?:$/.test(parsed.protocol)) throw new Error("bad scheme");
   } catch {
     return NextResponse.json({ error: "Enter a valid site URL" }, { status: 400 });
   }
-
-  // Normalize before storing / probing
   const normalizedUrl = normalizeInput(parsed.toString());
-  const host = new URL(normalizedUrl).hostname.toLowerCase().replace(/^www\./, "");
+  const host = new URL(normalizedUrl).hostname.replace(/^www\./, "");
 
-  // ✅ Optional allowlist (private beta)
+  // 4) Optional allowlist (private beta)
   const allowRx = process.env.ALLOWED_SITE_HOST_REGEX
     ? new RegExp(process.env.ALLOWED_SITE_HOST_REGEX, "i")
     : null;
@@ -87,9 +132,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "domain not allowed (private beta)" }, { status: 403 });
   }
 
-  // ✅ Lightweight rate-limit (10 requests / 10 minutes per user+IP)
+  // 5) Rate limit (per user + IP)
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  const rl = await rateLimit(`pair-start:${user.id}:${ip}`, 10, 10 * 60 * 1000);
+  const rl = await rateLimit(`pair-start:${dbUser.id}:${ip}`, 10, 10 * 60 * 1000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "too many attempts, try again later", retryAt: rl.resetAt },
@@ -97,10 +142,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 6-digit pairing code
-  const pairCode = String(Math.floor(100000 + Math.random() * 900000));
+  // 6) Generate unique code + write records
+  const pairCode = await ensureUniquePairCode();
   const id = crypto.randomUUID();
-
   const record = {
     id,
     siteUrl: normalizedUrl,
@@ -108,27 +152,29 @@ export async function POST(req: NextRequest) {
     createdAt: Date.now(),
     expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
     used: false,
-    userId: user.id, // ✅ link owner for handshake/DB upsert
+    userId: dbUser.id, // link to DB user; handshake will trust this
   };
 
-  // Store by code for easy lookup during handshake
-  // NOTE: public is fine for MVP; we’re not storing secrets here.
   await put(`pairings/code-${pairCode}.json`, JSON.stringify(record), {
     access: "public",
     contentType: "application/json",
   });
-
-  // (Optional) also store by id if you want backfill/debug later
   await put(`pairings/id-${id}.json`, JSON.stringify(record), {
     access: "public",
     contentType: "application/json",
   });
 
+  // 7) Probe plugin availability (nice-to-have UX)
   const pluginDetected = await probePlugin(normalizedUrl);
 
-  return NextResponse.json({
-    pairCode,
-    pluginDetected,
-    recordedSiteUrl: normalizedUrl,
-  });
+  // 8) Done
+  return NextResponse.json(
+    {
+      pairCode,
+      pluginDetected,
+      recordedSiteUrl: normalizedUrl,
+    },
+    { headers: { "cache-control": "no-store" } }
+  );
 }
+// Note: we don’t rate limit the GET /check endpoint, as it’s polled frequently
