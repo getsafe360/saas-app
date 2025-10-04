@@ -8,8 +8,6 @@ import { fixJobs, scanJobs, sites, teams } from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { list } from '@vercel/blob';
 import crypto from 'crypto';
-
-// Reuse the helper we created earlier to get current team (or inline it here)
 import { findCurrentUserTeam } from '@/lib/auth/current';
 
 type StartBody = { siteId: string; issueIds: string[] };
@@ -17,7 +15,6 @@ type StartBody = { siteId: string; issueIds: string[] };
 async function readLatestReportForSite(siteId: string) {
   const db = getDb();
 
-  // latest DONE job for this site
   const [job] = await db
     .select()
     .from(scanJobs)
@@ -27,9 +24,7 @@ async function readLatestReportForSite(siteId: string) {
 
   if (!job) return null;
 
-  // prefer explicit blob key, else conventional key
   const key = job.reportBlobKey || `scan-results/${job.id}.json`;
-
   const { blobs } = await list({ prefix: key });
   const match = blobs.find(b => b.pathname === key) || blobs[0];
   if (!match) return null;
@@ -56,26 +51,27 @@ export async function POST(req: NextRequest) {
 
   // Verify site exists
   const [site] = await db.select().from(sites).where(eq(sites.id, siteId)).limit(1);
-  if (!site) return NextResponse.json({ ok: false, error: 'site_not_found' }, { status: 404 });
+  if (!site) {
+    return NextResponse.json({ ok: false, error: 'site_not_found' }, { status: 404 });
+  }
 
-  // Current team (or user)
-  const current = await findCurrentUserTeam();
-  if (!current?.team?.id) {
+  // Current team (helper returns the team row or null)
+  const team = await findCurrentUserTeam();
+  if (!team?.id) {
     return NextResponse.json({ ok: false, error: 'no_team' }, { status: 403 });
   }
-  const teamId = current.team.id;
+  const teamId = team.id;
 
-  // Pull latest report to tailor fixes + token estimate
+  // Tailor fixes using latest scan report
   const report = await readLatestReportForSite(siteId);
   if (!report) {
     return NextResponse.json({ ok: false, error: 'no_recent_scan' }, { status: 409 });
   }
 
-  // Map requested ids to estTokens (fallback to 500 if not present)
+  // Map requested ids -> estTokens (fallback 500)
   const estMap = new Map<string, number>();
   for (const it of report.issues || []) estMap.set(it.id, it.estTokens || 500);
   const selected = issueIds.map(id => ({ id, estTokens: estMap.get(id) ?? 500 }));
-
   const estTokens = selected.reduce((sum, x) => sum + x.estTokens, 0);
 
   // Load team tokens
@@ -96,14 +92,15 @@ export async function POST(req: NextRequest) {
     teamId,
     siteId,
     status: 'queued',
-    issues: selected as any,
+    issues: selected as any, // jsonb
     estTokens,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
 
-  // Deduct tokens immediately (simple). Optional: move to "holds".
-  await db.update(teams)
+  // Deduct tokens (simple; you can move to a “hold” model later)
+  await db
+    .update(teams)
     .set({ tokensRemaining: (have - estTokens) as any })
     .where(eq(teams.id, teamId));
 

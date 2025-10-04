@@ -1,6 +1,6 @@
 // saas-ux/lib/db/schema.ts
 import {
-pgTable, varchar, integer, text, timestamp, jsonb, serial
+pgTable, varchar, integer, text, timestamp, jsonb, serial, uniqueIndex
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { sql } from "drizzle-orm";
@@ -33,17 +33,19 @@ export const users = pgTable('users', {
  * Use the same id the handshake generates (text/uuid/short hash).
  */
 export const sites = pgTable('sites', {
-  id: text('id').primaryKey(),                   // e.g., the siteId used in handshake
+  id: text('id').primaryKey(), // e.g., the siteId used in handshake
   userId: integer('user_id').notNull().references(() => users.id),
   siteUrl: text('site_url').notNull().unique(),  // normalized URL
   status: varchar('status', { length: 20 }).notNull().default('connected'),
   cms: varchar('cms', { length: 20 }).notNull().default('wordpress'),
   wpVersion: varchar('wp_version', { length: 20 }),
   pluginVersion: varchar('plugin_version', { length: 20 }),
-  tokenHash: text('token_hash'),                 // sha256(siteToken)
+  tokenHash: text('token_hash'), // sha256(siteToken)
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+}, (t) => ({
+  userUrlUnique: uniqueIndex('sites_user_url_unique').on(t.userId, t.siteUrl),
+}));
 
 /**
  * SCAN JOBS — 1..n per site, stores pointer to Blob report.

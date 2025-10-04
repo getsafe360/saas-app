@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   // Mark touched (optionally set status: 'cancelled' if you add that enum)
   await db
     .update(fixJobs)
-    .set({ updatedAt: new Date() })
+    .set({ updatedAt: new Date(), status: 'cancelled' })
     .where(eq(fixJobs.id, jobId));
 
   return NextResponse.json({ ok: true });
