@@ -1,229 +1,120 @@
-// /app/api/scan/start/route.ts
+// app/api/scan/start/route.ts
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { getDb } from '@/lib/db/drizzle';
-import { scanJobs, sites } from '@/lib/db/schema';
+import { list } from '@vercel/blob';
 import { eq } from 'drizzle-orm';
-import { list, type ListBlobResultBlob } from '@vercel/blob';
 
+import { getDb } from '@/lib/db/drizzle';
+import { sites, scanJobs } from '@/lib/db/schema';
+import { getDbUserFromClerk } from '@/lib/auth/current';
+
+// Narrow body type
 type Category = 'seo' | 'performance' | 'accessibility' | 'security';
-const ALLOWED_CATEGORIES: readonly Category[] = [
-  'seo',
-  'performance',
-  'accessibility',
-  'security'
-] as const;
+type Body = { siteId?: string; categories?: Category[] };
 
-const DEV = process.env.NODE_ENV !== 'production';
-
-function res(
-  status: number,
-  body: Record<string, any>,
-  requestId: string
-): NextResponse {
-  return NextResponse.json(
-    DEV ? body : { ok: body.ok, error: body.error, jobId: body.jobId },
-    {
-      status,
-      headers: {
-        'X-Request-Id': requestId,
-        'Cache-Control': 'no-store'
-      }
-    }
-  );
-}
-
-function devErr(e: unknown) {
-  if (!DEV) return undefined;
-  const err = e as any;
+// Small helper for safer error payloads
+function dbErr(e: unknown) {
+  const any = e as any;
   return {
-    name: err?.name,
-    message: err?.message,
-    stack: err?.stack
+    message: any?.message ?? 'db error',
+    code: any?.code,
+    detail: any?.detail,
   };
 }
 
-async function getSiteFromBlob(id: string): Promise<{ siteId: string; siteUrl: string } | null> {
+// Try to load site metadata from Blob and insert a DB row with userId
+async function ensureSiteExistsForUser(db: ReturnType<typeof getDb>, siteId: string, userId: number) {
+  // 1) Already there?
+  const existing = await db.select().from(sites).where(eq(sites.id, siteId)).limit(1);
+  if (existing[0]) return existing[0];
+
+  // 2) Hydrate from Blob: sites/{id}.json written during handshake
   try {
-    const { blobs } = await list({ prefix: `sites/${id}.json` });
-    const b = blobs?.[0] as ListBlobResultBlob | undefined;
+    const { blobs } = await list({ prefix: `sites/${siteId}.json`, limit: 1 });
+    const b = blobs[0];
     if (!b) return null;
+
     const r = await fetch(b.url, { cache: 'no-store' });
+    if (!r.ok) return null;
     const j = await r.json().catch(() => null);
-    if (!j || !j.siteId || !j.siteUrl) return null;
-    return { siteId: j.siteId, siteUrl: j.siteUrl };
+    if (!j || !j.siteUrl) return null;
+
+    // Insert with userId set (avoid NOT NULL violation)
+    await db.insert(sites).values({
+      id: siteId,
+      userId,
+      siteUrl: j.siteUrl,
+      status: (j.status ?? 'connected') as any,
+      cms: (j.cms ?? 'wordpress') as any,
+      wpVersion: j.wpVersion ?? null,
+      pluginVersion: j.pluginVersion ?? null,
+      createdAt: j.createdAt ? new Date(j.createdAt) : new Date(),
+      updatedAt: j.updatedAt ? new Date(j.updatedAt) : new Date(),
+    });
+
+    const [inserted] = await db.select().from(sites).where(eq(sites.id, siteId)).limit(1);
+    return inserted ?? null;
   } catch (e) {
-    if (DEV) console.error('[scan/start] blob fetch error:', e);
+    console.error('[scan/start] ensureSiteExistsForUser blob->db failed', e);
     return null;
   }
 }
 
 export async function POST(req: NextRequest) {
-  const t0 = Date.now();
-  const requestId = crypto.randomUUID();
-  const steps: Array<{ step: string; ms: number; note?: string; ok?: boolean }> = [];
-  const mark = (step: string, note?: string, ok?: boolean) => {
-    steps.push({ step, ms: Date.now() - t0, note, ok });
-  };
-
   const db = getDb();
 
-  // ---- Parse & validate payload
-  let payload: unknown;
-  try {
-    payload = await req.json();
-    mark('parse_json', undefined, true);
-  } catch (e) {
-    mark('parse_json', 'invalid json', false);
-    return res(
-      400,
-      { ok: false, error: { code: 'BAD_JSON', message: 'Invalid JSON body' }, debug: { steps, err: devErr(e) } },
-      requestId
-    );
+  // 1) Auth (server-side Clerk)
+  const user = await getDbUserFromClerk();
+  if (!user) {
+    return NextResponse.json({ error: 'auth required' }, { status: 401 });
   }
 
-  const { siteId, categories } = (payload as { siteId?: string; categories?: Category[] }) ?? {};
+  // 2) Body
+  const body = (await req.json().catch(() => null)) as Body | null;
+  const siteId = body?.siteId?.trim();
   if (!siteId) {
-    mark('validate', 'missing siteId', false);
-    return res(
-      400,
-      { ok: false, error: { code: 'SITE_ID_REQUIRED', message: 'siteId required' }, debug: { steps } },
-      requestId
-    );
+    return NextResponse.json({ error: 'siteId required' }, { status: 400 });
   }
+  const cats: Category[] =
+    body?.categories?.length ? body.categories : ['seo', 'performance', 'accessibility', 'security'];
 
-  // Validate categories, but be helpful
-  let cats: Category[] = Array.isArray(categories) && categories.length ? categories : [...ALLOWED_CATEGORIES];
-  const invalidCats = cats.filter(c => !ALLOWED_CATEGORIES.includes(c));
-  if (invalidCats.length) {
-    mark('validate', 'invalid categories', false);
-    return res(
-      400,
-      {
-        ok: false,
-        error: { code: 'INVALID_CATEGORIES', message: 'One or more categories are invalid' },
-        debug: { steps, invalid: invalidCats, allowed: ALLOWED_CATEGORIES }
-      },
-      requestId
-    );
-  }
-
-  // ---- Look up site (DB first)
-  let siteUrl: string | null = null;
-  let source: 'db' | 'blob' | 'none' = 'none';
-
-  try {
-    const [row] = await db
-      .select({ siteUrl: sites.siteUrl })
-      .from(sites)
-      .where(eq(sites.id, siteId))
-      .limit(1);
-    siteUrl = row?.siteUrl ?? null;
-    source = siteUrl ? 'db' : 'none';
-    mark('db_lookup', siteUrl ? 'hit' : 'miss', !!siteUrl);
-  } catch (e) {
-    mark('db_lookup', 'error', false);
-    if (DEV) console.error(`[scan/start] ${requestId} DB lookup error`, e);
-  }
-
-  // ---- Fallback to Blob (align with page data source)
-  if (!siteUrl) {
-    const blob = await getSiteFromBlob(siteId);
-    if (blob) {
-      siteUrl = blob.siteUrl;
-      source = 'blob';
-      mark('blob_lookup', 'hit', true);
-
-      // Optional: upsert stub site to satisfy FK constraints later
-      try {
-        // If your dialect supports it, keep onConflictDoNothing();
-        // Otherwise, wrap in try/catch like below to ignore duplicates.
-        await db
-          .insert(sites)
-          .values({
-            id: siteId,
-            siteUrl: blob.siteUrl,
-            status: 'connected',
-            createdAt: new Date(),
-            updatedAt: new Date()
-          } as any)
-          // @ts-ignore drizzle's onConflictDoNothing availability depends on the driver
-          .onConflictDoNothing?.();
-        mark('site_upsert', 'inserted (or skipped by conflict)', true);
-      } catch (e) {
-        mark('site_upsert', 'failed (non-fatal)', false);
-        if (DEV) console.warn(`[scan/start] ${requestId} site upsert failed (likely OK if already exists)`, e);
-      }
-    } else {
-      mark('blob_lookup', 'miss', false);
+  // 3) Make sure the site row exists and is owned by this user
+  let site = await db.select().from(sites).where(eq(sites.id, siteId)).limit(1);
+  if (!site[0]) {
+    // Try to hydrate from Blob (created by handshake)
+    const inserted = await ensureSiteExistsForUser(db, siteId, user.id);
+    if (!inserted) {
+      return NextResponse.json(
+        { error: 'site not found; connect it first', hint: 'Run WP plugin handshake or add the site in Dashboard.' },
+        { status: 404 },
+      );
+    }
+    site = [inserted];
+  } else {
+    // Optional: verify ownership (for multi-user safety)
+    if (site[0].userId !== user.id) {
+      return NextResponse.json({ error: 'forbidden: site belongs to another user' }, { status: 403 });
     }
   }
 
-  if (!siteUrl) {
-    return res(
-      404,
-      {
-        ok: false,
-        error: { code: 'SITE_NOT_FOUND', message: 'Site not found in DB or Blob' },
-        debug: { steps, siteId, sourceTried: ['db', 'blob'] }
-      },
-      requestId
-    );
-  }
-
-  // ---- Enqueue job
+  // 4) Enqueue scan job (with FK satisfied)
   const jobId = crypto.randomUUID();
-
   try {
     await db.insert(scanJobs).values({
       id: jobId,
       siteId,
       status: 'queued',
-      categories: cats.join(','),
+      categories: cats.join(','), // store as CSV
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
-    mark('enqueue_job', 'queued', true);
-  } catch (e: any) {
-    mark('enqueue_job', 'failed', false);
-
-    // Offer a precise hint if this is a FK / constraint issue
-    const msg = String(e?.message ?? e);
-    const isFK = /foreign key|constraint|references/i.test(msg);
-    const code = isFK ? 'FK_VIOLATION' : 'ENQUEUE_FAILED';
-
-    if (DEV) {
-      console.error(`[scan/start] ${requestId} enqueue error`, e);
-    }
-
-    return res(
-      500,
-      {
-        ok: false,
-        error: {
-          code,
-          message: isFK
-            ? 'Failed to enqueue: siteId does not exist in sites table (FK). Consider enabling site upsert.'
-            : 'Failed to enqueue job'
-        },
-        debug: { steps, dbMessage: msg, siteId, categories: cats }
-      },
-      requestId
-    );
+  } catch (e) {
+    console.error('[scan/start] enqueue error', e);
+    return NextResponse.json({ error: 'failed to enqueue', detail: dbErr(e) }, { status: 500 });
   }
 
-  // ---- Success
-  return res(
-    200,
-    {
-      ok: true,
-      jobId,
-      info: { siteId, categories: cats, source },
-      debug: DEV ? { steps, elapsedMs: Date.now() - t0 } : undefined
-    },
-    requestId
-  );
+  return NextResponse.json({ jobId, queued: true });
 }

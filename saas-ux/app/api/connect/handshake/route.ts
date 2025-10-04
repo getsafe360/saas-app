@@ -1,132 +1,88 @@
-// app/api/connect/handshake/route.ts
-import { list, put } from "@vercel/blob";
-import crypto from "crypto";
-import { NextRequest, NextResponse } from "next/server";
+// app/api/connect/check/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { list } from '@vercel/blob';
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-async function readPairingByCode(pairCode: string) {
-  const { blobs } = await list({ prefix: `pairings/code-${pairCode}.json` });
-  const b = blobs[0];
-  if (!b) return null;
-  const r = await fetch(b.url, { cache: "no-store" });
-  if (!r.ok) return null;
-  return r.json();
-}
+export async function GET(req: NextRequest) {
+  const code = req.nextUrl.searchParams.get('pairCode')?.trim();
 
-async function readExistingSite(siteId: string) {
-  const { blobs } = await list({ prefix: `sites/${siteId}.json` });
-  const b = blobs[0];
-  if (!b) return null;
-  const r = await fetch(b.url, { cache: "no-store" });
-  if (!r.ok) return null;
-  return r.json();
-}
+  if (!code || !/^\d{6}$/.test(code)) {
+    return NextResponse.json({ error: 'pairCode required' }, { status: 400 });
+  }
 
-function hostnameKey(u: string) {
-  const url = new URL(u);
-  return url.hostname.replace(/^www\./, "").toLowerCase();
-}
-
-function sameSite(a: string, b: string) {
   try {
-    return hostnameKey(a) === hostnameKey(b);
+    // We store records as: pairings/code-123456.json
+    const { blobs } = await list({ prefix: `pairings/code-${code}.json`, limit: 1 });
+
+    // No record at all → treat as expired/invalid
+    if (!blobs.length) {
+      return jsonNoStore({
+        used: false,
+        expired: true,
+        status: 'expired',
+        remainingMs: 0
+      });
+    }
+
+    const res = await fetch(blobs[0].url, { cache: 'no-store' });
+    if (!res.ok) {
+      // Graceful fallback: unknown → pending (client can retry)
+      return jsonNoStore({ used: false, expired: false, status: 'pending' });
+    }
+
+    const record = (await res.json().catch(() => null)) as
+      | { used?: boolean; siteId?: string; expiresAt?: number }
+      | null;
+
+    if (!record) {
+      return jsonNoStore({ used: false, expired: false, status: 'pending' });
+    }
+
+    const now = Date.now();
+    const expiresAt = record.expiresAt ?? 0;
+    const remainingMs = Math.max(0, expiresAt - now);
+    const expired = expiresAt ? now > expiresAt : false;
+
+    if (record.used) {
+      return jsonNoStore({
+        used: true,
+        expired: false,
+        status: 'used',
+        siteId: record.siteId,
+        remainingMs
+      });
+    }
+
+    if (expired) {
+      return jsonNoStore({
+        used: false,
+        expired: true,
+        status: 'expired',
+        remainingMs: 0
+      });
+    }
+
+    // Still waiting for handshake
+    return jsonNoStore({
+      used: false,
+      expired: false,
+      status: 'pending',
+      remainingMs
+    });
   } catch {
-    return false;
+    // Don’t leak details; let client keep polling
+    return jsonNoStore({ used: false, expired: false, status: 'pending' });
   }
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
+function jsonNoStore(body: Record<string, unknown>, init?: number | ResponseInit) {
+  const resInit: ResponseInit | undefined =
+    typeof init === 'number' ? { status: init } : init;
 
-    const { pairCode, siteUrl, wpVersion, pluginVersion } = body as {
-      pairCode?: string;
-      siteUrl?: string;
-      wpVersion?: string;
-      pluginVersion?: string;
-    };
-
-    if (!pairCode || !siteUrl) {
-      return NextResponse.json(
-        { error: "pairCode and siteUrl required" },
-        { status: 400 }
-      );
-    }
-
-    const rec: any = await readPairingByCode(pairCode);
-    if (!rec) {
-      return NextResponse.json({ error: "Invalid code" }, { status: 400 });
-    }
-    if (rec.used || rec.expiresAt < Date.now()) {
-      return NextResponse.json(
-        { error: "Code expired or already used" },
-        { status: 400 }
-      );
-    }
-    if (!sameSite(rec.siteUrl, siteUrl)) {
-      return NextResponse.json(
-        { error: "Site URL mismatch" },
-        { status: 400 }
-      );
-    }
-
-    // Mint token + stable siteId (based on hostname only)
-    const siteToken = crypto.randomBytes(32).toString("base64url");
-    const tokenHash = crypto.createHash("sha256").update(siteToken).digest("hex");
-    const siteId = crypto
-      .createHash("sha256")
-      .update(hostnameKey(siteUrl))
-      .digest("hex")
-      .slice(0, 16);
-
-    // Preserve createdAt if the site already exists
-    const existing = await readExistingSite(siteId);
-    const createdAt =
-      typeof existing?.createdAt === "number" ? existing.createdAt : Date.now();
-
-    const siteRecord = {
-      siteId,
-      siteUrl,
-      tokenHash,
-      wpVersion: wpVersion ?? existing?.wpVersion ?? null,
-      pluginVersion: pluginVersion ?? existing?.pluginVersion ?? null,
-      scopes: existing?.scopes ?? ["optimize:read", "optimize:write", "webhook:send"],
-      status: "connected",
-      createdAt,
-      updatedAt: Date.now(),
-    };
-
-    // ✅ allow overwrite of an existing record
-    await put(`sites/${siteId}.json`, JSON.stringify(siteRecord), {
-      access: "public",
-      contentType: "application/json",
-      allowOverwrite: true,
-    });
-
-    // Mark pairing as used (overwrite the same pairing blob)
-    rec.used = true;
-    rec.usedAt = Date.now();
-    await put(`pairings/code-${pairCode}.json`, JSON.stringify(rec), {
-      access: "public",
-      contentType: "application/json",
-      allowOverwrite: true,
-    });
-
-    return NextResponse.json({ siteId, siteToken });
-  } catch (err: any) {
-    console.error("Handshake error:", err);
-    return NextResponse.json(
-      { error: `Server error: ${err?.message ?? "unknown"}` },
-      { status: 500 }
-    );
-  }
+  const res = NextResponse.json(body, resInit);
+  res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  return res;
 }
 
-export async function GET() {
-  return NextResponse.json({ ok: true, expects: "POST" });
-}

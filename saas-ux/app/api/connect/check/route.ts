@@ -1,35 +1,40 @@
 // app/api/connect/check/route.ts
-import { list } from "@vercel/blob";
-import { NextRequest, NextResponse } from "next/server";
-import { getUser } from "@/lib/db/queries";
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+import { NextRequest, NextResponse } from 'next/server';
+import { list } from '@vercel/blob';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const user = await getUser();
-  if (!user) return NextResponse.json({ error: "auth required" }, { status: 401 });
-  const { searchParams } = new URL(req.url);
-  const pairCode = searchParams.get("pairCode") || "";
-  if (!pairCode) return NextResponse.json({ error: "pairCode required" }, { status: 400 });
-
-  const { blobs } = await list({ prefix: `pairings/code-${pairCode}.json` });
-  const b = blobs[0];
-  if (!b) return NextResponse.json({ used: false, found: false });
-
-  const rec = await fetch(b.url, { cache: "no-store" }).then(r => r.json()).catch(() => null);
-  if (!rec) return NextResponse.json({ used: false, found: false });
-
-  const found = true;
-  const used = !!rec.used;
-  const expiresAt = rec.expiresAt ?? null;
-  const recordedSiteUrl = rec.siteUrl ?? null;
-
-  // compute siteId same way as handshake (hostname hash is fine too)
-  let siteId: string | undefined;
-  if (used && recordedSiteUrl) {
-    const crypto = await import("crypto");
-    siteId = crypto.createHash("sha256").update(recordedSiteUrl).digest("hex").slice(0, 16);
+  const code = req.nextUrl.searchParams.get('pairCode')?.trim();
+  if (!code || !/^\d{6}$/.test(code)) {
+    return NextResponse.json({ error: 'pairCode required' }, { status: 400 });
   }
 
-  return NextResponse.json({ found, used, siteId, recordedSiteUrl, expiresAt });
+  try {
+    const { blobs } = await list({ prefix: `pairings/code-${code}.json`, limit: 1 });
+    if (!blobs.length) {
+      // Treat as invalid/expired code
+      return NextResponse.json({ used: false, expired: true }, { status: 200 });
+    }
+
+    const res = await fetch(blobs[0].url, { cache: 'no-store' });
+    if (!res.ok) return NextResponse.json({ used: false }, { status: 200 });
+
+    const record = await res.json().catch(() => null) as
+      | { used?: boolean; siteId?: string; expiresAt?: number }
+      | null;
+
+    if (!record) return NextResponse.json({ used: false }, { status: 200 });
+
+    const expired = record.expiresAt ? Date.now() > record.expiresAt : false;
+
+    if (record.used) {
+      return NextResponse.json({ used: true, siteId: record.siteId }, { status: 200 });
+    }
+    return NextResponse.json({ used: false, expired }, { status: 200 });
+  } catch {
+    // Don’t leak details
+    return NextResponse.json({ used: false }, { status: 200 });
+  }
 }
