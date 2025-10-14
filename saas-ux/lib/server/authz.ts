@@ -1,19 +1,25 @@
 // lib/server/authz.ts
-import { getDb } from '@/lib/db/conn'; // your helper
+import 'server-only';
+import { getDb } from '@/lib/db/drizzle';
 import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { auth } from '@clerk/nextjs'; // or your session helper
+import { auth } from '@clerk/nextjs/server';
 
 export async function requireAdmin() {
-  const { userId: clerkUserId } = auth(); // adapt to your session method
+  const { userId: clerkUserId } = await auth();
   if (!clerkUserId) throw new Error('Unauthorized');
 
   const db = getDb();
-  const [me] = await db.select().from(users).where(eq(users.clerkUserId, clerkUserId));
+  const [me] = await db
+    .select()
+    .from(users)
+    .where(eq(users.clerkUserId, clerkUserId))
+    .limit(1);
+
   if (!me) throw new Error('Unauthorized');
 
   const allowed = me.role === 'admin' || me.role === 'staff';
   if (!allowed) throw new Error('Forbidden');
+
   return { me };
 }
-// You can add more helpers, e.g. requireStaff(), requirePlan(), etc.

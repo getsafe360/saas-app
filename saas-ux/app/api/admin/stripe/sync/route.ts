@@ -1,9 +1,13 @@
 // app/api/admin/stripe/sync/route.ts
+import 'server-only';
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/server/authz';
 import { syncStripeForPlans, syncStripeForPacks } from '@/lib/server/payments/stripeSync';
-import { getDb } from '@/lib/db/conn';
+import { getDb } from '@/lib/db/drizzle';
 import { adminActions } from '@/lib/db/schema';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST() {
   try {
@@ -18,7 +22,7 @@ export async function POST() {
       targetType: 'billing',
       targetId: 'stripe',
       action: 'stripe_sync',
-      metadata: {},
+      metadata: {}, // ensure this matches your column name/type
     });
 
     return NextResponse.json({ ok: true });
