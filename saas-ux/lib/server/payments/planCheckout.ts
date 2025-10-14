@@ -2,7 +2,7 @@
 import Stripe from 'stripe';
 import { and, eq } from 'drizzle-orm';
 
-import { getDb } from '@/lib/db/conn';              // your DB connector
+import { getDb } from '@/lib/db/drizzle';              // your DB connector
 import { plans, planPrices } from '@/lib/db/schema';
 import { createCheckoutSession } from './checkout';
 import { syncStripeForPlans } from './stripeSync';

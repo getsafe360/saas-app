@@ -12,10 +12,27 @@ import {
   CheckCircle,
   type LucideIcon,
 } from 'lucide-react';
-import { ActivityType } from '@/lib/db/schema';
+// import { ActivityType } from '@/lib/db/schema'; // removed
 import { getActivityLogs } from '@/lib/db/queries';
 
-export const experimental_ppr = true; // Enable PPR for this page
+export const experimental_ppr = true;
+
+// Canonical action values (match what you store in DB)
+const ACTIONS = {
+  SIGN_UP: 'sign_up',
+  SIGN_IN: 'sign_in',
+  SIGN_OUT: 'sign_out',
+  UPDATE_PASSWORD: 'update_password',
+  DELETE_ACCOUNT: 'delete_account',
+  UPDATE_ACCOUNT: 'update_account',
+  CREATE_TEAM: 'create_team',
+  REMOVE_TEAM_MEMBER: 'remove_team_member',
+  INVITE_TEAM_MEMBER: 'invite_team_member',
+  ACCEPT_INVITATION: 'accept_invitation',
+} as const;
+
+type ActivityType = typeof ACTIONS[keyof typeof ACTIONS];
+
 // Minimal shape expected from getActivityLogs()
 type ActivityLog = {
   id: string | number;
@@ -25,16 +42,16 @@ type ActivityLog = {
 };
 
 const iconMap: Record<ActivityType, LucideIcon> = {
-  [ActivityType.SIGN_UP]: UserPlus,
-  [ActivityType.SIGN_IN]: UserCog,
-  [ActivityType.SIGN_OUT]: LogOut,
-  [ActivityType.UPDATE_PASSWORD]: Lock,
-  [ActivityType.DELETE_ACCOUNT]: UserMinus,
-  [ActivityType.UPDATE_ACCOUNT]: Settings,
-  [ActivityType.CREATE_TEAM]: UserPlus,
-  [ActivityType.REMOVE_TEAM_MEMBER]: UserMinus,
-  [ActivityType.INVITE_TEAM_MEMBER]: Mail,
-  [ActivityType.ACCEPT_INVITATION]: CheckCircle,
+  [ACTIONS.SIGN_UP]: UserPlus,
+  [ACTIONS.SIGN_IN]: UserCog,
+  [ACTIONS.SIGN_OUT]: LogOut,
+  [ACTIONS.UPDATE_PASSWORD]: Lock,
+  [ACTIONS.DELETE_ACCOUNT]: UserMinus,
+  [ACTIONS.UPDATE_ACCOUNT]: Settings,
+  [ACTIONS.CREATE_TEAM]: UserPlus,
+  [ACTIONS.REMOVE_TEAM_MEMBER]: UserMinus,
+  [ACTIONS.INVITE_TEAM_MEMBER]: Mail,
+  [ACTIONS.ACCEPT_INVITATION]: CheckCircle,
 };
 
 function getRelativeTime(date: Date) {
@@ -50,25 +67,25 @@ function getRelativeTime(date: Date) {
 
 function formatAction(action: ActivityType): string {
   switch (action) {
-    case ActivityType.SIGN_UP:
+    case ACTIONS.SIGN_UP:
       return 'You signed up';
-    case ActivityType.SIGN_IN:
+    case ACTIONS.SIGN_IN:
       return 'You signed in';
-    case ActivityType.SIGN_OUT:
+    case ACTIONS.SIGN_OUT:
       return 'You signed out';
-    case ActivityType.UPDATE_PASSWORD:
+    case ACTIONS.UPDATE_PASSWORD:
       return 'You changed your password';
-    case ActivityType.DELETE_ACCOUNT:
+    case ACTIONS.DELETE_ACCOUNT:
       return 'You deleted your account';
-    case ActivityType.UPDATE_ACCOUNT:
+    case ACTIONS.UPDATE_ACCOUNT:
       return 'You updated your account';
-    case ActivityType.CREATE_TEAM:
+    case ACTIONS.CREATE_TEAM:
       return 'You created a new team';
-    case ActivityType.REMOVE_TEAM_MEMBER:
+    case ACTIONS.REMOVE_TEAM_MEMBER:
       return 'You removed a team member';
-    case ActivityType.INVITE_TEAM_MEMBER:
+    case ACTIONS.INVITE_TEAM_MEMBER:
       return 'You invited a team member';
-    case ActivityType.ACCEPT_INVITATION:
+    case ACTIONS.ACCEPT_INVITATION:
       return 'You accepted an invitation';
     default:
       return 'Unknown action occurred';
@@ -90,10 +107,10 @@ export default async function ActivityPage() {
         <CardContent>
           {logs.length > 0 ? (
             <ul className="space-y-4">
-              {logs.map((log: ActivityLog) => {
-                const icon = iconMap[log.action as ActivityType] || Settings;
-                const Icon = icon;
-                const formattedAction = formatAction(log.action as ActivityType);
+              {logs.map((log) => {
+                const action = log.action as ActivityType;
+                const Icon = iconMap[action] || Settings;
+                const formattedAction = formatAction(action);
 
                 return (
                   <li key={String(log.id)} className="flex items-center space-x-4">
@@ -130,4 +147,3 @@ export default async function ActivityPage() {
     </section>
   );
 }
-// Note: This page is server-side rendered and fetches activity logs on each request.
