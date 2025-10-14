@@ -1,14 +1,18 @@
+// drizzle.config.ts
 import 'dotenv/config';
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  schema: './lib/db/schema.ts',  // <- your Drizzle schema
-  out: './drizzle',              // migrations/output folder
   dialect: 'postgresql',
+  schema: './lib/db/schema.ts',
+  out: './lib/db/migrations',           // single canonical folder (commit SQL + meta)
   dbCredentials: {
-    // Works with DATABASE_URL or POSTGRES_URL (Neon/Vercel PG etc.)
-    url: process.env.DATABASE_URL || process.env.POSTGRES_URL!,
+    url: process.env.DATABASE_URL ?? process.env.POSTGRES_URL!,
   },
   verbose: true,
-  strict: true,
+  strict: true,                         // fail fast if meta/journal are inconsistent
+  migrations: {
+    table: '__drizzle_migrations',
+    schema: 'drizzle',                  // journal lives in schema "drizzle"
+  },
 });

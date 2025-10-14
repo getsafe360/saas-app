@@ -4,12 +4,11 @@ import { list, put } from '@vercel/blob';
 import crypto from 'crypto';
 import { getDb } from '@/lib/db/drizzle';
 import { sites } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// --- helpers ---
 function normalizeInput(u: string): string {
   try {
     const url = new URL(u);
@@ -22,172 +21,200 @@ function normalizeInput(u: string): string {
     return u;
   }
 }
-
+function hostOf(u: string) {
+  try { return new URL(u).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; }
+}
 function jsonNoStore(body: Record<string, unknown>, init?: ResponseInit) {
   const res = NextResponse.json(body, init);
   res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   return res;
 }
 
-// For clarity: handshake should be POST only
+// Keep POST only. /api/connect/check handles the GET polling.
 export async function GET() {
-  return jsonNoStore({ error: 'method not allowed' }, { status: 405 });
+  return jsonNoStore({ error: 'method_not_allowed' }, { status: 405 });
 }
 
 export async function POST(req: NextRequest) {
-  let payload: unknown;
   try {
-    payload = await req.json();
-  } catch {
-    return jsonNoStore({ error: 'invalid_json' }, { status: 400 });
-  }
-
-  const { pairCode, siteUrl, wpVersion, pluginVersion } = (payload ?? {}) as {
-    pairCode?: string;
-    siteUrl?: string;
-    wpVersion?: string;
-    pluginVersion?: string;
-  };
-
-  if (!pairCode || !/^\d{6}$/.test(pairCode)) {
-    return jsonNoStore({ error: 'pairCode required' }, { status: 400 });
-  }
-  if (!siteUrl) {
-    return jsonNoStore({ error: 'siteUrl required' }, { status: 400 });
-  }
-
-  // Load pairing record from Blob
-  const { blobs } = await list({ prefix: `pairings/code-${pairCode}.json`, limit: 1 });
-  if (!blobs.length) {
-    return jsonNoStore({ error: 'invalid_or_expired_code' }, { status: 404 });
-  }
-
-  const recRes = await fetch(blobs[0].url, { cache: 'no-store' });
-  if (!recRes.ok) return jsonNoStore({ error: 'pairing_lookup_failed' }, { status: 500 });
-
-  const record = (await recRes.json().catch(() => null)) as
-    | {
-        id: string;
-        siteUrl: string;
-        pairCode: string;
-        createdAt: number;
-        expiresAt: number;
-        used: boolean;
-        userId?: number; // set in /api/connect/start
-        siteId?: string;
-      }
-    | null;
-
-  if (!record) return jsonNoStore({ error: 'pairing_parse_failed' }, { status: 500 });
-
-  const now = Date.now();
-  if (record.used) {
-    // Already paired: return existing site if present
-    return jsonNoStore(
-      record.siteId
-        ? { error: 'already_used', siteId: record.siteId }
-        : { error: 'already_used' },
-      { status: 409 }
-    );
-  }
-  if (record.expiresAt && now > record.expiresAt) {
-    return jsonNoStore({ error: 'code_expired' }, { status: 410 });
-  }
-  if (!record.userId) {
-    // Should be set by /api/connect/start; required to link site owner
-    return jsonNoStore({ error: 'missing_user_in_pair_record' }, { status: 500 });
-  }
-
-  // Normalize URL and prefer record’s normalized origin if needed
-  const normalized = normalizeInput(siteUrl);
-  const normalizedFromRecord = normalizeInput(record.siteUrl);
-
-  // (Optional) sanity check host equality; if different, still proceed with record’s URL
-  const reqHost = (() => {
-    try { return new URL(normalized).hostname.replace(/^www\./, ''); } catch { return ''; }
-  })();
-  const recHost = (() => {
-    try { return new URL(normalizedFromRecord).hostname.replace(/^www\./, ''); } catch { return ''; }
-  })();
-
-  const finalSiteUrl = recHost && reqHost && recHost !== reqHost ? normalizedFromRecord : normalized;
-
-  // Generate IDs/secrets
-  const siteId = record.siteId || crypto.randomBytes(8).toString('hex'); // 16 hex chars like your earlier examples
-  const siteToken = crypto.randomBytes(32).toString('base64url');
-  const tokenHash = crypto.createHash('sha256').update(siteToken).digest('hex');
-
-  // Upsert site in DB
-  const db = getDb();
-
-  // Check if site row already exists
-  const [existing] = await db.select().from(sites).where(eq(sites.id, siteId)).limit(1);
-
-  if (!existing) {
-    // Insert new site
+    let payload: unknown;
     try {
-      await db.insert(sites).values({
-        id: siteId,
-        userId: record.userId!, // NOT NULL in your schema
-        siteUrl: finalSiteUrl,
-        status: 'connected',
-        cms: 'wordpress',
-        wpVersion: wpVersion || null,
-        pluginVersion: pluginVersion || null,
-        tokenHash,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      } as any);
-    } catch (e) {
-      // If a race created it in parallel, continue
+      payload = await req.json();
+    } catch {
+      return jsonNoStore({ error: 'invalid_json', code: 'E_JSON' }, { status: 400 });
     }
-  } else {
-    // Update token & meta (optional)
+
+    const { pairCode, siteUrl, wpVersion, pluginVersion } = (payload ?? {}) as {
+      pairCode?: string;
+      siteUrl?: string;
+      wpVersion?: string;
+      pluginVersion?: string;
+    };
+
+    if (!pairCode || !/^\d{6}$/.test(pairCode)) {
+      return jsonNoStore({ error: 'pairCode required', code: 'E_CODE' }, { status: 400 });
+    }
+    if (!siteUrl) {
+      return jsonNoStore({ error: 'siteUrl required', code: 'E_URL' }, { status: 400 });
+    }
+
+    // Load pairing record created by /api/connect/start
+    let recBlobUrl: string | null = null;
     try {
-      await db
-        .update(sites)
-        .set({
+      const { blobs } = await list({ prefix: `pairings/code-${pairCode}.json`, limit: 1 });
+      recBlobUrl = blobs[0]?.url ?? null;
+    } catch (e) {
+      console.error('[handshake] list error', e);
+      return jsonNoStore({ error: 'pairing_lookup_failed', code: 'E_LIST' }, { status: 500 });
+    }
+    if (!recBlobUrl) {
+      return jsonNoStore({ error: 'invalid_or_expired_code', code: 'E_NOT_FOUND' }, { status: 404 });
+    }
+
+    const recRes = await fetch(recBlobUrl, { cache: 'no-store' });
+    if (!recRes.ok) {
+      return jsonNoStore({ error: 'pairing_fetch_failed', code: 'E_FETCH' }, { status: 500 });
+    }
+
+    const record = (await recRes.json().catch(() => null)) as
+      | {
+          id: string;
+          siteUrl: string;
+          pairCode: string;
+          createdAt: number;
+          expiresAt: number;
+          used: boolean;
+          userId?: number; // set in /api/connect/start
+          siteId?: string;
+        }
+      | null;
+
+    if (!record) {
+      return jsonNoStore({ error: 'pairing_parse_failed', code: 'E_PARSE' }, { status: 500 });
+    }
+
+    const now = Date.now();
+    if (record.used) {
+      return jsonNoStore(
+        record.siteId
+          ? { error: 'already_used', code: 'E_USED', siteId: record.siteId }
+          : { error: 'already_used', code: 'E_USED' },
+        { status: 409 }
+      );
+    }
+    if (record.expiresAt && now > record.expiresAt) {
+      return jsonNoStore({ error: 'code_expired', code: 'E_EXPIRED' }, { status: 410 });
+    }
+    if (!record.userId) {
+      // We require /api/connect/start to stamp userId; otherwise we can’t own the site row.
+      return jsonNoStore({ error: 'missing_user_in_pair_record', code: 'E_NOUSER' }, { status: 500 });
+    }
+
+    // Normalize URL & resolve host
+    const normalizedReq = normalizeInput(siteUrl);
+    const normalizedRec = normalizeInput(record.siteUrl);
+    const reqHost = hostOf(normalizedReq);
+    const recHost = hostOf(normalizedRec);
+
+    // Prefer the host we stored in /start (normalizedRec), but don’t block if they differ.
+    const finalSiteUrl = normalizedRec || normalizedReq;
+    const finalHost = recHost || reqHost;
+
+    // DB upsert (reuse if this user already has a site with same host)
+    const db = getDb();
+
+    // Try to find by same user + same host (case-insensitive match over siteUrl)
+    // NOTE: since we don’t have a separate host column, compare lower(site_url) LIKE '%//host/%'.
+    // This is a pragmatic guard; you can tighten this by storing host in its own column.
+    const likePattern = `%//${finalHost}/%`;
+    const existing = await db
+      .select({ id: sites.id })
+      .from(sites)
+      .where(
+        and(
+          eq(sites.userId, record.userId!),
+          sql`lower(${sites.siteUrl}) LIKE ${likePattern.toLowerCase()}`
+        )
+      )
+      .limit(1);
+
+    const reuseId = existing[0]?.id ?? record.siteId;
+    const siteId = reuseId || crypto.randomBytes(8).toString('hex'); // 16-hex chars
+    const siteToken = crypto.randomBytes(32).toString('base64url');
+    const tokenHash = crypto.createHash('sha256').update(siteToken).digest('hex');
+
+    // Insert or update the site
+    if (!existing[0]) {
+      try {
+        await db.insert(sites).values({
+          id: siteId,
+          userId: record.userId!,
           siteUrl: finalSiteUrl,
           status: 'connected',
-          wpVersion: wpVersion || existing.wpVersion || null,
-          pluginVersion: pluginVersion || existing.pluginVersion || null,
+          cms: 'wordpress',
+          wpVersion: wpVersion || null,
+          pluginVersion: pluginVersion || null,
           tokenHash,
+          createdAt: new Date(),
           updatedAt: new Date()
-        } as any)
-        .where(eq(sites.id, siteId));
-    } catch {}
+        } as any);
+      } catch (e: any) {
+        console.error('[handshake] insert sites failed', e);
+        return jsonNoStore({ error: 'db_insert_failed', code: 'E_DB_INSERT' }, { status: 500 });
+      }
+    } else {
+      try {
+        await db
+          .update(sites)
+          .set({
+            siteUrl: finalSiteUrl,
+            status: 'connected',
+            wpVersion: wpVersion || null,
+            pluginVersion: pluginVersion || null,
+            tokenHash,
+            updatedAt: new Date()
+          } as any)
+          .where(eq(sites.id, siteId));
+      } catch (e: any) {
+        console.error('[handshake] update sites failed', e);
+        return jsonNoStore({ error: 'db_update_failed', code: 'E_DB_UPDATE' }, { status: 500 });
+      }
+    }
+
+    // Mark pairing used
+    try {
+      await put(
+        `pairings/code-${pairCode}.json`,
+        JSON.stringify({ ...record, used: true, usedAt: now, siteId }),
+        { access: 'public', contentType: 'application/json' }
+      );
+    } catch (e) {
+      console.error('[handshake] mark used failed', e);
+      // Non-fatal for plugin experience—continue
+    }
+
+    // Optional: dashboard fallback blob
+    try {
+      await put(
+        `sites/${siteId}.json`,
+        JSON.stringify({
+          siteId,
+          siteUrl: finalSiteUrl,
+          status: 'connected',
+          wpVersion: wpVersion || null,
+          pluginVersion: pluginVersion || null,
+          createdAt: now,
+          updatedAt: now
+        }),
+        { access: 'public', contentType: 'application/json' }
+      );
+    } catch (e) {
+      console.error('[handshake] write site blob failed', e);
+    }
+
+    return jsonNoStore({ siteId, siteToken });
+  } catch (e: any) {
+    console.error('[handshake] unhandled error', e);
+    return jsonNoStore({ error: 'handshake_failed', code: 'E_UNCAUGHT' }, { status: 500 });
   }
-
-  // Mark the pairing as used and stamp the siteId
-  const updatedRecord = {
-    ...record,
-    used: true,
-    usedAt: now,
-    siteId
-  };
-  await put(`pairings/code-${pairCode}.json`, JSON.stringify(updatedRecord), {
-    access: 'public',
-    contentType: 'application/json'
-  });
-
-  // Optional: write a small site blob for the dashboard fallback
-  await put(
-    `sites/${siteId}.json`,
-    JSON.stringify({
-      siteId,
-      siteUrl: finalSiteUrl,
-      status: 'connected',
-      wpVersion: wpVersion || null,
-      pluginVersion: pluginVersion || null,
-      createdAt: now,
-      updatedAt: now
-    }),
-    { access: 'public', contentType: 'application/json' }
-  );
-
-  // Return credentials to the plugin
-  return jsonNoStore({
-    siteId,
-    siteToken
-  });
 }

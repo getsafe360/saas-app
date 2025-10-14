@@ -44,14 +44,13 @@ saas-ux/app/api/blobdelete/
 saas-ux/app/api/selftest/
 node_modules
 
-# Tests/coverage
-coverage/
+# Drizzle: keep canonical migrations + meta (inside saas-ux)
+!saas-ux/lib/db/migrations/
+!saas-ux/lib/db/migrations/**
 
-# Drizzle — keep migrations, ignore meta
-saas-ux/drizzle/meta/
-saas-ux/drizzle/*.sqlite
-saas-ux/drizzle/*.json
-saas-ux/drizzle/*.sql
+# Ignore legacy/stray drizzle outputs
+drizzle/
+saas-ux/drizzle/
 
 # Puppeteer/sharp temps
 tmp/

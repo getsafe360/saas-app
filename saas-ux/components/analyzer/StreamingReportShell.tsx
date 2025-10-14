@@ -1,3 +1,4 @@
+// saas-ux/components/analyzer/StreamingReportShell.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";

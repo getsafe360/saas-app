@@ -1,12 +1,12 @@
 // app/api/connect/start/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { list, put } from "@vercel/blob";
 import crypto from "crypto";
 
 import { getDb } from "@/lib/db/drizzle";
-import { users } from "@/lib/db/schema";
+import { users, sites } from "@/lib/db/schema";
 import { rateLimit } from "@/lib/api/rate-limit";
 
 export const runtime = "nodejs";
@@ -53,7 +53,7 @@ async function probePlugin(siteUrl: string): Promise<boolean> {
     if (await probeOnce(siteUrl, p)) return true;
   }
 
-  // If original was http, try https (and vice-versa) — some sites redirect weirdly
+  // If original was http, try https (and vice-versa)
   try {
     const u = new URL(siteUrl);
     const flipped = new URL(siteUrl);
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Enter a valid site URL" }, { status: 400 });
   }
   const normalizedUrl = normalizeInput(parsed.toString());
-  const host = new URL(normalizedUrl).hostname.replace(/^www\./, "");
+  const host = new URL(normalizedUrl).hostname.replace(/^www\./, "").toLowerCase();
 
   // 4) Optional allowlist (private beta)
   const allowRx = process.env.ALLOWED_SITE_HOST_REGEX
@@ -142,6 +142,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // 5.5) ✅ GUARD: check if this user already has a site for this host
+  // We don't have a "host" column, so compare lower(site_url) LIKE '%//host/%'
+  const likePattern = `%//${host}/%`.toLowerCase();
+  const existing = await db
+    .select({ id: sites.id })
+    .from(sites)
+    .where(
+      and(
+        eq(sites.userId, dbUser.id),
+        sql`lower(${sites.siteUrl}) LIKE ${likePattern}`
+      )
+    )
+    .limit(1);
+  const existingSiteId = existing[0]?.id ?? null;
+
   // 6) Generate unique code + write records
   const pairCode = await ensureUniquePairCode();
   const id = crypto.randomUUID();
@@ -152,7 +167,8 @@ export async function POST(req: NextRequest) {
     createdAt: Date.now(),
     expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
     used: false,
-    userId: dbUser.id, // link to DB user; handshake will trust this
+    userId: dbUser.id,           // link to DB user; handshake will trust this
+    siteId: existingSiteId || undefined, // ✅ hint handshake to reuse this site
   };
 
   await put(`pairings/code-${pairCode}.json`, JSON.stringify(record), {
@@ -173,8 +189,9 @@ export async function POST(req: NextRequest) {
       pairCode,
       pluginDetected,
       recordedSiteUrl: normalizedUrl,
+      // optional: echo which site the handshake is likely to reuse
+      existingSiteId: existingSiteId || null,
     },
     { headers: { "cache-control": "no-store" } }
   );
 }
-// Note: we don’t rate limit the GET /check endpoint, as it’s polled frequently
