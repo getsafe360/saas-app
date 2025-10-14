@@ -29,6 +29,7 @@ export async function getUser() {
       email: users.email,
       name: users.name,
       createdAt: users.createdAt,
+      language: users.language,
     })
     .from(users)
     .where(and(eq(users.id, session.user.id), isNull(users.deletedAt)))
