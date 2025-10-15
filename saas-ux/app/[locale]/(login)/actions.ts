@@ -1,6 +1,7 @@
 // saas-ux/app/(login)/actions.ts
 'use server';
 
+import 'server-only';
 import { auth } from '@clerk/nextjs/server';
 import { z } from 'zod';
 import { and, eq, sql } from 'drizzle-orm';
@@ -10,7 +11,6 @@ const db = getDb();
 
 import {
   // data + tables
-  type User,
   users,
   teams,
   teamMembers,
@@ -30,16 +30,11 @@ import { createCheckoutSession } from '@/lib/payments/stripe';
 import { getUser, getUserWithTeam } from '@/lib/db/queries';
 import {
   validatedAction,
-  validatedActionWithUser
+  validatedActionWithUser,
 } from '@/lib/auth/middleware';
 
 /** ---------------------------------------------------------
  * Logging helper
- * We encode user account/team events into activity_logs as:
- *   event = 'site_updated'   (fits the current enum)
- *   data  = { kind: 'user', action: 'SIGN_IN' | ... }
- * When/if you extend the enum with user_* values, you can
- * change `event: 'site_updated'` → `event: 'user_sign_in'` etc.
  * --------------------------------------------------------- */
 
 type UserActivity =
@@ -66,7 +61,7 @@ async function logActivity(
   const entry: NewActivityLog = {
     userId,
     teamId,
-    event: 'site_updated', // <-- valid per current enum
+    event: 'site_updated',
     data: { kind: 'user', action: type, ...(extra ?? {}) },
     ipAddress: ipAddress ?? null,
   };
@@ -101,12 +96,9 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
   const isPasswordValid = await comparePasswords(password, foundUser.passwordHash);
   if (!isPasswordValid) {
     return { error: 'Invalid email or password. Please try again.', email, password };
-    }
+  }
 
-  await Promise.all([
-    setSession(foundUser),
-    logActivity(foundTeam?.id, foundUser.id, 'SIGN_IN'),
-  ]);
+  await Promise.all([setSession(foundUser), logActivity(foundTeam?.id, foundUser.id, 'SIGN_IN')]);
 
   const redirectTo = formData.get('redirect') as string | null;
   if (redirectTo === 'checkout') {
@@ -140,8 +132,8 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   const newUser: NewUser = {
     email,
     passwordHash,
-    role: 'owner',     // schema default is 'member' if omitted
-    language: 'en',    // schema default is 'en'
+    role: 'owner', // schema default is 'member' if omitted
+    language: 'en',
     clerkUserId: clerkId,
   };
 
@@ -164,7 +156,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
           eq(invitations.id, parseInt(inviteId, 10)),
           eq(invitations.email, email),
           eq(invitations.status, 'pending'),
-        )
+        ),
       )
       .limit(1);
 
@@ -181,7 +173,10 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     [createdTeam] = await db.select().from(teams).where(eq(teams.id, teamId)).limit(1);
   } else {
     // Create new team
-    const [team] = await db.insert(teams).values({ name: `${email}'s Team` satisfies NewTeam['name'] }).returning();
+    const [team] = await db
+      .insert(teams)
+      .values({ name: `${email}'s Team` satisfies NewTeam['name'] })
+      .returning();
     if (!team) {
       return { error: 'Failed to create team. Please try again.', email, password };
     }
@@ -212,7 +207,8 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 /** ------------------------ Sign Out ------------------------ */
 
 export async function signOut() {
-  const user = (await getUser()) as User;
+  const user = await getUser();
+  if (!user) return;
   const userWithTeam = await getUserWithTeam(user.id);
   await logActivity(userWithTeam?.team?.id, user.id, 'SIGN_OUT');
   (await cookies()).delete('session');
@@ -226,32 +222,56 @@ const updatePasswordSchema = z.object({
   confirmPassword: z.string().min(8).max(100),
 });
 
-export const updatePassword = validatedActionWithUser(updatePasswordSchema, async (data, _, user) => {
-  const { currentPassword, newPassword, confirmPassword } = data;
+export const updatePassword = validatedActionWithUser(
+  updatePasswordSchema,
+  async (data, _, sessionUser) => {
+    const { currentPassword, newPassword, confirmPassword } = data;
 
-  const isPasswordValid = await comparePasswords(currentPassword, user.passwordHash);
-  if (!isPasswordValid) {
-    return { currentPassword, newPassword, confirmPassword, error: 'Current password is incorrect.' };
-  }
+    // Fetch full DB user to access passwordHash
+    const [dbUser] = await db.select().from(users).where(eq(users.id, sessionUser.id)).limit(1);
+    if (!dbUser) {
+      return { currentPassword, newPassword, confirmPassword, error: 'User not found.' };
+    }
 
-  if (currentPassword === newPassword) {
-    return { currentPassword, newPassword, confirmPassword, error: 'New password must be different from the current password.' };
-  }
+    const isPasswordValid = await comparePasswords(currentPassword, dbUser.passwordHash);
+    if (!isPasswordValid) {
+      return {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+        error: 'Current password is incorrect.',
+      };
+    }
 
-  if (confirmPassword !== newPassword) {
-    return { currentPassword, newPassword, confirmPassword, error: 'New password and confirmation password do not match.' };
-  }
+    if (currentPassword === newPassword) {
+      return {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+        error: 'New password must be different from the current password.',
+      };
+    }
 
-  const newPasswordHash = await hashPassword(newPassword);
-  const userWithTeam = await getUserWithTeam(user.id);
+    if (confirmPassword !== newPassword) {
+      return {
+        currentPassword,
+        newPassword,
+        confirmPassword,
+        error: 'New password and confirmation password do not match.',
+      };
+    }
 
-  await Promise.all([
-    db.update(users).set({ passwordHash: newPasswordHash }).where(eq(users.id, user.id)),
-    logActivity(userWithTeam?.team?.id, user.id, 'UPDATE_PASSWORD'),
-  ]);
+    const newPasswordHash = await hashPassword(newPassword);
+    const userWithTeam = await getUserWithTeam(sessionUser.id);
 
-  return { success: 'Password updated successfully.' };
-});
+    await Promise.all([
+      db.update(users).set({ passwordHash: newPasswordHash }).where(eq(users.id, sessionUser.id)),
+      logActivity(userWithTeam?.team?.id, sessionUser.id, 'UPDATE_PASSWORD'),
+    ]);
+
+    return { success: 'Password updated successfully.' };
+  },
+);
 
 /** ---------------------- Delete Account ------------------- */
 
@@ -259,36 +279,44 @@ const deleteAccountSchema = z.object({
   password: z.string().min(8).max(100),
 });
 
-export const deleteAccount = validatedActionWithUser(deleteAccountSchema, async (data, _, user) => {
-  const { password } = data;
+export const deleteAccount = validatedActionWithUser(
+  deleteAccountSchema,
+  async (data, _, sessionUser) => {
+    const { password } = data;
 
-  const isPasswordValid = await comparePasswords(password, user.passwordHash);
-  if (!isPasswordValid) {
-    return { password, error: 'Incorrect password. Account deletion failed.' };
-  }
+    // Fetch full DB user to access passwordHash
+    const [dbUser] = await db.select().from(users).where(eq(users.id, sessionUser.id)).limit(1);
+    if (!dbUser) {
+      return { password, error: 'User not found.' };
+    }
 
-  const userWithTeam = await getUserWithTeam(user.id);
+    const isPasswordValid = await comparePasswords(password, dbUser.passwordHash);
+    if (!isPasswordValid) {
+      return { password, error: 'Incorrect password. Account deletion failed.' };
+    }
 
-  await logActivity(userWithTeam?.team?.id, user.id, 'DELETE_ACCOUNT');
+    const userWithTeam = await getUserWithTeam(sessionUser.id);
+    await logActivity(userWithTeam?.team?.id, sessionUser.id, 'DELETE_ACCOUNT');
 
-  // Soft delete + keep email unique
-  await db
-    .update(users)
-    .set({
-      deletedAt: sql`CURRENT_TIMESTAMP`,
-      email: sql`CONCAT(email, '-', id, '-deleted')`,
-    })
-    .where(eq(users.id, user.id));
-
-  if (userWithTeam?.team?.id) {
+    // Soft delete + keep email unique
     await db
-      .delete(teamMembers)
-      .where(and(eq(teamMembers.userId, user.id), eq(teamMembers.teamId, userWithTeam.team.id)));
-  }
+      .update(users)
+      .set({
+        deletedAt: sql`CURRENT_TIMESTAMP`,
+        email: sql`CONCAT(email, '-', id, '-deleted')`,
+      })
+      .where(eq(users.id, sessionUser.id));
 
-  (await cookies()).delete('session');
-  redirect('/sign-in');
-});
+    if (userWithTeam?.team?.id) {
+      await db
+        .delete(teamMembers)
+        .where(and(eq(teamMembers.userId, sessionUser.id), eq(teamMembers.teamId, userWithTeam.team.id)));
+    }
+
+    (await cookies()).delete('session');
+    redirect('/sign-in');
+  },
+);
 
 /** --------------------- Update Account -------------------- */
 
@@ -297,17 +325,20 @@ const updateAccountSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
-export const updateAccount = validatedActionWithUser(updateAccountSchema, async (data, _, user) => {
-  const { name, email } = data;
-  const userWithTeam = await getUserWithTeam(user.id);
+export const updateAccount = validatedActionWithUser(
+  updateAccountSchema,
+  async (data, _, sessionUser) => {
+    const { name, email } = data;
+    const userWithTeam = await getUserWithTeam(sessionUser.id);
 
-  await Promise.all([
-    db.update(users).set({ name, email }).where(eq(users.id, user.id)),
-    logActivity(userWithTeam?.team?.id, user.id, 'UPDATE_ACCOUNT'),
-  ]);
+    await Promise.all([
+      db.update(users).set({ name, email }).where(eq(users.id, sessionUser.id)),
+      logActivity(userWithTeam?.team?.id, sessionUser.id, 'UPDATE_ACCOUNT'),
+    ]);
 
-  return { name, success: 'Account updated successfully.' };
-});
+    return { name, success: 'Account updated successfully.' };
+  },
+);
 
 /** -------------------- Remove Team Member ----------------- */
 
@@ -315,66 +346,4 @@ const removeTeamMemberSchema = z.object({
   memberId: z.number(),
 });
 
-export const removeTeamMember = validatedActionWithUser(removeTeamMemberSchema, async (data, _, user) => {
-  const { memberId } = data;
-  const userWithTeam = await getUserWithTeam(user.id);
-  if (!userWithTeam?.team?.id) return { error: 'User is not part of a team' };
-
-  await db
-    .delete(teamMembers)
-    .where(and(eq(teamMembers.id, memberId), eq(teamMembers.teamId, userWithTeam.team.id)));
-
-  await logActivity(userWithTeam.team.id, user.id, 'REMOVE_TEAM_MEMBER');
-
-  return { success: 'Team member removed successfully' };
-});
-
-/** --------------------- Invite Team Member ---------------- */
-
-const inviteTeamMemberSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  role: z.enum(['member', 'owner']),
-});
-
-export const inviteTeamMember = validatedActionWithUser(inviteTeamMemberSchema, async (data, _, user) => {
-  const { email, role } = data;
-  const userWithTeam = await getUserWithTeam(user.id);
-  if (!userWithTeam?.team?.id) return { error: 'User is not part of a team' };
-
-  const existingMember = await db
-    .select()
-    .from(users)
-    .leftJoin(teamMembers, eq(users.id, teamMembers.userId))
-    .where(and(eq(users.email, email), eq(teamMembers.teamId, userWithTeam.team.id)))
-    .limit(1);
-
-  if (existingMember.length > 0) {
-    return { error: 'User is already a member of this team' };
-  }
-
-  const existingInvitation = await db
-    .select()
-    .from(invitations)
-    .where(and(eq(invitations.email, email), eq(invitations.teamId, userWithTeam.team.id), eq(invitations.status, 'pending')))
-    .limit(1);
-
-  if (existingInvitation.length > 0) {
-    return { error: 'An invitation has already been sent to this email' };
-  }
-
-  await db.insert(invitations).values({
-    teamId: userWithTeam.team.id,
-    email,
-    role,
-    invitedBy: user.id,
-    status: 'pending',
-  });
-
-  await logActivity(userWithTeam.team.id, user.id, 'INVITE_TEAM_MEMBER');
-
-  // TODO: send email with ?inviteId={id}
-  return { success: 'Invitation sent successfully' };
-});
-// Note: For local dev with Clerk, ensure your `.env.local` has:
-// CLERK_JWT_KEY=clerk_local_jwt_key
-// CLERK_API_KEY=clerk_local_api_key
+export const removeTeamMember = validatedActionWithUser

@@ -1,15 +1,20 @@
 // saas-ux/lib/auth/middleware.ts
-
+import 'server-only';
 import { z } from 'zod';
-import { TeamDataWithMembers, teamMembers, User } from '@/lib/db/schema';
 import { getTeamForUser, getUser } from '@/lib/db/queries';
 import { redirect } from 'next/navigation';
 
 export type ActionState = {
   error?: string;
   success?: string;
-  [key: string]: any; // This allows for additional properties
+  [key: string]: any;
 };
+
+// Type derived from your actual session helper return
+type SessionUser = NonNullable<Awaited<ReturnType<typeof getUser>>>;
+
+// Type derived from your team helper (non-null at callsite)
+type TeamForUser = NonNullable<Awaited<ReturnType<typeof getTeamForUser>>>;
 
 type ValidatedActionFunction<S extends z.ZodType<any, any>, T> = (
   data: z.infer<S>,
@@ -25,7 +30,6 @@ export function validatedAction<S extends z.ZodType<any, any>, T>(
     if (!result.success) {
       return { error: result.error.errors[0].message };
     }
-
     return action(result.data, formData);
   };
 }
@@ -33,7 +37,7 @@ export function validatedAction<S extends z.ZodType<any, any>, T>(
 type ValidatedActionWithUserFunction<S extends z.ZodType<any, any>, T> = (
   data: z.infer<S>,
   formData: FormData,
-  user: User
+  user: SessionUser
 ) => Promise<T>;
 
 export function validatedActionWithUser<S extends z.ZodType<any, any>, T>(
@@ -51,14 +55,12 @@ export function validatedActionWithUser<S extends z.ZodType<any, any>, T>(
       return { error: result.error.errors[0].message };
     }
 
-    return action(result.data, formData, user);
+    // user is NonNullable here due to the guard
+    return action(result.data, formData, user as SessionUser);
   };
 }
 
-type ActionWithTeamFunction<T> = (
-  formData: FormData,
-  team: TeamDataWithMembers
-) => Promise<T>;
+type ActionWithTeamFunction<T> = (formData: FormData, team: TeamForUser) => Promise<T>;
 
 export function withTeam<T>(action: ActionWithTeamFunction<T>) {
   return async (formData: FormData): Promise<T> => {
@@ -72,6 +74,6 @@ export function withTeam<T>(action: ActionWithTeamFunction<T>) {
       throw new Error('Team not found');
     }
 
-    return action(formData, team);
+    return action(formData, team as TeamForUser);
   };
 }
