@@ -1,7 +1,19 @@
+// lib/db/queries/users.ts
 import 'server-only';
 import { eq } from 'drizzle-orm';
 import { getDb } from '../drizzle';
-import { users, teams, teamMembers, type TeamDataWithMembers } from '../schema';
+import { users, teams, teamMembers } from '../schema';
+
+// Minimal team type for legacy compatibility (extend if you re-enable teams)
+export type TeamDataWithMembers =
+  (typeof teams.$inferSelect) & {
+    members?: Array<{
+      id: number;
+      userId: number;
+      teamId: number;
+      role: string;
+    }>;
+  };
 
 export async function getUserWithTeam(userId: number) {
   const db = getDb();
@@ -18,7 +30,7 @@ export async function getUserWithTeam(userId: number) {
   return { user, team: team ?? null };
 }
 
-// Compatibility with old middleware.withTeam() contracts.
+// Legacy compatibility for middleware.withTeam(); return null until teams are enabled.
 export async function getTeamForUser(): Promise<TeamDataWithMembers | null> {
   return null;
 }

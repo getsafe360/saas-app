@@ -10,6 +10,7 @@ import { BgColorSelector } from "@/components/ui/bg-color-selector";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Menu as MenuIcon, X as CloseIcon } from "lucide-react";
+import HeaderAuthCta from '@/components/header/HeaderAuthCta.client';
 
 function NavLink({
   href,
@@ -100,15 +101,9 @@ export function Header() {
                 <SignedIn>
                   <UserButton />
                 </SignedIn>
-                <SignedOut>
-                  <SignInButton mode="modal">
-                    <button
-                      className="button-shine hover:cursor-pointer ml-2 inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-600 dark:focus-visible:ring-offset-0 transition"
-                    >
-                      {t("signIn")}
-                    </button>
-                  </SignInButton>
-                </SignedOut>
+                
+                <HeaderAuthCta t={t} />
+
               </Suspense>
             </nav>
 
@@ -145,13 +140,9 @@ export function Header() {
                   <SignedIn>
                     <UserButton />
                   </SignedIn>
-                  <SignedOut>
-                    <SignInButton mode="modal">
-                      <button className="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-600 dark:focus-visible:ring-offset-0 transition">
-                        {t("signIn")}
-                      </button>
-                    </SignInButton>
-                  </SignedOut>
+                  
+                  <HeaderAuthCta t={t} />
+                  
                 </Suspense>
               </div>
             </div>
