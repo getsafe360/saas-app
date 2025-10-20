@@ -45,8 +45,8 @@ saas-ux/app/api/selftest/
 node_modules
 
 # Drizzle: keep canonical migrations + meta (inside saas-ux)
-!saas-ux/lib/db/migrations/
-!saas-ux/lib/db/migrations/**
+saas-ux/lib/db/migrations/
+saas-ux/lib/db/migrations/**
 
 # Ignore legacy/stray drizzle outputs
 drizzle/

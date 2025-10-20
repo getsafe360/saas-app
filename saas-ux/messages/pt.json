@@ -76,7 +76,9 @@
     "view_pricing": "Ver preços",
     "view_dashboard": "Abrir painel",
     "add_website": "Adicionar site",
-    "run_analysis": "Iniciar análise"
+    "run_analysis": "Iniciar análise",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar"
   },
   "analysis": {
     "headline1": "Deixe seu site acessível e legal em 10 minutos",

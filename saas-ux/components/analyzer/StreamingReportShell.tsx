@@ -1,308 +1,158 @@
 // saas-ux/components/analyzer/StreamingReportShell.tsx
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { ShieldCheck, Gauge, Search, Accessibility, ImageIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import { useTranslations } from "next-intl";
+import { SignedOut, SignedIn, SignUpButton } from "@clerk/nextjs";
+import { cn } from "@/lib/cn";
 
-/* ---------- Public type you can reuse for CTA ---------- */
-export type AnalysisPayload = {
-  url: string;
-  scores: Record<"SEO" | "Accessibility" | "Performance" | "Security", number>;
-  screenshotUrl: string | null;
-  faviconUrl?: string | null;
-  cms: string | null;
-  findings: { category: string; severity: "info" | "warn" | "error"; message: string }[];
+type Props = {
+  className?: string;
+  autofillUrl?: string; // optional convenience
+  locale: string;       // pass current selected language/locale
 };
 
-/* ---------- Streaming types ---------- */
-type FindingChunk = {
-  event: "finding" | "score" | "status" | "screenshot" | "favicon" | "cms" | "done" | "error";
-  category?: "SEO" | "Accessibility" | "Performance" | "Security" | "CMS" | "System";
-  severity?: "info" | "warn" | "error";
-  message?: string;
-  score?: number;
-  screenshotUrl?: string;
-  faviconUrl?: string;
-};
+export default function StreamingReportShell({ className, autofillUrl = "", locale }: Props) {
+  const t = useTranslations("actions, Nav, intro, errors, input, cta");
+  const [url, setUrl] = useState(autofillUrl);
+  const [status, setStatus] = useState<"idle" | "loading" | "streaming" | "done" | "error">("idle");
+  const [output, setOutput] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-const CATS = ["SEO", "Accessibility", "Performance", "Security"] as const;
-type Category = typeof CATS[number];
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setOutput("");
+    setErrorMsg(null);
 
-const CAT_ICON: Record<Category, React.ReactNode> = {
-  SEO: <Search className="w-4 h-4" />,
-  Accessibility: <Accessibility className="w-4 h-4" />,
-  Performance: <Gauge className="w-4 h-4" />,
-  Security: <ShieldCheck className="w-4 h-4" />,
-};
+    const u = url.trim();
+    if (!u) return;
 
-/* Per-category ring gradients (start, end) */
-const CAT_GRADIENT: Record<Category, { start: string; end: string }> = {
-  SEO: { start: "#60A5FA", end: "#2563EB" },
-  Accessibility: { start: "#34D399", end: "#059669" },
-  Performance: { start: "#FBBF24", end: "#F59E0B" },
-  Security: { start: "#FB7185", end: "#F43F5E" },
-};
+    setStatus("loading");
+    abortRef.current?.abort();
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
 
-export default function StreamingReportShell({
-  url,
-  onComplete,
-}: {
-  url: string;
-  onComplete?: (analysis: AnalysisPayload) => void;
-}) {
-  const [scores, setScores] = useState<Record<Category, number>>({
-    SEO: 0,
-    Accessibility: 0,
-    Performance: 0,
-    Security: 0,
-  });
-
-  const [findings, setFindings] = useState<
-    { category: string; severity: FindingChunk["severity"]; message: string }[]
-  >([]);
-
-  const [screenshot, setScreenshot] = useState<string | null>(null);
-  const [favicon, setFavicon] = useState<string | null>(null);
-  const [cms, setCms] = useState<string | null>(null);
-  const [status, setStatus] = useState<"idle" | "streaming" | "done" | "error">("streaming");
-
-  // keep latest callback without retriggering the effect
-  const onCompleteRef = useRef<typeof onComplete>(undefined);
-  useEffect(() => {
-    onCompleteRef.current = onComplete;
-  }, [onComplete]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function run() {
-      setStatus("streaming");
-      setFindings([]);
-      setScreenshot(null);
-      setFavicon(null);
-      setCms(null);
-      setScores({ SEO: 0, Accessibility: 0, Performance: 0, Security: 0 });
-
-      // local collectors (avoid stale state in closure)
-      let localScores: Record<Category, number> = { SEO: 0, Accessibility: 0, Performance: 0, Security: 0 };
-      let localFindings: { category: string; severity: "info" | "warn" | "error"; message: string }[] = [];
-      let localScreenshot: string | null = null;
-      let localFavicon: string | null = null;
-      let localCms: string | null = null;
-
-      const res = await fetch(`/api/analyze?url=${encodeURIComponent(url)}`, {
-        method: "GET",
-        headers: { Accept: "application/x-ndjson" },
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: u, locale }),
+        signal: ctrl.signal,
       });
 
       if (!res.ok || !res.body) {
-        setStatus("error");
-        return;
+        const txt = await res.text().catch(() => "");
+        throw new Error(txt || `HTTP ${res.status}`);
       }
 
+      setStatus("streaming");
       const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
+      const decoder = new TextDecoder("utf-8");
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        if (cancelled) return;
-
-        buffer += decoder.decode(value, { stream: true });
-        let idx;
-        while ((idx = buffer.indexOf("\n")) >= 0) {
-          const raw = buffer.slice(0, idx).trim();
-          buffer = buffer.slice(idx + 1);
-          if (!raw) continue;
-
-          try {
-            const chunk: FindingChunk = JSON.parse(raw);
-
-            if (chunk.event === "score" && chunk.category && typeof chunk.score === "number") {
-              const label = chunk.category as Category;
-              if (CATS.includes(label)) {
-                localScores = { ...localScores, [label]: Math.round(chunk.score) };
-                setScores(localScores);
-              }
-            } else if (chunk.event === "finding" && chunk.category && chunk.message) {
-              if (chunk.category === "CMS") localCms = chunk.message || "Unknown";
-              const entry = {
-                category: chunk.category!,
-                severity: chunk.severity || "info",
-                message: chunk.message!,
-              };
-              localFindings = [entry, ...localFindings];
-              setFindings((prev) => [entry, ...prev]);
-            } else if (chunk.event === "status" && chunk.message) {
-              const entry = { category: "System", severity: "info" as const, message: chunk.message };
-              localFindings = [entry, ...localFindings];
-              setFindings((prev) => [entry, ...prev]);
-            } else if (chunk.event === "screenshot" && chunk.screenshotUrl) {
-              localScreenshot = chunk.screenshotUrl;
-              setScreenshot(chunk.screenshotUrl);
-            } else if (chunk.event === "favicon" && chunk.faviconUrl) {
-              localFavicon = chunk.faviconUrl;
-              setFavicon(chunk.faviconUrl);
-            } else if (chunk.event === "done") {
-              setStatus("done");
-              // call latest callback safely
-              if (onCompleteRef.current) {
-                onCompleteRef.current({
-                  url,
-                  scores: localScores,
-                  screenshotUrl: localScreenshot,
-                  faviconUrl: localFavicon,
-                  cms: localCms,
-                  findings: localFindings,
-                });
-              }
-            } else if (chunk.event === "error") {
-              setStatus("error");
-            }
-          } catch {
-            // ignore malformed lines
-          }
-        }
+      // Stream chunks into state
+      let done = false;
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        if (doneReading) break;
+        const chunk = decoder.decode(value, { stream: true });
+        setOutput((prev) => prev + chunk);
       }
+
+      setStatus("done");
+    } catch (err: any) {
+      if (err?.name === "AbortError") return;
+      setStatus("error");
+      setErrorMsg(err?.message || t("errors.generic"));
+    } finally {
+      abortRef.current = null;
     }
+  }
 
-    run();
-    return () => {
-      cancelled = true;
-    };
-    // IMPORTANT: only re-run on URL change, not on callback identity
-  }, [url]);
+  function cancel() {
+    abortRef.current?.abort();
+    setStatus("idle");
+  }
 
   return (
-    <div className="grid lg:grid-cols-5 gap-6">
-      {/* Left: Screenshot + URL (with favicon) */}
-      <div className="lg:col-span-2">
-        <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.03] shadow-xl backdrop-blur h-auto min-h-[250px] flex items-center justify-center">
-          {screenshot ? (
-            <img src={screenshot} alt="Website screenshot" className="w-full h-fit object-cover" />
-          ) : (
-            <div className="flex flex-col items-center text-slate-400">
-              <ImageIcon className="w-7 h-7 mb-2" />
-              <span className="text-sm">Capturing screenshot…</span>
-            </div>
-          )}
-        </div>
+    <div className={cn("space-y-4", className)}>
+      <form onSubmit={onSubmit} className="flex gap-2">
+        <input
+          type="url"
+          required
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder={t("input.placeholder")}
+          className="flex-1 rounded-xl border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-600"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+        />
+        <button
+          type="submit"
+          disabled={status === "loading" || status === "streaming"}
+          className="rounded-xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
+        >
+          {status === "loading" || status === "streaming" ? t("cta.analyzing") : t("cta.analyze")}
+        </button>
+        {(status === "loading" || status === "streaming") && (
+          <button
+            type="button"
+            onClick={cancel}
+            className="rounded-xl border px-5 py-3 text-sm font-semibold hover:bg-gray-50"
+          >
+            {t("actions.cancel")}
+          </button>
+        )}
+      </form>
 
-        {/* favicon + URL */}
-        <div className="mt-3 text-xs text-slate-400 break-all flex items-center gap-2">
-          {favicon ? (
-            <img src={favicon} alt="favicon" width={16} height={16} className="rounded-sm border border-white/10" />
-          ) : (
-            <span className="inline-block w-4 h-4 rounded-sm bg-white/10" />
-          )}
-          <span>
-            Analyzing: <span className="text-slate-200">{url}</span>
-          </span>
-        </div>
-      </div>
-
-      {/* Right: Scores + Findings */}
-      <div className="lg:col-span-3 space-y-6">
-        {/* Category scores */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          {CATS.map((c) => (
-            <CategoryScore key={c} label={c} score={scores[c]} icon={CAT_ICON[c]} gradient={CAT_GRADIENT[c]} />
-          ))}
-        </div>
-
-        {/* Live findings feed */}
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] shadow-xl backdrop-blur p-4 h-[320px] overflow-auto">
-          <h4 className="text-slate-200 font-semibold mb-2">Live findings</h4>
-          <ul className="space-y-2">
-            {findings.length === 0 ? (
-              <li className="text-slate-400 text-sm">Waiting for results…</li>
-            ) : (
-              findings.map((f, i) => (
-                <li key={i} className="text-sm grid grid-cols-[auto,1fr] items-start gap-2">
-                  <span
-                    className={
-                      f.severity === "error"
-                        ? "text-rose-400"
-                        : f.severity === "warn"
-                        ? "text-amber-300"
-                        : "text-slate-400"
-                    }
-                  >
-                    ●
-                  </span>
-                  <span className="text-slate-200">
-                    <b className="text-slate-300">{f.category}:</b> {f.message}
-                  </span>
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ---------- UI bits ---------- */
-function CategoryScore({
-  label,
-  score,
-  icon,
-  gradient,
-}: {
-  label: Category;
-  score: number;
-  icon: React.ReactNode;
-  gradient: { start: string; end: string };
-}) {
-  const pct = Math.max(0, Math.min(100, Math.round(score || 0)));
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur p-4 shadow">
-      <div className="flex items-center gap-2 text-slate-200 font-semibold mb-3">
-        <span className="text-slate-300">{icon}</span>
-        <span>{label}</span>
-      </div>
-      <div className="flex items-center gap-4">
-        <Ring value={pct} gradient={gradient} />
-        <div className="text-sm text-slate-400">
-          <div>
-            <span className="text-slate-200 font-semibold">{pct}</span>/100
+      {/* Copilot intro shows immediately while we wait */}
+      {(status === "loading" || status === "streaming") && (
+        <div className="rounded-2xl border p-4 shadow-sm bg-white/70 dark:bg-neutral-900/70">
+          <div className="text-lg font-semibold">{t("intro.title")}</div>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+            {t("intro.body")}
+          </p>
+          <div className="mt-3 flex items-center gap-2">
+            <SignedOut>
+              <SignUpButton mode="modal">
+                <button className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">
+                  {t ? t('Nav.createFreeAccount') : 'Create free account'}
+                </button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <span className="text-xs text-neutral-500">{t("intro.alreadySignedIn")}</span>
+            </SignedIn>
           </div>
-          <div className="text-xs">higher is better</div>
         </div>
-      </div>
+      )}
+
+      {/* Streamed report */}
+      {output && (
+        <div className="rounded-2xl border p-4 shadow-sm prose prose-sm max-w-none dark:prose-invert">
+          <div className="prose dark:prose-invert">
+          <ReactMarkdown>{output}</ReactMarkdown>
+          </div>
+          {/* Inline CTA stays visible post-report for SignedOut users */}
+          <div className="mt-4">
+            <SignedOut>
+              <SignUpButton mode="modal">
+                <button className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">
+                  {t("Nav.createFreeAccount")}
+                </button>
+              </SignUpButton>
+            </SignedOut>
+          </div>
+        </div>
+      )}
+
+      {status === "error" && (
+        <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-900">
+          {t("errors.title")}: {errorMsg}
+        </div>
+      )}
     </div>
-  );
-}
-
-function Ring({ value, gradient }: { value: number; gradient: { start: string; end: string } }) {
-  const r = 28;
-  const c = 2 * Math.PI * r;
-  const offset = c - (value / 100) * c;
-  const id = `grad-${gradient.start.slice(1)}-${gradient.end.slice(1)}`;
-
-  return (
-    <svg width="72" height="72" viewBox="0 0 72 72">
-      <circle cx="36" cy="36" r={r} stroke="currentColor" strokeOpacity="0.15" strokeWidth="8" fill="none" />
-      <circle
-        cx="36"
-        cy="36"
-        r={r}
-        stroke={`url(#${id})`}
-        strokeWidth="8"
-        fill="none"
-        strokeDasharray={c}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-        transform="rotate(-90 36 36)"
-      />
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={gradient.start} />
-          <stop offset="100%" stopColor={gradient.end} />
-        </linearGradient>
-      </defs>
-    </svg>
   );
 }

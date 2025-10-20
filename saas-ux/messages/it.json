@@ -76,7 +76,9 @@
     "view_pricing": "Vedi prezzi",
     "view_dashboard": "Apri dashboard",
     "add_website": "Aggiungi sito",
-    "run_analysis": "Avvia analisi"
+    "run_analysis": "Avvia analisi",
+    "cancel": "Annulla",
+    "confirm": "Conferma"
   },
   "analysis": {
     "headline1": "Rendi il tuo sito accessibile e conforme in 10 minuti",

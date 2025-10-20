@@ -1,4 +1,5 @@
 {
+  "name": "saas-ux",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -13,6 +14,7 @@
     "db:drop": "drizzle-kit drop"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.53",
     "@clerk/clerk-react": "^5.32.4",
     "@clerk/nextjs": "^6.23.1",
     "@headlessui/react": "^2.2.4",
@@ -25,6 +27,8 @@
     "@types/node": "^22.15.18",
     "@types/react": "19.1.4",
     "@types/react-dom": "19.1.5",
+    "@upstash/ratelimit": "^2.0.6",
+    "@upstash/redis": "^1.35.6",
     "@vercel/blob": "^1.1.1",
     "ai": "5.0.0-beta.2",
     "autoprefixer": "^10.4.21",
@@ -47,6 +51,7 @@
     "radix-ui": "^1.4.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-markdown": "^10.1.0",
     "reactflow": "^11.11.4",
     "server-only": "^0.0.1",
     "sharp": "^0.34.3",

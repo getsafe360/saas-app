@@ -1,1 +1,16 @@
-{"dependencies":{"@paypal/react-paypal-js":"^8.8.3","next":"15.4.0-canary.47","react":"^19.1.1","react-dom":"^19.1.1"},"devDependencies":{"tar":"^7.5.1"}}
+{
+  "name": "getsafe360-saas",
+  "private": true,
+  "packageManager": "pnpm@9.12.3",
+  "scripts": {
+    "dev": "pnpm -C saas-ux dev",
+    "build": "pnpm -C saas-ux build",
+    "start": "pnpm -C saas-ux start"
+  },
+    "pnpm": {
+    "overrides": {
+      "sha3": "npm:js-sha3@0.9.3",
+      "scrypt": "npm:scrypt-js@3.0.1"
+    }
+  }
+}

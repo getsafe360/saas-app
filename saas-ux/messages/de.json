@@ -76,7 +76,9 @@
     "view_pricing": "Preise ansehen",
     "view_dashboard": "Dashboard öffnen",
     "add_website": "Website hinzufügen",
-    "run_analysis": "Analyse starten"
+    "run_analysis": "Analyse starten",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen"
   },
     "AnalyzeMeta": {
     "title": "Website fixen - GetSafe 360 Co-Pilot",

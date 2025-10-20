@@ -1,2 +1,3 @@
-onlyBuiltDependencies:
-  - sharp
+# pnpm-workspace.yaml
+packages:
+  - saas-ux
