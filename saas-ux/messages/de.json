@@ -89,6 +89,7 @@
     "headline1": "Mach deine Website in 10 Minuten barrierefrei und gesetzeskonform",
     "subheadline": "Kostenloser BFSG/WCAG-Audit für alle Websites",
     "placeholder_url": "Gib deine URL ein…",
+    "invalid_url": "Bitte gib eine gültige URL ein",
     "analyzing": "Analysiere…",
     "analyze_btn": "Analysieren",
     "audit_result": "Audit-Ergebnis",

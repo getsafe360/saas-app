@@ -84,6 +84,7 @@
     "headline1": "Haz tu sitio accesible y legal en 10 minutos",
     "subheadline": "Auditoría BFSG/WCAG gratuita para todos los sitios",
     "placeholder_url": "Introduce tu URL…",
+    "invalid_url": "Por favor, introduce una URL válida",
     "analyzing": "Analizando…",
     "analyze_btn": "Analizar",
     "audit_result": "Resultado de auditoría",

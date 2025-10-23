@@ -90,6 +90,7 @@
     "headline1": "Make your website accessible and legally compliant in 10 minutes",
     "subheadline": "Free BFSG/WCAG audit for all websites",
     "placeholder_url": "Enter your URL…",
+    "invalid_url": "Please enter a valid URL",
     "analyzing": "Analyzing…",
     "analyze_btn": "Analyze",
     "audit_result": "Audit result",

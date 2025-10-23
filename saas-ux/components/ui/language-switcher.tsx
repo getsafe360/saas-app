@@ -23,7 +23,7 @@ const ALL_LANG = [
 
 export function LanguageSwitcher() {
   const router = useRouter();
-  const pathname = usePathname(); // e.g. /en/account or /es
+  const pathname = usePathname(); // e.g. /en/de/es/pt/it/fr
   const locale = useLocale();
   const [pending, startTransition] = useTransition();
 
