@@ -5,24 +5,14 @@ import React, { useState } from "react";
 import { cn } from "@/lib/cn";
 import { Loader2 } from "lucide-react";
 
-/**
- * Normalizes user-entered input into a valid HTTPS URL.
- * - Adds https:// if missing
- * - Handles "www.example.com"
- * - Trims whitespace
- */
+/** Normalize "www.example.com" → https://www.example.com (lowercase host) */
 function normalizeUrl(input: string): string | null {
   try {
     const trimmed = input.trim();
     if (!trimmed) return null;
-
-    // if it starts with just "www." add https://
     const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
     const url = new URL(candidate);
-
-    // optionally: force lowercase host
     url.hostname = url.hostname.toLowerCase();
-
     return url.href;
   } catch {
     return null;
@@ -30,10 +20,10 @@ function normalizeUrl(input: string): string | null {
 }
 
 type Labels = {
-  analyze: string;     // e.g. t('analysis.analyze_btn')
-  analyzing: string;   // e.g. t('analysis.analyzing')
-  cancel?: string;     // e.g. t('actions.cancel')
-  invalidUrl?: string; // e.g. t('analysis.invalid_url') (optional)
+  analyze: string;
+  analyzing: string;
+  cancel?: string;
+  invalidUrl?: string;
 };
 
 export default function UrlAnalyzeForm({
@@ -77,7 +67,8 @@ export default function UrlAnalyzeForm({
       onSubmit={handleSubmit}
       className="group relative flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] backdrop-blur px-3 py-2 shadow-lg focus-within:ring-2 focus-within:ring-sky-500/60"
     >
-      {icon ? <span className="text-slate-300">{icon}</span> : null}
+      {/* keep incoming icon color; no forced gray */}
+      {icon ? <span className="shrink-0">{icon}</span> : null}
 
       <input
         type="url"
@@ -101,7 +92,7 @@ export default function UrlAnalyzeForm({
           disabled={isBusy}
           className={cn(
             "rounded-full px-5 py-2 text-sm sm:text-base font-semibold",
-            "text-white bg-sky-600 hover:bg-sky-700 hover:cursor-pointer transition duration-300 ease-in-out",
+            "text-white bg-sky-600 hover:bg-sky-700 transition",
             "disabled:opacity-60 disabled:cursor-not-allowed"
           )}
         >
@@ -118,7 +109,7 @@ export default function UrlAnalyzeForm({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-full px-4 py-2 text-sm sm:text-base font-semibold border border-white/10 text-white/90 hover:bg-white/[0.08] transition duration-300"
+            className="rounded-full px-4 py-2 text-sm sm:text-base font-semibold border border-white/10 text-white/90 hover:bg-white/[0.08] transition"
           >
             {labels.cancel || "Cancel"}
           </button>
@@ -126,9 +117,7 @@ export default function UrlAnalyzeForm({
       </div>
 
       {error && (
-        <div className="absolute -bottom-6 left-4 text-xs text-rose-400">
-          {error}
-        </div>
+        <div className="absolute -bottom-6 left-4 text-xs text-rose-400">{error}</div>
       )}
     </form>
   );

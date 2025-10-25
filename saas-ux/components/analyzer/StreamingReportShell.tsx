@@ -19,6 +19,8 @@ type Props = {
   autofillUrl?: string;
   locale: string;
   onComplete?: (payload: AnalysisPayload) => void;
+  hideForm?: boolean;          // NEW: do not render the form inside the shell
+  startOnUrl?: string;         // NEW: when provided/changed, auto-start analysis
 };
 
 type Facts = Awaited<ReturnType<typeof import("@/lib/analyzer/preScan")["preScan"]>>;
@@ -31,7 +33,15 @@ export type AnalysisPayload = {
   locale: string;
 };
 
-export default function StreamingReportShell({ className, autofillUrl = "", locale, onComplete }: Props) {
+export default function StreamingReportShell({
+  className,
+  autofillUrl = "",
+  locale,
+  onComplete,
+  hideForm = false,
+  startOnUrl,
+}: Props) {
+  const t = useTranslations("Nav");
   const ta = useTranslations("analysis");
   const taction = useTranslations("actions");
 
@@ -43,6 +53,7 @@ export default function StreamingReportShell({ className, autofillUrl = "", loca
   const [findings, setFindings] = useState<Finding[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const completedRef = useRef(false);
+  const lastStartedRef = useRef<string | null>(null);
 
   const scores = useMemo(() => {
     const init = {
@@ -61,7 +72,6 @@ export default function StreamingReportShell({ className, autofillUrl = "", loca
   }, [findings]);
 
   async function startAnalysis(u: string) {
-    // caller already normalized in UrlAnalyzeForm
     setUrl(u);
     setOutput("");
     setFindings([]);
@@ -84,7 +94,6 @@ export default function StreamingReportShell({ className, autofillUrl = "", loca
       if (!res.ok || !res.body) throw new Error(await res.text().catch(() => `HTTP ${res.status}`));
       setStatus("streaming");
 
-      // hydrate identity facts separately (cheap)
       fetch("/api/analyze-facts?url=" + encodeURIComponent(u))
         .then((r) => (r.ok ? r.json() : null))
         .then(setFacts)
@@ -102,15 +111,25 @@ export default function StreamingReportShell({ className, autofillUrl = "", loca
     } catch (err: any) {
       if (err?.name === "AbortError") return;
       setStatus("error");
-      setErrorMsg(err?.message || ta("errors.generic"));
+      setErrorMsg(err?.message || ta("processing"));
     } finally {
       abortRef.current = null;
     }
   }
 
+  // Allow hero form to trigger this shell (keep gradient fixed)
+  useEffect(() => {
+    if (!hideForm && !startOnUrl) return;
+    if (startOnUrl && startOnUrl !== lastStartedRef.current) {
+      lastStartedRef.current = startOnUrl;
+      startAnalysis(startOnUrl);
+    }
+  }, [hideForm, startOnUrl]);
+
   function cancel() {
     abortRef.current?.abort();
     setStatus("idle");
+    lastStartedRef.current = null;
   }
 
   useEffect(() => {
@@ -134,21 +153,22 @@ export default function StreamingReportShell({ className, autofillUrl = "", loca
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Reuse your glass form with i18n + integrated cancel */}
-      <UrlAnalyzeForm
-        placeholder={ta("placeholder_url")}
-        icon={<Globe className="w-5 h-5" />}
-        onSubmit={startAnalysis}
-        isBusy={busy}
-        onCancel={busy ? cancel : undefined}
-        defaultValue={autofillUrl}
-        labels={{
-          analyze: ta("analyze_btn"),
-          analyzing: ta("analyzing"),
-          cancel: taction("cancel"),
-          invalidUrl: ta.has("invalid_url") ? ta("invalid_url") : undefined,
-        }}
-      />
+      {!hideForm && (
+        <UrlAnalyzeForm
+          placeholder={ta("placeholder_url")}
+          icon={<Globe className="w-5 h-5 text-sky-400" />}
+          onSubmit={startAnalysis}
+          isBusy={busy}
+          onCancel={busy ? cancel : undefined}
+          defaultValue={autofillUrl}
+          labels={{
+            analyze: ta("analyze_btn"),
+            analyzing: ta("analyzing"),
+            cancel: taction("cancel"),
+            invalidUrl: ta.has("invalid_url") ? ta("invalid_url") : undefined,
+          }}
+        />
+      )}
 
       {/* Identity + screenshot */}
       {status !== "idle" && (
@@ -172,7 +192,7 @@ export default function StreamingReportShell({ className, autofillUrl = "", loca
             <SignedOut>
               <SignUpButton mode="modal">
                 <button className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">
-                  {ta("intro.createFree")}
+                  {t("createFreeAccount") ?? "Create free account"}
                 </button>
               </SignUpButton>
             </SignedOut>
@@ -192,26 +212,14 @@ export default function StreamingReportShell({ className, autofillUrl = "", loca
 
       {status === "error" && (
         <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-900">
-          {ta("errors.title")}: {errorMsg}
+          {ta("audit_result")}: {errorMsg}
         </div>
       )}
 
       {(status === "loading" || status === "streaming") && (
         <div className="rounded-2xl border p-4 shadow-sm bg-white/70 dark:bg-neutral-900/70">
-          <div className="text-lg font-semibold">{ta("intro.title")}</div>
-          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">{ta("intro.body")}</p>
-          <div className="mt-3 flex items-center gap-2">
-            <SignedOut>
-              <SignUpButton mode="modal">
-                <button className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">
-                  {ta("intro.createFree")}
-                </button>
-              </SignUpButton>
-            </SignedOut>
-            <SignedIn>
-              <span className="text-xs text-neutral-500">{ta("intro.alreadySignedIn")}</span>
-            </SignedIn>
-          </div>
+          <div className="text-lg font-semibold">{ta("headline1")}</div>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">{ta("fixing_in_progress")}</p>
         </div>
       )}
     </div>
