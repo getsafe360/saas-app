@@ -1,16 +1,15 @@
-﻿// saas-ux/components/ui/header.tsx
+﻿// components/header/Header.tsx
 "use client";
 
-import Link from "next/link";
 import { Suspense, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/navigation"; // locale-aware Link + pathname
 import { Logo } from "@/components/ui/logo";
 import { BgColorSelector } from "@/components/ui/bg-color-selector";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignedIn, UserButton } from "@clerk/nextjs";
 import { Menu as MenuIcon, X as CloseIcon } from "lucide-react";
-import HeaderAuthCta from '@/components/header/HeaderAuthCta.client';
+import HeaderAuthCta from "@/components/header/HeaderAuthCta.client";
 
 function NavLink({
   href,
@@ -22,7 +21,8 @@ function NavLink({
   onClick?: () => void;
 }) {
   const pathname = usePathname();
-  const active = pathname === href;
+  const active = pathname === href || pathname.startsWith(`${href}/`);
+
   return (
     <Link
       href={href}
@@ -31,9 +31,7 @@ function NavLink({
       className={[
         "px-2 py-1 rounded transition-colors",
         "hover:text-sky-600 hover:bg-black/[0.03] dark:hover:bg-white/5",
-        active
-          ? "text-sky-600"
-          : "text-slate-800 dark:text-slate-200",
+        active ? "text-sky-600" : "text-slate-800 dark:text-slate-200",
         "uppercase tracking-wide text-sm font-light",
       ].join(" ")}
     >
@@ -45,13 +43,16 @@ function NavLink({
 export function Header() {
   const t = useTranslations("Nav");
   const [open, setOpen] = useState(false);
+  const mobilePanelId = "mobile-nav";
 
   const items = useMemo(
-    () => [
-      { href: "/pricing", label: t("pricing") },
-      { href: "/dashboard", label: t("dashboard") },
-      { href: "/accessibility", label: t("accessibility") },
-    ],
+    () =>
+      [
+        { href: "/pricing", label: t("pricing") },
+        { href: "/faq", label: t("faq") },
+        { href: "/accessibility", label: t("accessibility") },
+        { href: "/dashboard", label: t("dashboard") },
+      ] as const,
     [t]
   );
 
@@ -69,7 +70,7 @@ export function Header() {
         <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
           <div className="h-16 flex items-center justify-between">
             {/* Left: Logo */}
-            <Link title="GetSafe" href="/" className="flex items-center min-w-0">
+            <Link title="GetSafe 360" href="/" className="flex items-center min-w-0">
               <Logo size={32} />
               <span className="ml-2 text-xl font-medium text-slate-900 dark:text-slate-100 subpixel-antialiased">
                 Get<span className="ml-0.5">Safe</span>
@@ -87,7 +88,7 @@ export function Header() {
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden md:flex items-center gap-2">
+            <nav className="hidden md:flex items-center gap-2" aria-label="Primary navigation">
               {items.map((it) => (
                 <NavLink key={it.href} href={it.href} label={it.label} />
               ))}
@@ -101,9 +102,9 @@ export function Header() {
                 <SignedIn>
                   <UserButton />
                 </SignedIn>
-                
-                <HeaderAuthCta t={t} />
 
+                {/* Uses Nav.createFreeAccount / Nav.signIn / Nav.signOut internally */}
+                <HeaderAuthCta t={t} />
               </Suspense>
             </nav>
 
@@ -111,6 +112,8 @@ export function Header() {
             <div className="md:hidden flex items-center gap-2">
               <LanguageSwitcher />
               <button
+                aria-controls={mobilePanelId}
+                aria-expanded={open}
                 aria-label={open ? t("closeMenu") : t("openMenu")}
                 className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 dark:text-slate-200 hover:bg-black/[0.05] dark:hover:bg-white/10 transition"
                 onClick={() => setOpen((v) => !v)}
@@ -123,7 +126,10 @@ export function Header() {
 
         {/* Mobile panel */}
         {open && (
-          <div className="md:hidden border-t border-slate-200/70 dark:border-[#1b2430] bg-white dark:bg-[#080B0E]">
+          <div
+            id={mobilePanelId}
+            className="md:hidden border-t border-slate-200/70 dark:border-[#1b2430] bg-white dark:bg-[#080B0E]"
+          >
             <div className="mx-auto max-w-7xl px-4 py-3 flex flex-col gap-1">
               {items.map((it) => (
                 <NavLink
@@ -140,9 +146,8 @@ export function Header() {
                   <SignedIn>
                     <UserButton />
                   </SignedIn>
-                  
+
                   <HeaderAuthCta t={t} />
-                  
                 </Suspense>
               </div>
             </div>

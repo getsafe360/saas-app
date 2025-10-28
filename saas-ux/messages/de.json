@@ -21,6 +21,18 @@
     "title": "Mein Dashboard - GetSafe 360",
     "description": "Verwalte deine Websites in deinem Dashboard."
   },
+  "metaRoot": {
+    "title": "GetSafe 360 — Co-Pilot für KI-gestützte Website-Optimierung",
+    "description": "Ermöglicht Website-Inhabern und Entwicklern mit KI-Tools Echtzeit-SEO, Performance-Optimierung und Monitoring."
+  },
+  "metaPricing": {
+    "title": "Preise — Kostenlos starten, mit Ihrem Wachstum skalieren | GetSafe 360",
+    "description": "Flexible Tarife für Solo-Creator, Teams und Agenturen. Starten Sie kostenlos mit KI-gestützter Website-Optimierung und Automatisierung."
+  },
+  "metaAbout": {
+    "title": "Über GetSafe 360 — KI-Website-Copilot",
+    "description": "Wir bauen einen KI-Copilot, der jede Website in Minuten verbessert. Erfahren Sie mehr über unsere Mission, unser Team und was uns im Kern antreibt."
+  },
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Übersicht über deine Websites und Analysen",
@@ -59,6 +71,39 @@
     "details": "Wir unterstützen Website-Owner und Developer mit KI-Tools für <b>Echtzeit-Optimierung</b>, Performance-Tests und laufende Compliance mit <b>aktuellen SEO- und Barrierefreiheits-Standards</b>. Mit modernster Technik für <b>beste Performance</b> und <b>höchste Rankings</b>.",
     "intro_left": "Analysiere und optimiere jede Website in Sekunden. SEO, Performance, Sicherheit, Barrierefreiheit und rechtliche Vorgaben inklusive.",
     "intro_right": "Konkrete Insights. Sofortige Optimierung. Halte jede Website auf Top-Niveau. Starte kostenlos!"
+  },
+  "infobox": {
+    "sectionLabel": "Gezielte Vorteile für Website-Inhaber und Entwickler",
+    "owners": {
+      "title": "Für Website Owner & Webmasters",
+      "lead": "Lassen Sie Ihren AI Copilot Ihre Websites warten und optimieren — <b>ohne eine einzige Zeile Code</b>.",
+      "sublead": "URL einfügen und zusehen, wie Ihre Website sich in Minuten verbessert:",
+      "items": {
+        "1": "Frische, markenkonforme Inhalte; übersetzen Sie Ihre gesamte Website für globale Reichweite",
+        "2": "Volle SEO-Kontrolle mit strukturierten Daten (Schema), Sitemaps und Metadaten",
+        "3": "Schnellere Ladezeiten mit Lazy-Loading von Bildern",
+        "4": "Sicherheitshärtung über Header und benutzerdefinierte Skripte (XSS, DDoS)",
+        "5": "Kosteneffiziente UX- und Theme-Optimierungen für ein großartiges Erlebnis auf jedem Gerät",
+        "6": "WordPress & WooCommerce: ein maßgeschneiderter Werkzeugkasten, der bekannte Probleme behebt"
+      },
+      "closing": "Schluss mit stundenlanger Bastelarbeit — präsentieren Sie Startseiten, auf die Sie stolz sind, ganz ohne Code!",
+      "cta": "Meine Website optimieren"
+    },
+    "devs": {
+      "title": "Für Webentwickler & Profis",
+      "lead": "Holen Sie sich Ihren eigenen Web-Copilot und verabschieden Sie sich vom GitHub-Aufwand — rüsten Sie jede Website ohne Setup auf.",
+      "sublead": "Ihr KI-Teamkollege auf Agenturniveau hilft Ihnen, Ihre beste Arbeit zu liefern:",
+      "items": {
+        "1": "Automatisieren Sie das Langweilige, finden Sie Bugs schneller",
+        "2": "Boosten Sie SEO und strukturierte Daten; generieren Sie XML- und LLM-Sitemaps",
+        "3": "UX-Verbesserungen mit Lazy Loading und Skript-Optimierungen für schnellere Auslieferung",
+        "4": "Fügen Sie konfigurierbare Schutzmaßnahmen gegen gängige Angriffe hinzu (SQL-Injection, XSS, DDoS)",
+        "5": "Internationalisieren Sie mit i18n für echte globale Reichweite",
+        "6": "Liefern Sie hochwertige Features und Redesigns, die Ihre Kunden lieben werden"
+      },
+      "closing": "Lassen Sie die KI die mühsame Arbeit übernehmen, damit Sie Stunden sparen, Kosten senken und Ihren Flow — und Ihren Gewinn — steigern!",
+      "cta": "URL zum Analysieren einfügen"
+    }
   },
   "footer": {
     "copyright": "© {year} GetSafe 360 Limited. Alle Rechte vorbehalten.",

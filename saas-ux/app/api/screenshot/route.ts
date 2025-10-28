@@ -6,9 +6,7 @@ import core from "puppeteer-core";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Helper: choose the best available launcher for the current env
 async function launchBrowser() {
-  // Prefer serverless-compatible chromium path if available
   try {
     const execPath = await chromium.executablePath();
     if (execPath) {
@@ -19,11 +17,7 @@ async function launchBrowser() {
         headless: true,
       });
     }
-  } catch {
-    // swallow and try full puppeteer next
-  }
-
-  // Fallback: full puppeteer (bundled Chromium) — perfect for local dev/Windows
+  } catch {}
   const puppeteer = (await import("puppeteer")).default;
   return puppeteer.launch({
     headless: true,
@@ -31,49 +25,49 @@ async function launchBrowser() {
   });
 }
 
-function isHttpUrl(u: string | null): u is string {
-  if (!u) return false;
-  try {
-    const url = new URL(u);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
+function clamp(n: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, n));
 }
 
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
-  if (!isHttpUrl(url)) {
-    return new Response("Missing or invalid url", { status: 400 });
-  }
+  if (!url) return new Response("Missing url", { status: 400 });
+
+  const w = clamp(parseInt(req.nextUrl.searchParams.get("w") || "900", 10), 400, 1600);
+  const q = clamp(parseInt(req.nextUrl.searchParams.get("q") || "65", 10), 30, 90);
+  const mobile = req.nextUrl.searchParams.get("mobile") === "1";
 
   let browser: any;
   try {
     browser = await launchBrowser();
-
     const page = await browser.newPage();
-    await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome Safari"
-    );
 
-    // Fast load; if site is heavy, we still get a meaningful screenshot
+    if (mobile) {
+      await page.setViewport({ width: 390, height: 800, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+      await page.setUserAgent(
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"
+      );
+    } else {
+      await page.setViewport({ width: w, height: Math.round((w * 7) / 12), deviceScaleFactor: 1 });
+      await page.setUserAgent(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome Safari"
+      );
+    }
+
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 8000 }).catch(() => {});
-
-    const buf = await page.screenshot({ type: "jpeg", quality: 70 });
+    const buf = await page.screenshot({ type: "jpeg", quality: q });
     await page.close();
 
     return new Response(buf, {
       headers: {
         "Content-Type": "image/jpeg",
-        "Cache-Control": "public, max-age=600",
+        "Cache-Control": "public, s-maxage=86400, max-age=600", // CDN 1d, browser 10m
       },
     });
   } catch {
-    // No image available but don't break the page
     return new Response(null, { status: 204 });
   } finally {
-    try {
-      await browser?.close();
-    } catch {}
+    try { await browser?.close(); } catch {}
   }
 }
+

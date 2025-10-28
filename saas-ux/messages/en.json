@@ -21,7 +21,18 @@
     "title": "My Dashboard - GetSafe 360",
     "description": "Manage your websites in your dashboard."
   },
-
+  "metaRoot": {
+    "title": "GetSafe 360 — Co-Pilot for AI-driven website optimization",
+    "description": "Empowers website owners and developers with AI tools for real-time SEO, performance optimization, and monitoring."
+  },
+  "metaPricing": {
+    "title": "Pricing — Start free, scale as you grow | GetSafe 360",
+    "description": "Flexible plans for solo creators, teams, and agencies. Start free with core AI site optimization and automation."
+  },
+  "metaAbout": {
+    "title": "About GetSafe 360 — AI Website Copilot",
+    "description": "We’re building an AI copilot that upgrades any site in minutes. Learn our mission, team, and what drives us at the core."
+  },
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Overview of your websites and analyses",
@@ -60,6 +71,39 @@
     "details": "We empower website owners and developers with AI-driven tools for <b>real-time optimization</b>, performance testing, and ongoing compliance with <b>evolving SEO and accessibility standards</b>. Packed with the latest technologies for the <b>best website performance</b> and <b>highest possible rankings</b>.",
     "intro_left": "Instantly analyze and optimize any website. SEO, performance, security, accessibility, and legal compliance included.",
     "intro_right": "Actionable insights. Instant optimization. Keep every website at peak performance. Get started for free!"
+  },
+  "infobox": {
+  "sectionLabel": "Targeted benefits for site owners and developers",
+    "owners": {
+      "title": "For Website Owners & Webmasters",
+      "lead": "Let your AI Copilot maintain and optimize your sites — <b>without writing a single line of code</b>.",
+      "sublead": "Paste your URL and watch your site level up in minutes:",
+      "items": {
+        "1": "Fresh, on-brand content; translate your entire site for global reach",
+        "2": "Full SEO control with structured data (Schema), sitemaps, and metadata",
+        "3": "Faster load times with image lazy loading",
+        "4": "Security hardening via headers and custom scripts (XSS, DDoS)",
+        "5": "Cost-effective UX and theme tweaks for a great experience on every device",
+        "6": "WordPress & WooCommerce: a tailored toolbox that fixes known issues"
+      },
+      "closing": "Say goodbye to hours of fiddling — show off homepages you’re proud of, no coding needed!",
+      "cta": "Optimize my site"
+    },
+    "devs": {
+      "title": "For Web Developers & Pros",
+      "lead": "Get your own web copilot and <b>ditch the GitHub hassle</b> — upgrade any site with zero setup.",
+      "sublead": "Your AI agency teammate helps you build your best work:",
+      "items": {
+        "1": "Automate the boring stuff, surface bugs fast",
+        "2": "Supercharge SEO and structured data; generate XML & LLM sitemaps",
+        "3": "UX improvements with lazy loading and script optimizations for faster delivery",
+        "4": "Add configurable protections against common attacks (SQL injection, XSS, DDoS)",
+        "5": "Internationalize with i18n for true global reach",
+        "6": "Ship high-value features and redesigns your clients will love"
+      },
+      "closing": "Let AI handle the toil so you save hours, cut costs, and supercharge your flow — and your bottom line!",
+      "cta": "Paste URL to analyze"
+    }
   },
   "footer": {
     "copyright": "© {year} GetSafe 360 Limited. All rights reserved.",

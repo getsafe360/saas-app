@@ -21,6 +21,18 @@
     "title": "Mi Panel - GetSafe 360",
     "description": "Administra tus sitios web en tu panel."
   },
+  "metaRoot": {
+    "title": "GetSafe 360 — Copiloto para la optimización web con IA",
+    "description": "Impulsa a propietarios de sitios y desarrolladores con herramientas de IA para SEO en tiempo real, optimización del rendimiento y monitorización."
+  },
+  "metaPricing": {
+    "title": "Precios — Empieza gratis y escala a medida que creces | GetSafe 360",
+    "description": "Planes flexibles para creadores en solitario, equipos y agencias. Empieza gratis con optimización y automatización web con IA."
+  },
+  "metaAbout": {
+    "title": "Acerca de GetSafe 360 — Copiloto de sitios web con IA",
+    "description": "Estamos construyendo un copiloto de IA que mejora cualquier sitio en minutos. Conoce nuestra misión, nuestro equipo y lo que nos mueve en esencia."
+  },
   "dashboard": {
     "title": "Panel",
     "subtitle": "Resumen de tus sitios y análisis",
@@ -59,6 +71,39 @@
     "details": "Ofrecemos herramientas con IA para <b>optimización en tiempo real</b>, pruebas de rendimiento y cumplimiento continuo con <b>estándares de SEO y accesibilidad</b> en evolución. Todo para <b>el mejor rendimiento</b> y <b>máximos rankings</b>.",
     "intro_left": "Analiza y optimiza cualquier sitio al instante. SEO, rendimiento, seguridad, accesibilidad y cumplimiento legal incluidos.",
     "intro_right": "Insights accionables. Optimización instantánea. Mantén cada sitio al máximo rendimiento. ¡Empieza gratis!"
+  },
+    "infobox": {
+    "sectionLabel": "Beneficios específicos para propietarios de sitios y desarrolladores",
+    "owners": {
+      "title": "Para propietarios de sitios y webmasters",
+      "lead": "Deja que tu AI Copilot mantenga y optimice tus sitios — <b>sin escribir una sola línea de código</b>.",
+      "sublead": "Pega tu URL y mira cómo tu sitio sube de nivel en minutos:",
+      "items": {
+        "1": "Contenido fresco y acorde a tu marca; traduce todo tu sitio para alcance global",
+        "2": "Control SEO total con datos estructurados (Schema), sitemaps y metadatos",
+        "3": "Cargas más rápidas con carga diferida de imágenes",
+        "4": "Refuerzo de seguridad mediante encabezados y scripts personalizados (XSS, DDoS)",
+        "5": "Ajustes de UX y temas rentables para una gran experiencia en todos los dispositivos",
+        "6": "WordPress y WooCommerce: una caja de herramientas a medida que corrige problemas conocidos"
+      },
+      "closing": "Di adiós a horas de enredos — presume homepages de las que estés orgulloso, ¡sin código!",
+      "cta": "Optimizar mi sitio"
+    },
+    "devs": {
+      "title": "Para desarrolladores web y profesionales",
+      "lead": "Consigue tu propio copiloto web y olvida las molestias de GitHub — mejora cualquier sitio sin configuración.",
+      "sublead": "Tu compañero de agencia IA te ayuda a crear tu mejor trabajo:",
+      "items": {
+        "1": "Automatiza lo aburrido y detecta bugs rápido",
+        "2": "Potencia el SEO y los datos estructurados; genera sitemaps XML y LLM",
+        "3": "Mejoras de UX con carga diferida y optimización de scripts para una entrega más rápida",
+        "4": "Añade protecciones configurables contra ataques comunes (inyección SQL, XSS, DDoS)",
+        "5": "Internacionaliza con i18n para un alcance realmente global",
+        "6": "Entrega funciones y rediseños de alto valor que encantarán a tus clientes"
+      },
+      "closing": "Deja que la IA se encargue del trabajo pesado para ahorrar horas, recortar costes y potenciar tu flujo — y tus resultados.",
+      "cta": "Pegar URL para analizar"
+    }
   },
   "footer": {
     "copyright": "© {year} GetSafe 360 Limited. Todos los derechos reservados.",

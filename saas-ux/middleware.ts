@@ -1,40 +1,47 @@
 // saas-ux/middleware.ts
 import {clerkMiddleware} from '@clerk/nextjs/server';
 import createIntlMiddleware from 'next-intl/middleware';
+import {locales, defaultLocale} from './config/i18n';
 import {NextResponse} from 'next/server';
-
-const locales = ['en','de','es','fr','it','pt'] as const;
 
 const intl = createIntlMiddleware({
   locales,
-  defaultLocale: 'en',
-  localePrefix: 'as-needed' // always or 'as-needed' if you don't want /en/ prefix
+  defaultLocale,
+  localeDetection: true,
+  localePrefix: 'always' // or 'as-needed'
 });
 
-// Combine: run Clerk, then delegate routing to next-intl where appropriate.
 export default clerkMiddleware((auth, req) => {
   const {pathname} = req.nextUrl;
 
-  // 1) Never run i18n on API or static assets
+  // 1) Skip i18n for API/static
   if (
     pathname.startsWith('/api') ||
     pathname.startsWith('/trpc') ||
     pathname.startsWith('/_next') ||
-    /\.[^/]+$/.test(pathname) // any file with an extension
+    /\.[^/]+$/.test(pathname)
   ) {
     return NextResponse.next();
   }
 
-  // 2) For all app pages, let next-intl handle locale detection/rewrites
+  // 2) (Optional) Keep Clerk UI pages unlocalized
+  if (
+    pathname.startsWith('/sign-in') ||
+    pathname.startsWith('/sign-up') ||
+    pathname.startsWith('/sso-callback')
+  ) {
+    return NextResponse.next();
+  }
+
+  // 3) App pages → next-intl handles detection/rewrites
   return intl(req);
 });
 
-// Match both app pages and APIs (Clerk for both; next-intl will early-return for APIs)
 export const config = {
   matcher: [
     // App routes (exclude Next internals & files)
     '/((?!_next|.*\\..*).*)',
-    // Always run on API and tRPC for Clerk (but we won't apply next-intl there)
+    // Also run on API & tRPC for Clerk auth (i18n will early-return above)
     '/(api|trpc)(.*)'
   ]
 };

@@ -7,6 +7,7 @@ import { Globe } from "lucide-react";
 import UrlAnalyzeForm from "@/components/analyzer/UrlAnalyzeForm";
 import StreamingReportShell, { AnalysisPayload } from "@/components/analyzer/StreamingReportShell";
 import CTA from "@/components/ui/cta";
+import AudienceInfoBoxes from "@/components/marketing/AudienceInfoBoxes";
 
 export default function HomePage() {
   const th = useTranslations("home");
@@ -70,20 +71,9 @@ export default function HomePage() {
           <CTA analysis={analysis} />
         </section>
       )}
-      {/* Two quick audience cards */}
-      <section className="mx-auto max-w-6xl grid lg:grid-cols-2 gap-6 px-4 sm:px-6 lg:px-8 mb-10">
-        <div className="rounded-2xl p-6 shadow-xl border border-white/10 bg-white/[0.03] backdrop-blur">
-          <p className="text-xl leading-relaxed text-slate-200">
-            <span className="font-extrabold text-sky-300">Website owners</span> get a powerful AI assistant that
-            optimizes any website in minutes.
-          </p>
-        </div>
-        <div className="rounded-2xl p-6 shadow-xl border border-white/10 bg-white/[0.03] backdrop-blur">
-          <p className="text-xl leading-relaxed text-slate-200">
-            <span className="font-extrabold text-sky-300">Developers</span> boost productivity and focus on what matters.
-          </p>
-        </div>
-      </section>
+
+      <AudienceInfoBoxes />
+
     </main>
   );
 }

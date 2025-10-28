@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import NextImage from "next/image";
 import { cn } from "@/lib/cn";
 import { Globe, ShieldCheck, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { WordPressIcon } from "../icons/WordPress";
 
 type WordPressMeta = {
   version?: string | null;
@@ -97,12 +98,12 @@ export default function SiteIdentityCard({
             <span className="rounded-full bg-sky-50 text-sky-700 px-2 py-1 text-xs">Detected: {siteLang}</span>
           )}
 
-          {isWP && (
-            <span className="rounded-full bg-purple-50 text-purple-700 px-2 py-1 text-xs">
-              WP{cms.wp.version ? ` ${cms.wp.version}` : ""} {cms.wp.jsonApi ? "• REST" : ""}{" "}
-              {cms.wp.xmlrpc ? "• XML-RPC" : ""}
+            {isWP && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 text-purple-700 px-2 py-1 text-xs">
+                <WordPressIcon size={12} className="text-purple-600" />
+                WP{cms.wp.version ? ` ${cms.wp.version}` : ""} {cms.wp.jsonApi ? "• REST" : ""} {cms.wp.xmlrpc ? "• XML-RPC" : ""}
             </span>
-          )}
+            )}
         </div>
       </div>
 
