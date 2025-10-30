@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Globe } from "lucide-react";
 import UrlAnalyzeForm from "@/components/analyzer/UrlAnalyzeForm";
 import StreamingReportShell, { AnalysisPayload } from "@/components/analyzer/StreamingReportShell";
-import CTA from "@/components/ui/cta";
+import CTA from "@/components/marketing/CTA";
 import AudienceInfoBoxes from "@/components/marketing/AudienceInfoBoxes";
 
 export default function HomePage() {
@@ -65,14 +65,11 @@ export default function HomePage() {
         />
       </section>
 
-      {/* Optional CTA once an analysis is done */}
-      {analysis && (
-        <section className="mt-12 flex justify-center">
-          <CTA analysis={analysis} />
-        </section>
-      )}
-
       <AudienceInfoBoxes />
+
+        <section className="mt-12 flex justify-center">
+          <CTA />
+        </section>
 
     </main>
   );

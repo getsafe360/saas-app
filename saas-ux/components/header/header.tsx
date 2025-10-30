@@ -50,7 +50,6 @@ export function Header() {
       [
         { href: "/pricing", label: t("pricing") },
         { href: "/faq", label: t("faq") },
-        { href: "/accessibility", label: t("accessibility") },
         { href: "/dashboard", label: t("dashboard") },
       ] as const,
     [t]

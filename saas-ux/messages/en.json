@@ -11,6 +11,13 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
+    "ctaRoot": {
+    "headline": "Ship a better website – today!",
+    "support": "Let AI optimize any site in minutes – automate the boring stuff.",
+    "primary": "Create your free account",
+    "signedInCta": "Go to dashboard",
+    "microcopy": "No coding. No GitHub. Just results."
+  },
   "DashboardNav": {
     "websites": "Websites",
     "activity": "Activity",
@@ -22,15 +29,15 @@
     "description": "Manage your websites in your dashboard."
   },
   "metaRoot": {
-    "title": "GetSafe 360 — Co-Pilot for AI-driven website optimization",
+    "title": "GetSafe 360 – Co-Pilot for AI-driven website optimization",
     "description": "Empowers website owners and developers with AI tools for real-time SEO, performance optimization, and monitoring."
   },
   "metaPricing": {
-    "title": "Pricing — Start free, scale as you grow | GetSafe 360",
+    "title": "Pricing – Start free, scale as you grow | GetSafe 360",
     "description": "Flexible plans for solo creators, teams, and agencies. Start free with core AI site optimization and automation."
   },
   "metaAbout": {
-    "title": "About GetSafe 360 — AI Website Copilot",
+    "title": "About GetSafe 360 – AI Website Copilot",
     "description": "We’re building an AI copilot that upgrades any site in minutes. Learn our mission, team, and what drives us at the core."
   },
   "dashboard": {
@@ -76,7 +83,7 @@
   "sectionLabel": "Targeted benefits for site owners and developers",
     "owners": {
       "title": "For Website Owners & Webmasters",
-      "lead": "Let your AI Copilot maintain and optimize your sites — <b>without writing a single line of code</b>.",
+      "lead": "Let your AI Copilot maintain and optimize your sites – <b>without writing a single line of code</b>.",
       "sublead": "Paste your URL and watch your site level up in minutes:",
       "items": {
         "1": "Fresh, on-brand content; translate your entire site for global reach",
@@ -86,12 +93,12 @@
         "5": "Cost-effective UX and theme tweaks for a great experience on every device",
         "6": "WordPress & WooCommerce: a tailored toolbox that fixes known issues"
       },
-      "closing": "Say goodbye to hours of fiddling — show off homepages you’re proud of, no coding needed!",
+      "closing": "Say goodbye to hours of fiddling – show off homepages you’re proud of, no coding needed!",
       "cta": "Optimize my site"
     },
     "devs": {
       "title": "For Web Developers & Pros",
-      "lead": "Get your own web copilot and <b>ditch the GitHub hassle</b> — upgrade any site with zero setup.",
+      "lead": "Get your own web copilot and <b>ditch the GitHub hassle</b> – upgrade any site with zero setup.",
       "sublead": "Your AI agency teammate helps you build your best work:",
       "items": {
         "1": "Automate the boring stuff, surface bugs fast",
@@ -101,8 +108,41 @@
         "5": "Internationalize with i18n for true global reach",
         "6": "Ship high-value features and redesigns your clients will love"
       },
-      "closing": "Let AI handle the toil so you save hours, cut costs, and supercharge your flow — and your bottom line!",
+      "closing": "Let AI handle the toil so you save hours, cut costs, and supercharge your flow – and your bottom line!",
       "cta": "Paste URL to analyze"
+    }
+  },
+    "metaFaq": {
+    "title": "FAQ – GetSafe 360",
+    "description": "Quick answers about setup, pricing, platforms and getting started."
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "lead": "These basics will help you get started. We'll expand this page as new features land.",
+    "q1": "What is GetSafe 360?",
+    "a1": {
+      "part1": "An AI copilot for website optimization that works with your live site – no ",
+      "part2": "– just results in minutes."
+    },
+    "q2": "How does it work?",
+    "a2": "Paste your URL. We analyze SEO, performance and UX, propose changes, and help you apply them quickly.",
+    "q3": "Is there a free plan?",
+    "a3": {
+      "part1": "Yes, you can start free and upgrade anytime.",
+      "link": "See pricing",
+      "part2": "for plan limits and features."
+    },
+    "q4": "Which platforms are supported?",
+    "a4": "Works with most modern sites. We provide extra tooling for WordPress & WooCommerce.",
+    "q5": "How do I get started?",
+    "a5": {
+      "part1": "Go to the homepage and paste your URL.",
+      "link": "Start here",
+      "part2": "– no GitHub setup required."
+    },
+    "footer": {
+      "hint": "Need an accessible version of this page?",
+      "link": "Read our accessibility info"
     }
   },
   "footer": {
