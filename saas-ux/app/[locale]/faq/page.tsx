@@ -6,23 +6,19 @@ import { Link } from '@/navigation';
 import type { Locale } from '@/i18n/locales';
 
 type Params = { locale: Locale };
-type Props = { params: Params | Promise<Params> };
+type Props = { params: Promise<Params> };
 
-// Optional: keep static per-locale
+// Optional: keep this page static per locale
 // export const dynamic = 'force-static';
 
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  const { locale } = await (props.params as Promise<Params>);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'metaFaq' });
-
-  return {
-    title: t('title'),
-    description: t('description')
-  };
+  return { title: t('title'), description: t('description') };
 }
 
-export default async function FAQPage(props: Props) {
-  const { locale } = await (props.params as Promise<Params>);
+export default async function FAQPage({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'faq' });
 
   const faqs: Array<{ q: string; a: React.ReactNode; id: string }> = [
