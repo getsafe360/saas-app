@@ -17,13 +17,13 @@ export default function CTA() {
 const t = useTranslations("ctaRoot");
 
 return (
-<section className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 my-12">
-{/* Gradient border card */}
-<div className="cta-gradient-border">
-<div className="rounded-2xl ring-1 ring-slate-900/10 dark:ring-white/10
+<section className="mx-auto max-w-4xl px-3 sm:px-5 lg:px-6 my-8">
+{/* CTA card */}   
+<div className="cta-effect cta-sky rounded-2xl transition duration-700 ease-in-out">
+<div className="rounded-2xl border border-teal-500/40 dark:border-teal-400/30
                 bg-white/70 dark:bg-white/[0.04] backdrop-blur supports-[backdrop-filter]:bg-white/60
-                p-8 sm:p-10 lg:p-12 shadow-sm">
-<h2 className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 text-center">
+                p-8 sm:p-10 lg:p-12 shadow-sm relative z-10">
+<h2 className="text-4xl font-semibold tracking text-slate-900 dark:text-slate-100 text-center">
 {t("headline")}
 </h2>
 <p className="mt-3 text-center text-slate-700 dark:text-slate-300">
