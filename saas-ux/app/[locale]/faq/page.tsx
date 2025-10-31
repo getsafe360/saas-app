@@ -6,7 +6,7 @@ import { Link } from '@/navigation';
 import type { Locale } from '@/i18n/locales';
 
 type Params = { locale: Locale };
-type Props = { params: Params } | { params: Promise<Params> };
+type Props = { params: Params | Promise<Params> };
 
 // Optional: keep static per-locale
 // export const dynamic = 'force-static';

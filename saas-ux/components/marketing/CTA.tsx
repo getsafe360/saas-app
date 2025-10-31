@@ -19,7 +19,7 @@ const t = useTranslations("ctaRoot");
 return (
 <section className="mx-auto max-w-4xl px-3 sm:px-5 lg:px-6 my-8">
 {/* CTA card */}   
-<div className="cta-effect cta-sky rounded-2xl transition duration-700 ease-in-out">
+<div className="cta-effect cta-sky rounded-2xl transition duration-500 ease-in-out">
 <div className="rounded-2xl border border-teal-500/40 dark:border-teal-400/30
                 bg-white/70 dark:bg-white/[0.04] backdrop-blur supports-[backdrop-filter]:bg-white/60
                 p-8 sm:p-10 lg:p-12 shadow-sm relative z-10">
