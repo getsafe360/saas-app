@@ -11,6 +11,13 @@
     "openMenu": "Menü öffnen",
     "closeMenu": "Menü schließen"
   },
+  "ctaRoot": {
+    "headline": "Verbessern Sie Ihre Website – noch heute!",
+    "support": "Lassen Sie KI jede Website in Minuten optimieren – automatisieren Sie die langweiligen Aufgaben.",
+    "primary": "Erstellen Sie Ihr kostenloses Konto",
+    "signedInCta": "Gehe zum Dashboard",
+    "microcopy": "Kein Coding. Kein GitHub. Nur Ergebnisse."
+  },
   "DashboardNav": {
     "websites": "Websites",
     "activity": "Aktivität",
