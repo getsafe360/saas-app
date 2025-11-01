@@ -95,16 +95,21 @@ export async function GET(req: NextRequest) {
       out = await encode(q);
     }
 
-    const contentType =
+   const contentType =
       fmt === "avif" ? "image/avif" : fmt === "webp" ? "image/webp" : "image/jpeg";
 
-    const body = new Uint8Array(out.buffer, out.byteOffset, out.byteLength);
+   // Create an ArrayBufferView (Uint8Array) from the Buffer so Response accepts it as BodyInit
+   const body = new Uint8Array(out);
+
     return new Response(body, {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "public, s-maxage=2592000, max-age=600"
+        // optionally:
+        // "Content-Length": String(out.byteLength)
       }
     });
+
   } catch {
     return new Response(null, { status: 204 });
   } finally {
