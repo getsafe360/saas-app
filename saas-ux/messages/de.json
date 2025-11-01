@@ -2,7 +2,7 @@
   "Nav": {
     "pricing": "Preise",
     "accessibility": "Barrierefreiheit",
-    "dashboard": "Kontrollzentrum",
+    "dashboard": "Dashboard",
     "faq": "FAQ",
     "createFreeAccount": "Kostenloses Konto erstellen",
     "signIn": "Anmelden",
@@ -11,12 +11,15 @@
     "openMenu": "Menü öffnen",
     "closeMenu": "Menü schließen"
   },
-  "ctaRoot": {
-    "headline": "Verbessern Sie Ihre Website – noch heute!",
-    "support": "Lassen Sie KI jede Website in Minuten optimieren – automatisieren Sie die langweiligen Aufgaben.",
-    "primary": "Erstellen Sie Ihr kostenloses Konto",
-    "signedInCta": "Gehe zum Dashboard",
-    "microcopy": "Kein Coding. Kein GitHub. Nur Ergebnisse."
+   "ctaRoot": {
+    "headline": "Verbessere deine Website – noch heute!",
+    "support": "Lass die KI jede Website in Minuten optimieren – automatisiere das Langweilige.",
+    "primary": "Erstelle dein kostenloses Konto",
+    "signedInCta": "Zum Dashboard",
+    "microcopy": "Kein Code. Kein GitHub. Nur Ergebnisse."
+  },
+  "report": {
+    "onboardLine": "Wir haben deine Startseite analysiert und Chancen in SEO, Barrierefreiheit, Performance und Sicherheit gefunden. Klicke auf „Mit Copilot fixen“, um sichere Verbesserungen anzuwenden – ganz ohne Code."
   },
   "DashboardNav": {
     "websites": "Websites",

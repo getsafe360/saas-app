@@ -1,23 +1,20 @@
-// saas-ux/components/analyzer/StreamingReportShell.tsx
+// components/analyzer/StreamingReportShell.tsx
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { SignedOut, SignedIn, SignUpButton } from "@clerk/nextjs";
 import { cn } from "@/lib/cn";
-import { Globe, ExternalLink } from "lucide-react";
-import { parseFindings, type Finding } from "./parseFindings";
-import { ScoreBar } from "@/components/ui/ScoreBar";
-import { bucketVariant } from "@/lib/ab";
-import SiteIdentityCard from "./SiteIdentityCard";
+import { Globe } from "lucide-react";
+
 import UrlAnalyzeForm from "./UrlAnalyzeForm";
 import WPSpotlight from "./WPSpotlight";
-import StickyMiniBar from "./StickyMiniBar";
-import PillarColumn from "./PillarColumn";
-import FindingsFeed from "./FindingsFeed";
-
-const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
+import ReportHero from "@/components/analyzer/ReportHero";
+import { FindingsGrid } from "@/components/analyzer/FindingsGrid";
+import PillarColumn from "@/components/analyzer/PillarColumn";
+import { parseFindings } from "@/components/analyzer/parseFindings";
+import type { Finding } from "@/components/analyzer/parseFindings";
+import { bucketVariant } from "@/lib/ab";
+import SiteIdentityCard from "./SiteIdentityCard"; // optional, still shown below hero
 
 type Props = {
   className?: string;
@@ -37,6 +34,9 @@ export type AnalysisPayload = {
   facts?: Facts | null;
   locale: string;
 };
+
+const SCREENSHOT_W = 650;
+const MAX_BYTES = 30 * 1024;
 
 export default function StreamingReportShell({
   className,
@@ -67,19 +67,19 @@ export default function StreamingReportShell({
   }), [findings]);
 
   const scores = useMemo(() => {
-    const init = {
+    const s = {
       seo: { ok: 0, warn: 0, crit: 0 },
       a11y: { ok: 0, warn: 0, crit: 0 },
       perf: { ok: 0, warn: 0, crit: 0 },
       sec: { ok: 0, warn: 0, crit: 0 },
     };
     for (const f of findings) {
-      const slot = (init as any)[f.pillar];
+      const slot = (s as any)[f.pillar];
       if (f.severity === "minor") slot.ok++;
       else if (f.severity === "medium") slot.warn++;
       else slot.crit++;
     }
-    return init;
+    return s;
   }, [findings]);
 
   async function startAnalysis(u: string) {
@@ -160,9 +160,19 @@ export default function StreamingReportShell({
   }, [status, output, facts, url, locale, onComplete]);
 
   const busy = status === "loading" || status === "streaming";
+
+  // Build canonical screenshot URLs (single desktop variant, 650px wide)
+  const finalUrl = facts?.finalUrl || url;
+  const screenshotUrl = finalUrl
+    ? `/api/screenshot?fmt=avif&w=${SCREENSHOT_W}&max=${MAX_BYTES}&url=${encodeURIComponent(finalUrl)}`
+    : "";
+  const lowResUrl = finalUrl
+    ? `/api/screenshot?fmt=webp&w=24&q=30&url=${encodeURIComponent(finalUrl)}`
+    : "";
+
   const showWpSpotlight =
     facts?.cms?.type === "wordpress" &&
-    bucketVariant((facts.domain || "") + (facts.cms.wp?.version || ""));
+    bucketVariant((facts?.domain || "") + (facts?.cms?.wp?.version || ""));
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -183,88 +193,62 @@ export default function StreamingReportShell({
         />
       )}
 
-      {/* Sticky mini-bar */}
-      {status !== "idle" && facts && (
-        <StickyMiniBar
-          domain={facts.domain || (url ? new URL(url).hostname : "")}
-          finalUrl={facts.finalUrl || url}
-          status={facts.status || 0}
-          isHttps={!!facts.isHttps}
-          onRerun={() => startAnalysis(url)}
+      {/* Report hero (single screenshot + summary chips) */}
+      {(status !== "idle") && finalUrl && (
+        <ReportHero
+          url={finalUrl}
+          screenshotUrl={screenshotUrl}
+          lowResUrl={lowResUrl}
+          lastChecked={new Date().toISOString()}
+          lang={facts?.siteLang || undefined}
+          status={facts?.isHttps ? "HTTPS • " + (facts?.status || 0) : String(facts?.status || "")}
+          pillars={{
+            seo: countTriplet(pillars.seo),
+            a11y: countTriplet(pillars.a11y),
+            perf: countTriplet(pillars.perf),
+            sec: countTriplet(pillars.sec),
+          }}
+          onFixAll={() => {
+            // TODO: open Copilot prefilled with critical issues
+          }}
         />
       )}
 
-      {/* Header row: screenshot (left) + identity (right) */}
-      {status !== "idle" && facts && (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {/* Optimized screenshot: width param, decent quality */}
-          <div className="rounded-2xl border border-white/10 overflow-hidden bg-white/[0.03]">
-            <div className="relative aspect-[12/7] w-full">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/api/screenshot?w=900&q=65&url=${encodeURIComponent(facts.finalUrl || url)}`}
-                alt="Website preview"
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
-            </div>
-            <div className="flex items-center justify-between px-3 py-2 text-xs text-neutral-400">
-              <span>Last checked: just now</span>
-              <a href={facts.finalUrl || url} target="_blank" className="inline-flex items-center gap-1 hover:text-white">
-                Open site <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            </div>
-          </div>
-
-          {/* Identity & Spotlight */}
-          <div className="flex flex-col gap-4">
-            <SiteIdentityCard
-              domain={facts.domain || (url ? new URL(url).hostname : "example.com")}
-              finalUrl={facts.finalUrl || url}
-              status={facts.status || 0}
-              isHttps={!!facts.isHttps}
-              faviconUrl={facts.faviconUrl || null}
-              siteLang={facts.siteLang || null}
-              uiLocale={locale}
-              cms={facts.cms || { type: "unknown" }}
-            />
-            {showWpSpotlight && facts.cms?.type === "wordpress" && (
+      {/* Optional identity + WP spotlight under the hero */}
+      {facts && (
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 -mt-2">
+          <SiteIdentityCard
+            domain={facts.domain || (url ? new URL(url).hostname : "example.com")}
+            finalUrl={finalUrl}
+            status={facts.status || 0}
+            isHttps={!!facts.isHttps}
+            faviconUrl={facts.faviconUrl || null}
+            siteLang={facts.siteLang || null}
+            uiLocale={locale}
+            cms={facts.cms || { type: "unknown" }}
+          />
+          {showWpSpotlight && facts.cms?.type === "wordpress" && (
+            <div className="mt-4">
               <WPSpotlight
                 version={facts.cms.wp?.version}
                 jsonApi={facts.cms.wp?.jsonApi ?? null}
                 xmlrpc={facts.cms.wp?.xmlrpc ?? null}
               />
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Streaming Rundown */}
-
-      {/* Responsive Findings */}
+      {/* Findings */}
       {findings.length > 0 && (
-        <>
-          {/* Single feed (≤ 2xl) */}
-          <div className="block 2xl:hidden">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <ScoreBar label="SEO" ok={scores.seo.ok} warn={scores.seo.warn} crit={scores.seo.crit} />
-              <ScoreBar label="Accessibility" ok={scores.a11y.ok} warn={scores.a11y.warn} crit={scores.a11y.crit} />
-              <ScoreBar label="Performance" ok={scores.perf.ok} warn={scores.perf.warn} crit={scores.perf.crit} />
-              <ScoreBar label="Security" ok={scores.sec.ok} warn={scores.sec.warn} crit={scores.sec.crit} />
-            </div>
-            <div className="mt-3">
-              <FindingsFeed items={findings} title={ta("audit_result")} />
-            </div>
-          </div>
-
-          {/* Four columns (≥ 2xl screens) */}
-          <div className="hidden 2xl:grid 2xl:grid-cols-4 gap-4">
-            <PillarColumn label="SEO"          score={scores.seo} items={pillars.seo} />
-            <PillarColumn label="Accessibility" score={scores.a11y} items={pillars.a11y} />
-            <PillarColumn label="Performance"   score={scores.perf} items={pillars.perf} />
-            <PillarColumn label="Security"      score={scores.sec} items={pillars.sec} />
-          </div>
-        </>
+        <FindingsGrid
+          columns={[
+            <PillarColumn key="seo"          label="SEO"          score={scores.seo}  items={pillars.seo}  />,
+            <PillarColumn key="a11y"         label="Accessibility" score={scores.a11y} items={pillars.a11y} />,
+            <PillarColumn key="perf"         label="Performance"   score={scores.perf} items={pillars.perf} />,
+            <PillarColumn key="sec"          label="Security"      score={scores.sec}  items={pillars.sec}  />
+          ]}
+        />
       )}
 
       {status === "error" && (
@@ -274,11 +258,21 @@ export default function StreamingReportShell({
       )}
 
       {(status === "loading" || status === "streaming") && (
-        <div className="rounded-2xl border p-4 shadow-sm bg-white/70 dark:bg-neutral-900/70">
+        <div className="rounded-2xl border p-4 shadow-sm bg-white/70 dark:bg-white/[0.04] ring-1 ring-slate-900/10 dark:ring-white/10">
           <div className="text-lg font-semibold">{ta("headline1")}</div>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">{ta("fixing_in_progress")}</p>
         </div>
       )}
     </div>
   );
+}
+
+function countTriplet(items: Finding[]) {
+  let pass = 0, warn = 0, crit = 0;
+  for (const it of items) {
+    if (it.severity === "minor") pass++;
+    else if (it.severity === "medium") warn++;
+    else crit++;
+  }
+  return { pass, warn, crit };
 }

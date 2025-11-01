@@ -11,6 +11,16 @@
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu"
   },
+  "ctaRoot": {
+    "headline": "Améliore ton site web – dès aujourd’hui !",
+    "support": "Laisse l’IA optimiser n’importe quel site en quelques minutes – automatise les tâches pénibles.",
+    "primary": "Crée ton compte gratuit",
+    "signedInCta": "Accède au tableau de bord",
+    "microcopy": "Pas de code. Pas de GitHub. Juste des résultats."
+  },
+  "report": {
+    "onboardLine": "Nous avons analysé ta page d’accueil et repéré des opportunités en SEO, accessibilité, performance et sécurité. Clique sur « Corriger avec Copilot » pour appliquer des améliorations sûres – sans code."
+  },
   "DashboardNav": {
     "websites": "Sites web",
     "activity": "Activité",

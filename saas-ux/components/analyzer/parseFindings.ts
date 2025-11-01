@@ -1,3 +1,4 @@
+// saas-ux/components/analyzer/parseFindings.ts
 export type Pillar = "seo" | "a11y" | "perf" | "sec";
 export type Severity = "minor" | "medium" | "critical";
 

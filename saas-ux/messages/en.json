@@ -11,12 +11,15 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
-    "ctaRoot": {
+  "ctaRoot": {
     "headline": "Ship a better website – today!",
     "support": "Let AI optimize any site in minutes – automate the boring stuff.",
     "primary": "Create your free account",
     "signedInCta": "Go to dashboard",
     "microcopy": "No coding. No GitHub. Just results."
+  },
+  "report": {
+    "onboardLine": "We analyzed your homepage and found opportunities across SEO, Accessibility, Performance, and Security. Click “Fix with Copilot” to apply safe improvements – no code needed."
   },
   "DashboardNav": {
     "websites": "Websites",

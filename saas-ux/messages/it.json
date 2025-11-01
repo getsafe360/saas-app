@@ -11,6 +11,16 @@
     "openMenu": "Apri menu",
     "closeMenu": "Chiudi menu"
   },
+  "ctaRoot": {
+    "headline": "Migliora il tuo sito – oggi stesso!",
+    "support": "Lascia che l’IA ottimizzi qualsiasi sito in pochi minuti – automatizza le attività noiose.",
+    "primary": "Crea il tuo account gratuito",
+    "signedInCta": "Vai alla dashboard",
+    "microcopy": "Nessun codice. Niente GitHub. Solo risultati."
+  },
+  "report": {
+    "onboardLine": "Abbiamo analizzato la tua homepage e trovato opportunità in SEO, accessibilità, performance e sicurezza. Clicca “Correggi con Copilot” per applicare miglioramenti sicuri – senza codice."
+  },
   "DashboardNav": {
     "websites": "Siti",
     "activity": "Attività",
