@@ -98,10 +98,10 @@ export async function GET(req: NextRequest) {
     const contentType =
       fmt === "avif" ? "image/avif" : fmt === "webp" ? "image/webp" : "image/jpeg";
 
-    return new Response(out, {
+    const body = new Uint8Array(out.buffer, out.byteOffset, out.byteLength);
+    return new Response(body, {
       headers: {
         "Content-Type": contentType,
-        // 30d at the edge, 10m in the browser → dedup identical query strings
         "Cache-Control": "public, s-maxage=2592000, max-age=600"
       }
     });
