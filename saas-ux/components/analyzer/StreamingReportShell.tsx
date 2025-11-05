@@ -8,13 +8,13 @@ import { Globe } from "lucide-react";
 
 import UrlAnalyzeForm from "./UrlAnalyzeForm";
 import WPSpotlight from "./WPSpotlight";
-import ReportHero from "@/components/analyzer/ReportHero";
+import ReportHeroView from "@/components/analyzer/ReportHero"; // alias to avoid TS2349
 import { FindingsGrid } from "@/components/analyzer/FindingsGrid";
 import PillarColumn from "@/components/analyzer/PillarColumn";
 import { parseFindings } from "@/components/analyzer/parseFindings";
 import type { Finding } from "@/components/analyzer/parseFindings";
 import { bucketVariant } from "@/lib/ab";
-import SiteIdentityCard from "./SiteIdentityCard"; // optional, still shown below hero
+import SiteIdentityCard from "./SiteIdentityCard";
 
 type Props = {
   className?: string;
@@ -35,8 +35,8 @@ export type AnalysisPayload = {
   locale: string;
 };
 
-const SCREENSHOT_W = 650;
-const MAX_BYTES = 30 * 1024;
+const SCREENSHOT_W = 650;   // desktop width
+const MOBILE_W = 390;       // mobile width
 
 export default function StreamingReportShell({
   className,
@@ -161,13 +161,23 @@ export default function StreamingReportShell({
 
   const busy = status === "loading" || status === "streaming";
 
-  // Build canonical screenshot URLs (single desktop variant, 650px wide)
+  // Build canonical screenshot URLs INSIDE the component (facts/url available here).
   const finalUrl = facts?.finalUrl || url;
-  const screenshotUrl = finalUrl
-    ? `/api/screenshot?fmt=avif&w=${SCREENSHOT_W}&max=${MAX_BYTES}&url=${encodeURIComponent(finalUrl)}`
+  const enc = (u: string) => encodeURIComponent(u);
+
+  // Minimal route (native JPEG). Control size by w + q.
+  const desktopHi = finalUrl
+    ? `/api/screenshot?w=${SCREENSHOT_W}&q=60&url=${enc(finalUrl)}`
     : "";
-  const lowResUrl = finalUrl
-    ? `/api/screenshot?fmt=webp&w=24&q=30&url=${encodeURIComponent(finalUrl)}`
+  const desktopLo = finalUrl
+    ? `/api/screenshot?w=24&q=30&url=${enc(finalUrl)}`
+    : "";
+
+  const mobileHi = finalUrl
+    ? `/api/screenshot?mobile=1&w=${MOBILE_W}&q=60&url=${enc(finalUrl)}`
+    : "";
+  const mobileLo = finalUrl
+    ? `/api/screenshot?mobile=1&w=24&q=30&url=${enc(finalUrl)}`
     : "";
 
   const showWpSpotlight =
@@ -193,15 +203,25 @@ export default function StreamingReportShell({
         />
       )}
 
-      {/* Report hero (single screenshot + summary chips) */}
-      {(status !== "idle") && finalUrl && (
-        <ReportHero
+      {/* Report hero (desktop + mobile screenshots + summary chips) */}
+      {status !== "idle" && finalUrl && (
+        <ReportHeroView
           url={finalUrl}
-          screenshotUrl={screenshotUrl}
-          lowResUrl={lowResUrl}
+          // desktop
+          screenshotUrl={desktopHi}
+          lowResUrl={desktopLo}
+          // mobile
+          mobileUrl={mobileHi}
+          mobileLowResUrl={mobileLo}
+          // meta
           lastChecked={new Date().toISOString()}
           lang={facts?.siteLang || undefined}
-          status={facts?.isHttps ? "HTTPS • " + (facts?.status || 0) : String(facts?.status || "")}
+          status={facts?.isHttps ? `HTTPS • ${facts?.status || 0}` : String(facts?.status || "")}
+          cmsLabel={
+            facts?.cms?.type === "wordpress" && facts?.cms?.wp?.version
+              ? `WordPress ${facts.cms.wp.version}`
+              : undefined
+          }
           pillars={{
             seo: countTriplet(pillars.seo),
             a11y: countTriplet(pillars.a11y),
@@ -209,14 +229,26 @@ export default function StreamingReportShell({
             sec: countTriplet(pillars.sec),
           }}
           onFixAll={() => {
-            // TODO: open Copilot prefilled with critical issues
+            /* TODO: Copilot modal */
           }}
-        />
+        >
+          {/* ↓↓↓ Docked directly beneath the pills */}
+          {findings.length > 0 && (
+            <FindingsGrid
+              columns={[
+                <PillarColumn key="seo"  label="SEO"            score={scores.seo}  items={pillars.seo}  />,
+                <PillarColumn key="a11y" label="Accessibility"  score={scores.a11y} items={pillars.a11y} />,
+                <PillarColumn key="perf" label="Performance"    score={scores.perf} items={pillars.perf} />,
+                <PillarColumn key="sec"  label="Security"       score={scores.sec}  items={pillars.sec}  />
+              ]}
+            />
+          )}
+        </ReportHeroView>
       )}
 
       {/* Optional identity + WP spotlight under the hero */}
       {facts && (
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 -mt-2">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 -mt-2">
           <SiteIdentityCard
             domain={facts.domain || (url ? new URL(url).hostname : "example.com")}
             finalUrl={finalUrl}
@@ -237,18 +269,6 @@ export default function StreamingReportShell({
             </div>
           )}
         </div>
-      )}
-
-      {/* Findings */}
-      {findings.length > 0 && (
-        <FindingsGrid
-          columns={[
-            <PillarColumn key="seo"          label="SEO"          score={scores.seo}  items={pillars.seo}  />,
-            <PillarColumn key="a11y"         label="Accessibility" score={scores.a11y} items={pillars.a11y} />,
-            <PillarColumn key="perf"         label="Performance"   score={scores.perf} items={pillars.perf} />,
-            <PillarColumn key="sec"          label="Security"      score={scores.sec}  items={pillars.sec}  />
-          ]}
-        />
       )}
 
       {status === "error" && (

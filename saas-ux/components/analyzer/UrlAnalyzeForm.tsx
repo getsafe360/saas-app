@@ -92,7 +92,7 @@ export default function UrlAnalyzeForm({
           disabled={isBusy}
           className={cn(
             "rounded-full px-5 py-2 text-sm sm:text-base font-semibold",
-            "text-white bg-sky-600 hover:bg-sky-700 transition",
+            "text-white bg-sky-600 hover:bg-sky-700 transition cursor-pointer",
             "disabled:opacity-60 disabled:cursor-not-allowed"
           )}
         >
@@ -109,7 +109,7 @@ export default function UrlAnalyzeForm({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-full px-4 py-2 text-sm sm:text-base font-semibold border border-white/10 text-white/90 hover:bg-white/[0.08] transition"
+            className="rounded-full px-4 py-2 text-sm sm:text-base font-semibold border border-white/10 text-white/90 hover:bg-white/[0.08] transition cursor-pointer"
           >
             {labels.cancel || "Cancel"}
           </button>

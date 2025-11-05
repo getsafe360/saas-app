@@ -1,102 +1,151 @@
 // components/analyzer/ReportHero.tsx
 "use client";
 
-import Image from "next/image";
-import { Shield, Gauge, Search, Accessibility } from "lucide-react";
 import { useState } from "react";
+import { Shield, Gauge, Search, Accessibility } from "lucide-react";
 
 type PillarCounts = { pass: number; warn: number; crit: number };
 
 export default function ReportHero({
   url,
+  // Desktop
   screenshotUrl,
   lowResUrl,
+  // Mobile
+  mobileUrl,
+  mobileLowResUrl,
   lastChecked,
   lang,
   status,
-  pillars,
-  onFixAll
+  cmsLabel,
+  children,
+  onFixAll,
+  pillars
 }: {
   url: string;
-  screenshotUrl: string;     // e.g. /api/screenshot?fmt=avif&w=650&max=30720&url=...
-  lowResUrl?: string;        // e.g. /api/screenshot?fmt=webp&w=24&q=30&url=...
+  screenshotUrl: string;
+  lowResUrl?: string;
+  mobileUrl: string;
+  mobileLowResUrl?: string;
   lastChecked: string;
   lang?: string;
-  status?: string;
+  status?: string;   // e.g., "HTTPS • 200"
+  cmsLabel?: string; // e.g., "WordPress 6.7"
+  children?: React.ReactNode;
+  onFixAll?: () => void;
   pillars: {
     seo: PillarCounts;
     a11y: PillarCounts;
     perf: PillarCounts;
     sec: PillarCounts;
   };
-  onFixAll?: () => void;
 }) {
-  const [loaded, setLoaded] = useState(false);
+  const [deskLoaded, setDeskLoaded] = useState(false);
+  const [mobLoaded, setMobLoaded] = useState(false);
 
   return (
-    <section className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="cta-effect cta-sky rounded-2xl">
-        <div className="gb-card gb-sky rounded-2xl p-4 sm:p-6 lg:p-8 bg-white/70 dark:bg-white/[0.04] backdrop-blur ring-1 ring-slate-900/10 dark:ring-white/10">
-          {/* Screenshot */}
-          <div className="flex flex-col items-center">
-            <div className="relative rounded-xl overflow-hidden ring-1 ring-slate-900/10 dark:ring-white/10 shadow">
-              {/* Low-res layer (progressive blur-up) */}
-              {lowResUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
+        <div className="gb-card gb-sky rounded-2xl p-5 sm:p-6 lg:p-8 bg-white/70 dark:bg-white/[0.04] backdrop-blur ring-1 ring-slate-900/10 dark:ring-white/10">
+          
+          {/* Screenshots row */}
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-4 items-stretch">
+            {/* Desktop shot (defines row height via aspect) */}
+            <figure className="relative rounded-xl overflow-hidden ring-1 ring-slate-900/10 dark:ring-white/10 shadow">
+              <div className="relative aspect-[12/7] w-full">
+                {/* Low-res progressive layer */}
+                {lowResUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={lowResUrl}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover blur-md scale-105 opacity-70 transition-opacity duration-300"
+                    style={{ opacity: deskLoaded ? 0 : 1 }}
+                  />
+                )}
+                {/* Hi-res (no Next proxy; we control the exact size) */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={lowResUrl}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover blur-md scale-105 opacity-70 transition-opacity duration-300"
-                  style={{ opacity: loaded ? 0 : 1 }}
+                  src={screenshotUrl}
+                  alt={`Screenshot of ${url}`}
+                  width={650}
+                  height={Math.round((650 * 7) / 12)}
+                  loading="eager"
+                  decoding="async"
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${deskLoaded ? "opacity-100" : "opacity-0"}`}
+                  onLoad={() => setDeskLoaded(true)}
                 />
-              ) : null}
+                {!deskLoaded && (
+                  <div className="absolute inset-0 grid place-items-center">
+                    <div className="h-6 w-6 rounded-full border-2 border-sky-400/40 border-t-sky-500 animate-spin" />
+                  </div>
+                )}
+              </div>
+              <figcaption className="sr-only">Desktop preview</figcaption>
+            </figure>
 
-              <Image
-                src={screenshotUrl}
-                alt={`Screenshot of ${url}`}
-                width={650}
-                height={Math.round((650 * 7) / 12)}
-                sizes="(max-width: 768px) 100vw, 650px"
-                priority
-                onLoadingComplete={() => setLoaded(true)}
-                className={[
-                  "block max-w-[650px] h-auto transition-opacity duration-300",
-                  loaded ? "opacity-100" : "opacity-0"
-                ].join(" ")}
-              />
-
-              {/* Spinner while high-res loads (fallback) */}
-              {!loaded && (
-                <div className="absolute inset-0 grid place-items-center">
-                  <div className="h-6 w-6 rounded-full border-2 border-sky-400/40 border-t-sky-500 animate-spin" />
-                </div>
-              )}
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-              <span className="px-2 py-1 rounded-full ring-1 ring-slate-900/10 dark:ring-white/10 bg-white/60 dark:bg-white/[0.05]">
-                {new URL(url).hostname}
-              </span>
-              {status && (
-                <span className="px-2 py-1 rounded-full ring-1 ring-emerald-500/20 text-emerald-600 dark:text-emerald-300 bg-emerald-500/5">
-                  {status}
-                </span>
-              )}
-              {lang && <span className="px-2 py-1 rounded-full ring-1 ring-slate-900/10 dark:ring-white/10">{lang}</span>}
-              <span className="px-2 py-1 rounded-full ring-1 ring-slate-900/10 dark:ring-white/10">
-                Last checked: {new Date(lastChecked).toLocaleString()}
-              </span>
-            </div>
+            {/* Mobile shot: matches the row height via h-full */}
+            <figure className="relative rounded-xl overflow-hidden ring-1 ring-slate-900/10 dark:ring-white/10 shadow hidden lg:block">
+              <div className="relative h-full w-full">
+                {/* Low-res */}
+                {mobileLowResUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={mobileLowResUrl}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover blur-md scale-105 opacity-70 transition-opacity duration-300"
+                    style={{ opacity: mobLoaded ? 0 : 1 }}
+                  />
+                )}
+                {/* Hi-res phone */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={mobileUrl}
+                  alt={`Mobile screenshot of ${url}`}
+                  width={390}
+                  height={800}
+                  loading="eager"
+                  decoding="async"
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${mobLoaded ? "opacity-100" : "opacity-0"}`}
+                  onLoad={() => setMobLoaded(true)}
+                />
+                {!mobLoaded && (
+                  <div className="absolute inset-0 grid place-items-center">
+                    <div className="h-6 w-6 rounded-full border-2 border-sky-400/40 border-t-sky-500 animate-spin" />
+                  </div>
+                )}
+              </div>
+              <figcaption className="sr-only">Mobile preview</figcaption>
+            </figure>
           </div>
 
-          {/* Pillar summary row */}
+          {/* Meta row */}
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <span className="px-2 py-1 rounded-full ring-1 ring-slate-900/10 dark:ring-white/10 bg-white/60 dark:bg-white/[0.05]">
+              {new URL(url).hostname}
+            </span>
+            {status && (
+              <span className="px-2 py-1 rounded-full ring-1 ring-emerald-500/20 text-emerald-600 dark:text-emerald-300 bg-emerald-500/5">
+                {status}
+              </span>
+            )}
+            {cmsLabel && <span className="px-2 py-1 rounded-full ring-1 ring-slate-900/10 dark:ring-white/10">{cmsLabel}</span>}
+            {lang && <span className="px-2 py-1 rounded-full ring-1 ring-slate-900/10 dark:ring-white/10">{lang}</span>}
+            <span className="px-2 py-1 rounded-full ring-1 ring-slate-900/10 dark:ring-white/10">Last checked: {new Date(lastChecked).toLocaleString()}</span>
+          </div>
+
+          {/* Pillar chips */}
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
             <PillarChip icon={Search} title="SEO" {...pillars.seo} accent="sky" />
             <PillarChip icon={Accessibility} title="Accessibility" {...pillars.a11y} accent="teal" />
             <PillarChip icon={Gauge} title="Performance" {...pillars.perf} accent="violet" />
             <PillarChip icon={Shield} title="Security" {...pillars.sec} accent="amber" />
           </div>
-
+            {children ? (
+            <div className="mt-6 pt-6 border-t border-slate-200/70 dark:border-white/10">
+            {children}
+            </div>
+          ) : null}
           {/* CTA */}
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-sm text-slate-700 dark:text-slate-300">

@@ -2,10 +2,10 @@
 import { NextRequest } from "next/server";
 import chromium from "@sparticuz/chromium";
 import core from "puppeteer-core";
-import sharp from "sharp";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 async function launchBrowser() {
   try {
@@ -30,91 +30,81 @@ function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
 
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
   if (!url) return new Response("Missing url", { status: 400 });
 
-  // params
-  const w = clamp(parseInt(req.nextUrl.searchParams.get("w") || "650", 10), 400, 1600);
-  let q = clamp(parseInt(req.nextUrl.searchParams.get("q") || "60", 10), 25, 90);
+  const w = clamp(parseInt(req.nextUrl.searchParams.get("w") || "650", 10), 320, 1600);
+  const q = clamp(parseInt(req.nextUrl.searchParams.get("q") || "60", 10), 25, 90);
   const mobile = req.nextUrl.searchParams.get("mobile") === "1";
-  const fmt = (req.nextUrl.searchParams.get("fmt") || "avif").toLowerCase() as
-    | "avif"
-    | "webp"
-    | "jpeg";
-  const maxBytes = clamp(
-    parseInt(req.nextUrl.searchParams.get("max") || String(30 * 1024), 10),
-    10 * 1024,
-    200 * 1024
-  );
+  const dpr = clamp(Number(req.nextUrl.searchParams.get("dpr") || "1"), 1, 2);
 
   let browser: any;
+  let page: any;
+  
   try {
     browser = await launchBrowser();
-    const page = await browser.newPage(); // ✅ Puppeteer: no args here
+    page = await browser.newPage();
 
     if (mobile) {
-      await page.setViewport({
-        width: 390,
+      await page.setViewport({ 
+        width: w, 
         height: 800,
-        deviceScaleFactor: 2,
-        isMobile: true,
-        hasTouch: true
+        deviceScaleFactor: dpr, 
+        isMobile: true, 
+        hasTouch: true 
       });
       await page.setUserAgent(
         "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"
       );
     } else {
-      await page.setViewport({
-        width: w,
-        height: Math.round((w * 7) / 12),
-        deviceScaleFactor: 1
+      await page.setViewport({ 
+        width: w, 
+        height: Math.round((w * 7) / 12), 
+        deviceScaleFactor: dpr
       });
       await page.setUserAgent(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome Safari"
       );
     }
 
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 10_000 }).catch(() => {});
+    // Use 'load' instead of 'networkidle0' - much more reliable
+    await page.goto(url, { 
+      waitUntil: "load",
+      timeout: 20000
+    });
 
-    // Capture PNG first; we’ll transcode via Sharp.
-    const raw: Buffer = (await page.screenshot({ type: "png" })) as Buffer;
-    await page.close();
+    // Give page time to render (replace waitForTimeout)
+    await delay(800);
 
-    // Resize + compress to target format with size cap
-    const base = sharp(raw).resize({ width: w });
-    const encode = async (quality: number) => {
-      if (fmt === "avif") return base.avif({ quality, effort: 4 }).toBuffer();
-      if (fmt === "webp") return base.webp({ quality }).toBuffer();
-      return base.jpeg({ quality }).toBuffer();
-    };
+    const buf: Buffer = (await page.screenshot({ 
+      type: "jpeg", 
+      quality: q,
+      fullPage: false
+    })) as Buffer;
 
-    let out = await encode(q);
-    while (out.byteLength > maxBytes && q > 25) {
-      q -= 5;
-      out = await encode(q);
-    }
-
-   const contentType =
-      fmt === "avif" ? "image/avif" : fmt === "webp" ? "image/webp" : "image/jpeg";
-
-   // Create an ArrayBufferView (Uint8Array) from the Buffer so Response accepts it as BodyInit
-   const body = new Uint8Array(out);
-
-    return new Response(body, {
+    return new Response(buf, {
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": "image/jpeg",
         "Cache-Control": "public, s-maxage=2592000, max-age=600"
-        // optionally:
-        // "Content-Length": String(out.byteLength)
       }
     });
 
-  } catch {
+  } catch (err: any) {
+    console.error("Screenshot error for", url, err);
+    
     return new Response(null, { status: 204 });
+    
   } finally {
-    try {
-      await browser?.close();
+    try { 
+      if (page) await page.close(); 
+    } catch {}
+    try { 
+      if (browser) await browser.close(); 
     } catch {}
   }
 }

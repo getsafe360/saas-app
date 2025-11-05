@@ -42,7 +42,7 @@ export default function AudienceInfoBoxes({
   return (
     <section
       aria-label={tib("sectionLabel")} 
-      className="mx-auto max-w-6xl grid lg:grid-cols-2 gap-6 px-4 sm:px-6 lg:px-8 mb-12"
+      className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-6 px-4 sm:px-6 lg:px-8 mb-12"
     >
       {/* Owners/Webmasters Card */}
       <Card accent="sky" icon={

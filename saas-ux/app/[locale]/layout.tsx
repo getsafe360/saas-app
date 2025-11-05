@@ -29,7 +29,7 @@ const ogLocaleMap: Record<Locale, string> = {
   it: 'it_IT'
 };
 
-// ✅ Localized metadata
+// Localized metadata
 export async function generateMetadata(
   { params: { locale } }: { params: { locale: Locale } }
 ): Promise<Metadata> {

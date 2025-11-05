@@ -23,7 +23,7 @@ export default function HomePage() {
       {/* HERO (fixed-height visual; gradient stays constant) */}
       <section className="relative py-20">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(17,111,255,0.25),transparent)]" />
-        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight mb-6">
               <span className="bg-gradient-to-r from-white via-sky-300/80 to-sky-400/70 bg-clip-text text-transparent">
@@ -56,7 +56,7 @@ export default function HomePage() {
       </section>
 
       {/* RESULTS (lives below hero; gradient unaffected) */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mb-14">
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-14">
         <StreamingReportShell
           hideForm
           startOnUrl={pendingUrl}
