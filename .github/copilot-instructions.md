@@ -56,7 +56,7 @@ No `.env.example` exists; refer to `saas-ux/lib/db/setup.ts` and Flask `app.py` 
 
 **Next.js workspace:**
 ```bash
-cd /home/runner/work/saas-app/saas-app
+# From repository root:
 pnpm install
 ```
 **Preconditions:** pnpm 9.12.3 installed globally.  
