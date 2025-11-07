@@ -209,14 +209,14 @@ const a11yIssues = {
       fullPage: false,
     });
 
-    return new Response(buf, {
-      headers: {
-        "Content-Type": "image/jpeg",
-        "Cache-Control": "public, s-maxage=2592000, max-age=600",
-        "CDN-Cache-Control": "max-age=2592000"
-      }
-    });
-
+// With this (convert Buffer to Uint8Array):
+return new Response(new Uint8Array(buf), {
+  headers: {
+    "Content-Type": "image/jpeg",
+    "Cache-Control": "public, s-maxage=2592000, max-age=600",
+    "CDN-Cache-Control": "max-age=2592000"
+  }
+});
   } catch (err: any) {
     console.error(`Screenshot failed for ${url}:`, err.message);
     return new Response(null, { status: 204 });
