@@ -1,4 +1,4 @@
-// components/analyzer/StreamingReportShell.tsx
+// components/analyzer/core/StreamingReportShell.tsx
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -6,15 +6,16 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import { Globe } from "lucide-react";
 
-import UrlAnalyzeForm from "./UrlAnalyzeForm";
-import WPSpotlight from "./WPSpotlight";
-import ReportHeroView from "@/components/analyzer/ReportHero"; // alias to avoid TS2349
-import { FindingsGrid } from "@/components/analyzer/FindingsGrid";
-import PillarColumn from "@/components/analyzer/PillarColumn";
-import { parseFindings } from "@/components/analyzer/parseFindings";
-import type { Finding } from "@/components/analyzer/parseFindings";
+import UrlAnalyzeForm from "../forms/UrlAnalyzeForm";
+import WPSpotlight from "../cms/WPSpotlight";
+import ReportHeroView from "@/components/analyzer/display/ReportHero";
+import { FindingsGrid } from "@/components/analyzer/display/FindingsGrid";
+import PillarColumn from "@/components/analyzer/findings/PillarColumn";
+import { buildScreenshotUrls, prefetchScreenshots } from "@/components/analyzer/utils/screenshotPrefetch";
 import { bucketVariant } from "@/lib/ab";
-import SiteIdentityCard from "./SiteIdentityCard";
+import SiteIdentityCard from "../display/SiteIdentityCard";
+import { parseFindings } from "@/components/analyzer/utils/parseFindings";
+import type { Finding, Facts, AnalysisPayload, ScreenshotUrls } from "../types";
 
 type Props = {
   className?: string;
@@ -24,19 +25,6 @@ type Props = {
   hideForm?: boolean;
   startOnUrl?: string;
 };
-
-type Facts = Awaited<ReturnType<typeof import("@/lib/analyzer/preScan")["preScan"]>>;
-
-export type AnalysisPayload = {
-  url: string;
-  markdown: string;
-  findings: Finding[];
-  facts?: Facts | null;
-  locale: string;
-};
-
-const SCREENSHOT_W = 650;   // desktop width
-const MOBILE_W = 390;       // mobile width
 
 export default function StreamingReportShell({
   className,
@@ -55,6 +43,7 @@ export default function StreamingReportShell({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [facts, setFacts] = useState<Facts | null>(null);
   const [findings, setFindings] = useState<Finding[]>([]);
+  const [screenshotUrls, setScreenshotUrls] = useState<ScreenshotUrls | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const completedRef = useRef(false);
   const lastStartedRef = useRef<string | null>(null);
@@ -88,6 +77,7 @@ export default function StreamingReportShell({
     setFindings([]);
     setErrorMsg(null);
     setFacts(null);
+    setScreenshotUrls(null);
     completedRef.current = false;
 
     setStatus("loading");
@@ -128,6 +118,17 @@ export default function StreamingReportShell({
     }
   }
 
+  // Handle screenshot URL building and prefetching
+  useEffect(() => {
+    if (!facts?.finalUrl) return;
+    
+    const urls = buildScreenshotUrls(facts.finalUrl, locale);
+    setScreenshotUrls(urls);
+    
+    // Prefetch all screenshots in parallel (fire and forget)
+    prefetchScreenshots(urls);
+  }, [facts?.finalUrl, locale]);
+
   useEffect(() => {
     if (!hideForm && !startOnUrl) return;
     if (startOnUrl && startOnUrl !== lastStartedRef.current) {
@@ -154,31 +155,14 @@ export default function StreamingReportShell({
       findings: parseFindings(output),
       facts,
       locale,
+      timestamp: new Date().toISOString(),
     };
     onComplete?.(payload);
     completedRef.current = true;
   }, [status, output, facts, url, locale, onComplete]);
 
   const busy = status === "loading" || status === "streaming";
-
-  // Build canonical screenshot URLs INSIDE the component (facts/url available here).
   const finalUrl = facts?.finalUrl || url;
-  const enc = (u: string) => encodeURIComponent(u);
-
-  // Minimal route (native JPEG). Control size by w + q.
-  const desktopHi = finalUrl
-    ? `/api/screenshot?w=${SCREENSHOT_W}&q=60&url=${enc(finalUrl)}`
-    : "";
-  const desktopLo = finalUrl
-    ? `/api/screenshot?w=24&q=30&url=${enc(finalUrl)}`
-    : "";
-
-  const mobileHi = finalUrl
-    ? `/api/screenshot?mobile=1&w=${MOBILE_W}&q=60&url=${enc(finalUrl)}`
-    : "";
-  const mobileLo = finalUrl
-    ? `/api/screenshot?mobile=1&w=24&q=30&url=${enc(finalUrl)}`
-    : "";
 
   const showWpSpotlight =
     facts?.cms?.type === "wordpress" &&
@@ -204,15 +188,15 @@ export default function StreamingReportShell({
       )}
 
       {/* Report hero (desktop + mobile screenshots + summary chips) */}
-      {status !== "idle" && finalUrl && (
+      {status !== "idle" && finalUrl && screenshotUrls && (
         <ReportHeroView
           url={finalUrl}
           // desktop
-          screenshotUrl={desktopHi}
-          lowResUrl={desktopLo}
+          screenshotUrl={screenshotUrls.desktopHi}
+          lowResUrl={screenshotUrls.desktopLo}
           // mobile
-          mobileUrl={mobileHi}
-          mobileLowResUrl={mobileLo}
+          mobileUrl={screenshotUrls.mobileHi}
+          mobileLowResUrl={screenshotUrls.mobileLo}
           // meta
           lastChecked={new Date().toISOString()}
           lang={facts?.siteLang || undefined}
@@ -232,14 +216,14 @@ export default function StreamingReportShell({
             /* TODO: Copilot modal */
           }}
         >
-          {/* ↓↓↓ Docked directly beneath the pills */}
+          {/* Findings docked beneath the hero */}
           {findings.length > 0 && (
             <FindingsGrid
               columns={[
-                <PillarColumn key="seo"  label="SEO"            score={scores.seo}  items={pillars.seo}  />,
-                <PillarColumn key="a11y" label="Accessibility"  score={scores.a11y} items={pillars.a11y} />,
-                <PillarColumn key="perf" label="Performance"    score={scores.perf} items={pillars.perf} />,
-                <PillarColumn key="sec"  label="Security"       score={scores.sec}  items={pillars.sec}  />
+                <PillarColumn key="seo"  label="SEO"           items={pillars.seo}  />,
+                <PillarColumn key="a11y" label="Accessibility" items={pillars.a11y} />,
+                <PillarColumn key="perf" label="Performance"   items={pillars.perf} />,
+                <PillarColumn key="sec"  label="Security"      items={pillars.sec}  />
               ]}
             />
           )}

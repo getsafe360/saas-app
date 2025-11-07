@@ -1,8 +1,8 @@
-// saas-ux/components/analyzer/FindingsFeed.tsx
+// components/analyzer/findings/FindingsFeed.tsx
 "use client";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
-import { type Finding, type Severity, type Pillar } from "./parseFindings";
+import type { Finding, Severity, Pillar } from "../types";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Wrench, Link as LinkIcon, Copy } from "lucide-react";
 
@@ -32,8 +32,8 @@ export default function FindingsFeed({ items, initialShow, title, className }: P
       key={s}
       onClick={() => toggle(s)}
       className={cn(
-        "rounded-full px-2.5 py-1 text-xs border",
-        prevIncludes(show, s) ? "opacity-100" : "opacity-40",
+        "rounded-full px-2.5 py-1 text-xs border transition-opacity",
+        show.includes(s) ? "opacity-100" : "opacity-40",
         cls
       )}
     >
@@ -50,26 +50,51 @@ export default function FindingsFeed({ items, initialShow, title, className }: P
         {chip("critical", "🔴 Critical", "border-red-500/40 text-red-300")}
       </div>
       <ul className="space-y-2">
-        {filtered.map(i => (
-          <li key={i.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-            <div className="text-sm font-medium">
-              {i.text}
+        {filtered.map((finding, index) => (
+          <li 
+            key={`${finding.pillar}-${finding.severity}-${index}`} 
+            className="rounded-xl border border-white/10 bg-white/[0.02] p-3"
+          >
+            <div className="flex items-start gap-2">
+              <span className="text-lg">
+                {finding.severity === 'critical' ? '🔴' : finding.severity === 'medium' ? '⚠️' : '✅'}
+              </span>
+              <div className="flex-1">
+                <div className="text-sm font-medium">
+                  {finding.title}
+                </div>
+                {finding.description && (
+                  <div className="mt-1 text-xs text-neutral-400">
+                    {finding.description}
+                  </div>
+                )}
+                {finding.recommendation && (
+                  <div className="mt-2 text-xs text-sky-300">
+                    💡 {finding.recommendation}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="mt-2 flex items-center gap-2">
               <Tooltip content="Fix with Copilot">
                 <button className="rounded-full border border-sky-500/40 text-sky-300 px-2 py-1 text-xs hover:bg-sky-500/10 inline-flex items-center gap-1">
-                  <Wrench className="h-3.5 w-3.5" /> Fix with Copilot
+                  <Wrench className="h-3.5 w-3.5" /> Fix
                 </button>
               </Tooltip>
-              <Tooltip content="Show evidence (if available)">
-                <button className="rounded-full border border-white/10 px-2 py-1 text-xs text-neutral-300 hover:bg-white/[0.08] inline-flex items-center gap-1">
-                  <LinkIcon className="h-3.5 w-3.5" /> Evidence
-                </button>
-              </Tooltip>
+              {finding.code && (
+                <Tooltip content="Show code">
+                  <button className="rounded-full border border-white/10 px-2 py-1 text-xs text-neutral-300 hover:bg-white/[0.08] inline-flex items-center gap-1">
+                    <LinkIcon className="h-3.5 w-3.5" /> Code
+                  </button>
+                </Tooltip>
+              )}
               <Tooltip content="Copy to clipboard">
                 <button
                   className="rounded-full border border-white/10 px-2 py-1 text-xs text-neutral-300 hover:bg-white/[0.08] inline-flex items-center gap-1"
-                  onClick={() => navigator.clipboard?.writeText(i.text)}
+                  onClick={() => {
+                    const text = `${finding.title}\n${finding.description || ''}\n${finding.recommendation || ''}`;
+                    navigator.clipboard?.writeText(text.trim());
+                  }}
                 >
                   <Copy className="h-3.5 w-3.5" /> Copy
                 </button>
@@ -83,8 +108,4 @@ export default function FindingsFeed({ items, initialShow, title, className }: P
       </ul>
     </div>
   );
-}
-
-function prevIncludes(a: Severity[], s: Severity) {
-  return a.includes(s);
 }

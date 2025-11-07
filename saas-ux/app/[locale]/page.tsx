@@ -4,8 +4,9 @@
 import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Globe } from "lucide-react";
-import UrlAnalyzeForm from "@/components/analyzer/UrlAnalyzeForm";
-import StreamingReportShell, { AnalysisPayload } from "@/components/analyzer/StreamingReportShell";
+import UrlAnalyzeForm from "@/components/analyzer/forms/UrlAnalyzeForm";
+import StreamingReportShell from "@/components/analyzer/core/StreamingReportShell";
+type AnalysisPayload = any;
 import CTA from "@/components/marketing/CTA";
 import AudienceInfoBoxes from "@/components/marketing/AudienceInfoBoxes";
 

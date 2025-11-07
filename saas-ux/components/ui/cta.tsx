@@ -4,7 +4,7 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnalysisPayload } from "@/components/analyzer/StreamingReportShell";
+import { AnalysisPayload } from "@/components/analyzer/core/StreamingReportShell";
 
 export default function CTA({ analysis }: { analysis?: AnalysisPayload }) {
   const { openSignUp } = useClerk();

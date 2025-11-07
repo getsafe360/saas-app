@@ -93,7 +93,7 @@ export default function ReportHero({
                   <img
                     src={mobileLowResUrl}
                     alt=""
-                    className="absolute inset-0 h-full w-full object-cover blur-md scale-105 opacity-70 transition-opacity duration-300"
+                    className="absolute inset-0 h-full w-full object-top blur-md scale-105 opacity-70 transition-opacity duration-300"
                     style={{ opacity: mobLoaded ? 0 : 1 }}
                   />
                 )}
@@ -106,7 +106,7 @@ export default function ReportHero({
                   height={800}
                   loading="eager"
                   decoding="async"
-                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${mobLoaded ? "opacity-100" : "opacity-0"}`}
+                  className={`absolute inset-0 h-full w-full object-top transition-opacity duration-300 ${mobLoaded ? "opacity-100" : "opacity-0"}`}
                   onLoad={() => setMobLoaded(true)}
                 />
                 {!mobLoaded && (

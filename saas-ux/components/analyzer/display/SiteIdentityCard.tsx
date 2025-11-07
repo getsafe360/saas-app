@@ -1,11 +1,10 @@
 // saas-ux/components/analyzer/SiteIdentityCard.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import NextImage from "next/image";
+import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { Globe, ShieldCheck, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { WordPressIcon } from "../icons/WordPress";
+import { WordPressIcon } from "../../icons/WordPress";
 
 type WordPressMeta = {
   version?: string | null;
@@ -14,8 +13,9 @@ type WordPressMeta = {
 };
 
 type Cms =
-  | { type: "wordpress"; signals: string[]; wp: WordPressMeta }
-  | { type: "unknown" };
+  | { type: "wordpress"; signals?: string[]; wp?: WordPressMeta }
+  | { type: "unknown" }
+  | { type: string; [key: string]: any };
 
 type Props = {
   className?: string;

@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/cn";
-import { WordPressIcon } from "../icons/WordPress";
+import { WordPressIcon } from "../../icons/WordPress";
 import { Shield, Lock, RefreshCw } from "lucide-react";
 import * as React from "react";
 
