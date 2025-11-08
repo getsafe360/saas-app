@@ -12,7 +12,7 @@ import { HtmlLang } from '@/components/HtmlLang';
 
 // Absolute base for OG/canonical
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.getsafe360.com';
-
+const OG_IMAGE = '/og/featured-1200x630.jpg';
 export const experimental_ppr = true;
 
 export function generateStaticParams() {
@@ -31,8 +31,10 @@ const ogLocaleMap: Record<Locale, string> = {
 
 // Localized metadata
 export async function generateMetadata(
-  { params: { locale } }: { params: { locale: Locale } }
+  { params }: { params: Promise<{ locale: Locale }> }
 ): Promise<Metadata> {
+  const { locale } = await params;
+
   // Pull strings from messages.metaRoot.*
   const t = await getTranslations({ locale, namespace: 'metaRoot' });
 
@@ -54,7 +56,7 @@ export async function generateMetadata(
     description,
     metadataBase: new URL(siteUrl),
     alternates: {
-      languages, // <link rel="alternate" hreflang="...">
+      languages,
       canonical: locale === defaultLocale ? '/' : `/${locale}`
     },
     openGraph: {
@@ -64,13 +66,32 @@ export async function generateMetadata(
       description,
       url: locale === defaultLocale ? '/' : `/${locale}`,
       locale: ogLocale,
-      alternateLocale: ogAlternate
-    },
+      alternateLocale: ogAlternate,
+    // Featured image for messengers & social
+    images: [
+      {
+        url: OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: 'GetSafe 360'
+      }
+    ]
+  },
     twitter: {
       card: 'summary_large_image',
       title,
-      description
-    }
+      description,
+    // Twitter/X uses this
+    images: [OG_IMAGE]
+    },
+  // (Optional) Make favicons crisp in browser UI
+  icons: {
+    icon: [
+      { url: '/icons/favicon.ico' }, // fallback
+      { url: '/icons/360.svg', type: 'image/svg+xml' }
+    ],
+    apple: [{ url: '/icons/apple-icon.png', sizes: '180x180' }]
+  }
   };
 }
 
@@ -79,11 +100,13 @@ export default async function LocaleLayout({
   params
 }: {
   children: ReactNode;
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }>;
 }) {
-  const { locale } = params;
+  const { locale } = await params;
+
   setRequestLocale(locale);
 
+  // With next-intl v3, after setRequestLocale you can call getMessages() without args
   const messages = await getMessages();
 
   return (

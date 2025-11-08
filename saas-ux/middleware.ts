@@ -8,7 +8,7 @@ const intl = createIntlMiddleware({
   locales,
   defaultLocale,
   localeDetection: true,
-  localePrefix: 'always' // or 'as-needed'
+  localePrefix: 'as-needed' // or 'always'
 });
 
 export default clerkMiddleware((auth, req) => {
