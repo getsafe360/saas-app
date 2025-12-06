@@ -1,5 +1,5 @@
 // app/[locale]/(dashboard)/dashboard/activity/page.tsx
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Settings,
   LogOut,
@@ -11,27 +11,25 @@ import {
   Mail,
   CheckCircle,
   type LucideIcon,
-} from 'lucide-react';
+} from "lucide-react";
 // import { ActivityType } from '@/lib/db/schema'; // removed
-import { getActivityLogs } from '@/lib/db/queries';
-
-export const experimental_ppr = true;
+import { getActivityLogs } from "@/lib/db/queries";
 
 // Canonical action values (match what you store in DB)
 const ACTIONS = {
-  SIGN_UP: 'sign_up',
-  SIGN_IN: 'sign_in',
-  SIGN_OUT: 'sign_out',
-  UPDATE_PASSWORD: 'update_password',
-  DELETE_ACCOUNT: 'delete_account',
-  UPDATE_ACCOUNT: 'update_account',
-  CREATE_TEAM: 'create_team',
-  REMOVE_TEAM_MEMBER: 'remove_team_member',
-  INVITE_TEAM_MEMBER: 'invite_team_member',
-  ACCEPT_INVITATION: 'accept_invitation',
+  SIGN_UP: "sign_up",
+  SIGN_IN: "sign_in",
+  SIGN_OUT: "sign_out",
+  UPDATE_PASSWORD: "update_password",
+  DELETE_ACCOUNT: "delete_account",
+  UPDATE_ACCOUNT: "update_account",
+  CREATE_TEAM: "create_team",
+  REMOVE_TEAM_MEMBER: "remove_team_member",
+  INVITE_TEAM_MEMBER: "invite_team_member",
+  ACCEPT_INVITATION: "accept_invitation",
 } as const;
 
-type ActivityType = typeof ACTIONS[keyof typeof ACTIONS];
+type ActivityType = (typeof ACTIONS)[keyof typeof ACTIONS];
 
 // Minimal shape expected from getActivityLogs()
 type ActivityLog = {
@@ -58,37 +56,40 @@ function getRelativeTime(date: Date) {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (diffInSeconds < 60) return 'just now';
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  if (diffInSeconds < 60) return "just now";
+  if (diffInSeconds < 3600)
+    return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400)
+    return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800)
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
   return date.toLocaleDateString();
 }
 
 function formatAction(action: ActivityType): string {
   switch (action) {
     case ACTIONS.SIGN_UP:
-      return 'You signed up';
+      return "You signed up";
     case ACTIONS.SIGN_IN:
-      return 'You signed in';
+      return "You signed in";
     case ACTIONS.SIGN_OUT:
-      return 'You signed out';
+      return "You signed out";
     case ACTIONS.UPDATE_PASSWORD:
-      return 'You changed your password';
+      return "You changed your password";
     case ACTIONS.DELETE_ACCOUNT:
-      return 'You deleted your account';
+      return "You deleted your account";
     case ACTIONS.UPDATE_ACCOUNT:
-      return 'You updated your account';
+      return "You updated your account";
     case ACTIONS.CREATE_TEAM:
-      return 'You created a new team';
+      return "You created a new team";
     case ACTIONS.REMOVE_TEAM_MEMBER:
-      return 'You removed a team member';
+      return "You removed a team member";
     case ACTIONS.INVITE_TEAM_MEMBER:
-      return 'You invited a team member';
+      return "You invited a team member";
     case ACTIONS.ACCEPT_INVITATION:
-      return 'You accepted an invitation';
+      return "You accepted an invitation";
     default:
-      return 'Unknown action occurred';
+      return "Unknown action occurred";
   }
 }
 
@@ -113,7 +114,10 @@ export default async function ActivityPage() {
                 const formattedAction = formatAction(action);
 
                 return (
-                  <li key={String(log.id)} className="flex items-center space-x-4">
+                  <li
+                    key={String(log.id)}
+                    className="flex items-center space-x-4"
+                  >
                     <div className="bg-orange-100 rounded-full p-2">
                       <Icon className="w-5 h-5 text-orange-600" />
                     </div>

@@ -1,3 +1,4 @@
+// saas-ux/components/analyzer/cms/WPSpotlight.tsx
 "use client";
 import { cn } from "@/lib/cn";
 import { WordPressIcon } from "../../icons/WordPress";
@@ -11,7 +12,12 @@ type Props = {
   className?: string;
 };
 
-export default function WPSpotlight({ version, jsonApi, xmlrpc, className }: Props) {
+export default function WPSpotlight({
+  version,
+  jsonApi,
+  xmlrpc,
+  className,
+}: Props) {
   const Badge = ({ children }: { children: React.ReactNode }) => (
     <span className="inline-flex items-center rounded-full bg-purple-500/10 text-purple-300 px-2 py-0.5 text-xs border border-purple-500/30">
       {children}
@@ -39,7 +45,12 @@ export default function WPSpotlight({ version, jsonApi, xmlrpc, className }: Pro
   );
 
   return (
-    <div className={cn("rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur", className)}>
+    <div
+      className={cn(
+        "rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur",
+        className
+      )}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <WordPressIcon size={20} className="text-purple-300" />
@@ -75,7 +86,10 @@ export default function WPSpotlight({ version, jsonApi, xmlrpc, className }: Pro
       </div>
 
       <div className="mt-3 text-right">
-        <a href="/dashboard/wp-toolbox" className="text-xs text-purple-300 hover:text-purple-200 underline underline-offset-4">
+        <a
+          href="/dashboard/wp-toolbox"
+          className="text-xs text-purple-300 hover:text-purple-200 underline underline-offset-4"
+        >
           Open WP Toolbox →
         </a>
       </div>

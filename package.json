@@ -1,16 +1,27 @@
 {
   "name": "getsafe360-saas",
   "private": true,
-  "packageManager": "pnpm@9.12.3",
+  "packageManager": "pnpm@10.23.0",
   "scripts": {
     "dev": "pnpm -C saas-ux dev",
     "build": "pnpm -C saas-ux build",
     "start": "pnpm -C saas-ux start"
   },
-    "pnpm": {
+  "pnpm": {
     "overrides": {
       "sha3": "npm:js-sha3@0.9.3",
       "scrypt": "npm:scrypt-js@3.0.1"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@clerk/shared",
+      "@tailwindcss/oxide",
+      "core-js",
+      "esbuild",
+      "keccak",
+      "puppeteer",
+      "secp256k1",
+      "sharp",
+      "websocket"
+    ]
   }
 }

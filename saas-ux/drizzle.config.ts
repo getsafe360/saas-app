@@ -4,7 +4,7 @@ import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
   dialect: 'postgresql',
-  schema: './lib/db/schema.ts',
+  schema: './lib/db/schema',
   out: './lib/db/migrations',           // single canonical folder (commit SQL + meta)
   dbCredentials: {
     url: process.env.DATABASE_URL ?? process.env.POSTGRES_URL!,

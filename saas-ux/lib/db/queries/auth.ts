@@ -3,7 +3,7 @@ import { cache } from 'react';
 import { and, eq, isNull } from 'drizzle-orm';
 import { cookies as nextCookies } from 'next/headers';
 import { getDb } from '../drizzle';
-import { users } from '../schema';
+import { users } from '@/lib/db/schema/auth/users';
 import { verifyToken } from '@/lib/auth/session';
 
 // handles sync/async cookies() implementations

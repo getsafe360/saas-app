@@ -1,18 +1,18 @@
 // app/[locale]/(dashboard)/dashboard/sites/[id]/analyze/page.tsx
-import type { Metadata } from 'next';
-import { getDb } from '@/lib/db/drizzle';
-import { sites } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
-import { getTranslations } from 'next-intl/server';
-import AnalyzeClient from './AnalyzeClient';
+import type { Metadata } from "next";
+import { getDb } from "@/lib/db/drizzle";
+import { sites } from "@/lib/db/schema/sites";
+import { eq } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
+import AnalyzeClient from "./AnalyzeClient";
 
-export const experimental_ppr = true;
+const DEFAULT_LOCALE = "en";
 
-const DEFAULT_LOCALE = 'en';
-
-export async function generateMetadata(
-  { params }: { params: Promise<{ locale: string; id: string }> }
-): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
   const { locale, id } = await params;
 
   // Try to read siteUrl for a nicer title
@@ -27,10 +27,10 @@ export async function generateMetadata(
     siteUrl = row?.siteUrl ?? null;
   } catch {}
 
-  const t = await getTranslations('AnalyzeMeta');
+  const t = await getTranslations("AnalyzeMeta");
 
-  const title = siteUrl ? t('titleWithUrl', { url: siteUrl }) : t('title');
-  const description = t('description');
+  const title = siteUrl ? t("titleWithUrl", { url: siteUrl }) : t("title");
+  const description = t("description");
 
   const path = `/dashboard/sites/${id}/analyze`;
   const canonical = locale === DEFAULT_LOCALE ? path : `/${locale}${path}`;
@@ -39,7 +39,7 @@ export async function generateMetadata(
     title,
     description,
     alternates: { canonical },
-    openGraph: { title, description, url: canonical }
+    openGraph: { title, description, url: canonical },
   };
 }
 

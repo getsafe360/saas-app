@@ -1,7 +1,7 @@
 // lib/server/authz.ts
 import 'server-only';
 import { getDb } from '@/lib/db/drizzle';
-import { users } from '@/lib/db/schema';
+import { users } from '@/lib/db/schema/auth/users';
 import { eq } from 'drizzle-orm';
 import { auth } from '@clerk/nextjs/server';
 

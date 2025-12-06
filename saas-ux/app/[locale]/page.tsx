@@ -1,5 +1,5 @@
 // saas-ux/app/[locale]/page.tsx
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -28,17 +28,27 @@ export default function HomePage() {
           <div className="text-center">
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight mb-6">
               <span className="bg-gradient-to-r from-white via-sky-300/80 to-sky-400/70 bg-clip-text text-transparent">
-                {th.rich("title", { span: (chunks: React.ReactNode) => <span className="font-extrabold tracking-tighter">{chunks}</span> })}
+                {th.rich("title", {
+                  span: (chunks: React.ReactNode) => (
+                    <span className="font-extrabold tracking-tighter">
+                      {chunks}
+                    </span>
+                  ),
+                })}
               </span>
             </h1>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-tight mb-10 text-slate-300">
-              {th.rich("optimize", { span: (chunks) => <span className="font-semibold text-white">{chunks}</span> })}
+              {th.rich("optimize", {
+                span: (chunks) => (
+                  <span className="font-semibold text-white">{chunks}</span>
+                ),
+              })}
             </h2>
 
             <div className="mx-auto max-w-3xl">
               <UrlAnalyzeForm
                 placeholder={ta("placeholder_url")}
-                icon={<Globe className="w-5 h-5 text-sky-400" />}   // blue globe
+                icon={<Globe className="w-5 h-5 text-sky-400" />} // blue globe
                 onSubmit={(normalizedUrl) => {
                   setAnalysis(null);
                   setPendingUrl(normalizedUrl); // triggers the shell below
@@ -48,7 +58,9 @@ export default function HomePage() {
                   analyze: ta("analyze_btn"),
                   analyzing: ta("analyzing"),
                   cancel: taction("cancel"),
-                  invalidUrl: ta.has("invalid_url") ? ta("invalid_url") : undefined,
+                  invalidUrl: ta.has("invalid_url")
+                    ? ta("invalid_url")
+                    : undefined,
                 }}
               />
             </div>
@@ -68,10 +80,9 @@ export default function HomePage() {
 
       <AudienceInfoBoxes />
 
-        <section className="mt-12 flex justify-center">
-          <CTA />
-        </section>
-
+      <section className="mb-8">
+        <CTA />
+      </section>
     </main>
   );
 }

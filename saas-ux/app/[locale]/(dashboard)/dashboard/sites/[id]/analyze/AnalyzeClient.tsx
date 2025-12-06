@@ -1,17 +1,17 @@
 // app/[locale]/(dashboard)/dashboard/sites/[id]/analyze/AnalyzeClient.tsx
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import StatusBadge from '@/components/ui/StatusBadge';
-import MetricDonut from '@/components/report/MetricDonut';
-import { CategorySection } from '@/components/report/CategorySection';
-import { IssueCard } from '@/components/report/IssueCard';
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import StatusBadge from "@/components/ui/StatusBadge";
+import MetricDonut from "@/components/report/MetricDonut";
+import { CategorySection } from "@/components/report/CategorySection";
+import { IssueCard } from "@/components/report/IssueCard";
 
 type StatusResp = {
   id: string;
-  status: 'queued' | 'running' | 'done' | 'error';
+  status: "queued" | "running" | "done" | "error";
   costTokens?: number;
   reportBlobKey?: string;
   agentUsed?: string;
@@ -21,9 +21,9 @@ type StatusResp = {
 
 type Issue = {
   id: string;
-  category: 'seo' | 'performance' | 'accessibility' | 'security';
+  category: "seo" | "performance" | "accessibility" | "security";
   title: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
   description: string;
   suggestion: string;
   fixAvailable: boolean;
@@ -32,22 +32,35 @@ type Issue = {
 
 type Report = {
   siteUrl: string;
-  summary: { score: number; counts: Record<string, number>; estTotalTokens: number };
+  summary: {
+    score: number;
+    counts: Record<string, number>;
+    estTotalTokens: number;
+  };
   issues: Issue[];
   pagesAnalyzed: string[];
 };
 
-type FixState = 'idle' | 'working' | 'done' | 'insufficient' | 'accepted';
+type FixState = "idle" | "working" | "done" | "insufficient" | "accepted";
 
-const severityWeight: Record<Issue['severity'], number> = { high: 30, medium: 15, low: 7 };
+const severityWeight: Record<Issue["severity"], number> = {
+  high: 30,
+  medium: 15,
+  low: 7,
+};
 function categoryScore(issues: Issue[]) {
-  const penalty = issues.reduce((acc, i) => acc + (severityWeight[i.severity] ?? 10), 0);
+  const penalty = issues.reduce(
+    (acc, i) => acc + (severityWeight[i.severity] ?? 10),
+    0
+  );
   return Math.max(0, Math.min(100, 100 - penalty));
 }
 
 export default function AnalyzeClient() {
   const params = useParams(); // { locale?: string; id: string | string[] }
-  const siteId = Array.isArray((params as any).id) ? (params as any).id[0] : (params as any).id;
+  const siteId = Array.isArray((params as any).id)
+    ? (params as any).id[0]
+    : (params as any).id;
 
   const [jobId, setJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<StatusResp | null>(null);
@@ -57,15 +70,17 @@ export default function AnalyzeClient() {
   // Tokens + per-issue state
   const [tokens, setTokens] = useState<number | null>(null);
   const [fixing, setFixing] = useState<Record<string, FixState>>({});
-  const [fixJobByIssue, setFixJobByIssue] = useState<Record<string, string>>({});
+  const [fixJobByIssue, setFixJobByIssue] = useState<Record<string, string>>(
+    {}
+  );
 
   // Load remaining tokens once
   useEffect(() => {
     (async () => {
-      const r = await fetch('/api/team/tokens', { cache: 'no-store' });
+      const r = await fetch("/api/team/tokens", { cache: "no-store" });
       if (r.ok) {
         const j = await r.json();
-        if (typeof j.tokensRemaining === 'number') setTokens(j.tokensRemaining);
+        if (typeof j.tokensRemaining === "number") setTokens(j.tokensRemaining);
       }
     })();
   }, []);
@@ -74,10 +89,10 @@ export default function AnalyzeClient() {
   useEffect(() => {
     if (!siteId) return;
     (async () => {
-      const r = await fetch('/api/scan/start', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ siteId })
+      const r = await fetch("/api/scan/start", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ siteId }),
       });
       const j = await r.json();
       if (j.jobId) setJobId(j.jobId);
@@ -98,20 +113,26 @@ export default function AnalyzeClient() {
 
     const tick = async () => {
       try {
-        const r = await fetch(`/api/scan/status?id=${encodeURIComponent(jobId)}`, { cache: 'no-store' });
+        const r = await fetch(
+          `/api/scan/status?id=${encodeURIComponent(jobId)}`,
+          { cache: "no-store" }
+        );
         if (!r.ok) return; // soft fail, keep polling
 
         const j: StatusResp = await r.json();
         if (stopped) return;
         setStatus(j);
 
-        if (j.status === 'error') {
+        if (j.status === "error") {
           clear();
           return;
         }
 
-        if (j.status === 'done') {
-          const rr = await fetch(`/api/scan/result?id=${encodeURIComponent(jobId)}`, { cache: 'no-store' });
+        if (j.status === "done") {
+          const rr = await fetch(
+            `/api/scan/result?id=${encodeURIComponent(jobId)}`,
+            { cache: "no-store" }
+          );
 
           if (rr.status === 202) return; // not ready yet — let next tick retry
           if (!rr.ok) return; // soft fail
@@ -132,7 +153,8 @@ export default function AnalyzeClient() {
     return clear;
   }, [jobId]);
 
-  const busy = !status || status.status === 'queued' || status.status === 'running';
+  const busy =
+    !status || status.status === "queued" || status.status === "running";
 
   // Group issues by category for pretty sections
   const grouped = (report?.issues ?? []).reduce(
@@ -144,7 +166,7 @@ export default function AnalyzeClient() {
       seo: [] as Issue[],
       performance: [] as Issue[],
       accessibility: [] as Issue[],
-      security: [] as Issue[]
+      security: [] as Issue[],
     }
   );
 
@@ -155,38 +177,38 @@ export default function AnalyzeClient() {
 
     // Local guard: known tokens < estimated cost
     if (tokens !== null && tokens < issue.estTokens) {
-      setFixing((s) => ({ ...s, [issue.id]: 'insufficient' }));
+      setFixing((s) => ({ ...s, [issue.id]: "insufficient" }));
       return;
     }
 
-    setFixing((s) => ({ ...s, [issue.id]: 'working' }));
+    setFixing((s) => ({ ...s, [issue.id]: "working" }));
 
     try {
       // Be compatible with both payload shapes
-      const r = await fetch('/api/fix/start', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
+      const r = await fetch("/api/fix/start", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({
           siteId,
           issues: [{ id: issue.id, estTokens: issue.estTokens }],
           // legacy compatibility:
-          issueIds: [issue.id]
-        })
+          issueIds: [issue.id],
+        }),
       });
 
       if (r.status === 422 || r.status === 409) {
-        setFixing((s) => ({ ...s, [issue.id]: 'insufficient' }));
+        setFixing((s) => ({ ...s, [issue.id]: "insufficient" }));
         return;
       }
       if (!r.ok) {
-        setFixing((s) => ({ ...s, [issue.id]: 'idle' }));
+        setFixing((s) => ({ ...s, [issue.id]: "idle" }));
         return;
       }
 
       const j = await r.json();
       const fixJobId: string | undefined = j.fixJobId || j.jobId;
       if (!fixJobId) {
-        setFixing((s) => ({ ...s, [issue.id]: 'idle' }));
+        setFixing((s) => ({ ...s, [issue.id]: "idle" }));
         return;
       }
 
@@ -195,48 +217,51 @@ export default function AnalyzeClient() {
       // short-lived poll
       const poll = async () => {
         try {
-          const s = await fetch(`/api/fix/status?id=${encodeURIComponent(fixJobId)}`, { cache: 'no-store' });
+          const s = await fetch(
+            `/api/fix/status?id=${encodeURIComponent(fixJobId)}`,
+            { cache: "no-store" }
+          );
           if (!s.ok) return setTimeout(poll, 1200);
           const js = await s.json();
-          if (js.status !== 'done') return setTimeout(poll, 1200);
+          if (js.status !== "done") return setTimeout(poll, 1200);
 
-          setFixing((prev) => ({ ...prev, [issue.id]: 'done' }));
+          setFixing((prev) => ({ ...prev, [issue.id]: "done" }));
         } catch {
           setTimeout(poll, 1200);
         }
       };
       poll();
     } catch {
-      setFixing((s) => ({ ...s, [issue.id]: 'idle' }));
+      setFixing((s) => ({ ...s, [issue.id]: "idle" }));
     }
   }
 
   async function acceptFix(issue: Issue) {
     const jobId = fixJobByIssue[issue.id];
     if (!jobId) return;
-    const r = await fetch('/api/fix/accept', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ jobId })
+    const r = await fetch("/api/fix/accept", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jobId }),
     });
     const j = await r.json();
     if (!r.ok) {
-      alert(j.error || 'Could not accept fix');
+      alert(j.error || "Could not accept fix");
       return;
     }
-    if (typeof j.remainingTokens === 'number') setTokens(j.remainingTokens);
-    setFixing((s) => ({ ...s, [issue.id]: 'accepted' }));
+    if (typeof j.remainingTokens === "number") setTokens(j.remainingTokens);
+    setFixing((s) => ({ ...s, [issue.id]: "accepted" }));
   }
 
   async function cancelFix(issue: Issue) {
     const jobId = fixJobByIssue[issue.id];
     if (!jobId) return;
-    await fetch('/api/fix/cancel', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ jobId })
+    await fetch("/api/fix/cancel", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jobId }),
     });
-    setFixing((s) => ({ ...s, [issue.id]: 'idle' }));
+    setFixing((s) => ({ ...s, [issue.id]: "idle" }));
   }
 
   return (
@@ -248,7 +273,10 @@ export default function AnalyzeClient() {
             We’ll analyze SEO, Performance, Accessibility, and Security.
           </p>
         </div>
-        <Link href={`/dashboard/sites/${siteId}`} className="text-sm text-slate-600 hover:underline">
+        <Link
+          href={`/dashboard/sites/${siteId}`}
+          className="text-sm text-slate-600 hover:underline"
+        >
           ← Back to site
         </Link>
       </div>
@@ -256,9 +284,13 @@ export default function AnalyzeClient() {
       {/* Status bar */}
       <div className="border rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 bg-white/60 dark:bg-slate-900/40 backdrop-blur">
         <div className="flex items-center gap-3">
-          <StatusBadge status={(status?.status ?? 'queued') as any} />
+          <StatusBadge status={(status?.status ?? "queued") as any} />
           <div className="text-sm text-slate-700 dark:text-slate-300">
-            {busy ? 'Running analysis…' : status?.status === 'done' ? 'Complete' : 'Error'}
+            {busy
+              ? "Running analysis…"
+              : status?.status === "done"
+              ? "Complete"
+              : "Error"}
           </div>
         </div>
         <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
@@ -268,7 +300,7 @@ export default function AnalyzeClient() {
             </span>
           ) : null}
           <span className="rounded-md border px-2 py-1 bg-white/70 dark:bg-slate-900/40">
-            Tokens: <span className="font-semibold">{tokens ?? '—'}</span>
+            Tokens: <span className="font-semibold">{tokens ?? "—"}</span>
           </span>
         </div>
       </div>
@@ -282,9 +314,9 @@ export default function AnalyzeClient() {
         </div>
       )}
 
-      {status?.status === 'error' && (
+      {status?.status === "error" && (
         <div className="rounded-xl border p-4 bg-rose-50 text-rose-800">
-          ❌ Scan failed: {status.errorMessage || 'Unknown error'}
+          ❌ Scan failed: {status.errorMessage || "Unknown error"}
         </div>
       )}
 
@@ -297,7 +329,7 @@ export default function AnalyzeClient() {
               <div className="text-sm text-slate-500">Overall</div>
               <div className="text-2xl font-semibold">{report.siteUrl}</div>
               <div className="text-sm text-slate-500 mt-1">
-                Estimated tokens for available fixes:{' '}
+                Estimated tokens for available fixes:{" "}
                 <span className="font-medium">
                   ~{report.summary.estTotalTokens.toLocaleString()} tokens
                 </span>
@@ -317,9 +349,9 @@ export default function AnalyzeClient() {
                   <IssueCard
                     {...i}
                     onFix={() => startFix(i)}
-                    fixState={fixing[i.id] ?? 'idle'}
+                    fixState={fixing[i.id] ?? "idle"}
                   />
-                  {fixing[i.id] === 'done' && (
+                  {fixing[i.id] === "done" && (
                     <div className="flex items-center gap-2 text-sm">
                       <button
                         className="px-3 py-1.5 rounded-md bg-amber-600 text-white hover:bg-amber-700"
@@ -347,9 +379,9 @@ export default function AnalyzeClient() {
                   <IssueCard
                     {...i}
                     onFix={() => startFix(i)}
-                    fixState={fixing[i.id] ?? 'idle'}
+                    fixState={fixing[i.id] ?? "idle"}
                   />
-                  {fixing[i.id] === 'done' && (
+                  {fixing[i.id] === "done" && (
                     <div className="flex items-center gap-2 text-sm">
                       <button
                         className="px-3 py-1.5 rounded-md bg-sky-600 text-white hover:bg-sky-700"
@@ -377,9 +409,9 @@ export default function AnalyzeClient() {
                   <IssueCard
                     {...i}
                     onFix={() => startFix(i)}
-                    fixState={fixing[i.id] ?? 'idle'}
+                    fixState={fixing[i.id] ?? "idle"}
                   />
-                  {fixing[i.id] === 'done' && (
+                  {fixing[i.id] === "done" && (
                     <div className="flex items-center gap-2 text-sm">
                       <button
                         className="px-3 py-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
@@ -407,9 +439,9 @@ export default function AnalyzeClient() {
                   <IssueCard
                     {...i}
                     onFix={() => startFix(i)}
-                    fixState={fixing[i.id] ?? 'idle'}
+                    fixState={fixing[i.id] ?? "idle"}
                   />
-                  {fixing[i.id] === 'done' && (
+                  {fixing[i.id] === "done" && (
                     <div className="flex items-center gap-2 text-sm">
                       <button
                         className="px-3 py-1.5 rounded-md bg-violet-600 text-white hover:bg-violet-700"

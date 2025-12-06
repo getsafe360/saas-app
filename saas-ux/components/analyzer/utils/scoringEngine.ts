@@ -99,6 +99,58 @@ export function calculateScores(findings: Finding[]): Scores {
 }
 
 /**
+ * Calculate a single pillar score from its data
+ * Used when you have pillar data but need to compute the score
+ */
+export function calculatePillarScore(pillarData: any): number {
+  if (!pillarData) return 100;
+  
+  // If pillarData already has a percentage, use it
+  if (typeof pillarData.percentage === 'number') {
+    return pillarData.percentage;
+  }
+  
+  // If pillarData has ok/warn/crit counts, calculate percentage
+  if (typeof pillarData.ok === 'number' && typeof pillarData.total === 'number') {
+    if (pillarData.total === 0) return 100;
+    
+    const okCount = pillarData.ok || 0;
+    const warnCount = pillarData.warn || 0;
+    const critCount = pillarData.crit || 0;
+    const total = pillarData.total;
+    
+    return Math.round(
+      ((okCount * 1 + warnCount * 0.5 + critCount * 0) / total) * 100
+    );
+  }
+  
+  // Fallback: assume it's already a score
+  if (typeof pillarData === 'number') {
+    return pillarData;
+  }
+  
+  return 100;
+}
+
+/**
+ * Calculate overall score from all pillars
+ */
+export function calculateOverallScore(pillars: {
+  seo: any;
+  a11y: any;
+  perf: any;
+  sec: any;
+}): number {
+  const seoScore = calculatePillarScore(pillars.seo);
+  const a11yScore = calculatePillarScore(pillars.a11y);
+  const perfScore = calculatePillarScore(pillars.perf);
+  const secScore = calculatePillarScore(pillars.sec);
+  
+  // Average of all four pillars
+  return Math.round((seoScore + a11yScore + perfScore + secScore) / 4);
+}
+
+/**
  * Calculate quick scores from instant DOM checks (used during screenshot)
  * This is faster and simpler - returns 0-100 per category
  */

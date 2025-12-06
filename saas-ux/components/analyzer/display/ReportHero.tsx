@@ -1,193 +1,147 @@
-// components/analyzer/ReportHero.tsx
+// components/analyzer/display/ReportHero.tsx
 "use client";
 
-import { useState } from "react";
-import { Shield, Gauge, Search, Accessibility } from "lucide-react";
+import ScorePills from "./ScorePills";
+import CoPilotDrawer from "./CoPilotDrawer";
+import CTA from "@/components/marketing/CTA";
+import { ReportHeader } from "./ReportHeader";
+import ScreenshotSection from "./ScreenshotSection";
+import type { CMSSignature } from "@/components/analyzer/cms/cms-signatures";
 
-type PillarCounts = { pass: number; warn: number; crit: number };
+type Props = {
+  url: string;
+  domain: string;
+  faviconUrl?: string;
+  status?: number;
+  isHttps: boolean;
+  cms?: CMSSignature | null; // Updated to accept full CMS signature object
+  cmsLabel?: string; // Deprecated, kept for backwards compatibility
+  siteLang?: string;
+  hostIP?: string;
+  lastChecked?: Date | string;
+  screenshotUrl?: string;
+  mobileUrl?: string;
+  locale: string;
+  pillars: {
+    seo: any;
+    a11y: any;
+    perf: any;
+    sec: any;
+  };
+  quickScores?: {
+    seo: number;
+    a11y: number;
+    perf: number;
+    sec: number;
+    overall: number;
+  };
+  isAnalyzing?: boolean;
+  children?: React.ReactNode;
+};
 
 export default function ReportHero({
   url,
-  // Desktop
-  screenshotUrl,
-  lowResUrl,
-  // Mobile
-  mobileUrl,
-  mobileLowResUrl,
-  lastChecked,
-  lang,
+  domain,
+  faviconUrl,
   status,
-  cmsLabel,
+  isHttps,
+  cms,
+  cmsLabel, // Legacy support
+  siteLang,
+  hostIP,
+  lastChecked,
+  screenshotUrl,
+  mobileUrl,
+  locale,
+  pillars,
+  quickScores,
+  isAnalyzing = false,
   children,
-  onFixAll,
-  pillars
-}: {
-  url: string;
-  screenshotUrl: string;
-  lowResUrl?: string;
-  mobileUrl: string;
-  mobileLowResUrl?: string;
-  lastChecked: string;
-  lang?: string;
-  status?: string;   // e.g., "HTTPS • 200"
-  cmsLabel?: string; // e.g., "WordPress 6.7"
-  children?: React.ReactNode;
-  onFixAll?: () => void;
-  pillars: {
-    seo: PillarCounts;
-    a11y: PillarCounts;
-    perf: PillarCounts;
-    sec: PillarCounts;
+}: Props) {
+  // Calculate scores if not provided
+  const scores = quickScores ?? {
+    seo: calculatePillarScore(pillars.seo),
+    a11y: calculatePillarScore(pillars.a11y),
+    perf: calculatePillarScore(pillars.perf),
+    sec: calculatePillarScore(pillars.sec),
+    overall: calculateOverallScore(pillars),
   };
-}) {
-  const [deskLoaded, setDeskLoaded] = useState(false);
-  const [mobLoaded, setMobLoaded] = useState(false);
+
+  // Handle CMS display - use new cms object or fallback to legacy cmsLabel
+  const cmsDisplay = cms
+    ? {
+        name: cms.name,
+        icon: cms.icon,
+        iconEmoji: cms.iconEmoji,
+        type: cms.type,
+      }
+    : cmsLabel
+    ? {
+        name: cmsLabel,
+        iconEmoji: "🔧",
+        type: "custom" as const,
+      }
+    : null;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div className="cta-effect cta-sky rounded-2xl">
-        <div className="gb-card gb-sky rounded-2xl p-5 sm:p-6 lg:p-8 bg-white/70 dark:bg-white/[0.04] backdrop-blur ring-1 ring-slate-900/10 dark:ring-white/10">
-          
-          {/* Screenshots row */}
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-4 items-stretch">
-            {/* Desktop shot (defines row height via aspect) */}
-            <figure className="relative rounded-xl overflow-hidden ring-1 ring-slate-900/10 dark:ring-white/10 shadow">
-              <div className="relative aspect-[12/7] w-full">
-                {/* Low-res progressive layer */}
-                {lowResUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={lowResUrl}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover blur-md scale-105 opacity-70 transition-opacity duration-300"
-                    style={{ opacity: deskLoaded ? 0 : 1 }}
-                  />
-                )}
-                {/* Hi-res (no Next proxy; we control the exact size) */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={screenshotUrl}
-                  alt={`Screenshot of ${url}`}
-                  width={650}
-                  height={Math.round((650 * 7) / 12)}
-                  loading="eager"
-                  decoding="async"
-                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${deskLoaded ? "opacity-100" : "opacity-0"}`}
-                  onLoad={() => setDeskLoaded(true)}
-                />
-                {!deskLoaded && (
-                  <div className="absolute inset-0 grid place-items-center">
-                    <div className="h-6 w-6 rounded-full border-2 border-sky-400/40 border-t-sky-500 animate-spin" />
-                  </div>
-                )}
-              </div>
-              <figcaption className="sr-only">Desktop preview</figcaption>
-            </figure>
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* Header */}
+      <ReportHeader
+        url={url}
+        domain={domain}
+        faviconUrl={faviconUrl}
+        status={status}
+        isHttps={isHttps}
+        cms={cmsDisplay}
+        siteLang={siteLang}
+        hostIP={hostIP}
+        lastChecked={lastChecked}
+        overallScore={scores.overall}
+      />
 
-            {/* Mobile shot: matches the row height via h-full */}
-            <figure className="relative rounded-xl overflow-hidden ring-1 ring-slate-900/10 dark:ring-white/10 shadow hidden lg:block">
-              <div className="relative h-full w-full">
-                {/* Low-res */}
-                {mobileLowResUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={mobileLowResUrl}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-top blur-md scale-105 opacity-70 transition-opacity duration-300"
-                    style={{ opacity: mobLoaded ? 0 : 1 }}
-                  />
-                )}
-                {/* Hi-res phone */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={mobileUrl}
-                  alt={`Mobile screenshot of ${url}`}
-                  width={390}
-                  height={800}
-                  loading="eager"
-                  decoding="async"
-                  className={`absolute inset-0 h-full w-full object-top transition-opacity duration-300 ${mobLoaded ? "opacity-100" : "opacity-0"}`}
-                  onLoad={() => setMobLoaded(true)}
-                />
-                {!mobLoaded && (
-                  <div className="absolute inset-0 grid place-items-center">
-                    <div className="h-6 w-6 rounded-full border-2 border-sky-400/40 border-t-sky-500 animate-spin" />
-                  </div>
-                )}
-              </div>
-              <figcaption className="sr-only">Mobile preview</figcaption>
-            </figure>
-          </div>
+      {/* Screenshot + Intro */}
+      <ScreenshotSection
+        desktopScreenshotUrl={screenshotUrl ?? ""}
+        mobileScreenshotUrl={mobileUrl ?? ""}
+        locale={locale}
+        isAnalyzing={isAnalyzing}
+        url={url}
+      />
 
-          {/* Meta row */}
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-            <span className="px-2 py-1 rounded-full ring-1 ring-slate-900/10 dark:ring-white/10 bg-white/60 dark:bg-white/[0.05]">
-              {new URL(url).hostname}
-            </span>
-            {status && (
-              <span className="px-2 py-1 rounded-full ring-1 ring-emerald-500/20 text-emerald-600 dark:text-emerald-300 bg-emerald-500/5">
-                {status}
-              </span>
-            )}
-            {cmsLabel && <span className="px-2 py-1 rounded-full ring-1 ring-slate-900/10 dark:ring-white/10">{cmsLabel}</span>}
-            {lang && <span className="px-2 py-1 rounded-full ring-1 ring-slate-900/10 dark:ring-white/10">{lang}</span>}
-            <span className="px-2 py-1 rounded-full ring-1 ring-slate-900/10 dark:ring-white/10">Last checked: {new Date(lastChecked).toLocaleString()}</span>
-          </div>
+      {/* Score Pills */}
+      <ScorePills scores={scores} counts={pillars} />
 
-          {/* Pillar chips */}
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <PillarChip icon={Search} title="SEO" {...pillars.seo} accent="sky" />
-            <PillarChip icon={Accessibility} title="Accessibility" {...pillars.a11y} accent="teal" />
-            <PillarChip icon={Gauge} title="Performance" {...pillars.perf} accent="violet" />
-            <PillarChip icon={Shield} title="Security" {...pillars.sec} accent="amber" />
-          </div>
-            {children ? (
-            <div className="mt-6 pt-6 border-t border-slate-200/70 dark:border-white/10">
-            {children}
-            </div>
-          ) : null}
-          {/* CTA */}
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-sm text-slate-700 dark:text-slate-300">
-              We’ll highlight issues and <span className="font-semibold">auto-generate safe fixes</span> you can apply with one click.
-            </p>
-            <button
-              onClick={onFixAll}
-              className="button-shine inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-600 dark:focus-visible:ring-offset-0 transition"
-            >
-              Fix with Copilot
-            </button>
-          </div>
-        </div>
+      {/* CTA */}
+      <div className="mb-8">
+        <CTA />
       </div>
-    </section>
+
+      {/* Findings (passed as children) */}
+      {children}
+
+      {/* Co-Pilot Drawer */}
+      <CoPilotDrawer />
+    </div>
   );
 }
 
-function PillarChip({
-  icon: Icon,
-  title,
-  pass, warn, crit,
-  accent = "sky"
-}: {
-  icon: any; title: string; pass: number; warn: number; crit: number; accent?: "sky"|"teal"|"violet"|"amber";
-}) {
-  const ring =
-    accent === "teal"   ? "ring-teal-500/20 bg-teal-500/5 text-teal-600 dark:text-teal-300" :
-    accent === "violet" ? "ring-violet-500/20 bg-violet-500/5 text-violet-600 dark:text-violet-300" :
-    accent === "amber"  ? "ring-amber-500/20 bg-amber-500/5 text-amber-600 dark:text-amber-300" :
-                          "ring-sky-500/20 bg-sky-500/5 text-sky-600 dark:text-sky-300";
-  return (
-    <div className={`rounded-xl p-3 ring-1 ${ring} flex items-center justify-between`}>
-      <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4" />
-        <span className="text-sm font-medium">{title}</span>
-      </div>
-      <div className="flex items-center gap-2 text-xs">
-        <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">{pass}</span>
-        <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-300">{warn}</span>
-        <span className="px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-300">{crit}</span>
-      </div>
-    </div>
-  );
+// Utility functions
+function calculatePillarScore(counts: {
+  pass: number;
+  warn: number;
+  crit: number;
+}): number {
+  const total = counts.pass + counts.warn + counts.crit;
+  if (total === 0) return 100;
+  return Math.round(((counts.pass + counts.warn * 0.5) / total) * 100);
+}
+
+function calculateOverallScore(pillars: Props["pillars"]): number {
+  const scores = [
+    calculatePillarScore(pillars.seo),
+    calculatePillarScore(pillars.a11y),
+    calculatePillarScore(pillars.perf),
+    calculatePillarScore(pillars.sec),
+  ];
+  return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
 }

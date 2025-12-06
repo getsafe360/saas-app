@@ -11,7 +11,10 @@ import WPSpotlight from "../cms/WPSpotlight";
 import ReportHeroView from "@/components/analyzer/display/ReportHero";
 import { FindingsGrid } from "@/components/analyzer/display/FindingsGrid";
 import PillarColumn from "@/components/analyzer/findings/PillarColumn";
-import { buildScreenshotUrls, prefetchScreenshots } from "@/components/analyzer/utils/screenshotPrefetch";
+import {
+  buildScreenshotUrls,
+  prefetchScreenshots,
+} from "@/components/analyzer/utils/screenshotPrefetch";
 import { bucketVariant } from "@/lib/ab";
 import SiteIdentityCard from "../display/SiteIdentityCard";
 import { parseFindings } from "@/components/analyzer/utils/parseFindings";
@@ -38,22 +41,29 @@ export default function StreamingReportShell({
   const taction = useTranslations("actions");
 
   const [url, setUrl] = useState(autofillUrl);
-  const [status, setStatus] = useState<"idle" | "loading" | "streaming" | "done" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "streaming" | "done" | "error"
+  >("idle");
   const [output, setOutput] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [facts, setFacts] = useState<Facts | null>(null);
   const [findings, setFindings] = useState<Finding[]>([]);
-  const [screenshotUrls, setScreenshotUrls] = useState<ScreenshotUrls | null>(null);
+  const [screenshotUrls, setScreenshotUrls] = useState<ScreenshotUrls | null>(
+    null
+  );
   const abortRef = useRef<AbortController | null>(null);
   const completedRef = useRef(false);
   const lastStartedRef = useRef<string | null>(null);
 
-  const pillars = useMemo(() => ({
-    seo: findings.filter(f => f.pillar === "seo"),
-    a11y: findings.filter(f => f.pillar === "a11y"),
-    perf: findings.filter(f => f.pillar === "perf"),
-    sec: findings.filter(f => f.pillar === "sec"),
-  }), [findings]);
+  const pillars = useMemo(
+    () => ({
+      seo: findings.filter((f) => f.pillar === "seo"),
+      a11y: findings.filter((f) => f.pillar === "a11y"),
+      perf: findings.filter((f) => f.pillar === "perf"),
+      sec: findings.filter((f) => f.pillar === "sec"),
+    }),
+    [findings]
+  );
 
   const scores = useMemo(() => {
     const s = {
@@ -92,7 +102,8 @@ export default function StreamingReportShell({
         body: JSON.stringify({ url: u, locale }),
         signal: ctrl.signal,
       });
-      if (!res.ok || !res.body) throw new Error(await res.text().catch(() => `HTTP ${res.status}`));
+      if (!res.ok || !res.body)
+        throw new Error(await res.text().catch(() => `HTTP ${res.status}`));
       setStatus("streaming");
 
       fetch("/api/analyze-facts?url=" + encodeURIComponent(u))
@@ -121,10 +132,10 @@ export default function StreamingReportShell({
   // Handle screenshot URL building and prefetching
   useEffect(() => {
     if (!facts?.finalUrl) return;
-    
+
     const urls = buildScreenshotUrls(facts.finalUrl, locale);
     setScreenshotUrls(urls);
-    
+
     // Prefetch all screenshots in parallel (fire and forget)
     prefetchScreenshots(urls);
   }, [facts?.finalUrl, locale]);
@@ -187,62 +198,57 @@ export default function StreamingReportShell({
         />
       )}
 
-      {/* Report hero (desktop + mobile screenshots + summary chips) */}
-      {status !== "idle" && finalUrl && screenshotUrls && (
+      {/* Report hero */}
+      {status !== "idle" && finalUrl && screenshotUrls && facts && (
         <ReportHeroView
           url={finalUrl}
-          // desktop
+          domain={facts.domain || new URL(url).hostname}
+          faviconUrl={facts.faviconUrl ?? undefined}
+          status={facts.status || 0}
+          isHttps={!!facts.isHttps}
+          hostIP={facts.hostIP}
           screenshotUrl={screenshotUrls.desktopHi}
-          lowResUrl={screenshotUrls.desktopLo}
-          // mobile
           mobileUrl={screenshotUrls.mobileHi}
-          mobileLowResUrl={screenshotUrls.mobileLo}
-          // meta
           lastChecked={new Date().toISOString()}
-          lang={facts?.siteLang || undefined}
-          status={facts?.isHttps ? `HTTPS • ${facts?.status || 0}` : String(facts?.status || "")}
+          locale={locale}
           cmsLabel={
-            facts?.cms?.type === "wordpress" && facts?.cms?.wp?.version
+            facts.cms?.type === "wordpress" && facts.cms?.wp?.version
               ? `WordPress ${facts.cms.wp.version}`
               : undefined
           }
+          siteLang={facts.siteLang || undefined}
           pillars={{
             seo: countTriplet(pillars.seo),
             a11y: countTriplet(pillars.a11y),
             perf: countTriplet(pillars.perf),
             sec: countTriplet(pillars.sec),
           }}
-          onFixAll={() => {
-            /* TODO: Copilot modal */
-          }}
+          isAnalyzing={busy}
         >
-          {/* Findings docked beneath the hero */}
           {findings.length > 0 && (
             <FindingsGrid
               columns={[
-                <PillarColumn key="seo"  label="SEO"           items={pillars.seo}  />,
-                <PillarColumn key="a11y" label="Accessibility" items={pillars.a11y} />,
-                <PillarColumn key="perf" label="Performance"   items={pillars.perf} />,
-                <PillarColumn key="sec"  label="Security"      items={pillars.sec}  />
+                <PillarColumn key="seo" label="SEO" items={pillars.seo} />,
+                <PillarColumn
+                  key="a11y"
+                  label="Accessibility"
+                  items={pillars.a11y}
+                />,
+                <PillarColumn
+                  key="perf"
+                  label="Performance"
+                  items={pillars.perf}
+                />,
+                <PillarColumn key="sec" label="Security" items={pillars.sec} />,
               ]}
             />
           )}
         </ReportHeroView>
       )}
 
-      {/* Optional identity + WP spotlight under the hero */}
+      {/* Optional WP spotlight under the hero */}
       {facts && (
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 -mt-2">
-          <SiteIdentityCard
-            domain={facts.domain || (url ? new URL(url).hostname : "example.com")}
-            finalUrl={finalUrl}
-            status={facts.status || 0}
-            isHttps={!!facts.isHttps}
-            faviconUrl={facts.faviconUrl || null}
-            siteLang={facts.siteLang || null}
-            uiLocale={locale}
-            cms={facts.cms || { type: "unknown" }}
-          />
           {showWpSpotlight && facts.cms?.type === "wordpress" && (
             <div className="mt-4">
               <WPSpotlight
@@ -264,7 +270,9 @@ export default function StreamingReportShell({
       {(status === "loading" || status === "streaming") && (
         <div className="rounded-2xl border p-4 shadow-sm bg-white/70 dark:bg-white/[0.04] ring-1 ring-slate-900/10 dark:ring-white/10">
           <div className="text-lg font-semibold">{ta("headline1")}</div>
-          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">{ta("fixing_in_progress")}</p>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+            {ta("analyzing")}
+          </p>
         </div>
       )}
     </div>
@@ -272,7 +280,9 @@ export default function StreamingReportShell({
 }
 
 function countTriplet(items: Finding[]) {
-  let pass = 0, warn = 0, crit = 0;
+  let pass = 0,
+    warn = 0,
+    crit = 0;
   for (const it of items) {
     if (it.severity === "minor") pass++;
     else if (it.severity === "medium") warn++;

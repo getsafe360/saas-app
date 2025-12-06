@@ -34,7 +34,6 @@ export type Scores = {
   overall: number;
 };
 
-// CMS detection types
 export type CMSType = 
   | 'wordpress' 
   | 'drupal' 
@@ -77,6 +76,7 @@ export type Facts = {
   loadTime?: number;
   pageSize?: number;
   technologies?: string[];
+  hostIP?: string;
 };
 
 // Analysis payload

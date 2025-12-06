@@ -1,19 +1,14 @@
 // saas-ux/app/[locale]/(dashboard)/dashboard/general/page.tsx
-'use client';
-import { useActionState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
-import { updateAccount } from '@/app/[locale]/(login)/actions';
-import { User } from '@/lib/db/schema';
-import useSWR from 'swr';
-import { Suspense } from 'react';
-import type { Metadata } from 'next';
-import type { LocaleParams } from '@/types/route-params';
-export const experimental_ppr = true;
-
+"use client";
+import { useActionState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
+import { updateAccount } from "@/app/[locale]/(login)/actions";
+import useSWR from "swr";
+import { Suspense } from "react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -31,8 +26,8 @@ type AccountFormProps = {
 
 function AccountForm({
   state,
-  nameValue = '',
-  emailValue = ''
+  nameValue = "",
+  emailValue = "",
 }: AccountFormProps) {
   return (
     <>
@@ -66,16 +61,15 @@ function AccountForm({
 }
 
 function AccountFormWithData({ state }: { state: ActionState }) {
-  const { data: user } = useSWR<User>('/api/user', fetcher);
+  const { data: user } = useSWR("/api/user", fetcher);
   return (
     <AccountForm
       state={state}
-      nameValue={user?.name ?? ''}
-      emailValue={user?.email ?? ''}
+      nameValue={user?.name ?? ""}
+      emailValue={user?.email ?? ""}
     />
   );
 }
-
 export default function GeneralPage() {
   const [state, formAction, isPending] = useActionState<ActionState, FormData>(
     updateAccount,
@@ -114,7 +108,7 @@ export default function GeneralPage() {
                   Saving...
                 </>
               ) : (
-                'Save Changes'
+                "Save Changes"
               )}
             </Button>
           </form>

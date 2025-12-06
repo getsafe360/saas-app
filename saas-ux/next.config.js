@@ -7,7 +7,7 @@ const withNextIntl = createNextIntlPlugin();
 /** @type {import('next').NextConfig} */
 const nextConfig = withNextIntl({
   experimental: {
-    ppr: 'incremental', // enable Partial Prerendering
+    // enable Partial Prerendering ppr: 'incremental',
   },
   images: {
     formats: ['image/avif', 'image/webp'],

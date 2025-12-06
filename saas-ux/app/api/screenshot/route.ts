@@ -36,17 +36,14 @@ async function launchBrowser(): Promise<Browser> {
 }
 
 async function getBrowser(): Promise<Browser> {
-  // Return cached browser if still alive
   if (cachedBrowser && cachedBrowser.isConnected()) {
     return cachedBrowser;
   }
   
-  // If already launching, wait for that
   if (browserLaunchPromise) {
     return browserLaunchPromise;
   }
   
-  // Launch new browser
   browserLaunchPromise = launchBrowser();
   cachedBrowser = await browserLaunchPromise;
   browserLaunchPromise = null;
@@ -58,8 +55,126 @@ function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
 
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+// Cookie consent handler - supports multiple frameworks
+async function handleCookieConsent(page: Page) {
+  try {
+    await page.evaluate(() => {
+      // OneTrust selectors (most common)
+      const oneTrustSelectors = [
+        '#onetrust-accept-btn-handler',
+        'button#onetrust-accept-btn-handler',
+        '.onetrust-close-btn-handler',
+        '[id*="accept-recommended-btn"]',
+      ];
+
+      // Cookiebot selectors
+      const cookiebotSelectors = [
+        '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
+        '#CybotCookiebotDialogBodyButtonAccept',
+        '.CybotCookiebotDialogBodyButton[data-action="accept"]',
+      ];
+
+      // Generic selectors (multi-language support)
+      const genericSelectors = [
+        // English
+        'button[aria-label*="accept" i]',
+        'button[aria-label*="agree" i]',
+        'button[title*="accept" i]',
+        'a[aria-label*="accept" i]',
+        // German
+        'button[aria-label*="akzeptieren" i]',
+        'button[aria-label*="zustimmen" i]',
+        // Spanish
+        'button[aria-label*="aceptar" i]',
+        // French
+        'button[aria-label*="accepter" i]',
+        // Portuguese
+        'button[aria-label*="aceitar" i]',
+        // Italian
+        'button[aria-label*="accettare" i]',
+        // Text content fallback
+        'button:has-text("Accept all")',
+        'button:has-text("Accept All")',
+        'button:has-text("Alle akzeptieren")',
+        'button:has-text("Aceptar todo")',
+      ];
+
+      // Try all selector groups
+      const allSelectors = [
+        ...oneTrustSelectors,
+        ...cookiebotSelectors,
+        ...genericSelectors,
+      ];
+
+      let clicked = false;
+      for (const selector of allSelectors) {
+        try {
+          const el = document.querySelector(selector) as HTMLElement;
+          if (el && el.offsetParent !== null) { // Check if visible
+            el.click();
+            clicked = true;
+            break;
+          }
+        } catch {}
+      }
+
+      // If no button found, forcefully hide common overlays
+      if (!clicked) {
+        const overlaySelectors = [
+          // OneTrust
+          '#onetrust-banner-sdk',
+          '#onetrust-consent-sdk',
+          '.onetrust-pc-dark-filter',
+          '.ot-sdk-container',
+          // Cookiebot
+          '#CybotCookiebotDialog',
+          '#CookiebotWidget',
+          // Generic
+          '.cookie-consent',
+          '.cookie-banner',
+          '.cookie-notice',
+          '.cc-window',
+          '.cc-banner',
+          '[class*="cookie"][class*="banner"]',
+          '[class*="cookie"][class*="consent"]',
+          '[id*="cookie"][id*="banner"]',
+          '[id*="cookie"][id*="consent"]',
+          // GDPR-specific
+          '.gdpr-banner',
+          '#gdpr-banner',
+          '[class*="gdpr"]',
+        ];
+
+        for (const selector of overlaySelectors) {
+          try {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach((el) => {
+              if (el instanceof HTMLElement) {
+                el.style.setProperty('display', 'none', 'important');
+                el.style.setProperty('visibility', 'hidden', 'important');
+                el.style.setProperty('opacity', '0', 'important');
+                el.style.setProperty('pointer-events', 'none', 'important');
+              }
+            });
+          } catch {}
+        }
+
+        // Remove backdrop/overlay filters
+        const backdrops = document.querySelectorAll('[class*="backdrop"], [class*="overlay"]');
+        backdrops.forEach((el) => {
+          if (el instanceof HTMLElement) {
+            el.style.setProperty('display', 'none', 'important');
+          }
+        });
+      }
+    });
+
+    // Give page time to settle after interaction
+    await page.waitForTimeout(300);
+  } catch (error) {
+    // Silently fail - don't break screenshot if consent handling fails
+    console.warn('Cookie consent handling failed:', error);
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -72,6 +187,7 @@ export async function GET(req: NextRequest) {
     : undefined;
   const q = clamp(parseInt(req.nextUrl.searchParams.get("q") || "60", 10), 25, 90);
   const mobile = req.nextUrl.searchParams.get("mobile") === "1";
+  const handleConsent = req.nextUrl.searchParams.get("consent") !== "0"; // Default true
 
   let context: BrowserContext | null = null;
   let page: Page | null = null;
@@ -93,7 +209,7 @@ export async function GET(req: NextRequest) {
         : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     });
 
-    page = await context.newPage();
+    page = await browser.newPage();
 
     // Aggressive resource blocking for speed
     await page.route('**/*', (route) => {
@@ -125,82 +241,23 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Race between page load and timeout
+    // Navigate to page
     try {
       await page.goto(url, { 
         waitUntil: "domcontentloaded",
         timeout: 8000
       });
     } catch {
-      // Ignore timeout - we'll screenshot what we have
+      // Ignore timeout - screenshot what we have
     }
 
-const quickAnalysis = await page.evaluate(() => {
-  // SEO Quick Checks (10 checks, ~50ms)
-  const seoIssues = {
-    noTitle: !document.title,
-    titleTooShort: document.title.length < 30,
-    titleTooLong: document.title.length > 60,
-    noMetaDescription: !document.querySelector('meta[name="description"]'),
-    multipleH1: document.querySelectorAll('h1').length !== 1,
-    imagesNoAlt: document.querySelectorAll('img:not([alt])').length,
-    noCanonical: !document.querySelector('link[rel="canonical"]'),
-    noOpenGraph: !document.querySelector('meta[property^="og:"]'),
-  };
-
-// Accessibility Quick Checks (8 checks, ~50ms)
-const a11yIssues = {
-  lowContrast: 0, // Would need color calculation - skip for quick
-  missingLang: !document.documentElement.lang,
-  buttonsNoLabel: document.querySelectorAll('button:not([aria-label])').length,
-  linksNoText: Array.from(document.querySelectorAll<HTMLAnchorElement>('a:not([aria-label])'))
-    .filter(a => !a.textContent?.trim())
-    .length,
-  formInputsNoLabels: Array.from(document.querySelectorAll<HTMLInputElement>('input'))
-    .filter(input => !input.labels?.length && !input.getAttribute('aria-label'))
-    .length,
-  imagesNoAltA11y: document.querySelectorAll('img:not([alt])').length,
-};
-
-  // Performance Quick Checks (6 checks, ~30ms)
-  const perfIssues = {
-    tooManyResources: performance.getEntriesByType('resource').length > 100,
-    largeDOM: document.querySelectorAll('*').length > 1500,
-    noLazyLoading: document.querySelectorAll('img:not([loading="lazy"])').length,
-    inlineStyles: document.querySelectorAll('[style]').length > 20,
-    blockingScripts: document.querySelectorAll('script:not([async]):not([defer])').length,
-  };
-
-  // Security Quick Checks (5 checks, ~30ms)
-  const secIssues = {
-    notHttps: location.protocol !== 'https:',
-    mixedContent: Array.from(document.querySelectorAll('[src],[href]')).filter(
-      el => el.getAttribute('src')?.startsWith('http:')
-    ).length,
-    noCSP: !document.querySelector('meta[http-equiv="Content-Security-Policy"]'),
-    inlineJavaScript: document.querySelectorAll('script:not([src])').length,
-  };
-
-  return {
-    seo: seoIssues,
-    a11y: a11yIssues,
-    perf: perfIssues,
-    sec: secIssues,
-    timing: (() => {
-  const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-  if (navEntry) {
-    return Math.round(navEntry.loadEventEnd - navEntry.fetchStart);
-  }
-  // Fallback to deprecated API if needed
-  return performance.timing ? 
-    performance.timing.loadEventEnd - performance.timing.navigationStart : 
-    0;
-})(),
-  };
-});
+    // Handle cookie consent if enabled
+    if (handleConsent) {
+      await handleCookieConsent(page);
+    }
 
     // Brief render delay
-    await delay(600);
+    await page.waitForTimeout(600);
 
     // Take screenshot
     const buf = await page.screenshot({ 
@@ -209,14 +266,14 @@ const a11yIssues = {
       fullPage: false,
     });
 
-// With this (convert Buffer to Uint8Array):
-return new Response(new Uint8Array(buf), {
-  headers: {
-    "Content-Type": "image/jpeg",
-    "Cache-Control": "public, s-maxage=2592000, max-age=600",
-    "CDN-Cache-Control": "max-age=2592000"
-  }
-});
+    return new Response(new Uint8Array(buf), {
+      headers: {
+        "Content-Type": "image/jpeg",
+        "Cache-Control": "public, s-maxage=2592000, max-age=600",
+        "CDN-Cache-Control": "max-age=2592000"
+      }
+    });
+
   } catch (err: any) {
     console.error(`Screenshot failed for ${url}:`, err.message);
     return new Response(null, { status: 204 });
@@ -225,7 +282,6 @@ return new Response(new Uint8Array(buf), {
     try { 
       if (page) await page.close();
       if (context) await context.close();
-      // Don't close browser - keep it warm
     } catch {}
   }
 }

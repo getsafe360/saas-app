@@ -1,19 +1,19 @@
 // app/[locale]/(dashboard)/dashboard/page.tsx  (SERVER)
-import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
-import DashboardClient from './DashboardClient';
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import DashboardClient from "./DashboardClient";
 
-export const experimental_ppr = true;
-
-export async function generateMetadata(
-  { params }: { params: Promise<{ locale: string }> }
-): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'DashboardMeta' });
+  const t = await getTranslations({ locale, namespace: "DashboardMeta" });
 
   return {
-    title: t('title'),
-    description: t('description')
+    title: t("title"),
+    description: t("description"),
   };
 }
 

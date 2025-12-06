@@ -1,7 +1,5 @@
 // components/analyzer/findings/types.ts
-
 import type { Finding, Severity, Pillar, PillarScore } from '../types';
-
 export type { Finding, Severity, Pillar };
 
 // PillarColumn component props

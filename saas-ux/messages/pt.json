@@ -1,4 +1,8 @@
 {
+    "SiteCockpit": {
+    "title": "Site Cockpit · {url}",
+    "description": "Gerencie e otimize {url} com ferramentas impulsionadas por IA para SEO, desempenho, acessibilidade e segurança."
+  },
   "Nav": {
     "pricing": "Preços",
     "accessibility": "Acessibilidade",
