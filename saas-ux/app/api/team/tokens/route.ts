@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
-import { teams, teamMembers } from '@/lib/db/schema';
+import { teams, teamMembers } from '@/lib/db/schema/auth';
 import { getDbUserFromClerk } from '@/lib/auth/current';
 
 export const runtime = 'nodejs';

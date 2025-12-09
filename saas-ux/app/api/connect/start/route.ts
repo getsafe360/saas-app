@@ -6,7 +6,8 @@ import { list, put } from "@vercel/blob";
 import crypto from "crypto";
 
 import { getDb } from "@/lib/db/drizzle";
-import { users, sites } from "@/lib/db/schema";
+import { users } from '@/lib/db/schema/auth/users';
+import { sites } from "@/lib/db/schema/sites";
 import { rateLimit } from "@/lib/api/rate-limit";
 
 export const runtime = "nodejs";

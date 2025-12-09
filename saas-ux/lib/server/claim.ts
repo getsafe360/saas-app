@@ -1,7 +1,8 @@
 // lib/server/claim.ts
 import { and, eq, sql } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
-import { guestSessions, guestScans, sites, scanJobs, scheduledScans, idempotency } from '@/lib/db/schema';
+import { guestSessions, guestScans, scanJobs, scheduledScans, idempotency } from '@/lib/db/schema';
+import { sites } from '@/lib/db/schema/sites';
 import crypto from 'crypto';
 
 const sha256hex = (s: string) => crypto.createHash('sha256').update(s).digest('hex');

@@ -2,7 +2,7 @@
 import 'server-only';
 import { eq } from 'drizzle-orm';
 import { getDb } from '../drizzle';
-import { users, teams, teamMembers } from '../schema';
+import { users, teams, teamMembers } from '../schema/auth';
 
 // Minimal team type for legacy compatibility (extend if you re-enable teams)
 export type TeamDataWithMembers =

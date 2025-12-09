@@ -4,7 +4,9 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db/drizzle';
-import { fixJobs, scanJobs, sites, teams } from '@/lib/db/schema';
+import { fixJobs, scanJobs } from '@/lib/db/schema';
+import { sites } from '@/lib/db/schema/sites';
+import { teams } from '@/lib/db/schema/auth';
 import { eq, and, desc } from 'drizzle-orm';
 import { list } from '@vercel/blob';
 import crypto from 'crypto';

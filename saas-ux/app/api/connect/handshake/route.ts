@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { list, put } from '@vercel/blob';
 import crypto from 'crypto';
 import { getDb } from '@/lib/db/drizzle';
-import { sites } from '@/lib/db/schema';
+import { sites } from '@/lib/db/schema/sites';
 import { and, eq, sql } from 'drizzle-orm';
 
 export const runtime = 'nodejs';

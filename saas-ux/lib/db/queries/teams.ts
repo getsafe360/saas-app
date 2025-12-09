@@ -2,7 +2,7 @@
 import 'server-only';
 import { eq } from 'drizzle-orm';
 import { getDb } from '../drizzle';
-import { teams } from '../schema';
+import { teams } from '../schema/auth';
 
 export async function getTeamByStripeCustomerId(customerId: string) {
   const db = getDb();

@@ -1,17 +1,17 @@
 // app/[locale]/(dashboard)/dashboard/sites/[id]/page.tsx
-import { getDb } from '@/lib/db/drizzle';
-import { sites } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
-import { getTranslations } from 'next-intl/server';
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+import { getDb } from "@/lib/db/drizzle";
+import { sites } from "@/lib/db/schema/sites";
+import { eq } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-import { list, type ListBlobResultBlob } from '@vercel/blob';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import StatusBadge from '@/components/ui/StatusBadge';
-import type { Metadata } from 'next';
-const DEFAULT_LOCALE = 'en';
+import { list, type ListBlobResultBlob } from "@vercel/blob";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import StatusBadge from "@/components/ui/StatusBadge";
+import type { Metadata } from "next";
+const DEFAULT_LOCALE = "en";
 
 type SiteRecord = {
   siteId: string;
@@ -24,13 +24,15 @@ type SiteRecord = {
 };
 
 // params is a Promise and contains both locale & id in this route
-export async function generateMetadata(
-  { params }: { params: Promise<{ locale: string; id: string }> }
-): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
   const { id, locale } = await params;
 
   // locale-aware translations
-  const t = await getTranslations({ locale, namespace: 'Sites' });
+  const t = await getTranslations({ locale, namespace: "Sites" });
 
   // Try DB first (good when your sites table is populated)
   let siteUrl: string | null = null;
@@ -53,10 +55,12 @@ export async function generateMetadata(
     siteUrl = blobSite?.siteUrl ?? null;
   }
 
-  const title = siteUrl ? t('detailTitle', { url: siteUrl }) : t('notFoundTitle');
+  const title = siteUrl
+    ? t("detailTitle", { url: siteUrl })
+    : t("notFoundTitle");
   const description = siteUrl
-    ? t('detailDescription', { url: siteUrl })
-    : t('notFoundDescription');
+    ? t("detailDescription", { url: siteUrl })
+    : t("notFoundDescription");
 
   const path = `/dashboard/sites/${id}`;
   const canonicalPath = locale === DEFAULT_LOCALE ? path : `/${locale}${path}`;
@@ -67,11 +71,11 @@ export async function generateMetadata(
     openGraph: {
       title,
       description,
-      url: canonicalPath
+      url: canonicalPath,
     },
     alternates: {
-      canonical: canonicalPath
-    }
+      canonical: canonicalPath,
+    },
   };
 }
 
@@ -79,7 +83,7 @@ async function getSite(id: string): Promise<SiteRecord | null> {
   const { blobs } = await list({ prefix: `sites/${id}.json` });
   const b = blobs[0];
   if (!b) return null;
-  const r = await fetch(b.url, { cache: 'no-store' });
+  const r = await fetch(b.url, { cache: "no-store" });
   const j = await r.json().catch(() => null);
   if (!j || !j.siteId || !j.siteUrl) return null;
   return j as SiteRecord;
@@ -95,35 +99,42 @@ async function getRecentScreenshots(siteId: string): Promise<string[]> {
   const { blobs } = await list({ prefix: `screenshots/${siteId}/` });
   return blobs
     .sort((a, b) => {
-      const ta = a.uploadedAt instanceof Date ? a.uploadedAt.getTime() : Date.now();
-      const tb = b.uploadedAt instanceof Date ? b.uploadedAt.getTime() : Date.now();
+      const ta =
+        a.uploadedAt instanceof Date ? a.uploadedAt.getTime() : Date.now();
+      const tb =
+        b.uploadedAt instanceof Date ? b.uploadedAt.getTime() : Date.now();
       return tb - ta;
     })
     .slice(0, 4)
-    .map(b => b.url);
+    .map((b) => b.url);
 }
 
 function hostnameOf(u: string) {
-  try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; }
+  try {
+    return new URL(u).hostname.replace(/^www\./, "");
+  } catch {
+    return u;
+  }
 }
 function initials(host: string) {
-  const parts = host.split('.');
-  const core = parts[parts.length - 2] || parts[0] || '';
-  const s = core.replace(/[^a-zA-Z0-9]/g, '');
-  return s.slice(0, 2).toUpperCase() || 'S';
+  const parts = host.split(".");
+  const core = parts[parts.length - 2] || parts[0] || "";
+  const s = core.replace(/[^a-zA-Z0-9]/g, "");
+  return s.slice(0, 2).toUpperCase() || "S";
 }
 
 export default async function SiteDetail({
   params,
-  searchParams
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
   const sp = (searchParams ? await searchParams : {}) ?? {};
-  const justConnected =
-    Array.isArray(sp.connected) ? sp.connected[0] === '1' : sp.connected === '1';
+  const justConnected = Array.isArray(sp.connected)
+    ? sp.connected[0] === "1"
+    : sp.connected === "1";
   const site = await getSite(id);
   if (!site) return notFound();
 
@@ -143,7 +154,11 @@ export default async function SiteDetail({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {fav ? (
-            <img src={fav} alt={`${host} favicon`} className="h-10 w-10 rounded-md border" />
+            <img
+              src={fav}
+              alt={`${host} favicon`}
+              className="h-10 w-10 rounded-md border"
+            />
           ) : (
             <div className="h-10 w-10 rounded-md border border-blue-500/50 bg-blue-800/90 flex items-center justify-center font-semibold">
               {initials(host)}
@@ -166,7 +181,9 @@ export default async function SiteDetail({
             Run full scan
           </Link>
           <Link
-            href={`/dashboard/sites/connect?url=${encodeURIComponent(site.siteUrl)}`}
+            href={`/dashboard/sites/connect?url=${encodeURIComponent(
+              site.siteUrl
+            )}`}
             className="px-4 py-2 rounded-full border border-slate-300 hover:bg-white/50"
           >
             Reconnect
@@ -197,7 +214,8 @@ export default async function SiteDetail({
         <div className="border rounded-lg p-4">
           <div className="font-semibold mb-2">Next step</div>
           <p className="text-sm text-slate-600">
-            We’ll pull a quick snapshot and then offer instant repairs with estimated token cost.
+            We’ll pull a quick snapshot and then offer instant repairs with
+            estimated token cost.
           </p>
           <div className="mt-3">
             <Link
@@ -216,8 +234,15 @@ export default async function SiteDetail({
           <div className="font-semibold mb-2">Recent screenshots</div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {shots.map((u, i) => (
-              <div key={`${u}::${i}`} className="rounded-lg overflow-hidden border">
-                <img src={u} alt={`Screenshot ${i + 1}`} className="w-full h-32 object-cover" />
+              <div
+                key={`${u}::${i}`}
+                className="rounded-lg overflow-hidden border"
+              >
+                <img
+                  src={u}
+                  alt={`Screenshot ${i + 1}`}
+                  className="w-full h-32 object-cover"
+                />
               </div>
             ))}
           </div>

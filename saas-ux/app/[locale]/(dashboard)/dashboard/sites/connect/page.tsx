@@ -1,4 +1,8 @@
+// saas/ux/app/[locale]/(dashboard)/dashboard/sites/connect/page.tsx
+// This page allows users to connect their WordPress site
+
 export const runtime = "nodejs";
+
 export const dynamic = "force-dynamic";
 
 import ConnectWordPress from "@/components/ConnectWordPress";

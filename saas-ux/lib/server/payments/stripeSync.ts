@@ -6,7 +6,7 @@ import {
   plans, planPrices,
   appPacks, appPackPrices,
   taxDisplayPolicies,
-} from '@/lib/db/schema';
+} from '@/lib/db/schema/';
 import { eq } from 'drizzle-orm';
 
 // Use account default API version to avoid TS union mismatches

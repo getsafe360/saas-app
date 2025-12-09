@@ -3,13 +3,14 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Minimize2, Maximize2 } from "lucide-react";
+import { GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CategoryType } from "@/types/site-cockpit";
+import type { ReactNode } from "react";
 
 interface CockpitCardProps {
   id: string;
-  title: string;
+  title: string | ReactNode; // ✅ Support both string and custom elements
   category: CategoryType;
   score?: number;
   grade?: string;
@@ -20,7 +21,6 @@ interface CockpitCardProps {
   className?: string;
 }
 
-// Extended from your existing CATEGORY_THEMES - added 'tech'
 const CATEGORY_STYLES: Record<
   CategoryType,
   {
@@ -59,7 +59,6 @@ const CATEGORY_STYLES: Record<
     text: "text-purple-400",
     bg: "bg-purple-500/5",
   },
-  // ✅ ADDED: Missing 'tech' category
   tech: {
     gradient: "from-orange-500/10 via-orange-500/5 to-transparent",
     border: "border-orange-500/20 hover:border-orange-500/40",
@@ -111,7 +110,6 @@ export function CockpitCard({
     transition,
   };
 
-  // ✅ FIXED: Safe style access with fallback
   const styles = CATEGORY_STYLES[category] || DEFAULT_STYLES;
 
   return (
@@ -160,8 +158,12 @@ export function CockpitCard({
                 </button>
               )}
 
-              {/* Title */}
-              <h3 className="text-xl font-bold text-white">{title}</h3>
+              {/* Title - ✅ Support both string and ReactNode */}
+              {typeof title === "string" ? (
+                <h3 className="text-xl font-bold text-white">{title}</h3>
+              ) : (
+                <h3 className="text-xl font-bold">{title}</h3>
+              )}
 
               {/* Score pill */}
               {score !== undefined && grade && (
@@ -170,7 +172,6 @@ export function CockpitCard({
                     "ml-auto flex items-center gap-2 px-3 py-1 rounded-full",
                     "backdrop-blur-sm",
                     styles.bg,
-                    // ✅ FIXED: Safe string replacement
                     styles.border.replace("hover:", "")
                   )}
                 >
@@ -182,20 +183,7 @@ export function CockpitCard({
               )}
             </div>
 
-            {/* Minimize button */}
-            {editable && onToggleMinimize && (
-              <button
-                onClick={onToggleMinimize}
-                className="ml-3 text-gray-600 hover:text-white transition-colors"
-                aria-label={minimized ? "Maximize" : "Minimize"}
-              >
-                {minimized ? (
-                  <Maximize2 className="h-5 w-5" />
-                ) : (
-                  <Minimize2 className="h-5 w-5" />
-                )}
-              </button>
-            )}
+            {/* Minimize button removed - keeping it simple! */}
           </div>
 
           {/* Score bar */}

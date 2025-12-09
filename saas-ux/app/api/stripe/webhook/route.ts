@@ -4,7 +4,9 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getDb } from '@/lib/db/drizzle';
-import { webhookEvents, teamSubscriptions, plans } from '@/lib/db/schema';
+import { webhookEvents } from '@/lib/db/schema';
+import { teamSubscriptions } from '@/lib/db/schema';
+import { plans } from '@/lib/db/schema/billing/plans';
 import { and, eq } from 'drizzle-orm';
 
 export const runtime = 'nodejs';

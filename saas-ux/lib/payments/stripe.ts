@@ -1,11 +1,11 @@
 // lib/payments/stripe.ts
 import Stripe from 'stripe';
 import { redirect } from 'next/navigation';
-import { Team } from '@/lib/db/schema';
+import { Team } from '@/lib/db/schema/auth';
 import {
-  getTeamByStripeCustomerId, // Module '"@/lib/db/queries"' has no exported member 'getTeamByStripeCustomerId'.ts(2305)
+  getTeamByStripeCustomerId,
   getUser,
-  updateTeamSubscription // Module '"@/lib/db/queries"' has no exported member 'updateTeamSubscription'.ts(2305)
+  updateTeamSubscription
 } from '@/lib/db/queries';
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);

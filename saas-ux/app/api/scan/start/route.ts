@@ -8,7 +8,8 @@ import { list } from '@vercel/blob';
 import { eq } from 'drizzle-orm';
 
 import { getDb } from '@/lib/db/drizzle';
-import { sites, scanJobs } from '@/lib/db/schema';
+import { sites } from '@/lib/db/schema/sites'; 
+import { scanJobs } from '@/lib/db/schema'; 
 import { getDbUserFromClerk } from '@/lib/auth/current';
 
 // Narrow body type

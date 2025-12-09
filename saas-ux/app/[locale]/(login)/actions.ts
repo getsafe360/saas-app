@@ -9,20 +9,11 @@ import { getDb } from '@/lib/db/drizzle';
 import { randomUUID } from 'crypto';
 const db = getDb();
 
-import {
-  // data + tables
-  users,
-  teams,
-  teamMembers,
-  invitations,
-  activityLogs,
-  // inserts
-  type NewUser,
-  type NewTeam,
-  type NewTeamMember,
-  type NewActivityLog,
-} from '@/lib/db/schema';
-
+// Auth
+import { users, type NewUser } from '@/lib/db/schema/auth/users';
+import { teams, teamMembers, invitations, type NewTeam, type NewTeamMember } from '@/lib/db/schema/auth';
+// Activity
+import { activityLogs, type NewActivityLog } from '@/lib/db/schema';
 import { comparePasswords, hashPassword, setSession } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';

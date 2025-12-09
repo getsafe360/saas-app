@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { and, eq, sql } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
-import { fixJobs, teams } from '@/lib/db/schema';
+import { fixJobs } from '@/lib/db/schema';
+import { teams } from '@/lib/db/schema/auth';
 import { findCurrentUserTeam } from '@/lib/auth/current';
 
 export async function POST(req: NextRequest) {

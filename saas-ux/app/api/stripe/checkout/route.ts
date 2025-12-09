@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
 const db = getDb();
-import { users, teams, teamMembers } from '@/lib/db/schema';
+import { users } from '@/lib/db/schema/auth/users';
+import { teams, teamMembers } from '@/lib/db/schema/auth';
 import { setSession } from '@/lib/auth/session';
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/payments/stripe';

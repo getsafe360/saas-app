@@ -2,8 +2,9 @@
 import 'server-only';
 import { desc, eq, sql } from 'drizzle-orm';
 import { getDb } from '../drizzle';
-import { activityLogs, users } from '../schema';
+import { activityLogs } from '../schema';
 import { requireUser } from './auth';
+import { users } from '../schema/auth/users';
 
 export async function getActivityLogs(opts: { limit?: number; offset?: number } = {}) {
   const { limit = 10, offset = 0 } = opts;

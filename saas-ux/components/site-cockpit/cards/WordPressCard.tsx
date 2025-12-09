@@ -1,9 +1,17 @@
 // components/site-cockpit/cards/WordPressCard.tsx
-'use client';
+"use client";
 
-import { CockpitCard } from '../CockpitCard';
-import { Shield, AlertTriangle, CheckCircle, Package, Palette, Zap } from 'lucide-react';
-import type { SiteCockpitResponse } from '@/types/site-cockpit';
+import { CockpitCard } from "../CockpitCard";
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  Package,
+  Palette,
+} from "lucide-react";
+
+import type { SiteCockpitResponse } from "@/types/site-cockpit";
+import { WordPressIcon } from "../../icons/WordPress";
 
 interface WordPressCardProps {
   id: string;
@@ -21,13 +29,18 @@ export function WordPressCard({
   editable,
 }: WordPressCardProps) {
   const { wordpress } = data;
-  
+
   if (!wordpress) return null;
 
   return (
     <CockpitCard
       id={id}
-      title="WordPress Spotlight"
+      title={
+        <div className="flex items-center gap-3">
+          <WordPressIcon size={24} className="text-[#21759B]" />
+          <span className="text-blue-400">WordPress Insights</span>
+        </div>
+      }
       category="wordpress"
       score={wordpress.score}
       grade={wordpress.grade}
@@ -57,7 +70,8 @@ export function WordPressCard({
             <AlertTriangle className="h-5 w-5 text-orange-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="text-sm text-gray-300 mb-1">
-                {wordpress.version.daysOld} days old • Latest: {wordpress.version.latest}
+                {wordpress.version.daysOld} days old • Latest:{" "}
+                {wordpress.version.latest}
               </div>
               <div className="text-xs text-gray-500">
                 {wordpress.recommendations.length} security recommendations
@@ -76,25 +90,29 @@ export function WordPressCard({
           label="Login Page"
           icon={Shield}
           status={!wordpress.security.defaultLoginExposed}
-          value={wordpress.security.defaultLoginExposed ? 'Exposed' : 'Protected'}
+          value={
+            wordpress.security.defaultLoginExposed ? "Exposed" : "Protected"
+          }
         />
         <SecurityMetric
           label="User Enum"
           icon={Shield}
           status={wordpress.security.userEnumerationBlocked}
-          value={wordpress.security.userEnumerationBlocked ? 'Blocked' : 'Vulnerable'}
+          value={
+            wordpress.security.userEnumerationBlocked ? "Blocked" : "Vulnerable"
+          }
         />
         <SecurityMetric
           label="XML-RPC"
           icon={Shield}
           status={!wordpress.security.xmlrpcEnabled}
-          value={wordpress.security.xmlrpcEnabled ? 'Enabled' : 'Disabled'}
+          value={wordpress.security.xmlrpcEnabled ? "Enabled" : "Disabled"}
         />
         <SecurityMetric
           label="Debug Mode"
           icon={Shield}
           status={!wordpress.security.wpDebugMode}
-          value={wordpress.security.wpDebugMode ? 'On' : 'Off'}
+          value={wordpress.security.wpDebugMode ? "On" : "Off"}
         />
       </div>
 
@@ -106,29 +124,37 @@ export function WordPressCard({
             Plugins ({wordpress.plugins.total})
           </h4>
           <div className="flex items-center gap-3 text-sm">
-            <span className="text-gray-400">{wordpress.plugins.active} active</span>
+            <span className="text-gray-400">
+              {wordpress.plugins.active} active
+            </span>
             {wordpress.plugins.outdated > 0 && (
-              <span className="text-orange-400">{wordpress.plugins.outdated} outdated</span>
+              <span className="text-orange-400">
+                {wordpress.plugins.outdated} outdated
+              </span>
             )}
             {wordpress.plugins.vulnerable > 0 && (
-              <span className="text-red-400 font-semibold">{wordpress.plugins.vulnerable} vulnerable</span>
+              <span className="text-red-400 font-semibold">
+                {wordpress.plugins.vulnerable} vulnerable
+              </span>
             )}
           </div>
         </div>
 
         {/* Vulnerable plugins */}
-        {wordpress.plugins.list.filter(p => p.vulnerable).length > 0 && (
+        {wordpress.plugins.list.filter((p) => p.vulnerable).length > 0 && (
           <div className="space-y-2 mb-4">
             {wordpress.plugins.list
-              .filter(p => p.vulnerable)
-              .map(plugin => (
+              .filter((p) => p.vulnerable)
+              .map((plugin) => (
                 <div
                   key={plugin.slug}
                   className="p-3 rounded-lg bg-red-500/10 border border-red-500/20"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <div className="text-sm font-semibold text-white">{plugin.name}</div>
+                      <div className="text-sm font-semibold text-white">
+                        {plugin.name}
+                      </div>
                       <div className="text-xs text-gray-400">
                         Current: {plugin.version} → Update to: {plugin.latest}
                       </div>
@@ -137,11 +163,12 @@ export function WordPressCard({
                       Fix Now
                     </button>
                   </div>
-                  {plugin.vulnerabilities && plugin.vulnerabilities.length > 0 && (
-                    <div className="text-xs text-red-400">
-                      {plugin.vulnerabilities[0].description}
-                    </div>
-                  )}
+                  {plugin.vulnerabilities &&
+                    plugin.vulnerabilities.length > 0 && (
+                      <div className="text-xs text-red-400">
+                        {plugin.vulnerabilities[0].description}
+                      </div>
+                    )}
                 </div>
               ))}
           </div>
@@ -152,7 +179,8 @@ export function WordPressCard({
           <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
             <div className="flex items-center justify-between">
               <div className="text-sm text-orange-400">
-                {wordpress.plugins.outdated - wordpress.plugins.vulnerable} plugins need updates
+                {wordpress.plugins.outdated - wordpress.plugins.vulnerable}{" "}
+                plugins need updates
               </div>
               <button className="text-xs text-orange-400 hover:text-orange-300 font-semibold transition-colors">
                 View All →
@@ -170,10 +198,13 @@ export function WordPressCard({
               <Palette className="h-5 w-5 text-purple-400" />
             </div>
             <div>
-              <div className="text-sm font-semibold text-white">{wordpress.themes.active}</div>
+              <div className="text-sm font-semibold text-white">
+                {wordpress.themes.active}
+              </div>
               <div className="text-xs text-gray-400">
-                v{wordpress.themes.version} 
-                {wordpress.themes.outdated && ` • Update to ${wordpress.themes.latest}`}
+                v{wordpress.themes.version}
+                {wordpress.themes.outdated &&
+                  ` • Update to ${wordpress.themes.latest}`}
               </div>
             </div>
           </div>
@@ -185,56 +216,87 @@ export function WordPressCard({
         </div>
       </div>
 
-      {/* Performance Quick Stats */}
+      {/* Performance Quick Stats - ✅ FIXED: Access performance properly */}
       <div className="grid grid-cols-2 gap-3">
         <PerformanceMetric
           label="Object Cache"
-          value={wordpress.performance.objectCache}
-          recommendation={!wordpress.performance.objectCache ? 'Enable for 40% speed boost' : undefined}
+          value={(wordpress as any)?.performance?.objectCache ?? false}
+          recommendation={
+            !(wordpress as any)?.performance?.objectCache
+              ? "Enable for 40% speed boost"
+              : undefined
+          }
         />
         <PerformanceMetric
           label="OPcache"
-          value={wordpress.performance.opcacheEnabled}
+          value={(wordpress as any)?.performance?.opcacheEnabled ?? false}
+        />
+        <PerformanceMetric
+          label="Gzip Compression"
+          value={(wordpress as any)?.performance?.gzipEnabled ?? false}
+        />
+        <PerformanceMetric
+          label="Lazy Loading"
+          value={(wordpress as any)?.performance?.lazyLoadEnabled ?? false}
         />
       </div>
     </CockpitCard>
   );
 }
 
-function SecurityMetric({ label, icon: Icon, status, value }: {
+function SecurityMetric({
+  label,
+  icon: Icon,
+  status,
+  value,
+}: {
   label: string;
   icon: any;
   status: boolean;
   value: string;
 }) {
   return (
-    <div className={`p-3 rounded-lg border ${
-      status 
-        ? 'bg-green-500/5 border-green-500/20' 
-        : 'bg-red-500/5 border-red-500/20'
-    }`}>
+    <div
+      className={`p-3 rounded-lg border ${
+        status
+          ? "bg-green-500/5 border-green-500/20"
+          : "bg-red-500/5 border-red-500/20"
+      }`}
+    >
       <div className="flex items-center gap-2 mb-1">
-        <Icon className={`h-4 w-4 ${status ? 'text-green-400' : 'text-red-400'}`} />
+        <Icon
+          className={`h-4 w-4 ${status ? "text-green-400" : "text-red-400"}`}
+        />
         <span className="text-xs text-gray-400">{label}</span>
       </div>
-      <div className={`text-sm font-semibold ${status ? 'text-green-400' : 'text-red-400'}`}>
+      <div
+        className={`text-sm font-semibold ${
+          status ? "text-green-400" : "text-red-400"
+        }`}
+      >
         {value}
       </div>
     </div>
   );
 }
 
-function PerformanceMetric({ label, value, recommendation }: {
+function PerformanceMetric({
+  label,
+  value,
+  recommendation,
+}: {
   label: string;
   value: boolean;
   recommendation?: string;
 }) {
   return (
-    <div className={`p-3 rounded-lg border ${
-      value 
-        ? 'bg-green-500/5 border-green-500/20' 
-        : 'bg-orange-500/5 border-orange-500/20'
-    }`}>
+    <div
+      className={`p-3 rounded-lg border ${
+        value
+          ? "bg-green-500/5 border-green-500/20"
+          : "bg-orange-500/5 border-orange-500/20"
+      }`}
+    >
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-gray-400">{label}</span>
         {value ? (
@@ -243,8 +305,12 @@ function PerformanceMetric({ label, value, recommendation }: {
           <AlertTriangle className="h-4 w-4 text-orange-400" />
         )}
       </div>
-      <div className={`text-sm font-semibold ${value ? 'text-green-400' : 'text-orange-400'}`}>
-        {value ? 'Enabled' : 'Disabled'}
+      <div
+        className={`text-sm font-semibold ${
+          value ? "text-green-400" : "text-orange-400"
+        }`}
+      >
+        {value ? "Enabled" : "Disabled"}
       </div>
       {recommendation && (
         <div className="text-xs text-gray-500 mt-1">{recommendation}</div>

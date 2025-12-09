@@ -2,7 +2,8 @@
 import { auth } from '@clerk/nextjs/server';
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
-import { users, teams, teamMembers } from '@/lib/db/schema';
+import { users } from '@/lib/db/schema/auth/users';
+import { teams, teamMembers } from '@/lib/db/schema/auth';
 
 export async function clerkUserId(): Promise<string | null> {
   const { userId } = await auth();              // Clerk server-side
