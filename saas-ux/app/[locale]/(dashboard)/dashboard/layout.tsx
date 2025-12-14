@@ -8,7 +8,8 @@ import { Settings, Shield, Activity, Menu, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { UserGreeting } from "@/components/ui/user-greeting";
-import { SignedIn, SignedOut, SignUpButton, useUser } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
+import CTA from "@/components/marketing/CTA";
 
 export default function DashboardLayout({
   children,
@@ -18,7 +19,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const t = useTranslations("DashboardNav");
-  const { user } = useUser();
+  const ts = useTranslations("Nav");
 
   const navItems = [
     { href: "/dashboard/sites", icon: Globe, label: "websites" },
@@ -90,7 +91,18 @@ export default function DashboardLayout({
           </main>
         </SignedIn>
         <SignedOut>
-          <SignUpButton>Sign Up</SignUpButton>
+          <section className="mb-8 min-w-80">
+            <CTA />
+            <p className="text-center text-base text-gray-500 dark:text-gray-400">
+              {ts("haveAccount")}?{" "}
+              {/* Optional: subtle sign-in for returning users */}
+              <SignInButton mode="modal">
+                <button className="text-sky-600 hover:text-sky-700 underline-offset-2 hover:underline hover:cursor-pointer transition">
+                  {ts("signIn")}
+                </button>
+              </SignInButton>
+            </p>
+          </section>
         </SignedOut>
       </div>
     </div>

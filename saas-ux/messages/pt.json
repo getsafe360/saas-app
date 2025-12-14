@@ -1,14 +1,11 @@
 {
-    "SiteCockpit": {
-    "title": "Site Cockpit · {url}",
-    "description": "Gerencie e otimize {url} com ferramentas impulsionadas por IA para SEO, desempenho, acessibilidade e segurança."
-  },
   "Nav": {
     "pricing": "Preços",
     "accessibility": "Acessibilidade",
     "dashboard": "Painel",
     "faq": "FAQ",
     "createFreeAccount": "Criar conta grátis",
+    "haveAccount": "Já tem uma conta",
     "signIn": "Entrar",
     "signOut": "Sair",
     "skipToContent": "Ir para o conteúdo",

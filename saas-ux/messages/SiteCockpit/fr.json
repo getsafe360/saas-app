@@ -1,0 +1,458 @@
+{
+  "SiteCockpit": {
+    "title": "Cockpit du Site - {url}",
+    "description": "Gérez et optimisez {url} avec des outils pilotés par IA pour le SEO, la performance, l'accessibilité et la sécurité.",
+    "notFoundTitle": "Site non trouvé",
+    "notFoundDescription": "Le site demandé n'a pas pu être trouvé",
+    "analysisUnavailable": "Analyse non disponible",
+    "analysisUnavailableDescription": "Nous n'avons pas pu analyser ce site pour le moment. Veuillez réessayer plus tard.",
+    
+    "summary": {
+      "title": "Score Global",
+      "grade": "Note",
+      "strengths": "Forces",
+      "criticalIssues": "Problèmes Critiques",
+      "warnings": "Avertissements",
+      "passed": "Vérifications Réussies"
+    },
+    
+    "quickWins": {
+      "title": "Victoires Rapides",
+      "subtitle": "Améliorations faciles à fort impact",
+      "count": "{count} opportunités",
+      "potentialIncrease": "Augmentation potentielle du score",
+      "estimatedTime": "Temps estimé",
+      "impact": {
+        "critical": "Critique",
+        "high": "Élevé",
+        "medium": "Moyen",
+        "low": "Faible"
+      },
+      "effort": {
+        "low": "Effort faible",
+        "medium": "Effort moyen",
+        "high": "Effort élevé"
+      },
+      "noWins": "Excellent travail ! Aucune victoire rapide disponible.",
+      "fixNow": "Corriger Maintenant",
+      "learnMore": "En Savoir Plus"
+    },
+    
+    "performance": {
+      "title": "Performance",
+      "score": "Score de Performance",
+      "metrics": {
+        "loadTime": "Temps de Chargement",
+        "timeToFirstByte": "Temps Jusqu'au Premier Octet",
+        "firstContentfulPaint": "Première Peinture de Contenu",
+        "largestContentfulPaint": "Plus Grande Peinture de Contenu",
+        "timeToInteractive": "Temps Jusqu'à l'Interactivité",
+        "cumulativeLayoutShift": "Décalage de Mise en Page Cumulé",
+        "firstInputDelay": "Délai de la Première Entrée"
+      },
+      "pageWeight": "Poids de la Page",
+      "requests": "Requêtes",
+      "caching": "Mise en Cache",
+      "compression": "Compression",
+      "cdn": "CDN",
+      "webVitals": "Core Web Vitals",
+      "good": "Bon",
+      "needsImprovement": "À Améliorer",
+      "poor": "Mauvais"
+    },
+    
+    "security": {
+      "title": "Sécurité",
+      "score": "Score de Sécurité",
+      "https": {
+        "enabled": "HTTPS Activé",
+        "disabled": "HTTPS Désactivé",
+        "forced": "HTTPS Forcé",
+        "hsts": "HSTS Activé"
+      },
+      "ssl": {
+        "title": "Certificat SSL",
+        "valid": "Valide",
+        "invalid": "Invalide",
+        "issuer": "Émetteur",
+        "validUntil": "Valide Jusqu'au",
+        "daysRemaining": "Jours Restants",
+        "grade": "Note"
+      },
+      "headers": {
+        "title": "En-têtes de Sécurité",
+        "contentSecurityPolicy": "Content Security Policy",
+        "strictTransportSecurity": "Strict Transport Security",
+        "xFrameOptions": "X-Frame-Options",
+        "xContentTypeOptions": "X-Content-Type-Options",
+        "referrerPolicy": "Referrer Policy",
+        "permissionsPolicy": "Permissions Policy",
+        "present": "Présent",
+        "missing": "Manquant"
+      },
+      "vulnerabilities": {
+        "title": "Vulnérabilités",
+        "total": "Total",
+        "critical": "Critiques",
+        "high": "Élevées",
+        "medium": "Moyennes",
+        "low": "Faibles",
+        "none": "Aucune vulnérabilité trouvée"
+      }
+    },
+    
+    "seo": {
+      "title": "SEO",
+      "score": "Score SEO",
+      "meta": {
+        "title": "Meta Titre",
+        "description": "Meta Description",
+        "titleLength": "Longueur du Titre",
+        "descriptionLength": "Longueur de la Description",
+        "optimal": "Optimal",
+        "tooShort": "Trop Court",
+        "tooLong": "Trop Long",
+        "robots": "Robots",
+        "canonical": "URL Canonique"
+      },
+      "openGraph": {
+        "title": "Open Graph",
+        "complete": "Complet",
+        "incomplete": "Incomplet",
+        "missing": "Manquant"
+      },
+      "twitterCard": {
+        "title": "Twitter Card",
+        "present": "Présent",
+        "missing": "Manquant"
+      },
+      "structuredData": {
+        "title": "Données Structurées",
+        "schemas": "Schémas",
+        "valid": "Valide",
+        "invalid": "Invalide"
+      },
+      "headings": {
+        "title": "Structure des Titres",
+        "h1": "Titres H1",
+        "properHierarchy": "Hiérarchie Correcte",
+        "multipleH1": "Plusieurs H1 Détectés"
+      },
+      "content": {
+        "title": "Contenu",
+        "wordCount": "Nombre de Mots",
+        "readingTime": "Temps de Lecture",
+        "quality": "Qualité"
+      },
+      "links": {
+        "title": "Liens",
+        "internal": "Internes",
+        "external": "Externes",
+        "broken": "Cassés"
+      },
+      "images": {
+        "title": "Images",
+        "total": "Total",
+        "withAlt": "Avec Texte Alt",
+        "missingAlt": "Sans Texte Alt",
+        "optimized": "Optimisées"
+      },
+      "sitemap": {
+        "title": "Plan du Site XML",
+        "present": "Présent",
+        "missing": "Manquant",
+        "valid": "Valide",
+        "invalid": "Invalide"
+      },
+      "robotsTxt": {
+        "title": "Robots.txt",
+        "present": "Présent",
+        "missing": "Manquant"
+      },
+      "aiReadiness": {
+        "title": "Préparation IA",
+        "subtitle": "Optimisation pour les LLM et moteurs de recherche",
+        "score": "Score IA",
+        "structuredData": "Données Structurées",
+        "semanticMarkup": "Balisage Sémantique",
+        "contentAccessible": "Contenu Accessible",
+        "llmFriendly": "Compatible LLM",
+        "recommendations": "Recommandations"
+      }
+    },
+    
+    "accessibility": {
+      "title": "Accessibilité",
+      "score": "Score d'Accessibilité",
+      "wcagLevel": "Niveau WCAG",
+      "images": {
+        "title": "Images",
+        "withAlt": "Avec Texte Alt",
+        "missingAlt": "Sans Texte Alt",
+        "decorative": "Décoratives"
+      },
+      "forms": {
+        "title": "Formulaires",
+        "withLabels": "Avec Étiquettes",
+        "missingLabels": "Sans Étiquettes"
+      },
+      "links": {
+        "title": "Liens",
+        "withText": "Avec Texte",
+        "emptyLinks": "Liens Vides"
+      },
+      "headings": {
+        "title": "Titres",
+        "properHierarchy": "Hiérarchie Correcte",
+        "skippedLevels": "Niveaux Sautés"
+      },
+      "contrast": {
+        "title": "Contraste des Couleurs",
+        "issues": "Problèmes",
+        "passes": "Réussi"
+      },
+      "keyboard": {
+        "title": "Navigation au Clavier",
+        "focusVisible": "Focus Visible",
+        "tabOrder": "Ordre de Tabulation",
+        "skipLinks": "Liens de Saut"
+      },
+      "aria": {
+        "title": "ARIA",
+        "landmarks": "Points de Repère",
+        "labels": "Étiquettes",
+        "roles": "Rôles"
+      }
+    },
+    
+    "technology": {
+      "title": "Technologie",
+      "cms": {
+        "title": "Système de Gestion de Contenu",
+        "detected": "Détecté",
+        "notDetected": "Non Détecté",
+        "version": "Version"
+      },
+      "server": {
+        "title": "Serveur",
+        "software": "Logiciel",
+        "version": "Version",
+        "os": "Système d'Exploitation"
+      },
+      "programming": {
+        "title": "Programmation",
+        "languages": "Langages",
+        "phpVersion": "Version PHP",
+        "outdated": "Obsolète",
+        "endOfLife": "Fin de Vie"
+      },
+      "frameworks": {
+        "title": "Frameworks",
+        "backend": "Backend",
+        "frontend": "Frontend"
+      },
+      "libraries": {
+        "title": "Bibliothèques",
+        "jquery": "jQuery",
+        "react": "React",
+        "vue": "Vue"
+      },
+      "analytics": {
+        "title": "Analytiques",
+        "detected": "Détecté",
+        "none": "Aucun détecté"
+      },
+      "cdn": {
+        "title": "Réseau de Distribution de Contenu",
+        "provider": "Fournisseur",
+        "detected": "Détecté",
+        "notDetected": "Non Détecté"
+      },
+      "hosting": {
+        "title": "Hébergement",
+        "provider": "Fournisseur",
+        "datacenter": "Centre de Données"
+      },
+      "protocols": {
+        "title": "Protocoles",
+        "http2": "HTTP/2",
+        "http3": "HTTP/3",
+        "quic": "QUIC"
+      },
+      "compression": {
+        "title": "Compression",
+        "brotli": "Brotli",
+        "gzip": "Gzip"
+      },
+      "caching": {
+        "title": "Mise en Cache",
+        "edgeCache": "Cache Edge",
+        "browserCache": "Cache Navigateur",
+        "objectCache": "Cache Objet"
+      }
+    },
+    
+    "wordpress": {
+      "title": "Informations WordPress",
+      "detected": "WordPress Détecté",
+      "notDetected": "WordPress Non Détecté",
+      "connect": {
+        "title": "Connectez Votre Site WordPress",
+        "subtitle": "Obtenez des insights détaillés, des vérifications de sécurité et une optimisation des performances",
+        "button": "Connecter le Site",
+        "downloadPlugin": "Télécharger le Plugin",
+        "benefits": {
+          "plugins": "Analyse des Plugins et Thèmes",
+          "pluginsDesc": "Détecter les plugins obsolètes et vulnérables",
+          "security": "Analyse de Sécurité",
+          "securityDesc": "Vérifier l'exposition de connexion et XML-RPC",
+          "performance": "Métriques de Performance",
+          "performanceDesc": "État du cache objet et OPcache"
+        }
+      },
+      "connection": {
+        "connected": "Connecté",
+        "disconnected": "Déconnecté",
+        "liveData": "Données en direct de votre site",
+        "reconnect": "Reconnecter",
+        "connectionLost": "Connexion Perdue",
+        "pluginDeactivated": "Le plugin peut être désactivé"
+      },
+      "version": {
+        "title": "Version WordPress",
+        "current": "Actuelle",
+        "latest": "Dernière",
+        "outdated": "Obsolète",
+        "updateAvailable": "Mise à Jour Disponible",
+        "daysOld": "{count} jours",
+        "updateNow": "Mettre à Jour Maintenant"
+      },
+      "security": {
+        "title": "Sécurité",
+        "loginPage": "Page de Connexion",
+        "exposed": "Exposée",
+        "protected": "Protégée",
+        "userEnum": "Énumération des Utilisateurs",
+        "blocked": "Bloquée",
+        "vulnerable": "Vulnérable",
+        "xmlrpc": "XML-RPC",
+        "enabled": "Activé",
+        "disabled": "Désactivé",
+        "debugMode": "Mode Debug",
+        "on": "Activé",
+        "off": "Désactivé"
+      },
+      "plugins": {
+        "title": "Plugins",
+        "total": "Total",
+        "active": "Actifs",
+        "outdated": "Obsolètes",
+        "vulnerable": "Vulnérables",
+        "updateAvailable": "Mise à Jour Disponible",
+        "fixNow": "Corriger Maintenant",
+        "viewAll": "Voir Tout",
+        "needsUpdate": "{count} plugins nécessitent des mises à jour"
+      },
+      "themes": {
+        "title": "Thème",
+        "active": "Actif",
+        "version": "Version",
+        "updateAvailable": "Mise à Jour Disponible",
+        "updateTheme": "Mettre à Jour le Thème"
+      },
+      "performance": {
+        "title": "Performance",
+        "objectCache": "Cache Objet",
+        "opcache": "OPcache",
+        "gzip": "Compression Gzip",
+        "lazyLoading": "Chargement Différé",
+        "enabled": "Activé",
+        "disabled": "Désactivé",
+        "recommendation": "Activer pour une augmentation de vitesse de 40%"
+      },
+      "recommendations": {
+        "title": "Recommandations",
+        "securityRisk": "Risque de Sécurité",
+        "critical": "Critique",
+        "high": "Élevé",
+        "medium": "Moyen",
+        "low": "Faible"
+      }
+    },
+    
+    "mobile": {
+      "title": "Mobile",
+      "score": "Score Mobile",
+      "responsive": "Responsive",
+      "viewport": "Viewport",
+      "touchOptimized": "Optimisé Tactile",
+      "textReadability": "Lisibilité du Texte",
+      "performance": "Performance Mobile"
+    },
+    
+    "network": {
+      "title": "Réseau",
+      "ipVersion": "Version IP",
+      "geolocation": "Géolocalisation",
+      "isp": "FAI",
+      "latency": "Latence"
+    },
+    
+    "common": {
+      "loading": "Chargement...",
+      "error": "Erreur",
+      "retry": "Réessayer",
+      "close": "Fermer",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "enable": "Activer",
+      "disable": "Désactiver",
+      "enabled": "Activé",
+      "disabled": "Désactivé",
+      "yes": "Oui",
+      "no": "Non",
+      "on": "Activé",
+      "off": "Désactivé",
+      "good": "Bon",
+      "warning": "Avertissement",
+      "critical": "Critique",
+      "passed": "Réussi",
+      "failed": "Échoué",
+      "unknown": "Inconnu",
+      "notAvailable": "Non Disponible",
+      "comingSoon": "Bientôt Disponible",
+      "learnMore": "En Savoir Plus",
+      "viewDetails": "Voir les Détails",
+      "refresh": "Actualiser",
+      "export": "Exporter",
+      "share": "Partager"
+    },
+    
+    "grades": {
+      "A+": "Excellent",
+      "A": "Très Bon",
+      "A-": "Bon",
+      "B+": "Au-dessus de la Moyenne",
+      "B": "Moyen",
+      "B-": "En-dessous de la Moyenne",
+      "C+": "Satisfaisant",
+      "C": "Passable",
+      "C-": "Insuffisant",
+      "D": "Mauvais",
+      "F": "Échec"
+    },
+    
+    "actions": {
+      "analyze": "Analyser",
+      "reanalyze": "Ré-analyser",
+      "fix": "Corriger",
+      "optimize": "Optimiser",
+      "download": "Télécharger",
+      "connect": "Connecter",
+      "disconnect": "Déconnecter",
+      "update": "Mettre à Jour",
+      "install": "Installer",
+      "configure": "Configurer"
+    }
+  }
+}

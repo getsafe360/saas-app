@@ -1,14 +1,11 @@
 {
-    "SiteCockpit": {
-    "title": "Site Cockpit · {url}",
-    "description": "Optimieren Sie {url} mit KI-gestützten Tools für SEO, Performance, Barrierefreiheit und Sicherheit."
-  },
   "Nav": {
     "pricing": "Preise",
     "accessibility": "Barrierefreiheit",
     "dashboard": "Dashboard",
     "faq": "FAQ",
     "createFreeAccount": "Kostenloses Konto erstellen",
+    "haveAccount": "Du besitzt bereits ein Konto",
     "signIn": "Anmelden",
     "signOut": "Abmelden",
     "skipToContent": "Zum Inhalt springen",

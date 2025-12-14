@@ -8,14 +8,10 @@ import {
   CheckCircle,
   Package,
   Palette,
-  Link as LinkIcon,
-  ExternalLink,
 } from "lucide-react";
 
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import { WordPressIcon } from "../../icons/WordPress";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 interface WordPressCardProps {
   id: string;
@@ -23,7 +19,6 @@ interface WordPressCardProps {
   minimized?: boolean;
   onToggleMinimize?: () => void;
   editable?: boolean;
-  siteId?: string; // For connection status
 }
 
 export function WordPressCard({
@@ -32,121 +27,10 @@ export function WordPressCard({
   minimized,
   onToggleMinimize,
   editable,
-  siteId,
 }: WordPressCardProps) {
-  const { wordpress, cms } = data;
-  const router = useRouter();
-  const [showConnect, setShowConnect] = useState(false);
+  const { wordpress } = data;
 
-  // Check if site is connected to GetSafe 360
-  const isConnected = !!siteId;
-
-  if (!wordpress) {
-    // WordPress detected but not connected
-    if (cms.type === "wordpress") {
-      return (
-        <CockpitCard
-          id={id}
-          title={
-            <div className="flex items-center gap-3">
-              <WordPressIcon size={24} className="text-[#21759B]" />
-              <span className="text-blue-400">WordPress Detected</span>
-            </div>
-          }
-          category="wordpress"
-          minimized={minimized}
-          onToggleMinimize={onToggleMinimize}
-          editable={editable}
-          className="lg:col-span-2"
-        >
-          {/* Connection CTA */}
-          <div className="mb-6 p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-lg bg-blue-500/10">
-                <LinkIcon className="h-6 w-6 text-blue-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  Connect Your WordPress Site
-                </h3>
-                <p className="text-sm text-gray-400 mb-4">
-                  Get deep insights, security checks, and performance
-                  optimization by connecting your site with our WordPress
-                  plugin.
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() =>
-                      router.push(
-                        `/dashboard/sites/connect?url=${encodeURIComponent(
-                          data.finalUrl
-                        )}&siteId=${id}`
-                      )
-                    }
-                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors flex items-center gap-2"
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                    Connect Site
-                  </button>
-                  <a
-                    href="/wp-plugin/getsafe360-connector.zip"
-                    download
-                    className="px-4 py-2 rounded-lg border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 text-sm font-semibold transition-colors flex items-center gap-2"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Download Plugin
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* What You'll Get */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-gray-300">
-                  <div className="font-medium">Plugin & Theme Analysis</div>
-                  <div className="text-xs text-gray-500">
-                    Detect outdated & vulnerable plugins
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-gray-300">
-                  <div className="font-medium">Security Scanning</div>
-                  <div className="text-xs text-gray-500">
-                    Check login exposure & XML-RPC
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-gray-300">
-                  <div className="font-medium">Performance Metrics</div>
-                  <div className="text-xs text-gray-500">
-                    Object cache & OPcache status
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Basic WP Info (from detection) */}
-          <div className="p-4 rounded-lg bg-gray-800/40 border border-gray-700/50">
-            <div className="text-sm text-gray-400 mb-1">WordPress Version</div>
-            <div className="text-lg font-semibold text-white">
-              {cms.wp?.version || "Unknown"}
-            </div>
-            <div className="text-xs text-gray-500 mt-2">
-              Connect for comprehensive analysis
-            </div>
-          </div>
-        </CockpitCard>
-      );
-    }
-    return null;
-  }
+  if (!wordpress) return null;
 
   return (
     <CockpitCard
@@ -165,18 +49,6 @@ export function WordPressCard({
       editable={editable}
       className="lg:col-span-2"
     >
-      {/* Connection Status Badge */}
-      {isConnected && (
-        <div className="mb-4 flex items-center gap-2 text-sm">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
-            <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-green-400 font-medium">Connected</span>
-          </div>
-          <span className="text-gray-500">•</span>
-          <span className="text-gray-400">Live data from your site</span>
-        </div>
-      )}
-
       {/* Version Status */}
       <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
         <div className="flex items-center justify-between mb-3">
@@ -344,28 +216,28 @@ export function WordPressCard({
         </div>
       </div>
 
-      {/* Performance Quick Stats */}
+      {/* Performance Quick Stats - ✅ FIXED: Access performance properly */}
       <div className="grid grid-cols-2 gap-3">
         <PerformanceMetric
           label="Object Cache"
-          value={wordpress.performanceData.objectCache}
+          value={(wordpress as any)?.performance?.objectCache ?? false}
           recommendation={
-            !wordpress.performanceData.objectCache
+            !(wordpress as any)?.performance?.objectCache
               ? "Enable for 40% speed boost"
               : undefined
           }
         />
         <PerformanceMetric
           label="OPcache"
-          value={wordpress.performanceData.opcacheEnabled}
+          value={(wordpress as any)?.performance?.opcacheEnabled ?? false}
         />
         <PerformanceMetric
           label="Gzip Compression"
-          value={wordpress.performanceData.gzipEnabled}
+          value={(wordpress as any)?.performance?.gzipEnabled ?? false}
         />
         <PerformanceMetric
           label="Lazy Loading"
-          value={wordpress.performanceData.lazyLoadEnabled}
+          value={(wordpress as any)?.performance?.lazyLoadEnabled ?? false}
         />
       </div>
     </CockpitCard>

@@ -4,7 +4,10 @@
  * Description: Secure connector between your site and GetSafe 360.
  * Version: 0.1.1
  */
-
+/*
+// saas-ux/public/wp-plugin/getsafe360-connector.php
+// saas-ux/public/wp-plugin/getsafe360-connector.zip
+*/
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {

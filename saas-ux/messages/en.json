@@ -1,14 +1,11 @@
 {
-  "SiteCockpit": {
-    "title": "Site Cockpit · {url}",
-    "description": "Manage and optimize {url} with AI-driven tools for SEO, performance, accessibility, and security."
-  },
-  "Nav": {
+  "Nav": { 
     "pricing": "Pricing",
     "accessibility": "Accessibility",
     "dashboard": "Dashboard",
     "faq": "FAQ",
     "createFreeAccount": "Create free account",
+    "haveAccount": "Already have an account",
     "signIn": "Sign in",
     "signOut": "Sign out",
     "skipToContent": "Skip to content",
