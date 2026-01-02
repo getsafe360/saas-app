@@ -1,4 +1,4 @@
-// components/site-cockpit/CockpitCard.tsx
+// components/site-cockpit/cards/CockpitCard.tsx
 "use client";
 
 import { useSortable } from "@dnd-kit/sortable";

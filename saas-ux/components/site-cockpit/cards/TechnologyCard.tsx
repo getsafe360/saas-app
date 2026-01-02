@@ -1,5 +1,5 @@
 // components/site-cockpit/cards/TechnologyCard.tsx
-import { CockpitCard } from "../CockpitCard";
+import { CockpitCard } from "./CockpitCard";
 import type { Technology } from "@/types/site-cockpit";
 
 interface TechnologyCardProps {

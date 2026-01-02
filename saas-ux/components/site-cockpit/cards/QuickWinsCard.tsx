@@ -1,9 +1,9 @@
 // components/site-cockpit/cards/QuickWinsCard.tsx
-'use client';
+"use client";
 
-import { CockpitCard } from '../CockpitCard';
-import { Zap, Clock, TrendingUp, ChevronRight, Sparkles } from 'lucide-react';
-import type { SiteCockpitResponse } from '@/types/site-cockpit';
+import { CockpitCard } from "./CockpitCard";
+import { Zap, Clock, TrendingUp, ChevronRight, Sparkles } from "lucide-react";
+import type { SiteCockpitResponse } from "@/types/site-cockpit";
 
 interface QuickWinsCardProps {
   id: string;
@@ -14,16 +14,16 @@ interface QuickWinsCardProps {
 }
 
 const IMPACT_COLORS = {
-  critical: 'text-red-400 bg-red-500/10 border-red-500/20',
-  high: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
-  medium: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
-  low: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+  critical: "text-red-400 bg-red-500/10 border-red-500/20",
+  high: "text-orange-400 bg-orange-500/10 border-orange-500/20",
+  medium: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+  low: "text-blue-400 bg-blue-500/10 border-blue-500/20",
 };
 
 const EFFORT_COLORS = {
-  low: 'text-green-400',
-  medium: 'text-yellow-400',
-  high: 'text-orange-400',
+  low: "text-green-400",
+  medium: "text-yellow-400",
+  high: "text-orange-400",
 };
 
 export function QuickWinsCard({
@@ -52,7 +52,9 @@ export function QuickWinsCard({
             <Sparkles className="h-5 w-5 text-green-400" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-green-400">{quickWins.count}</div>
+            <div className="text-2xl font-bold text-green-400">
+              {quickWins.count}
+            </div>
             <div className="text-xs text-gray-500">Opportunities</div>
           </div>
         </div>
@@ -62,7 +64,9 @@ export function QuickWinsCard({
             <TrendingUp className="h-5 w-5 text-blue-400" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-blue-400">{quickWins.potentialScoreIncrease}</div>
+            <div className="text-2xl font-bold text-blue-400">
+              {quickWins.potentialScoreIncrease}
+            </div>
             <div className="text-xs text-gray-500">Score Boost</div>
           </div>
         </div>
@@ -72,7 +76,9 @@ export function QuickWinsCard({
             <Clock className="h-5 w-5 text-purple-400" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-purple-400">{quickWins.estimatedTime}</div>
+            <div className="text-2xl font-bold text-purple-400">
+              {quickWins.estimatedTime}
+            </div>
             <div className="text-xs text-gray-500">Est. Time</div>
           </div>
         </div>
@@ -87,7 +93,11 @@ export function QuickWinsCard({
           >
             {/* Impact badge */}
             <div className="absolute top-4 right-4">
-              <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${IMPACT_COLORS[item.impact]}`}>
+              <span
+                className={`text-xs font-semibold px-2 py-1 rounded-full border ${
+                  IMPACT_COLORS[item.impact]
+                }`}
+              >
                 {item.impact.toUpperCase()}
               </span>
             </div>
@@ -107,16 +117,22 @@ export function QuickWinsCard({
             <div className="flex items-center gap-4 mb-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500">Current:</span>
-                <span className="text-sm font-semibold text-gray-300">{item.currentScore}</span>
+                <span className="text-sm font-semibold text-gray-300">
+                  {item.currentScore}
+                </span>
               </div>
               <ChevronRight className="h-4 w-4 text-gray-600" />
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500">Potential:</span>
-                <span className="text-sm font-semibold text-green-400">{item.potentialScore}</span>
+                <span className="text-sm font-semibold text-green-400">
+                  {item.potentialScore}
+                </span>
               </div>
               <div className="ml-auto flex items-center gap-1">
                 <TrendingUp className="h-4 w-4 text-green-400" />
-                <span className="text-sm font-bold text-green-400">+{item.scoreIncrease}</span>
+                <span className="text-sm font-bold text-green-400">
+                  +{item.scoreIncrease}
+                </span>
               </div>
             </div>
 
@@ -124,7 +140,11 @@ export function QuickWinsCard({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-xs text-gray-500">Effort:</span>
-                <span className={`text-xs font-semibold ${EFFORT_COLORS[item.effort]}`}>
+                <span
+                  className={`text-xs font-semibold ${
+                    EFFORT_COLORS[item.effort]
+                  }`}
+                >
                   {item.effort.toUpperCase()}
                 </span>
               </div>

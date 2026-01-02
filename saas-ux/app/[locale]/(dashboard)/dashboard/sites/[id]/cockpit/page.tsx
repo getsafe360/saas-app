@@ -1,4 +1,4 @@
-// app/[locale]/(dashboard)/dashboard/sites/[id]/cockpit/page.tsx
+// saas-ux/app/[locale]/(dashboard)/dashboard/sites/[id]/cockpit/page.tsx
 import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
 import { eq } from "drizzle-orm";

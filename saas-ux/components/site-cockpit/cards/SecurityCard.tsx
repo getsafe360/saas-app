@@ -1,5 +1,5 @@
 // components/site-cockpit/cards/SecurityCard.tsx
-import { CockpitCard } from "../CockpitCard";
+import { CockpitCard } from "./CockpitCard";
 import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import type { SecurityData } from "@/types/site-cockpit";
 

@@ -1,5 +1,5 @@
 // components/site-cockpit/cards/SEOCard.tsx
-import { CockpitCard } from "../CockpitCard";
+import { CockpitCard } from "./CockpitCard";
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import type { SEOData } from "@/types/site-cockpit";
 

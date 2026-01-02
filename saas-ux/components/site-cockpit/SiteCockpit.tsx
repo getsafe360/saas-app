@@ -20,7 +20,7 @@ import { PerformanceCard } from "./cards/PerformanceCard";
 import { SecurityCard } from "./cards/SecurityCard";
 import { SEOCard } from "./cards/SEOCard";
 import { AccessibilityCard } from "./cards/AccessibilityCard";
-import { WordPressCard } from "./cards/WordPressCard";
+import { WordPressCard } from "./cards/wordpress/WordPressCard";
 import { TechnologyCard } from "./cards/TechnologyCard";
 // import { MobileCard } from "./cards/MobileCard";
 // import { NetworkCard } from "./cards/NetworkCard";

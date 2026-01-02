@@ -1,4 +1,5 @@
 // saas-ux/i18n/resolve-locale.ts
+// Server-side locale detection
 import 'server-only';
 import { cookies, headers } from 'next/headers';
 import { normalizeLocale } from './locales';

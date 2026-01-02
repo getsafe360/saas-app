@@ -1,5 +1,5 @@
 // components/site-cockpit/cards/PerformanceCard.tsx
-import { CockpitCard } from "../CockpitCard";
+import { CockpitCard } from "./CockpitCard";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import type { Performance } from "@/types/site-cockpit";
 

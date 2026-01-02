@@ -1,4 +1,5 @@
 // saas-ux/i18n/locales.ts
+// Locale definitions and utilities
 export const LOCALES = ['en', 'de', 'es', 'fr', 'it', 'pt'] as const;
 export type Locale = typeof LOCALES[number];
 

@@ -582,6 +582,14 @@ export interface SiteCockpitResponse {
       xmlrpc: boolean | null;
     };
   };
+
+  // Add connection metadata
+  connectionStatus?: {
+    isConnected: boolean;
+    connectedAt?: string;
+    lastSync?: string;
+    pluginVersion?: string;
+  };
   
   // WordPress spotlight (when WP detected)
   wordpress?: WordPress;

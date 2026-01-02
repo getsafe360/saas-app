@@ -1,5 +1,5 @@
 // components/site-cockpit/cards/AccessibilityCard.tsx
-import { CockpitCard } from "../CockpitCard";
+import { CockpitCard } from "./CockpitCard";
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import type { Accessibility } from "@/types/site-cockpit";
 
