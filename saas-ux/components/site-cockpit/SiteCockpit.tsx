@@ -1,7 +1,7 @@
 // components/site-cockpit/SiteCockpit.tsx
 "use client";
 
-import { useState, useCallback, useEffect, useTransition } from "react";
+import { useState, useCallback, useTransition } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -22,6 +22,7 @@ import { SEOCard } from "./cards/SEOCard";
 import { AccessibilityCard } from "./cards/AccessibilityCard";
 import { WordPressCard } from "./cards/wordpress/WordPressCard";
 import { TechnologyCard } from "./cards/TechnologyCard";
+import { OptimizationCard } from "./cards/optimization";
 // import { MobileCard } from "./cards/MobileCard";
 // import { NetworkCard } from "./cards/NetworkCard";
 import { OverallScoreHero } from "./OverallScoreHero";
@@ -35,7 +36,7 @@ interface SiteCockpitProps {
   data: SiteCockpitResponse;
   siteId?: string;
   editable?: boolean;
-  initialLayout?: CockpitLayoutData; // Server-side loaded layout
+  initialLayout?: CockpitLayoutData;
 }
 
 interface CardConfig {
@@ -55,8 +56,7 @@ const CARD_COMPONENTS: Record<string, React.ComponentType<any>> = {
   accessibility: AccessibilityCard,
   wordpress: WordPressCard,
   technology: TechnologyCard,
-  //  mobile: MobileCard,
-  //  network: NetworkCard,
+  optimization: OptimizationCard,
 };
 
 // Default card order
@@ -68,8 +68,7 @@ const DEFAULT_CARDS: CockpitCardLayout[] = [
   { id: "accessibility", visible: true, minimized: false, order: 4 },
   { id: "wordpress", visible: true, minimized: false, order: 5 },
   { id: "technology", visible: true, minimized: false, order: 6 },
-  { id: "mobile", visible: true, minimized: false, order: 7 },
-  { id: "network", visible: true, minimized: false, order: 8 },
+  { id: "optimization", visible: true, minimized: false, order: 7 },
 ];
 
 const DEFAULT_LAYOUT: CockpitLayoutData = {
@@ -77,7 +76,6 @@ const DEFAULT_LAYOUT: CockpitLayoutData = {
   cards: DEFAULT_CARDS,
 };
 
-// Convert layout data to card configs with components
 function layoutToCards(layout: CockpitLayoutData): CardConfig[] {
   return layout.cards
     .sort((a, b) => a.order - b.order)
@@ -88,10 +86,9 @@ function layoutToCards(layout: CockpitLayoutData): CardConfig[] {
       minimized: card.minimized,
       order: card.order,
     }))
-    .filter((card) => card.component); // Only include cards with valid components
+    .filter((card) => card.component);
 }
 
-// Convert card configs back to layout data
 function cardsToLayout(cards: CardConfig[]): CockpitLayoutData {
   return {
     version: 1,
@@ -110,18 +107,15 @@ export function SiteCockpit({
   editable = true,
   initialLayout,
 }: SiteCockpitProps) {
-  // Initialize with server-provided layout or default
   const [cards, setCards] = useState<CardConfig[]>(() =>
     layoutToCards(initialLayout || DEFAULT_LAYOUT)
   );
 
-  // Track saving state
   const [isPending, startTransition] = useTransition();
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
 
-  // Save layout to database (debounced)
   const saveLayout = useCallback(
     async (newCards: CardConfig[]) => {
       if (!editable) return;
@@ -143,30 +137,24 @@ export function SiteCockpit({
         }
 
         setSaveStatus("saved");
-
-        // Reset status after 2 seconds
         setTimeout(() => setSaveStatus("idle"), 2000);
       } catch (error) {
         console.error("Error saving layout:", error);
         setSaveStatus("error");
-
-        // Reset status after 3 seconds
         setTimeout(() => setSaveStatus("idle"), 3000);
       }
     },
     [siteId, editable]
   );
 
-  // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // 8px movement required to start drag
+        distance: 8,
       },
     })
   );
 
-  // Handle drag end
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -176,7 +164,6 @@ export function SiteCockpit({
         const newIndex = items.findIndex((item) => item.id === over.id);
         const newOrder = arrayMove(items, oldIndex, newIndex);
 
-        // Save to database in background
         startTransition(() => {
           saveLayout(newOrder);
         });
@@ -186,7 +173,6 @@ export function SiteCockpit({
     }
   };
 
-  // Toggle card minimized state
   const toggleMinimize = useCallback(
     (cardId: string) => {
       setCards((items) => {
@@ -194,7 +180,6 @@ export function SiteCockpit({
           card.id === cardId ? { ...card, minimized: !card.minimized } : card
         );
 
-        // Save to database in background
         startTransition(() => {
           saveLayout(newCards);
         });
@@ -205,7 +190,6 @@ export function SiteCockpit({
     [saveLayout]
   );
 
-  // Toggle card visibility
   const toggleVisibility = useCallback(
     (cardId: string) => {
       setCards((items) => {
@@ -213,7 +197,6 @@ export function SiteCockpit({
           card.id === cardId ? { ...card, visible: !card.visible } : card
         );
 
-        // Save to database in background
         startTransition(() => {
           saveLayout(newCards);
         });
@@ -224,12 +207,10 @@ export function SiteCockpit({
     [saveLayout]
   );
 
-  // Reset to default order
   const resetLayout = useCallback(async () => {
     const defaultCards = layoutToCards(DEFAULT_LAYOUT);
     setCards(defaultCards);
 
-    // Delete custom layout from database
     try {
       await fetch(`/api/cockpit-layout${siteId ? `?siteId=${siteId}` : ""}`, {
         method: "DELETE",
@@ -242,7 +223,6 @@ export function SiteCockpit({
     }
   }, [siteId]);
 
-  // Filter WordPress card if not WordPress site
   const visibleCards = cards.filter((card) => {
     if (card.id === "wordpress" && data.cms.type !== "wordpress") {
       return false;
@@ -252,7 +232,6 @@ export function SiteCockpit({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
-      {/* Overall Score Hero - Always at top */}
       <OverallScoreHero
         summary={data.summary}
         domain={data.domain}
@@ -260,11 +239,9 @@ export function SiteCockpit({
         cms={data.cms}
       />
 
-      {/* Layout Controls */}
       {editable && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
           <div className="flex items-center justify-end gap-3">
-            {/* Save status indicator */}
             <div className="flex items-center gap-2">
               {saveStatus === "saving" && (
                 <span className="text-sm text-blue-400 flex items-center gap-1">
@@ -308,7 +285,6 @@ export function SiteCockpit({
         </div>
       )}
 
-      {/* Draggable Card Grid */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -327,9 +303,20 @@ export function SiteCockpit({
                     key={card.id}
                     id={card.id}
                     data={data}
+                    siteId={siteId}
                     minimized={card.minimized}
                     onToggleMinimize={() => toggleMinimize(card.id)}
                     editable={editable}
+                    connection={{
+                      method: data.wordpress ? "wordpress" : "none",
+                      status: data.wordpress ? "connected" : "disconnected",
+                      wordpress: data.wordpress
+                        ? {
+                            siteId: siteId || "",
+                            pluginVersion: "1.0.0",
+                          }
+                        : undefined,
+                    }}
                   />
                 );
               })}
