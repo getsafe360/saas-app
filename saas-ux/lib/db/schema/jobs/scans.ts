@@ -60,7 +60,7 @@ export const fixJobs = pgTable('fix_jobs', {
 
 export const editJobs = pgTable('edit_jobs', {
   id: uuid('id').primaryKey().defaultRandom(),
-  changeSetId: uuid('change_set_id').notNull().references(() => changeSets.id, { onDelete: 'cascade' }),
+  changeSetId: uuid('changeset_id').notNull().references(() => changeSets.id, { onDelete: 'cascade' }),
   status: jobStatusEnum('status').notNull().default('queued'),
   agentUsed: agentEnum('agent_used'),
   errorMessage: text('error_message'),
