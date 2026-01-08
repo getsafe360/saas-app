@@ -31,3 +31,13 @@ export const activityEventEnum = pgEnum('activity_event', [
 export const changeSetStatusEnum = pgEnum('changeset_status', [
   'draft', 'approved', 'applied', 'rolled_back', 'failed'
 ]);
+
+// AI analysis job status
+export const aiJobStatusEnum = pgEnum('ai_job_status', [
+  'pending', 'running', 'completed', 'failed', 'cancelled'
+]);
+
+// AI repair action status
+export const aiRepairStatusEnum = pgEnum('ai_repair_status', [
+  'pending', 'running', 'completed', 'failed', 'skipped'
+]);
