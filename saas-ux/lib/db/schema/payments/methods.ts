@@ -26,3 +26,4 @@ export const paymentMethodTranslations = pgTable('payment_method_translations', 
 
 // Type exports
 export type PaymentMethod = typeof paymentMethods.$inferSelect;
+export type PaymentMethodTranslation = typeof paymentMethodTranslations.$inferSelect;

@@ -35,7 +35,7 @@ export const changeSets = pgTable('change_sets', {
 
 export const changeItems = pgTable('change_items', {
   id: uuid('id').primaryKey().defaultRandom(),
-  changeSetId: uuid('changeset_id').notNull().references(() => changeSets.id, { onDelete: 'cascade' }),
+  changeSetId: uuid('change_set_id').notNull().references(() => changeSets.id, { onDelete: 'cascade' }),
   op: varchar('op', { length: 16 }).notNull(),
   path: text('path').notNull(),
   oldValue: jsonb('old_value'),

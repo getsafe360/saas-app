@@ -26,7 +26,7 @@ export type { Site, NewSite, ConnectionLog, NewConnectionLog } from './sites/sit
 export { plans, planPrices, planTranslations } from './billing/plans';
 export type { Plan, PlanPrice } from './billing/plans';
 export { teamSubscriptions, planPackInclusions } from './billing/subscriptions';
-export type { TeamSubscription } from './billing/subscriptions';
+export type { TeamSubscription, PlanPackInclusion } from './billing/subscriptions';
 
 // Features
 export { cockpitLayouts } from './features/cockpit-layouts';
@@ -45,6 +45,7 @@ export type {
 export { scanJobs, fixJobs, editJobs } from './jobs/scans';
 export type { ScanJob, NewScanJob, FixJob, NewFixJob, EditJob } from './jobs/scans';
 export { packRuns } from './jobs/packs';
+export type { PackRun } from './jobs/packs';
 
 // Activity
 export { activityLogs } from './activity/logs';
@@ -67,7 +68,7 @@ export type { Snapshot, ChangeSet, ChangeItem } from './copilot/changes';
 
 // Packs
 export { appPacks, appPackTranslations, appPackPrices, sitePacks } from './packs/catalog';
-export type { AppPack, AppPackPrice } from './packs/catalog';
+export type { AppPack, AppPackPrice, AppPackTranslation, SitePack } from './packs/catalog';
 
 // Locales
 export { supportedLocales } from './locales/supported';
@@ -75,7 +76,7 @@ export type { SupportedLocale } from './locales/supported';
 
 // Payments
 export { paymentMethods, paymentMethodTranslations } from './payments/methods';
-export type { PaymentMethod } from './payments/methods';
+export type { PaymentMethod, PaymentMethodTranslation } from './payments/methods';
 export { regionPaymentMethods, taxDisplayPolicies } from './payments/regions';
 export type { RegionPaymentMethod, TaxDisplayPolicy } from './payments/regions';
 

@@ -22,3 +22,6 @@ export const packRuns = pgTable('pack_runs', {
   bySite: index('pack_runs_site_idx').on(t.siteId),
   byPack: index('pack_runs_pack_idx').on(t.packId),
 }));
+
+// Type exports
+export type PackRun = typeof packRuns.$inferSelect;

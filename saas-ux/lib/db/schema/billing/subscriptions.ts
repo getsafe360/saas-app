@@ -37,3 +37,4 @@ export const planPackInclusions = pgTable('plan_pack_inclusions', {
 
 // Type exports
 export type TeamSubscription = typeof teamSubscriptions.$inferSelect;
+export type PlanPackInclusion = typeof planPackInclusions.$inferSelect;

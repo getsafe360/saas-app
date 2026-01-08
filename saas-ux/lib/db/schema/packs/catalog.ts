@@ -62,3 +62,5 @@ export const sitePacks = pgTable('site_packs', {
 // Type exports
 export type AppPack = typeof appPacks.$inferSelect;
 export type AppPackPrice = typeof appPackPrices.$inferSelect;
+export type AppPackTranslation = typeof appPackTranslations.$inferSelect;
+export type SitePack = typeof sitePacks.$inferSelect;
