@@ -25,6 +25,8 @@ export type { Site, NewSite, ConnectionLog, NewConnectionLog } from './sites/sit
 // Billing
 export { plans, planPrices, planTranslations } from './billing/plans';
 export type { Plan, PlanPrice } from './billing/plans';
+export { teamSubscriptions, planPackInclusions } from './billing/subscriptions';
+export type { TeamSubscription } from './billing/subscriptions';
 
 // Features
 export { cockpitLayouts } from './features/cockpit-layouts';
@@ -36,69 +38,49 @@ export type {
 } from './features/cockpit-layouts';
 
 // ============================================
-// Legacy schema - Everything else
+// Modular schema - All tables
 // ============================================
-// NOTE: Using explicit named exports to avoid TypeScript conflicts
-// with tables that import from modular structure
 
 // Jobs
-export { scanJobs } from '../schema';
-export { fixJobs } from '../schema';
-export { editJobs } from '../schema';
-export { packRuns } from '../schema';
+export { scanJobs, fixJobs, editJobs } from './jobs/scans';
+export type { ScanJob, NewScanJob, FixJob, NewFixJob, EditJob } from './jobs/scans';
+export { packRuns } from './jobs/packs';
 
 // Activity
-export { activityLogs } from '../schema';
+export { activityLogs } from './activity/logs';
+export type { ActivityLog, NewActivityLog } from './activity/logs';
 
 // Guests
-export { guestSessions } from '../schema';
-export { guestScans } from '../schema';
-export { idempotency } from '../schema';
-export { blobGc } from '../schema';
+export { guestSessions, guestScans } from './guests/sessions';
+export type { GuestSession, GuestScan } from './guests/sessions';
+
+// System
+export { idempotency, blobGc } from './system/maintenance';
 
 // Scans
-export { scheduledScans } from '../schema';
-export { scanSummaries } from '../schema';
+export { scheduledScans, scanSummaries } from './scans/scheduled';
+export type { ScheduledScan, ScanSummary } from './scans/scheduled';
 
 // Co-pilot
-export { snapshots } from '../schema';
-export { changeSets } from '../schema';
-export { changeItems } from '../schema';
+export { snapshots, changeSets, changeItems } from './copilot/changes';
+export type { Snapshot, ChangeSet, ChangeItem } from './copilot/changes';
 
 // Packs
-export { appPacks } from '../schema';
-export { appPackTranslations } from '../schema';
-export { appPackPrices } from '../schema';
-export { sitePacks } from '../schema';
+export { appPacks, appPackTranslations, appPackPrices, sitePacks } from './packs/catalog';
+export type { AppPack, AppPackPrice } from './packs/catalog';
 
 // Locales
-export { supportedLocales } from '../schema';
-
-// Billing (rest)
-export { planPackInclusions } from '../schema';
-export { teamSubscriptions } from '../schema';
+export { supportedLocales } from './locales/supported';
+export type { SupportedLocale } from './locales/supported';
 
 // Payments
-export { paymentMethods } from '../schema';
-export { paymentMethodTranslations } from '../schema';
-export { regionPaymentMethods } from '../schema';
-export { taxDisplayPolicies } from '../schema';
+export { paymentMethods, paymentMethodTranslations } from './payments/methods';
+export type { PaymentMethod } from './payments/methods';
+export { regionPaymentMethods, taxDisplayPolicies } from './payments/regions';
+export type { RegionPaymentMethod, TaxDisplayPolicy } from './payments/regions';
 
 // Admin
-export { webhookEvents } from '../schema';
-export { adminActions } from '../schema';
-export { adminNotes } from '../schema';
-
-// Legacy types
-export type { ScanJob, NewScanJob } from '../schema';
-export type { FixJob, NewFixJob } from '../schema';
-export type { ActivityLog, NewActivityLog } from '../schema';
-export type { GuestSession, GuestScan } from '../schema';
-export type { ScheduledScan, ScanSummary } from '../schema';
-export type { Snapshot, ChangeSet, ChangeItem } from '../schema';
-export type { EditJob } from '../schema';
-export type { AppPack, AppPackPrice } from '../schema';
-export type { SupportedLocale } from '../schema';
-export type { TeamSubscription } from '../schema';
-export type { PaymentMethod, RegionPaymentMethod, TaxDisplayPolicy } from '../schema';
-export type { WebhookEvent, AdminAction, AdminNote } from '../schema';
+export { webhookEvents } from './admin/webhooks';
+export type { WebhookEvent } from './admin/webhooks';
+export { adminActions, adminNotes } from './admin/actions';
+export type { AdminAction, AdminNote } from './admin/actions';
