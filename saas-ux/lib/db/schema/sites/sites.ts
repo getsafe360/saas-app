@@ -59,6 +59,11 @@ export const sites = pgTable('sites', {
   lastScreenshotUrl: text('last_screenshot_url'),
   lastFaviconUrl: text('last_favicon_url'),
   lastFindingCount: integer('last_finding_count'),
+
+  // AI Analysis & Repair
+  wordpressConnection: jsonb('wordpress_connection'),
+  aiRepairEnabled: pgBool('ai_repair_enabled').default(false),
+  lastAiAnalysis: timestamp('last_ai_analysis'),
 }, (t) => ({
   uniqUserHost: uniqueIndex('sites_user_host_uq').on(t.userId, t.canonicalHost),
   byUser: index('sites_user_idx').on(t.userId),

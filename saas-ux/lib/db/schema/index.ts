@@ -84,3 +84,7 @@ export { webhookEvents } from './admin/webhooks';
 export type { WebhookEvent } from './admin/webhooks';
 export { adminActions, adminNotes } from './admin/actions';
 export type { AdminAction, AdminNote } from './admin/actions';
+
+// AI Analysis
+export { aiAnalysisJobs, aiRepairActions } from './ai/analysis';
+export type { AiAnalysisJob, NewAiAnalysisJob, AiRepairAction, NewAiRepairAction } from './ai/analysis';
