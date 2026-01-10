@@ -103,9 +103,9 @@ export function PricingTable() {
               ))}
             </ul>
 
-            <div className="mt-auto">
+            <div className="mt-auto w-full">
               <SignUpButton mode="modal">
-                <SubmitButton variant="green" className="w-full" />
+                <SubmitButton variant="green" />
               </SignUpButton>
             </div>
           </CardContent>
@@ -144,9 +144,9 @@ export function PricingTable() {
               ))}
             </ul>
 
-            <div className="mt-auto">
+            <div className="mt-auto w-full">
               <SignUpButton mode="modal">
-                <SubmitButton variant="blue" className="w-full" />
+                <SubmitButton variant="blue" />
               </SignUpButton>
             </div>
           </CardContent>
