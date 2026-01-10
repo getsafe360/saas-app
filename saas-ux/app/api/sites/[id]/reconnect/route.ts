@@ -8,9 +8,6 @@ import { createWordPressClient, WordPressErrorCode } from '@/lib/wordpress/clien
 import { logConnectionSuccess, logConnectionError } from '@/lib/wordpress/logger';
 import { createWordPressConnection } from '@/lib/wordpress/auth';
 
-// Use shared database client to prevent connection pool exhaustion
-const db = getDrizzle();
-
 /**
  * POST /api/sites/[id]/reconnect
  *
@@ -49,6 +46,9 @@ export async function POST(
   }
 
   try {
+    // Get database instance (lazy initialization)
+    const db = getDrizzle();
+
     // 2. Get site from database and verify ownership
     const [site] = await db
       .select({
@@ -212,6 +212,7 @@ export async function GET(
   }
 
   try {
+    const db = getDrizzle();
     const [site] = await db
       .select({
         id: sites.id,

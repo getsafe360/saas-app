@@ -6,9 +6,6 @@ import { sites } from '@/lib/db/schema/sites/sites';
 import { eq } from 'drizzle-orm';
 import { createWordPressClient } from '@/lib/wordpress/client';
 
-// Use shared database client to prevent connection pool exhaustion
-const db = getDrizzle();
-
 /**
  * POST /api/sites/[id]/wordpress/test
  *
@@ -46,6 +43,9 @@ export async function POST(
   }
 
   try {
+    // Get database instance (lazy initialization)
+    const db = getDrizzle();
+
     // 2. Get site and verify ownership
     const [site] = await db
       .select({

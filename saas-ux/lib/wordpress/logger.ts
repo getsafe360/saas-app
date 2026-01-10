@@ -4,8 +4,10 @@
 import { getDrizzle } from '@/lib/db/postgres';
 import { connectionLogs } from '@/lib/db/schema';
 
-// Use shared database client to prevent connection pool exhaustion
-const db = getDrizzle();
+// Lazy initialization - get DB instance only when needed
+function getDb() {
+  return getDrizzle();
+}
 
 export type ConnectionEventStatus =
   | 'connected'
@@ -44,6 +46,7 @@ export async function logConnectionEvent({
   errorMessage,
 }: LogConnectionEventParams): Promise<void> {
   try {
+    const db = getDb();
     await db.insert(connectionLogs).values({
       siteId,
       status,
