@@ -1,28 +1,33 @@
 // app/api/sites/[id]/reconnect/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '@/lib/db/schema';
+import { sites } from '@/lib/db/schema/sites/sites';
+import { eq, sql } from 'drizzle-orm';
+import { createWordPressClient, WordPressErrorCode } from '@/lib/wordpress/client';
+import { logConnectionSuccess, logConnectionError } from '@/lib/wordpress/logger';
+import { createWordPressConnection } from '@/lib/wordpress/auth';
 
-// Create db instance if not already exported
+// Create db instance
 const queryClient = postgres(process.env.DATABASE_URL!);
 const db = drizzle(queryClient, { schema });
 
-// Import your sites table
-import { sites } from '@/lib/db/schema/sites/sites';
-import { eq, sql } from 'drizzle-orm';
-
 /**
  * POST /api/sites/[id]/reconnect
- * 
+ *
  * Reconnects to a WordPress site and updates connection status
- * 
+ *
+ * Requires user authentication and site ownership verification
+ *
  * Flow:
- * 1. Validate site exists
- * 2. Ping WordPress REST API endpoint
- * 3. Update connection status in database
- * 4. Trigger data sync if successful
- * 5. Return updated status
+ * 1. Authenticate user
+ * 2. Verify site ownership
+ * 3. Test WordPress connection
+ * 4. Update connection status
+ * 5. Log connection event
+ * 6. Return updated status
  */
 export async function POST(
   _request: NextRequest,
@@ -31,15 +36,33 @@ export async function POST(
   const params = await props.params;
   const { id } = params;
 
+  // 1. Authenticate user
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Authentication required'
+        }
+      },
+      { status: 401 }
+    );
+  }
+
   try {
-    // 1. Get site from database using Drizzle query
+    // 2. Get site from database and verify ownership
     const [site] = await db
       .select({
         id: sites.id,
+        userId: sites.userId,
         siteUrl: sites.siteUrl,
         tokenHash: sites.tokenHash,
         connectionStatus: sites.connectionStatus,
         retryCount: sites.retryCount,
+        wpVersion: sites.wpVersion,
+        pluginVersion: sites.pluginVersion,
       })
       .from(sites)
       .where(eq(sites.id, id))
@@ -47,43 +70,52 @@ export async function POST(
 
     if (!site) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: { 
+        {
+          success: false,
+          error: {
             code: 'SITE_NOT_FOUND',
-            message: 'Site not found' 
-          } 
+            message: 'Site not found'
+          }
         },
         { status: 404 }
       );
     }
 
-    // 2. Attempt to ping WordPress REST API
-    const wpApiUrl = `${site.siteUrl}/wp-json/getsafe360/v1/status`;
-    
-    console.log(`[Reconnect] Attempting to reach: ${wpApiUrl}`);
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-    const response = await fetch(wpApiUrl, {
-      method: 'GET',
-      headers: {
-        'X-API-Key': site.tokenHash || '',
-        'Content-Type': 'application/json',
-      },
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timeoutId));
-
-    if (!response.ok) {
-      throw new Error(`WordPress API returned ${response.status}: ${response.statusText}`);
+    // Verify site ownership
+    if (site.userId.toString() !== userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to access this site'
+          }
+        },
+        { status: 403 }
+      );
     }
 
-    const wpData = await response.json();
+    // 3. Test WordPress connection using client
+    const wpClient = createWordPressClient({
+      siteUrl: site.siteUrl,
+      tokenHash: site.tokenHash || undefined,
+      timeout: 10000,
+    });
 
-    console.log(`[Reconnect] Success! WordPress version: ${wpData.version || 'unknown'}`);
+    console.log(`[Reconnect] Testing connection to: ${site.siteUrl}`);
 
-    // 3. Update connection status to connected
+    const status = await wpClient.getStatus();
+
+    console.log(`[Reconnect] Success! WordPress v${status.version}, Plugin v${status.pluginVersion}`);
+
+    // 4. Update connection status and WordPress connection metadata
+    const wordpressConnection = createWordPressConnection({
+      tokenHash: site.tokenHash || '',
+      pluginVersion: status.pluginVersion,
+      wpVersion: status.version,
+      siteUrl: site.siteUrl,
+    });
+
     await db
       .update(sites)
       .set({
@@ -91,45 +123,40 @@ export async function POST(
         lastConnectedAt: new Date(),
         connectionError: null,
         retryCount: 0,
+        wpVersion: status.version,
+        pluginVersion: status.pluginVersion,
+        wordpressConnection: wordpressConnection as any,
       })
       .where(eq(sites.id, id));
 
-    // 4. Trigger fresh data sync (optional - implement based on your sync strategy)
-    // await syncWordPressData(id);
-    
-    // You could also trigger a background job here:
-    // await triggerSyncJob(id);
+    // 5. Log successful connection
+    await logConnectionSuccess(id);
 
     return NextResponse.json({
       success: true,
       data: {
         status: 'connected',
         lastConnected: new Date().toISOString(),
-        wordpress: wpData,
+        wordpress: {
+          version: status.version,
+          pluginVersion: status.pluginVersion,
+        },
       },
     });
 
   } catch (error: any) {
     console.error(`[Reconnect] Error for site ${id}:`, error);
 
-    // Determine error type
-    let errorCode = 'CONNECTION_FAILED';
-    let errorMessage = 'Could not reach WordPress site';
-    let errorDetails = error.message;
-
-    if (error.name === 'AbortError') {
-      errorCode = 'TIMEOUT';
-      errorMessage = 'Connection timeout after 10 seconds';
-      errorDetails = 'WordPress site did not respond in time';
-    } else if (error.message.includes('404')) {
-      errorCode = 'ENDPOINT_NOT_FOUND';
-      errorMessage = 'WordPress API endpoint not found';
-      errorDetails = 'Plugin may not be installed or activated';
-    } else if (error.message.includes('403') || error.message.includes('401')) {
-      errorCode = 'AUTHENTICATION_FAILED';
-      errorMessage = 'Authentication failed';
-      errorDetails = 'API key may be invalid or missing';
-    }
+    // Get user-friendly error details
+    const wpError = error.code && WordPressErrorCode[error.code as keyof typeof WordPressErrorCode]
+      ? error.toJSON()
+      : {
+          code: 'CONNECTION_FAILED',
+          title: 'Connection Failed',
+          message: 'Could not reach WordPress site',
+          action: 'Check your site URL and try again',
+          details: error.message,
+        };
 
     // Update database with error status
     try {
@@ -137,10 +164,13 @@ export async function POST(
         .update(sites)
         .set({
           connectionStatus: 'error',
-          connectionError: `${errorCode}: ${errorMessage}`,
-          retryCount: sql`${sites.retryCount} + 1`,
+          connectionError: `${wpError.code}: ${wpError.message}`,
+          retryCount: sql`COALESCE(${sites.retryCount}, 0) + 1`,
         })
         .where(eq(sites.id, id));
+
+      // Log connection error
+      await logConnectionError(id, wpError.message, 'error');
     } catch (dbError) {
       console.error(`[Reconnect] Failed to update error status:`, dbError);
     }
@@ -148,11 +178,7 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error: {
-          code: errorCode,
-          message: errorMessage,
-          details: errorDetails,
-        },
+        error: wpError,
       },
       { status: 500 }
     );
@@ -161,10 +187,11 @@ export async function POST(
 
 /**
  * GET /api/sites/[id]/reconnect
- * 
+ *
  * Get current connection status for a site
+ *
+ * Requires user authentication and site ownership verification
  */
-
 export async function GET(
   _request: NextRequest,
   props: { params: Promise<{ id: string }> }
@@ -172,10 +199,26 @@ export async function GET(
   const params = await props.params;
   const { id } = params;
 
+  // Authenticate user
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Authentication required'
+        }
+      },
+      { status: 401 }
+    );
+  }
+
   try {
     const [site] = await db
       .select({
         id: sites.id,
+        userId: sites.userId,
         connectionStatus: sites.connectionStatus,
         lastConnectedAt: sites.lastConnectedAt,
         connectionError: sites.connectionError,
@@ -187,11 +230,25 @@ export async function GET(
 
     if (!site) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: { message: 'Site not found' } 
+        {
+          success: false,
+          error: { message: 'Site not found' }
         },
         { status: 404 }
+      );
+    }
+
+    // Verify site ownership
+    if (site.userId.toString() !== userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to access this site'
+          }
+        },
+        { status: 403 }
       );
     }
 
@@ -208,9 +265,9 @@ export async function GET(
   } catch (error: any) {
     console.error(`[Reconnect Status] Error:`, error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: { message: error.message } 
+      {
+        success: false,
+        error: { message: error.message }
       },
       { status: 500 }
     );

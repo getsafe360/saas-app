@@ -1,10 +1,12 @@
 // app/api/connect/handshake/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { list, put } from '@vercel/blob';
-import crypto from 'crypto';
 import { getDb } from '@/lib/db/drizzle';
 import { sites } from '@/lib/db/schema/sites';
 import { and, eq, sql } from 'drizzle-orm';
+import { generateSiteToken, hashToken, createWordPressConnection } from '@/lib/wordpress/auth';
+import { logPairingComplete, logConnectionError } from '@/lib/wordpress/logger';
+import crypto from 'crypto';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -140,8 +142,16 @@ export async function POST(req: NextRequest) {
 
     const reuseId = existing[0]?.id ?? record.siteId;
     const siteId = reuseId || crypto.randomBytes(8).toString('hex'); // 16-hex chars
-    const siteToken = crypto.randomBytes(32).toString('base64url');
-    const tokenHash = crypto.createHash('sha256').update(siteToken).digest('hex');
+    const siteToken = generateSiteToken(); // Use new secure token generator
+    const tokenHash = hashToken(siteToken); // Use new hash function
+
+    // Create WordPress connection metadata
+    const wordpressConnection = createWordPressConnection({
+      tokenHash,
+      pluginVersion: pluginVersion || 'unknown',
+      wpVersion: wpVersion || 'unknown',
+      siteUrl: finalSiteUrl,
+    });
 
     // Insert or update the site
     if (!existing[0]) {
@@ -150,16 +160,22 @@ export async function POST(req: NextRequest) {
           id: siteId,
           userId: record.userId!,
           siteUrl: finalSiteUrl,
-          status: 'connected',
+          connectionStatus: 'connected',
           cms: 'wordpress',
           wpVersion: wpVersion || null,
           pluginVersion: pluginVersion || null,
           tokenHash,
+          wordpressConnection: wordpressConnection as any,
+          lastConnectedAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date()
         } as any);
+
+        // Log successful pairing
+        await logPairingComplete(siteId);
       } catch (e: any) {
         console.error('[handshake] insert sites failed', e);
+        await logConnectionError(siteId, 'Database insert failed', 'error');
         return jsonNoStore({ error: 'db_insert_failed', code: 'E_DB_INSERT' }, { status: 500 });
       }
     } else {
@@ -168,15 +184,21 @@ export async function POST(req: NextRequest) {
           .update(sites)
           .set({
             siteUrl: finalSiteUrl,
-            status: 'connected',
+            connectionStatus: 'connected',
             wpVersion: wpVersion || null,
             pluginVersion: pluginVersion || null,
             tokenHash,
+            wordpressConnection: wordpressConnection as any,
+            lastConnectedAt: new Date(),
             updatedAt: new Date()
           } as any)
           .where(eq(sites.id, siteId));
+
+        // Log successful re-pairing
+        await logPairingComplete(siteId);
       } catch (e: any) {
         console.error('[handshake] update sites failed', e);
+        await logConnectionError(siteId, 'Database update failed', 'error');
         return jsonNoStore({ error: 'db_update_failed', code: 'E_DB_UPDATE' }, { status: 500 });
       }
     }
