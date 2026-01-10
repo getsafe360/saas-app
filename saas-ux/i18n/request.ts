@@ -21,6 +21,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const [
     coreMessages,
     siteCockpitMessages,
+    supportMessages,
     // Add more as you create them:
     // dashboardMessages,
     // settingsMessages,
@@ -29,6 +30,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   ] = await Promise.all([
     import(`@/messages/${locale}.json`),
     import(`@/messages/SiteCockpit/${locale}.json`),
+    import(`@/messages/Support/${locale}.json`),
     // import(`@/messages/Dashboard/${locale}.json`),
     // import(`@/messages/Settings/${locale}.json`),
     // import(`@/messages/i18n/${locale}.json`),
@@ -40,10 +42,11 @@ export default getRequestConfig(async ({ requestLocale }) => {
     messages: {
       // Spread core/shared translations at root level
       ...coreMessages.default,
-      
+
       // Add feature-specific translations under namespaces
       SiteCockpit: siteCockpitMessages.default.SiteCockpit,
-      
+      Support: supportMessages.default.Support,
+
       // Future features (uncomment as you add them):
       // Dashboard: dashboardMessages.default.Dashboard,
       // Settings: settingsMessages.default.Settings,

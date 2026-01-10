@@ -1,0 +1,113 @@
+{
+  "Support": {
+    "hero": {
+      "title": "Customer Support",
+      "subtitle": "We're here to help you succeed with GetSafe360 AI"
+    },
+    "contactMethods": {
+      "email": {
+        "title": "Email Support",
+        "description": "Our primary support channel for all inquiries",
+        "address": "support@getsafe360.ai",
+        "action": "Send us an email"
+      },
+      "responseTime": {
+        "title": "Response Time",
+        "primary": "Within 24 hours",
+        "secondary": "Most inquiries answered within a few hours during business hours"
+      }
+    },
+    "noPhone": {
+      "message": "We provide support exclusively via email. This ensures you receive accurate, documented responses and allows us to handle technical questions efficiently."
+    },
+    "whatWeHelp": {
+      "title": "How we can help",
+      "categories": {
+        "account": {
+          "title": "Account & Access",
+          "description": "Login issues, password resets, account management, and settings"
+        },
+        "billing": {
+          "title": "Billing & Subscriptions",
+          "description": "Payment questions, invoices, subscription changes, and refund requests"
+        },
+        "technical": {
+          "title": "Technical Support",
+          "description": "Website analysis, WordPress connections, scanning issues, and integrations"
+        },
+        "security": {
+          "title": "Security Concerns",
+          "description": "Vulnerability reports, security alerts, and urgent security issues"
+        },
+        "general": {
+          "title": "General Questions",
+          "description": "Product features, pricing information, and general inquiries"
+        }
+      }
+    },
+    "billingSection": {
+      "title": "Billing & Payment Support",
+      "description": "All payments are securely processed through Stripe. For billing inquiries, please include:",
+      "requirements": {
+        "item1": "Your account email address",
+        "item2": "Invoice or charge reference number (if applicable)",
+        "item3": "Date of the transaction or charge",
+        "item4": "Clear description of your question or concern"
+      },
+      "note": "This information helps us locate your records quickly and resolve issues faster.",
+      "stripeInfo": "If you have questions about a charge on your credit card statement, look for \"GETSAFE360\" or \"GetSafe360 AI\" as the merchant name.",
+      "refundPolicy": "For refund requests, please review our refund policy and include your reason for the request."
+    },
+    "feedback": {
+      "title": "Product Feedback & Suggestions",
+      "subtitle": "Your input shapes our product",
+      "description": "We actively seek feedback from our users. Your suggestions, feature requests, and constructive criticism help us improve GetSafe360 AI.",
+      "encourage": "Please share:",
+      "items": {
+        "item1": "Features you'd like to see",
+        "item2": "Improvements to existing functionality",
+        "item3": "Issues or frustrations you've experienced",
+        "item4": "Ideas for new use cases"
+      },
+      "commitment": "Every piece of feedback is reviewed by our product team and directly influences our development roadmap."
+    },
+    "commitment": {
+      "title": "Our support commitment",
+      "values": {
+        "response": {
+          "title": "Timely Responses",
+          "description": "We aim to respond to all inquiries within 24 hours on business days"
+        },
+        "clarity": {
+          "title": "Clear Communication",
+          "description": "No jargon, no confusion—just straightforward, helpful answers"
+        },
+        "resolution": {
+          "title": "Problem Resolution",
+          "description": "We work with you until your issue is fully resolved"
+        }
+      }
+    },
+    "contactInfo": {
+      "title": "Contact Information",
+      "company": {
+        "name": "GETSAFE 360 AI LIMITED",
+        "description": "AI-powered website security and optimization platform"
+      },
+      "email": {
+        "support": "support@getsafe360.ai",
+        "supportLabel": "General Support",
+        "billing": "support@getsafe360.ai",
+        "billingLabel": "Billing & Payments",
+        "security": "security@getsafe360.ai",
+        "securityLabel": "Security Vulnerabilities",
+        "legal": "legal@getsafe360.ai",
+        "legalLabel": "Legal Inquiries"
+      },
+      "emergencyNote": "For urgent security vulnerabilities affecting your website, please email security@getsafe360.ai with \"URGENT\" in the subject line."
+    },
+    "legal": {
+      "disclaimer": "By contacting support, you agree that we may use your communication to improve our services. We never share your information with third parties without your consent."
+    }
+  }
+}
