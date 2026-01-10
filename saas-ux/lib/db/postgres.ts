@@ -28,8 +28,8 @@ export function getPostgresClient(): ReturnType<typeof postgres> {
 
     globalForDb.postgresClient = postgres(process.env.DATABASE_URL, {
       max: 10, // Maximum pool size
-      idle_timeout: 20, // Close idle connections after 20 seconds
-      connect_timeout: 10, // Connection timeout in seconds
+      idle_timeout: 60, // Close idle connections after 60 seconds (better for serverless)
+      connect_timeout: 30, // Connection timeout in seconds (more forgiving for serverless cold starts)
     });
   }
 

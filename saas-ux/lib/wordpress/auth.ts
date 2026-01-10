@@ -45,8 +45,18 @@ export function hashToken(token: string): string {
  */
 export function verifyToken(token: string, hash: string): boolean {
   const tokenHash = hashToken(token);
+
+  // Convert to buffers for timing-safe comparison
+  const tokenHashBuffer = Buffer.from(tokenHash);
+  const hashBuffer = Buffer.from(hash);
+
+  // timingSafeEqual throws if lengths differ, so check first
+  if (tokenHashBuffer.length !== hashBuffer.length) {
+    return false;
+  }
+
   // Use timing-safe comparison to prevent timing attacks
-  return timingSafeEqual(Buffer.from(tokenHash), Buffer.from(hash));
+  return timingSafeEqual(tokenHashBuffer, hashBuffer);
 }
 
 /**

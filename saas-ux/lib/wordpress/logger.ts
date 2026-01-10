@@ -4,11 +4,6 @@
 import { getDrizzle } from '@/lib/db/postgres';
 import { connectionLogs } from '@/lib/db/schema';
 
-// Lazy initialization - get DB instance only when needed
-function getDb() {
-  return getDrizzle();
-}
-
 export type ConnectionEventStatus =
   | 'connected'
   | 'disconnected'
@@ -46,7 +41,7 @@ export async function logConnectionEvent({
   errorMessage,
 }: LogConnectionEventParams): Promise<void> {
   try {
-    const db = getDb();
+    const db = getDrizzle();
     await db.insert(connectionLogs).values({
       siteId,
       status,
