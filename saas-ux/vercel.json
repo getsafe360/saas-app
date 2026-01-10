@@ -1,9 +1,0 @@
-{
-  "git": {
-    "deploymentEnabled": {
-      "main": true,
-      "production": true
-    }
-  },
-  "ignoreCommand": "bash vercel-ignore-build.sh"
-}
