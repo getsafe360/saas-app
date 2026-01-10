@@ -1,18 +1,12 @@
 // app/api/sites/[id]/reconnect/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from '@/lib/db/schema';
+import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
 import { eq, sql } from 'drizzle-orm';
 import { createWordPressClient, WordPressErrorCode } from '@/lib/wordpress/client';
 import { logConnectionSuccess, logConnectionError } from '@/lib/wordpress/logger';
 import { createWordPressConnection } from '@/lib/wordpress/auth';
-
-// Create db instance
-const queryClient = postgres(process.env.DATABASE_URL!);
-const db = drizzle(queryClient, { schema });
 
 /**
  * POST /api/sites/[id]/reconnect
@@ -52,6 +46,9 @@ export async function POST(
   }
 
   try {
+    // Get database instance (lazy initialization)
+    const db = getDrizzle();
+
     // 2. Get site from database and verify ownership
     const [site] = await db
       .select({
@@ -160,6 +157,7 @@ export async function POST(
 
     // Update database with error status
     try {
+      const db = getDrizzle();
       await db
         .update(sites)
         .set({
@@ -215,6 +213,7 @@ export async function GET(
   }
 
   try {
+    const db = getDrizzle();
     const [site] = await db
       .select({
         id: sites.id,

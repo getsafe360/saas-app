@@ -1,15 +1,10 @@
 // app/api/sites/[id]/wordpress/disconnect/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from '@/lib/db/schema';
+import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
 import { eq } from 'drizzle-orm';
 import { logDisconnection } from '@/lib/wordpress/logger';
-
-const queryClient = postgres(process.env.DATABASE_URL!);
-const db = drizzle(queryClient, { schema });
 
 /**
  * POST /api/sites/[id]/wordpress/disconnect
@@ -49,6 +44,9 @@ export async function POST(
   }
 
   try {
+    // Get database instance (lazy initialization)
+    const db = getDrizzle();
+
     // 2. Get site and verify ownership
     const [site] = await db
       .select({

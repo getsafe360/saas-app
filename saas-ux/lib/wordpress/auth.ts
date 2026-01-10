@@ -1,7 +1,7 @@
 // lib/wordpress/auth.ts
 // WordPress authentication and token management
 
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes, randomInt, timingSafeEqual } from 'crypto';
 
 /**
  * Generate a secure random site token
@@ -24,7 +24,8 @@ export function generateSiteToken(bytes: number = 32): string {
  * Hash a site token using SHA-256
  *
  * Tokens are stored as hashes in the database for security.
- * WordPress plugin sends the plain token, we hash it for comparison.
+ * SaaS platform sends the token hash as X-API-Key.
+ * WordPress plugin hashes its stored plain token and compares it.
  *
  * @param token - Plain text token
  * @returns Hex-encoded SHA-256 hash
@@ -36,25 +37,38 @@ export function hashToken(token: string): string {
 /**
  * Verify a token against its hash
  *
+ * Uses timing-safe comparison to prevent timing attacks
+ *
  * @param token - Plain text token to verify
  * @param hash - Stored hash to compare against
  * @returns True if token matches hash
  */
 export function verifyToken(token: string, hash: string): boolean {
   const tokenHash = hashToken(token);
-  return tokenHash === hash;
+
+  // Convert to buffers for timing-safe comparison
+  const tokenHashBuffer = Buffer.from(tokenHash);
+  const hashBuffer = Buffer.from(hash);
+
+  // timingSafeEqual throws if lengths differ, so check first
+  if (tokenHashBuffer.length !== hashBuffer.length) {
+    return false;
+  }
+
+  // Use timing-safe comparison to prevent timing attacks
+  return timingSafeEqual(tokenHashBuffer, hashBuffer);
 }
 
 /**
  * Generate a 6-digit pairing code
  *
- * Generates a random 6-digit code for the initial pairing flow.
+ * Uses crypto.randomInt for cryptographically secure randomness.
  * Format: 000000 - 999999
  *
  * @returns 6-digit code as string
  */
 export function generatePairingCode(): string {
-  const code = Math.floor(Math.random() * 1000000);
+  const code = randomInt(0, 1000000);
   return code.toString().padStart(6, '0');
 }
 
