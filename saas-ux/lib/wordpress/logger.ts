@@ -1,12 +1,11 @@
 // lib/wordpress/logger.ts
 // Connection logging utility for WordPress sites
 
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { getDrizzle } from '@/lib/db/postgres';
 import { connectionLogs } from '@/lib/db/schema';
 
-const queryClient = postgres(process.env.DATABASE_URL!);
-const db = drizzle(queryClient, { schema: { connectionLogs } });
+// Use shared database client to prevent connection pool exhaustion
+const db = getDrizzle();
 
 export type ConnectionEventStatus =
   | 'connected'

@@ -1,15 +1,13 @@
 // app/api/sites/[id]/wordpress/test/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from '@/lib/db/schema';
+import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
 import { eq } from 'drizzle-orm';
 import { createWordPressClient } from '@/lib/wordpress/client';
 
-const queryClient = postgres(process.env.DATABASE_URL!);
-const db = drizzle(queryClient, { schema });
+// Use shared database client to prevent connection pool exhaustion
+const db = getDrizzle();
 
 /**
  * POST /api/sites/[id]/wordpress/test
