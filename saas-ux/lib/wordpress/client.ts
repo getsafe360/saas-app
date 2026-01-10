@@ -64,11 +64,13 @@ export class WordPressAPIError extends Error {
   }
 
   toJSON() {
+    const friendlyError = USER_FRIENDLY_ERRORS[this.code];
     return {
       code: this.code,
       message: this.userMessage,
       details: this.details,
-      ...USER_FRIENDLY_ERRORS[this.code],
+      title: friendlyError.title,
+      action: friendlyError.action,
     };
   }
 }
