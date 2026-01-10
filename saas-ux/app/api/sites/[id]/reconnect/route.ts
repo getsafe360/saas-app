@@ -157,6 +157,7 @@ export async function POST(
 
     // Update database with error status
     try {
+      const db = getDrizzle();
       await db
         .update(sites)
         .set({
