@@ -1,0 +1,155 @@
+{
+  "title": "Support",
+  "hero": {
+    "title": "We're here to help",
+    "subtitle": "Fast, clear, and reliable support when you need it"
+  },
+  "contactMethods": {
+    "title": "How to reach us",
+    "email": {
+      "title": "Email Support",
+      "address": "support@getsafe360.ai",
+      "description": "Primary support channel for all inquiries",
+      "action": "Send email"
+    },
+    "form": {
+      "title": "Support Form",
+      "description": "Submit your question directly through our platform",
+      "action": "Open form"
+    },
+    "responseTime": {
+      "title": "Response Time",
+      "primary": "Within 1 business day",
+      "secondary": "Many requests are answered within hours"
+    }
+  },
+  "noPhone": {
+    "message": "We currently provide support via email and our support form only. This allows us to give you accurate, documented responses and resolve issues efficiently."
+  },
+  "whatWeHelp": {
+    "title": "What we can help with",
+    "categories": {
+      "account": {
+        "title": "Account & Access",
+        "description": "Login issues, password resets, account settings"
+      },
+      "billing": {
+        "title": "Billing & Payments",
+        "description": "Subscriptions, invoices, payment methods, refunds"
+      },
+      "technical": {
+        "title": "Technical Support",
+        "description": "Site analysis, WordPress connections, API integration"
+      },
+      "security": {
+        "title": "Security Alerts",
+        "description": "Vulnerability notifications, security recommendations"
+      },
+      "general": {
+        "title": "General Questions",
+        "description": "Features, pricing, how GetSafe360 AI works"
+      }
+    }
+  },
+  "billingTip": {
+    "title": "For faster billing support",
+    "description": "When contacting us about billing, payments, or Stripe charges, please include:",
+    "items": [
+      "Your account email address",
+      "Invoice or transaction reference number",
+      "Approximate date of the charge"
+    ],
+    "footer": "This helps us locate your records quickly and resolve issues faster."
+  },
+  "feedback": {
+    "title": "Product Feedback & Feature Requests",
+    "subtitle": "Help us build GetSafe360 AI together",
+    "description": "Your input directly shapes our product roadmap. We'd love to hear from you.",
+    "questions": [
+      "What could we improve?",
+      "What feature would make GetSafe360 AI more valuable to you?",
+      "What problem are you still missing a solution for?"
+    ],
+    "action": "Share your ideas",
+    "note": "Use the support form and select \"Product Feedback\" as the topic."
+  },
+  "commitment": {
+    "title": "Our commitment to you",
+    "values": [
+      {
+        "title": "Clear Communication",
+        "description": "Honest, jargon-free responses"
+      },
+      {
+        "title": "Timely Responses",
+        "description": "We respect your time"
+      },
+      {
+        "title": "Continuous Improvement",
+        "description": "Your feedback drives our development"
+      }
+    ],
+    "closing": "If something doesn't meet your expectations, please tell us. Your feedback directly influences how GetSafe360 AI evolves."
+  },
+  "form": {
+    "title": "Send us a message",
+    "subtitle": "We'll get back to you within 1 business day",
+    "fields": {
+      "name": {
+        "label": "Your name",
+        "placeholder": "John Doe"
+      },
+      "email": {
+        "label": "Email address",
+        "placeholder": "john@example.com",
+        "helper": "We'll reply to this address"
+      },
+      "subject": {
+        "label": "Subject",
+        "placeholder": "Brief description of your issue"
+      },
+      "category": {
+        "label": "What can we help with?",
+        "options": {
+          "account": "Account & Access",
+          "billing": "Billing & Payments",
+          "technical": "Technical Support",
+          "security": "Security Alert",
+          "feedback": "Product Feedback",
+          "other": "Other"
+        }
+      },
+      "message": {
+        "label": "Message",
+        "placeholder": "Please describe your question or issue in detail...",
+        "helper": "Include any relevant details like error messages, invoice numbers, or screenshots"
+      },
+      "accountEmail": {
+        "label": "Account email (if different)",
+        "placeholder": "account@example.com",
+        "helper": "Optional - only if different from the reply email above"
+      },
+      "referenceNumber": {
+        "label": "Invoice or transaction reference",
+        "placeholder": "INV-2024-12345",
+        "helper": "Optional - for billing inquiries"
+      }
+    },
+    "submit": "Send message",
+    "submitting": "Sending...",
+    "success": {
+      "title": "Message sent!",
+      "description": "We've received your message and will respond within 1 business day. Check your email for our reply.",
+      "action": "Send another message"
+    },
+    "error": {
+      "title": "Something went wrong",
+      "description": "We couldn't send your message. Please try again or email us directly at support@getsafe360.ai",
+      "action": "Try again"
+    }
+  },
+  "legal": {
+    "companyName": "GETSAFE 360 AI LIMITED",
+    "disclaimer": "For legal inquiries, please contact legal@getsafe360.ai. For security vulnerabilities, please email security@getsafe360.ai."
+  }
+}
