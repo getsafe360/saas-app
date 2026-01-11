@@ -1,139 +1,174 @@
 // app/(dashboard)/dashboard/welcome/page.tsx
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
+import { WelcomeClient } from "./WelcomeClient";
+import { getDb } from "@/lib/db/drizzle";
+import { sites } from "@/lib/db/schema/sites";
+import { users } from "@/lib/db/schema/auth/users";
+import { eq } from "drizzle-orm";
+import type { StashedTestResult } from "@/lib/stash/types";
+
 export const runtime = "nodejs";
 
-async function fetchStashViaUrl(publicUrl: string) {
-  const r = await fetch(publicUrl, { cache: "no-store" });
-  if (!r.ok) return null;
-  return r.json();
+async function fetchStashViaUrl(publicUrl: string): Promise<StashedTestResult | null> {
+  try {
+    const r = await fetch(publicUrl, { cache: "no-store" });
+    if (!r.ok) return null;
+    const data = await r.json();
+    return data as StashedTestResult;
+  } catch (error) {
+    console.error("Failed to fetch stash:", error);
+    return null;
+  }
 }
 
-/** Optional fallback if you’d rather compose a URL from a base */
 function buildPublicUrlFromKey(key: string) {
   const base =
     process.env.NEXT_PUBLIC_BLOB_BASE_URL || process.env.BLOB_PUBLIC_BASE;
-  // e.g. NEXT_PUBLIC_BLOB_BASE_URL="https://<your-public-id>.public.blob.vercel-storage.com/"
   if (!base) return null;
-  // new URL handles slashes gracefully
   return new URL(key, base).toString();
 }
 
-async function saveSiteForUser(userId: string, seed: any) {
-  const { put } = await import("@vercel/blob");
-  const key = `sites/${userId}/${crypto.randomUUID()}.json`;
-  const res = await put(
-    key,
-    JSON.stringify({
-      userId,
-      url: seed.url,
-      scores: seed.scores,
-      screenshotUrl: seed.screenshotUrl,
-      faviconUrl: seed.faviconUrl,
-      cms: seed.cms ?? null,
-      createdAt: Date.now(),
-    }),
-    { access: "public", contentType: "application/json" }
-  );
-  return { key, privateUrl: res.url };
+async function getAppUserId(clerkUserId: string): Promise<number | null> {
+  try {
+    const db = getDb();
+    const [row] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.clerkUserId, clerkUserId))
+      .limit(1);
+    return row?.id ?? null;
+  } catch (error) {
+    console.error("Failed to get app user ID:", error);
+    return null;
+  }
+}
+
+async function saveSiteToDatabase(
+  appUserId: number,
+  stash: StashedTestResult
+): Promise<string | null> {
+  try {
+    const db = getDb();
+    const siteId = crypto.randomUUID();
+
+    // Extract domain from URL
+    const domain = new URL(stash.url).hostname;
+
+    await db.insert(sites).values({
+      id: siteId,
+      siteUrl: stash.url,
+      userId: appUserId,
+      status: "connected",
+      cms: stash.facts?.cms?.type || null,
+      lastScores: stash.scores ? JSON.stringify(stash.scores) : null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any);
+
+    // Also save to blob storage for quick access
+    const { put } = await import("@vercel/blob");
+    const blobKey = `sites/${siteId}.json`;
+    await put(
+      blobKey,
+      JSON.stringify({
+        siteId,
+        siteUrl: stash.url,
+        userId: appUserId,
+        status: "connected",
+        scores: stash.scores,
+        faviconUrl: stash.facts?.faviconUrl,
+        cms: stash.facts?.cms,
+        findings: stash.findings,
+        createdAt: Date.now(),
+      }),
+      { access: "public", contentType: "application/json" }
+    );
+
+    return siteId;
+  } catch (error) {
+    console.error("Failed to save site to database:", error);
+    return null;
+  }
 }
 
 export default async function WelcomePage({
   searchParams,
 }: {
-  // ✅ In Next 15+, searchParams is a Promise
   searchParams: Promise<{ stash?: string; u?: string }>;
 }) {
   const user = await currentUser();
   if (!user) redirect("/sign-in");
 
-  const sp = await searchParams; // ✅ await it
+  // Get app user ID from Clerk ID
+  const appUserId = await getAppUserId(user.id);
+  if (!appUserId) {
+    console.error("Failed to get app user ID");
+    redirect("/dashboard");
+  }
+
+  const sp = await searchParams;
   const stashKey = sp?.stash;
-  const stashUrl = sp?.u; // public blob URL (preferred)
+  const stashUrl = sp?.u;
 
   if (!stashKey && !stashUrl) {
     redirect("/dashboard/sites?first=1");
   }
 
-  // Prefer the direct public URL we passed from the CTA
-  let stash: any = null;
+  // Retrieve stash
+  let stash: StashedTestResult | null = null;
   if (stashUrl) {
     stash = await fetchStashViaUrl(stashUrl);
   } else if (stashKey) {
     const composed = buildPublicUrlFromKey(stashKey);
-    if (!composed) {
-      // If you don’t want to expose a public base, you can switch to Blob SDK “get” here instead.
-      // For now we bail out to the sites page.
-      redirect("/dashboard/sites?first=1");
+    if (composed) {
+      stash = await fetchStashViaUrl(composed);
     }
-    stash = await fetchStashViaUrl(composed!);
   }
 
   if (!stash) {
     redirect("/dashboard/sites?first=1");
   }
 
-  await saveSiteForUser(user.id, stash);
+  // Save site to database
+  const siteId = await saveSiteToDatabase(appUserId, stash);
+  if (!siteId) {
+    console.error("Failed to create site");
+    redirect("/dashboard/sites?first=1");
+  }
 
-  return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-white">Welcome to GetSafe 360</h1>
-      <p className="text-slate-300">
-        We’ve imported your first site from the analyzer. Next, connect your
-        site for
-        <b> instant optimization</b>.
-      </p>
+  // Extract quick wins from findings
+  const quickWins = stash.findings
+    .filter((f) => f.severity === "critical" || f.severity === "medium")
+    .slice(0, 10)
+    .map((f) => ({
+      title: f.title,
+      impact: f.severity === "critical" ? "critical" as const : "high" as const,
+      effort: "low" as const, // Simplified for now
+      scoreIncrease: 2,
+    }));
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-        <div className="flex items-center gap-3 mb-4">
-          {stash.faviconUrl ? (
-            <img
-              src={stash.faviconUrl}
-              alt=""
-              width={20}
-              height={20}
-              className="rounded-sm"
-            />
-          ) : null}
-          <div className="text-slate-200">{stash.url}</div>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          {stash.screenshotUrl ? (
-            <img
-              src={stash.screenshotUrl}
-              alt="site preview"
-              className="rounded-lg border border-white/10 w-full h-auto"
-            />
-          ) : null}
-          <div className="text-sm text-slate-300 space-y-2">
-            <div>
-              CMS:{" "}
-              <span className="text-slate-100">{stash.cms ?? "Unknown"}</span>
-            </div>
-            <div>SEO: {stash.scores?.SEO ?? 0}</div>
-            <div>Performance: {stash.scores?.Performance ?? 0}</div>
-            <div>Accessibility: {stash.scores?.Accessibility ?? 0}</div>
-            <div>Security: {stash.scores?.Security ?? 0}</div>
-          </div>
-        </div>
+  // Extract domain from URL
+  const domain = new URL(stash.url).hostname;
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <a
-            href={`/dashboard/sites/connect?url=${encodeURIComponent(
-              stash.url
-            )}`}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-sky-500 hover:bg-sky-600 text-white font-semibold"
-          >
-            Connect WordPress
-          </a>
-          <a
-            href="/dashboard/sites"
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-white/15 text-slate-200 hover:bg-white/5"
-          >
-            Go to your sites
-          </a>
-        </div>
-      </div>
-    </div>
-  );
+  // Prepare data for client component
+  const welcomeData = {
+    url: stash.url,
+    domain,
+    faviconUrl: stash.facts?.faviconUrl || undefined,
+    overallScore: stash.scores?.overall || 0,
+    categoryScores: {
+      performance: stash.scores?.perf,
+      security: stash.scores?.sec,
+      seo: stash.scores?.seo,
+      accessibility: stash.scores?.a11y,
+      wordpress: stash.facts?.cms?.type === "wordpress" ? stash.scores?.overall : undefined,
+    },
+    quickWinsCount: stash.quickWinsCount || quickWins.length,
+    potentialScoreIncrease: stash.potentialScoreIncrease || quickWins.length * 2,
+    quickWins,
+    siteId,
+  };
+
+  return <WelcomeClient data={welcomeData} />;
 }
