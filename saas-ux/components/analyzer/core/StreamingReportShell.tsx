@@ -19,6 +19,8 @@ import { bucketVariant } from "@/lib/ab";
 import SiteIdentityCard from "../display/SiteIdentityCard";
 import { parseFindings } from "@/components/analyzer/utils/parseFindings";
 import type { Finding, Facts, AnalysisPayload, ScreenshotUrls } from "../types";
+import { useTestResultSafe } from "@/contexts/TestResultContext";
+import type { EnhancedAnalysisPayload } from "@/lib/stash/types";
 
 type Props = {
   className?: string;
@@ -39,6 +41,7 @@ export default function StreamingReportShell({
 }: Props) {
   const ta = useTranslations("analysis");
   const taction = useTranslations("actions");
+  const testResultContext = useTestResultSafe();
 
   const [url, setUrl] = useState(autofillUrl);
   const [status, setStatus] = useState<
@@ -160,17 +163,26 @@ export default function StreamingReportShell({
 
   useEffect(() => {
     if (status !== "done" || completedRef.current) return;
-    const payload: AnalysisPayload = {
+
+    const enhancedPayload: EnhancedAnalysisPayload = {
       url,
       markdown: output,
       findings: parseFindings(output),
       facts,
       locale,
       timestamp: new Date().toISOString(),
+      screenshotUrls: screenshotUrls ?? undefined,
     };
-    onComplete?.(payload);
+
+    // Update context if available
+    if (testResultContext) {
+      testResultContext.setTestResult(enhancedPayload);
+    }
+
+    // Call original callback
+    onComplete?.(enhancedPayload);
     completedRef.current = true;
-  }, [status, output, facts, url, locale, onComplete]);
+  }, [status, output, facts, url, locale, screenshotUrls, onComplete, testResultContext]);
 
   const busy = status === "loading" || status === "streaming";
   const finalUrl = facts?.finalUrl || url;
