@@ -1,7 +1,7 @@
 // app/api/connect/handshake/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { list, put } from '@vercel/blob';
-import { getDb } from '@/lib/db/drizzle';
+import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites';
 import { and, eq, sql } from 'drizzle-orm';
 import { generateSiteToken, hashToken, createWordPressConnection } from '@/lib/wordpress/auth';
@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
     const finalHost = recHost || reqHost;
 
     // DB upsert (reuse if this user already has a site with same host)
-    const db = getDb();
+    const db = getDrizzle();
 
     // Try to find by same user + same host (case-insensitive match over siteUrl)
     // NOTE: since we don’t have a separate host column, compare lower(site_url) LIKE '%//host/%'.
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     const reuseId = existing[0]?.id ?? record.siteId;
-    const siteId = reuseId || crypto.randomBytes(8).toString('hex'); // 16-hex chars
+    const siteId = reuseId || crypto.randomUUID(); // Proper UUID format for PostgreSQL
     const siteToken = generateSiteToken(); // Use new secure token generator
     const tokenHash = hashToken(siteToken); // Use new hash function
 
@@ -167,9 +167,8 @@ export async function POST(req: NextRequest) {
           tokenHash,
           wordpressConnection: wordpressConnection as any,
           lastConnectedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date()
-        } as any);
+          // createdAt and updatedAt handled by defaultNow()
+        });
 
         // Log successful pairing
         await logPairingComplete(siteId);
@@ -190,8 +189,8 @@ export async function POST(req: NextRequest) {
             tokenHash,
             wordpressConnection: wordpressConnection as any,
             lastConnectedAt: new Date(),
-            updatedAt: new Date()
-          } as any)
+            updatedAt: new Date() // Explicitly update timestamp on reconnect
+          })
           .where(eq(sites.id, siteId));
 
         // Log successful re-pairing

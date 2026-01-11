@@ -5,7 +5,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { list, put } from "@vercel/blob";
 import crypto from "crypto";
 
-import { getDb } from "@/lib/db/drizzle";
+import { getDrizzle } from "@/lib/db/postgres";
 import { users } from '@/lib/db/schema/auth/users';
 import { sites } from "@/lib/db/schema/sites";
 import { rateLimit } from "@/lib/api/rate-limit";
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "auth required" }, { status: 401 });
   }
 
-  const db = getDb();
+  const db = getDrizzle();
   const [dbUser] = await db
     .select()
     .from(users)
