@@ -85,7 +85,7 @@ export function ShareButtons({
         {/* Twitter */}
         <button
           onClick={handleTwitterShare}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white font-medium text-sm transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white font-medium text-sm transition-colors cursor-pointer"
         >
           <Twitter className="w-4 h-4" />
           <span>Twitter</span>
@@ -94,7 +94,7 @@ export function ShareButtons({
         {/* LinkedIn */}
         <button
           onClick={handleLinkedInShare}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0A66C2] hover:bg-[#004182] text-white font-medium text-sm transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0A66C2] hover:bg-[#004182] text-white font-medium text-sm transition-colors cursor-pointer"
         >
           <Linkedin className="w-4 h-4" />
           <span>LinkedIn</span>
@@ -104,7 +104,7 @@ export function ShareButtons({
         <button
           onClick={handleCopyLink}
           className={cn(
-            "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all",
+            "inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all cursor-pointer",
             copied
               ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
               : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -127,7 +127,7 @@ export function ShareButtons({
         {canNativeShare && (
           <button
             onClick={handleNativeShare}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-medium text-sm transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-medium text-sm transition-colors cursor-pointer"
           >
             <Share2 className="w-4 h-4" />
             <span>Share</span>

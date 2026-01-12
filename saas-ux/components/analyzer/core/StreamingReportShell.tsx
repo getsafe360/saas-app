@@ -21,6 +21,7 @@ import { parseFindings } from "@/components/analyzer/utils/parseFindings";
 import type { Finding, Facts, AnalysisPayload, ScreenshotUrls } from "../types";
 import { useTestResultSafe } from "@/contexts/TestResultContext";
 import type { EnhancedAnalysisPayload } from "@/lib/stash/types";
+import { saveTestResults } from "@/lib/stash/saveTestResults";
 
 type Props = {
   className?: string;
@@ -174,13 +175,28 @@ export default function StreamingReportShell({
       screenshotUrls: screenshotUrls ?? undefined,
     };
 
-    // Update context if available
-    if (testResultContext) {
-      testResultContext.setTestResult(enhancedPayload);
+    // Auto-stash test results for signup flow
+    async function stashAndUpdateContext() {
+      try {
+        const stashResult = await saveTestResults(enhancedPayload);
+        if (stashResult?.stashUrl && testResultContext) {
+          testResultContext.setStashUrl(stashResult.stashUrl);
+        }
+      } catch (error) {
+        console.error("Failed to auto-stash test results:", error);
+        // Continue even if stashing fails
+      }
+
+      // Update context with test result
+      if (testResultContext) {
+        testResultContext.setTestResult(enhancedPayload);
+      }
+
+      // Call original callback
+      onComplete?.(enhancedPayload);
     }
 
-    // Call original callback
-    onComplete?.(enhancedPayload);
+    stashAndUpdateContext();
     completedRef.current = true;
   }, [status, output, facts, url, locale, screenshotUrls, onComplete, testResultContext]);
 
