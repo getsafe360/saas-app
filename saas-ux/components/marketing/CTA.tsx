@@ -2,13 +2,11 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 import { Link } from "@/navigation";
 import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import { useTestResultSafe } from "@/contexts/TestResultContext";
-import { saveTestResults, backupToSessionStorage } from "@/lib/stash/saveTestResults";
 
 /**
  * CTA component
@@ -22,55 +20,17 @@ import { saveTestResults, backupToSessionStorage } from "@/lib/stash/saveTestRes
 export default function CTA() {
   const t = useTranslations("ctaRoot");
   const testContext = useTestResultSafe();
-  const [isStashing, setIsStashing] = useState(false);
 
   // Check if a test has been completed
   const hasTest = testContext?.hasCompletedTest ?? false;
   const quickWinsCount = testContext?.quickWinsCount ?? 0;
   const overallScore = testContext?.overallScore ?? 0;
+  const stashUrl = testContext?.stashUrl ?? null;
 
-  // Handle signup with test result stashing
-  const handleSignupClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!hasTest || !testContext?.testResult) {
-      // No test completed, proceed with normal signup
-      return;
-    }
-
-    // Prevent default to handle stashing first
-    e.preventDefault();
-    e.stopPropagation();
-
-    setIsStashing(true);
-
-    try {
-      // Save to blob storage
-      const stashResult = await saveTestResults(testContext.testResult);
-
-      // Also backup to sessionStorage as fallback
-      backupToSessionStorage(testContext.testResult);
-
-      // Build redirect URL with stash parameter
-      let redirectUrl = "/dashboard/welcome";
-      if (stashResult?.stashUrl) {
-        redirectUrl += `?u=${encodeURIComponent(stashResult.stashUrl)}`;
-      }
-
-      // Trigger Clerk signup with custom redirect
-      const signUpButton = document.querySelector(
-        '[data-clerk-sign-up-button="true"]'
-      ) as HTMLButtonElement;
-      if (signUpButton) {
-        // Store redirect URL for after signup
-        sessionStorage.setItem("getsafe360_after_signup_url", redirectUrl);
-        signUpButton.click();
-      }
-    } catch (error) {
-      console.error("Failed to stash test results:", error);
-      // Continue with signup anyway
-    } finally {
-      setIsStashing(false);
-    }
-  };
+  // Build redirect URL for Clerk signup
+  const redirectUrl = stashUrl
+    ? `/dashboard/welcome?u=${encodeURIComponent(stashUrl)}`
+    : "/dashboard";
 
   // Dynamic messaging based on test state
   const getCtaContent = () => {
@@ -88,10 +48,8 @@ export default function CTA() {
       return {
         headline: "Save These Results & Get Your Quick Wins",
         support: `We found ${quickWinsCount} quick wins that could boost your score. Sign up to see the full report and start fixing issues instantly.`,
-        buttonText: isStashing
-          ? "Saving results..."
-          : `Unlock ${quickWinsCount} Quick Wins`,
-        icon: isStashing ? null : <Zap className="size-4" />,
+        buttonText: `Unlock ${quickWinsCount} Quick Wins`,
+        icon: <Zap className="size-4" />,
         highlight: true,
       };
     }
@@ -99,8 +57,8 @@ export default function CTA() {
     return {
       headline: "Save Your Analysis & Access Full Report",
       support: `Your site scored ${overallScore}/100. Create a free account to access detailed recommendations, security checks, and more.`,
-      buttonText: isStashing ? "Saving results..." : "Save & View Full Report",
-      icon: isStashing ? null : <Sparkles className="size-4" />,
+      buttonText: "Save & View Full Report",
+      icon: <Sparkles className="size-4" />,
       highlight: true,
     };
   };
@@ -135,16 +93,13 @@ export default function CTA() {
 
           <div className="mt-6 flex items-center justify-center gap-3">
             <SignedOut>
-              <SignUpButton mode="modal">
+              <SignUpButton mode="modal" forceRedirectUrl={redirectUrl}>
                 <button
-                  data-clerk-sign-up-button="true"
-                  onClick={hasTest ? handleSignupClick : undefined}
-                  disabled={isStashing}
-                  className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-lg font-semibold ring-1 transition-all ${
+                  className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-lg font-semibold ring-1 transition-all cursor-pointer ${
                     ctaContent.highlight
                       ? "ring-green-600/30 dark:ring-green-400/30 bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600 shadow-lg hover:shadow-xl"
                       : "ring-sky-600/30 dark:ring-sky-400/30 bg-sky-50 dark:bg-sky-400/10 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-400/20"
-                  } ${isStashing ? "opacity-75 cursor-wait" : ""}`}
+                  }`}
                 >
                   {ctaContent.buttonText}
                   {ctaContent.icon}
@@ -163,9 +118,7 @@ export default function CTA() {
           </div>
 
           <p className="mt-3 text-center text-sm text-slate-500 dark:text-slate-400">
-            {hasTest
-              ? "Free account • No credit card required • Results saved instantly"
-              : t("microcopy")}
+            {hasTest ? "Free account • No credit card required • Results saved automatically" : t("microcopy")}
           </p>
         </div>
       </div>

@@ -17,6 +17,10 @@ interface TestResultContextValue {
   // Clear test result
   clearTestResult: () => void;
 
+  // Stash URL for redirecting to welcome page
+  stashUrl: string | null;
+  setStashUrl: (url: string | null) => void;
+
   // Quick access to key metrics
   overallScore: number | null;
   quickWinsCount: number | null;
@@ -34,13 +38,19 @@ export function TestResultProvider({
 }) {
   const [testResult, setTestResultState] =
     useState<EnhancedAnalysisPayload | null>(null);
+  const [stashUrl, setStashUrlState] = useState<string | null>(null);
 
   const setTestResult = useCallback((payload: EnhancedAnalysisPayload | null) => {
     setTestResultState(payload);
   }, []);
 
+  const setStashUrl = useCallback((url: string | null) => {
+    setStashUrlState(url);
+  }, []);
+
   const clearTestResult = useCallback(() => {
     setTestResultState(null);
+    setStashUrlState(null);
   }, []);
 
   // Compute derived values
@@ -64,6 +74,8 @@ export function TestResultProvider({
     hasCompletedTest,
     setTestResult,
     clearTestResult,
+    stashUrl,
+    setStashUrl,
     overallScore,
     quickWinsCount,
     url,
