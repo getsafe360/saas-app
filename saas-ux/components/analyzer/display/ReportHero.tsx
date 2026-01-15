@@ -2,10 +2,11 @@
 "use client";
 
 import ScorePills from "./ScorePills";
-import CoPilotDrawer from "./CoPilotDrawer";
+import SparkyDrawer from "./SparkyDrawer";
 import CTA from "@/components/marketing/CTA";
 import { ReportHeader } from "./ReportHeader";
 import ScreenshotSection from "./ScreenshotSection";
+import { UnifiedTestResultHero } from "./UnifiedTestResultHero";
 import type { CMSSignature } from "@/components/analyzer/cms/cms-signatures";
 
 type Props = {
@@ -84,44 +85,52 @@ export default function ReportHero({
     : null;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      {/* Header */}
-      <ReportHeader
+    <>
+      {/* Unified Test Result Hero - matches cockpit design */}
+      <UnifiedTestResultHero
         url={url}
         domain={domain}
         faviconUrl={faviconUrl}
-        status={status}
-        isHttps={isHttps}
-        cms={cmsDisplay}
-        siteLang={siteLang}
-        hostIP={hostIP}
-        lastChecked={lastChecked}
+        cms={cmsDisplay ? {
+          type: cmsDisplay.type,
+          name: cmsDisplay.name,
+          version: undefined
+        } : undefined}
         overallScore={scores.overall}
-      />
-
-      {/* Screenshot + Intro */}
-      <ScreenshotSection
-        desktopScreenshotUrl={screenshotUrl ?? ""}
-        mobileScreenshotUrl={mobileUrl ?? ""}
-        locale={locale}
+        categoryScores={{
+          seo: scores.seo,
+          a11y: scores.a11y,
+          perf: scores.perf,
+          sec: scores.sec,
+        }}
+        counts={pillars}
+        facts={null}
         isAnalyzing={isAnalyzing}
-        url={url}
+        locale={locale}
       />
 
-      {/* Score Pills */}
-      <ScorePills scores={scores} counts={pillars} />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Screenshot + Intro */}
+        <ScreenshotSection
+          desktopScreenshotUrl={screenshotUrl ?? ""}
+          mobileScreenshotUrl={mobileUrl ?? ""}
+          locale={locale}
+          isAnalyzing={isAnalyzing}
+          url={url}
+        />
 
-      {/* CTA */}
-      <div className="mb-8">
-        <CTA />
+        {/* Findings (passed as children) */}
+        {children}
+
+        {/* CTA - moved below test results */}
+        <div className="my-8">
+          <CTA />
+        </div>
       </div>
 
-      {/* Findings (passed as children) */}
-      {children}
-
-      {/* Co-Pilot Drawer */}
-      <CoPilotDrawer />
-    </div>
+      {/* Sparky Drawer */}
+      <SparkyDrawer />
+    </>
   );
 }
 

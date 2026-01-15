@@ -134,7 +134,47 @@
     "add_website": "Adicionar site",
     "run_analysis": "Iniciar análise",
     "cancel": "Cancelar",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "save": "Guardar",
+    "createAccount": "Criar Conta Gratuita",
+    "saveAndCreateAccount": "Guardar e Criar Conta Gratuita",
+    "viewReport": "Ver Relatório Completo",
+    "chatWithSparky": "Conversar com Sparky",
+    "applyQuickWins": "Aplicar Todas as Melhorias Rápidas",
+    "optimize": "Otimizar",
+    "reconnect": "Reconectar"
+  },
+  "Sparky": {
+    "name": "Sparky",
+    "greeting": "Olá, sou ✨ Sparky, o seu assistente IA",
+    "tagline": "estou aqui para ajudá-lo a tornar o seu website mais rápido, visível, acessível e seguro",
+    "analyzing": "Sparky está a analisar o seu site...",
+    "chatButton": "Conversar com Sparky",
+    "drawer": {
+      "title": "✨ Sparky",
+      "subtitle": "O seu assistente de otimização IA",
+      "helpText": "Posso ajudá-lo a compreender e resolver problemas no seu site"
+    }
+  },
+  "TestResultHero": {
+    "analyzingTitle": "Torne o seu website mais rápido, visível, acessível e seguro em 10 minutos",
+    "analyzingSubtitle": "a analisar o seu site {url}…",
+    "analyzingWait": "aguarde alguns segundos...",
+    "overallScore": "Pontuação Geral",
+    "grade": "Nota {grade}",
+    "stats": {
+      "passed": "Aprovado",
+      "warnings": "Avisos",
+      "critical": "Crítico"
+    },
+    "categories": {
+      "seo": "SEO",
+      "accessibility": "Acessibilidade",
+      "performance": "Desempenho",
+      "security": "Segurança",
+      "wordpress": "WordPress"
+    },
+    "strengths": "O Que Funciona Bem"
   },
   "analysis": {
     "headline1": "Deixe seu site acessível e legal em 10 minutos",

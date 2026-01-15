@@ -167,7 +167,47 @@
     "add_website": "Add website",
     "run_analysis": "Run analysis",
     "cancel": "Cancel",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "save": "Save",
+    "createAccount": "Create Free Account",
+    "saveAndCreateAccount": "Save & Create Free Account",
+    "viewReport": "View Full Report",
+    "chatWithSparky": "Chat with Sparky",
+    "applyQuickWins": "Apply All Quick Wins",
+    "optimize": "Optimize",
+    "reconnect": "Reconnect"
+  },
+  "Sparky": {
+    "name": "Sparky",
+    "greeting": "Hi, I'm ✨ Sparky, your AI assistant",
+    "tagline": "here to help you make your website faster, more visible, accessible, and safer",
+    "analyzing": "Sparky is analyzing your site...",
+    "chatButton": "Chat with Sparky",
+    "drawer": {
+      "title": "✨ Sparky",
+      "subtitle": "Your AI optimization assistant",
+      "helpText": "I can help you understand and fix issues on your site"
+    }
+  },
+  "TestResultHero": {
+    "analyzingTitle": "Make your website faster, more visible & accessible and safer in 10 minutes",
+    "analyzingSubtitle": "analyzing your site {url}…",
+    "analyzingWait": "hang on a few seconds...",
+    "overallScore": "Overall Score",
+    "grade": "Grade {grade}",
+    "stats": {
+      "passed": "Passed",
+      "warnings": "Warnings",
+      "critical": "Critical"
+    },
+    "categories": {
+      "seo": "SEO",
+      "accessibility": "Accessibility",
+      "performance": "Performance",
+      "security": "Security",
+      "wordpress": "WordPress"
+    },
+    "strengths": "What's Working Well"
   },
     "AnalyzeMeta": {
     "title": "Fix My Website - GetSafe 360 Co-Pilot",
