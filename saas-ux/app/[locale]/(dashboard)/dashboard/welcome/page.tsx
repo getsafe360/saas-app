@@ -4,9 +4,8 @@ import { currentUser } from "@clerk/nextjs/server";
 import { WelcomeClient } from "./WelcomeClient";
 import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
-import { users } from "@/lib/db/schema/auth/users";
-import { eq } from "drizzle-orm";
 import type { StashedTestResult } from "@/lib/stash/types";
+import { getOrCreateAppUserId } from "@/lib/auth/sync-clerk-user";
 
 export const runtime = "nodejs";
 
@@ -27,21 +26,6 @@ function buildPublicUrlFromKey(key: string) {
     process.env.NEXT_PUBLIC_BLOB_BASE_URL || process.env.BLOB_PUBLIC_BASE;
   if (!base) return null;
   return new URL(key, base).toString();
-}
-
-async function getAppUserId(clerkUserId: string): Promise<number | null> {
-  try {
-    const db = getDb();
-    const [row] = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.clerkUserId, clerkUserId))
-      .limit(1);
-    return row?.id ?? null;
-  } catch (error) {
-    console.error("Failed to get app user ID:", error);
-    return null;
-  }
 }
 
 async function saveSiteToDatabase(
@@ -100,12 +84,15 @@ export default async function WelcomePage({
   const user = await currentUser();
   if (!user) redirect("/sign-in");
 
-  // Get app user ID from Clerk ID
-  const appUserId = await getAppUserId(user.id);
+  // Get or create app user ID from Clerk ID
+  // This syncs the Clerk user to our database on first visit
+  const appUserId = await getOrCreateAppUserId();
   if (!appUserId) {
-    console.error("Failed to get app user ID");
+    console.error("[WelcomePage] Failed to get or create app user ID");
     redirect("/dashboard");
   }
+
+  console.log("[WelcomePage] User synced, appUserId:", appUserId);
 
   const sp = await searchParams;
   const stashKey = sp?.stash;
@@ -131,11 +118,14 @@ export default async function WelcomePage({
   }
 
   // Save site to database
+  console.log("[WelcomePage] Saving site to database for user:", appUserId, "URL:", stash.url);
   const siteId = await saveSiteToDatabase(appUserId, stash);
   if (!siteId) {
-    console.error("Failed to create site");
+    console.error("[WelcomePage] Failed to create site");
     redirect("/dashboard/sites?first=1");
   }
+
+  console.log("[WelcomePage] Site created successfully:", siteId);
 
   // Extract quick wins from findings
   const quickWins = stash.findings
