@@ -32,7 +32,7 @@ export default function ScreenshotSection({
         {/* Left Column: Screenshots */}
         <div>
           {/* View Toggle */}
-          <div className="mb-4 flex justify-center lg:justify-start">
+          <div className="mb-4 flex justify-center lg:justify-end">
             <div className="inline-flex rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-1">
               <button
                 onClick={() => setActiveView("desktop")}

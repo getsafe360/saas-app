@@ -57,7 +57,7 @@ export default function CTA() {
     return {
       headline: "Save Your Analysis & Access Full Report",
       support: `Your site scored ${overallScore}/100. Create a free account to access detailed recommendations, security checks, and more.`,
-      buttonText: "Save & View Full Report",
+      buttonText: "Save & Create Free Account",
       icon: <Sparkles className="size-4" />,
       highlight: true,
     };

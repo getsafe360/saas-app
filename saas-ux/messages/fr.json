@@ -128,13 +128,53 @@
     "try_for_free": "Essayer gratuitement",
     "start_now": "Commencer maintenant",
     "buy_now": "Acheter maintenant",
-    "upgrade_plan": "Mettre à niveau l’offre",
+    "upgrade_plan": "Mettre à niveau l'offre",
     "view_pricing": "Voir les tarifs",
     "view_dashboard": "Ouvrir le tableau de bord",
     "add_website": "Ajouter un site",
-    "run_analysis": "Lancer l’analyse",
+    "run_analysis": "Lancer l'analyse",
     "cancel": "Annuler",
-    "confirm": "Confirmer"
+    "confirm": "Confirmer",
+    "save": "Enregistrer",
+    "createAccount": "Créer un Compte Gratuit",
+    "saveAndCreateAccount": "Enregistrer et Créer un Compte Gratuit",
+    "viewReport": "Voir le Rapport Complet",
+    "chatWithSparky": "Discuter avec Sparky",
+    "applyQuickWins": "Appliquer Toutes les Améliorations Rapides",
+    "optimize": "Optimiser",
+    "reconnect": "Reconnecter"
+  },
+  "Sparky": {
+    "name": "Sparky",
+    "greeting": "Bonjour, je suis ✨ Sparky, votre assistant IA",
+    "tagline": "je suis là pour vous aider à rendre votre site web plus rapide, visible, accessible et sûr",
+    "analyzing": "Sparky analyse votre site...",
+    "chatButton": "Discuter avec Sparky",
+    "drawer": {
+      "title": "✨ Sparky",
+      "subtitle": "Votre assistant d'optimisation IA",
+      "helpText": "Je peux vous aider à comprendre et résoudre les problèmes de votre site"
+    }
+  },
+  "TestResultHero": {
+    "analyzingTitle": "Rendez votre site web plus rapide, visible, accessible et sûr en 10 minutes",
+    "analyzingSubtitle": "analyse de votre site {url}…",
+    "analyzingWait": "attendez quelques secondes...",
+    "overallScore": "Score Global",
+    "grade": "Note {grade}",
+    "stats": {
+      "passed": "Réussi",
+      "warnings": "Avertissements",
+      "critical": "Critique"
+    },
+    "categories": {
+      "seo": "SEO",
+      "accessibility": "Accessibilité",
+      "performance": "Performance",
+      "security": "Sécurité",
+      "wordpress": "WordPress"
+    },
+    "strengths": "Ce Qui Fonctionne Bien"
   },
   "analysis": {
     "headline1": "Rendez votre site accessible et conforme en 10 minutes",

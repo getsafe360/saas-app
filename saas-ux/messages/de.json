@@ -134,7 +134,47 @@
     "add_website": "Website hinzufügen",
     "run_analysis": "Analyse starten",
     "cancel": "Abbrechen",
-    "confirm": "Bestätigen"
+    "confirm": "Bestätigen",
+    "save": "Speichern",
+    "createAccount": "Kostenloses Konto erstellen",
+    "saveAndCreateAccount": "Speichern & Kostenloses Konto erstellen",
+    "viewReport": "Vollständigen Bericht ansehen",
+    "chatWithSparky": "Mit Sparky chatten",
+    "applyQuickWins": "Alle Quick Wins anwenden",
+    "optimize": "Optimieren",
+    "reconnect": "Neu verbinden"
+  },
+  "Sparky": {
+    "name": "Sparky",
+    "greeting": "Hallo, ich bin ✨ Sparky, dein KI-Assistent",
+    "tagline": "Ich helfe dir, deine Website schneller, sichtbarer, barrierefreier und sicherer zu machen",
+    "analyzing": "Sparky analysiert deine Website...",
+    "chatButton": "Mit Sparky chatten",
+    "drawer": {
+      "title": "✨ Sparky",
+      "subtitle": "Dein KI-Optimierungsassistent",
+      "helpText": "Ich kann dir helfen, Probleme auf deiner Website zu verstehen und zu beheben"
+    }
+  },
+  "TestResultHero": {
+    "analyzingTitle": "Mache deine Website schneller, sichtbarer, barrierefreier und sicherer in 10 Minuten",
+    "analyzingSubtitle": "analysiere deine Website {url}…",
+    "analyzingWait": "warte einen Moment...",
+    "overallScore": "Gesamtpunktzahl",
+    "grade": "Note {grade}",
+    "stats": {
+      "passed": "Bestanden",
+      "warnings": "Warnungen",
+      "critical": "Kritisch"
+    },
+    "categories": {
+      "seo": "SEO",
+      "accessibility": "Barrierefreiheit",
+      "performance": "Performance",
+      "security": "Sicherheit",
+      "wordpress": "WordPress"
+    },
+    "strengths": "Was gut funktioniert"
   },
     "AnalyzeMeta": {
     "title": "Website fixen - GetSafe 360 Co-Pilot",
