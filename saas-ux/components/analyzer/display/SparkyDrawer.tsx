@@ -21,7 +21,7 @@ export default function SparkyDrawer() {
         <div className="flex flex-col items-center gap-2">
           <Sparkles className="h-5 w-5" />
           <span className="text-xs font-semibold writing-mode-vertical-rl transform rotate-180">
-            ✨ Sparky
+            Sparky
           </span>
         </div>
       </button>
@@ -45,7 +45,9 @@ export default function SparkyDrawer() {
         <div className="flex items-center justify-between p-6 border-b border-neutral-700">
           <div className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-sky-400" />
-            <h2 className="text-xl font-bold text-white">{t("drawer.title")}</h2>
+            <h2 className="text-xl font-bold text-white">
+              {t("drawer.title")}
+            </h2>
           </div>
           <button
             onClick={() => setIsOpen(false)}

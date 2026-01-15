@@ -150,7 +150,7 @@
     }
   },
   "footer": {
-    "copyright": "© {year} GetSafe 360 Limited. All rights reserved.",
+    "copyright": "© {year} GetSafe 360 AI Limited. All rights reserved.",
     "support": "Support",
     "terms": "Terms",
     "contact": "Contact"
@@ -179,12 +179,12 @@
   },
   "Sparky": {
     "name": "Sparky",
-    "greeting": "Hi, I'm ✨ Sparky, your AI assistant",
+    "greeting": "Hi, I'm Sparky, your AI assistant",
     "tagline": "here to help you make your website faster, more visible, accessible, and safer",
     "analyzing": "Sparky is analyzing your site...",
     "chatButton": "Chat with Sparky",
     "drawer": {
-      "title": "✨ Sparky",
+      "title": "Sparky",
       "subtitle": "Your AI optimization assistant",
       "helpText": "I can help you understand and fix issues on your site"
     }

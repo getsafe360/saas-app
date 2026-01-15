@@ -117,7 +117,7 @@
     }
   },
   "footer": {
-    "copyright": "© {year} GetSafe 360 Limited. Tous droits réservés.",
+    "copyright": "© {year} GetSafe 360 AI Limited. Tous droits réservés.",
     "support": "Support",
     "terms": "Conditions",
     "contact": "Contact"
@@ -146,12 +146,12 @@
   },
   "Sparky": {
     "name": "Sparky",
-    "greeting": "Bonjour, je suis ✨ Sparky, votre assistant IA",
+    "greeting": "Bonjour, je suis Sparky, votre assistant IA",
     "tagline": "je suis là pour vous aider à rendre votre site web plus rapide, visible, accessible et sûr",
     "analyzing": "Sparky analyse votre site...",
     "chatButton": "Discuter avec Sparky",
     "drawer": {
-      "title": "✨ Sparky",
+      "title": "Sparky",
       "subtitle": "Votre assistant d'optimisation IA",
       "helpText": "Je peux vous aider à comprendre et résoudre les problèmes de votre site"
     }

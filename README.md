@@ -6,8 +6,8 @@ We empower website owners and developers with AI-driven tools for real-time opti
 - 🌱 Currently developing a modular AI-agent platform for automated website tuning and continuous optimization.
 - 💼 Our mission: Make enterprise-level optimization accessible to SMEs, freelancers, medical, educational, and public organizations.
 - 💞️ Looking to collaborate with AI engineers, open-source contributors, and web performance enthusiasts.
-- 🌍 Production site: [getsafe360.com](https://getsafe360.com)
-- 📫 Contact: dev@getsafe360.com
+- 🌍 Production site: [getsafe360.ai](https://www.getsafe360.ai)
+- 📫 Contact: dev@getsafe360.ai
 - 😄 Pronouns: we/our
 - ⚡ Fun fact: We use AI to fix the things your web agency forgot — faster, safer, and smarter.
 
