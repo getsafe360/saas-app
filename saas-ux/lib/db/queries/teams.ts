@@ -26,6 +26,12 @@ export async function updateTeamSubscription(
   const db = getDb();
   await db
     .update(teams)
-    .set({ ...data, updatedAt: new Date() })
+    .set({
+      stripeSubscriptionId: data.stripeSubscriptionId,
+      stripeProductId: data.stripeProductId,
+      planName: data.planName || 'free', // Default to free if null
+      subscriptionStatus: data.subscriptionStatus,
+      updatedAt: new Date(),
+    })
     .where(eq(teams.id, teamId));
 }

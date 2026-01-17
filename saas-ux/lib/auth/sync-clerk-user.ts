@@ -76,11 +76,19 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
 
     console.log('[syncClerkUser] User created:', createdUser.id);
 
-    // Create default team for user
+    // Create default team for user with free plan (5K tokens)
     const [createdTeam] = await db
       .insert(teams)
       .values({
         name: `${createdUser.name || createdUser.email}'s Team`,
+        planName: 'free',
+        subscriptionStatus: 'active',
+        tokensIncluded: 5000,
+        tokensUsedThisMonth: 0,
+        tokensPurchased: 0,
+        billingCycleStart: new Date(),
+        notifiedAt80Percent: false,
+        notifiedAt100Percent: false,
       } satisfies NewTeam)
       .returning();
 
