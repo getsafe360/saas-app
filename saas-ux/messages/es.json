@@ -1,6 +1,6 @@
 {
   "Nav": {
-    "pricing": "Precios",
+    "pricing": "Planes",
     "accessibility": "Accesibilidad",
     "dashboard": "Panel",
     "faq": "FAQ",
@@ -83,7 +83,7 @@
     "intro_left": "Analiza y optimiza cualquier sitio al instante. SEO, rendimiento, seguridad, accesibilidad y cumplimiento legal incluidos.",
     "intro_right": "Insights accionables. Optimización instantánea. Mantén cada sitio al máximo rendimiento. ¡Empieza gratis!"
   },
-    "infobox": {
+  "infobox": {
     "sectionLabel": "Beneficios específicos para propietarios de sitios y desarrolladores",
     "owners": {
       "title": "Para propietarios de sitios y webmasters",
@@ -216,5 +216,52 @@
   },
   "terms": {
     "date": "Fecha de vigencia:"
+  },
+  "plans": {
+    "headline1": "Planes para cada nivel de sitio web",
+    "headline2": "Análisis ilimitados. Paga solo por correcciones de IA.",
+    "subheadline": "Todos los planes incluyen análisis de sitios gratuitos e ilimitados. Solo pagas por el trabajo de IA que uses – justo, transparente y flexible.",
+    "subscriptions": {
+      "title": "Planes Mensuales",
+      "popular": "Más Popular",
+      "free": {
+        "description": "Perfecto para probar GetSafe 360",
+        "cta": "Comenzar Gratis"
+      },
+      "pro": {
+        "description": "Ideal para profesionales y sitios en crecimiento",
+        "cta": "Comenzar Plan Pro"
+      },
+      "agency": {
+        "description": "Para agencias que gestionan múltiples clientes",
+        "cta": "Comenzar Plan Agencia"
+      }
+    },
+    "tokenPacks": {
+      "title": "Paquetes de Tokens Únicos",
+      "description": "¿Necesitas más tokens? Compra paquetes de tokens que nunca expiran.",
+      "tokens": "tokens",
+      "approx": "~{fixes} correcciones IA",
+      "buy": "Comprar Ahora",
+      "neverExpire": "Los paquetes de tokens nunca expiran"
+    },
+    "tokenInfo": {
+      "title": "Cómo funcionan los Tokens",
+      "whatAreTokens": "¿Qué son los tokens?",
+      "tokensExplained": "Los tokens alimentan nuestras correcciones y optimizaciones de IA. Una corrección de IA usa aproximadamente 2,000 tokens.",
+      "howManyNeeded": "¿Cuántos necesito?",
+      "usageExplained": "La mayoría de los usuarios promedian 2-5 correcciones de IA por sitio. El plan gratuito te da 5K tokens (~2-3 correcciones) mensuales."
+    },
+    "faq": {
+      "title": "Preguntas Frecuentes",
+      "q1": "¿Qué pasa cuando me quedo sin tokens?",
+      "a1": "Los usuarios gratuitos pueden comprar paquetes de tokens para continuar. Los usuarios Pro y Agencia pueden continuar con procesamiento más lento.",
+      "q2": "¿Los tokens comprados expiran?",
+      "a2": "¡No! Los paquetes de tokens que compres nunca expiran.",
+      "q3": "¿Puedo cambiar mi plan en cualquier momento?",
+      "a3": "Sí, puedes actualizar o degradar tu plan en cualquier momento.",
+      "q4": "¿Los análisis de sitios son realmente ilimitados?",
+      "a4": "¡Absolutamente! Puedes analizar tantos sitios como quieras, tan a menudo como quieras."
+    }
   }
 }

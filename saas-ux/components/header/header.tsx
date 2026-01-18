@@ -48,7 +48,7 @@ export function Header() {
   const items = useMemo(
     () =>
       [
-        { href: "/pricing", label: t("pricing") },
+        { href: "/plans", label: t("pricing") },
         { href: "/faq", label: t("faq") },
         { href: "/dashboard", label: t("dashboard") },
       ] as const,

@@ -1,6 +1,6 @@
 {
-  "Nav": { 
-    "pricing": "Pricing",
+  "Nav": {
+    "pricing": "Plans",
     "accessibility": "Accessibility",
     "dashboard": "Dashboard",
     "faq": "FAQ",
@@ -37,8 +37,8 @@
     "description": "Empowers website owners and developers with AI tools for real-time SEO, performance optimization, and monitoring."
   },
   "metaPricing": {
-    "title": "Pricing – Start free, scale as you grow | GetSafe 360",
-    "description": "Flexible plans for solo creators, teams, and agencies. Start free with core AI site optimization and automation."
+    "title": "Plans – Unlimited analyses, pay only for AI fixes | GetSafe 360",
+    "description": "Transparent token-based pricing. Unlimited free site analyses. Pay only for AI work. Start free with 5K tokens, upgrade anytime."
   },
   "metaAbout": {
     "title": "About GetSafe 360 – AI Website Copilot",
@@ -133,7 +133,7 @@
     "q3": "Is there a free plan?",
     "a3": {
       "part1": "Yes, you can start free and upgrade anytime.",
-      "link": "See pricing",
+      "link": "See plans",
       "part2": "for plan limits and features."
     },
     "q4": "Which platforms are supported?",
@@ -162,7 +162,7 @@
     "start_now": "Start now",
     "buy_now": "Buy now",
     "upgrade_plan": "Upgrade plan",
-    "view_pricing": "View pricing",
+    "view_pricing": "View plans",
     "view_dashboard": "View dashboard",
     "add_website": "Add website",
     "run_analysis": "Run analysis",
@@ -251,6 +251,53 @@
     "headline1": "Plans For Every Level of Website",
     "headline2": "Start for Free and Pay as you grow.",
     "subheadline": "Our plans include your Co-Pilot to analyze and optimize end-to-end workflows with the power of AI."
+  },
+  "plans": {
+    "headline1": "Plans For Every Level of Website",
+    "headline2": "Unlimited analyses. Pay only for AI fixes.",
+    "subheadline": "All plans include unlimited free site analyses. You only pay for the AI work you use – fair, transparent, and flexible.",
+    "subscriptions": {
+      "title": "Monthly Plans",
+      "popular": "Most Popular",
+      "free": {
+        "description": "Perfect for trying GetSafe 360",
+        "cta": "Get Started Free"
+      },
+      "pro": {
+        "description": "Best for professionals and growing sites",
+        "cta": "Start Pro Plan"
+      },
+      "agency": {
+        "description": "For agencies managing multiple clients",
+        "cta": "Start Agency Plan"
+      }
+    },
+    "tokenPacks": {
+      "title": "One-Time Token Packs",
+      "description": "Need more tokens? Buy token packs that never expire. Perfect for occasional users or as top-ups for your plan.",
+      "tokens": "tokens",
+      "approx": "~{fixes} AI fixes",
+      "buy": "Buy Now",
+      "neverExpire": "Token packs never expire and can be used anytime"
+    },
+    "tokenInfo": {
+      "title": "How Tokens Work",
+      "whatAreTokens": "What are tokens?",
+      "tokensExplained": "Tokens power our AI fixes and optimizations. One AI fix uses approximately 2,000 tokens. Site analyses are always free and don't use tokens.",
+      "howManyNeeded": "How many do I need?",
+      "usageExplained": "Most users average 2-5 AI fixes per site. Free plan gives you 5K tokens (~2-3 fixes) monthly. Pro users get 100K tokens (~50 fixes)."
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "What happens when I run out of tokens?",
+      "a1": "Free users can purchase token packs to continue. Pro and Agency users can continue with slower processing (soft cap) or purchase additional token packs for instant processing.",
+      "q2": "Do purchased tokens expire?",
+      "a2": "No! Token packs you purchase never expire. They're yours to use whenever you need them.",
+      "q3": "Can I change my plan anytime?",
+      "a3": "Yes, you can upgrade or downgrade your plan at any time. Upgrades are instant, downgrades take effect at the end of your billing cycle.",
+      "q4": "Are site analyses really unlimited?",
+      "a4": "Absolutely! You can analyze as many sites as you want, as often as you want. We only charge for AI-powered fixes and optimizations."
+    }
   },
   "terms": {
     "date": "Effective Date:"

@@ -1,6 +1,6 @@
 {
   "Nav": {
-    "pricing": "Tarifs",
+    "pricing": "Plans",
     "accessibility": "Accessibilité",
     "dashboard": "Tableau de bord",
     "faq": "FAQ",
@@ -216,5 +216,52 @@
   },
   "terms": {
     "date": "Date d’effet :"
+  },
+  "plans": {
+    "headline1": "Plans pour chaque niveau de site web",
+    "headline2": "Analyses illimitées. Payez uniquement pour les corrections IA.",
+    "subheadline": "Tous les plans incluent des analyses de sites gratuites et illimitées. Vous ne payez que pour le travail IA que vous utilisez – équitable, transparent et flexible.",
+    "subscriptions": {
+      "title": "Plans Mensuels",
+      "popular": "Le plus populaire",
+      "free": {
+        "description": "Parfait pour essayer GetSafe 360",
+        "cta": "Commencer Gratuitement"
+      },
+      "pro": {
+        "description": "Idéal pour les professionnels et les sites en croissance",
+        "cta": "Commencer le Plan Pro"
+      },
+      "agency": {
+        "description": "Pour les agences gérant plusieurs clients",
+        "cta": "Commencer le Plan Agence"
+      }
+    },
+    "tokenPacks": {
+      "title": "Packs de Tokens Uniques",
+      "description": "Besoin de plus de tokens? Achetez des packs de tokens qui n'expirent jamais.",
+      "tokens": "tokens",
+      "approx": "~{fixes} corrections IA",
+      "buy": "Acheter Maintenant",
+      "neverExpire": "Les packs de tokens n'expirent jamais"
+    },
+    "tokenInfo": {
+      "title": "Comment fonctionnent les Tokens",
+      "whatAreTokens": "Que sont les tokens?",
+      "tokensExplained": "Les tokens alimentent nos corrections et optimisations IA. Une correction IA utilise environ 2 000 tokens.",
+      "howManyNeeded": "Combien en ai-je besoin?",
+      "usageExplained": "La plupart des utilisateurs font en moyenne 2 à 5 corrections IA par site. Le plan gratuit vous donne 5K tokens (~2-3 corrections) mensuellement."
+    },
+    "faq": {
+      "title": "Questions Fréquemment Posées",
+      "q1": "Que se passe-t-il lorsque je n'ai plus de tokens?",
+      "a1": "Les utilisateurs gratuits peuvent acheter des packs de tokens pour continuer. Les utilisateurs Pro et Agence peuvent continuer avec un traitement plus lent.",
+      "q2": "Les tokens achetés expirent-ils?",
+      "a2": "Non! Les packs de tokens que vous achetez n'expirent jamais.",
+      "q3": "Puis-je changer mon plan à tout moment?",
+      "a3": "Oui, vous pouvez mettre à niveau ou rétrograder votre plan à tout moment.",
+      "q4": "Les analyses de sites sont-elles vraiment illimitées?",
+      "a4": "Absolument! Vous pouvez analyser autant de sites que vous le souhaitez, aussi souvent que vous le souhaitez."
+    }
   }
 }

@@ -6,11 +6,16 @@ import { useFormStatus } from 'react-dom';
 import { useClerk } from "@clerk/clerk-react";
 import type { VariantProps } from "class-variance-authority";
 
-type SubmitButtonProps = VariantProps<typeof buttonVariants>;
+type SubmitButtonProps = VariantProps<typeof buttonVariants> & {
+  className?: string;
+  children?: React.ReactNode;
+};
 
 export function SubmitButton({
   variant = "default",
   size = "lg",
+  className,
+  children,
   ...props
 }: SubmitButtonProps) {
   const { pending } = useFormStatus();
@@ -27,6 +32,7 @@ export function SubmitButton({
       disabled={pending}
       variant={variant}
       size={size}
+      className={className}
       onClick={handleClick}
       {...props}
     >
@@ -36,10 +42,12 @@ export function SubmitButton({
           Loading...
         </>
       ) : (
-        <>
-          Get Started
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </>
+        children || (
+          <>
+            Get Started
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </>
+        )
       )}
     </Button>
   );

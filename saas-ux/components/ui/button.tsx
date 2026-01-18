@@ -14,6 +14,8 @@ const buttonVariants = cva(
           "border border-[--thin-border] border-green-700/20 bg-green-50 text-green-800 dark:border-green-400/40 dark:bg-green-600/60 dark:text-white/90 dark:hover:bg-green-500/60 transition-all duration-200",
         blue:
           "border border-[--thin-border] border-blue-700/20 bg-blue-50 text-blue-800 dark:border-blue-400/40 dark:bg-blue-600/60 dark:text-white/90 dark:hover:bg-blue-500/60 transition-all duration-200",
+        purple:
+          "border border-[--thin-border] border-purple-700/20 bg-purple-50 text-purple-800 dark:border-purple-400/40 dark:bg-purple-600/60 dark:text-white/90 dark:hover:bg-purple-500/60 transition-all duration-200",
         free:
           "bg-gradient-to-r from-green-600 via-emerald-500 to-lime-400 text-white border border-green-200/70 shadow-xl hover:shadow-lime-400/30 hover:from-green-700 hover:to-emerald-600 hover:border-lime-200 focus-visible:ring-lime-300/60 transition-all duration-200",
         default:

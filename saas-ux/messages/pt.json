@@ -1,6 +1,6 @@
 {
   "Nav": {
-    "pricing": "Preços",
+    "pricing": "Planos",
     "accessibility": "Acessibilidade",
     "dashboard": "Painel",
     "faq": "FAQ",
@@ -12,7 +12,7 @@
     "openMenu": "Abrir menu",
     "closeMenu": "Fechar menu"
   },
-    "ctaRoot": {  
+  "ctaRoot": {
     "headline": "Melhore seu site – hoje mesmo!",
     "support": "Deixe a IA otimizar qualquer site em minutos – automatize o trabalho chato.",
     "primary": "Crie sua conta gratuita",
@@ -83,7 +83,7 @@
     "intro_left": "Analise e otimize qualquer site em instantes. SEO, desempenho, segurança, acessibilidade e conformidade legal incluídos.",
     "intro_right": "Insights acionáveis. Otimização instantânea. Mantenha cada site no máximo. Comece grátis!"
   },
-    "infobox": {
+  "infobox": {
     "sectionLabel": "Benefícios direcionados para proprietários de sites e desenvolvedores",
     "owners": {
       "title": "Para proprietários de sites e webmasters",
@@ -216,5 +216,52 @@
   },
   "terms": {
     "date": "Data de vigência:"
+  },
+  "plans": {
+    "headline1": "Planos para cada nível de site",
+    "headline2": "Análises ilimitadas. Pague apenas por correções de IA.",
+    "subheadline": "Todos os planos incluem análises de sites gratuitas e ilimitadas. Você paga apenas pelo trabalho de IA que usa – justo, transparente e flexível.",
+    "subscriptions": {
+      "title": "Planos Mensais",
+      "popular": "Mais Popular",
+      "free": {
+        "description": "Perfeito para experimentar o GetSafe 360",
+        "cta": "Começar Grátis"
+      },
+      "pro": {
+        "description": "Ideal para profissionais e sites em crescimento",
+        "cta": "Começar Plano Pro"
+      },
+      "agency": {
+        "description": "Para agências que gerenciam vários clientes",
+        "cta": "Começar Plano Agência"
+      }
+    },
+    "tokenPacks": {
+      "title": "Pacotes de Tokens Únicos",
+      "description": "Precisa de mais tokens? Compre pacotes de tokens que nunca expiram.",
+      "tokens": "tokens",
+      "approx": "~{fixes} correções de IA",
+      "buy": "Comprar Agora",
+      "neverExpire": "Os pacotes de tokens nunca expiram"
+    },
+    "tokenInfo": {
+      "title": "Como funcionam os Tokens",
+      "whatAreTokens": "O que são tokens?",
+      "tokensExplained": "Os tokens alimentam nossas correções e otimizações de IA. Uma correção de IA usa aproximadamente 2.000 tokens.",
+      "howManyNeeded": "Quantos preciso?",
+      "usageExplained": "A maioria dos usuários faz em média 2-5 correções de IA por site. O plano gratuito fornece 5K tokens (~2-3 correções) mensalmente."
+    },
+    "faq": {
+      "title": "Perguntas Frequentes",
+      "q1": "O que acontece quando acabo os tokens?",
+      "a1": "Usuários gratuitos podem comprar pacotes de tokens para continuar. Usuários Pro e Agência podem continuar com processamento mais lento.",
+      "q2": "Os tokens comprados expiram?",
+      "a2": "Não! Os pacotes de tokens que você compra nunca expiram.",
+      "q3": "Posso mudar meu plano a qualquer momento?",
+      "a3": "Sim, você pode fazer upgrade ou downgrade do seu plano a qualquer momento.",
+      "q4": "As análises de sites são realmente ilimitadas?",
+      "a4": "Absolutamente! Você pode analisar quantos sites quiser, quantas vezes quiser."
+    }
   }
 }
