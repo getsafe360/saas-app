@@ -1,6 +1,6 @@
 {
   "Nav": {
-    "pricing": "Preise",
+    "pricing": "Pläne",
     "accessibility": "Barrierefreiheit",
     "dashboard": "Dashboard",
     "faq": "FAQ",
@@ -218,6 +218,53 @@
     "headline1": "Pläne für jede Website-Größe",
     "headline2": "Starte kostenlos und zahle, während du wächst.",
     "subheadline": "Unsere Pläne enthalten deinen Co-Piloten, der mit KI End-to-End-Workflows analysiert und optimiert."
+  },
+  "plans": {
+    "headline1": "Pläne für jede Website-Größe",
+    "headline2": "Unbegrenzte Analysen. Nur für KI-Fixes bezahlen.",
+    "subheadline": "Alle Pläne beinhalten unbegrenzte kostenlose Website-Analysen. Sie zahlen nur für die von Ihnen genutzte KI-Arbeit – fair, transparent und flexibel.",
+    "subscriptions": {
+      "title": "Monatliche Pläne",
+      "popular": "Beliebteste",
+      "free": {
+        "description": "Perfekt, um GetSafe 360 auszuprobieren",
+        "cta": "Kostenlos starten"
+      },
+      "pro": {
+        "description": "Ideal für Profis und wachsende Websites",
+        "cta": "Pro-Plan starten"
+      },
+      "agency": {
+        "description": "Für Agenturen mit mehreren Kunden",
+        "cta": "Agentur-Plan starten"
+      }
+    },
+    "tokenPacks": {
+      "title": "Einmalige Token-Pakete",
+      "description": "Brauchen Sie mehr Tokens? Kaufen Sie Token-Pakete, die niemals ablaufen. Perfekt für Gelegenheitsnutzer oder als Aufstockung für Ihren Plan.",
+      "tokens": "Tokens",
+      "approx": "~{fixes} KI-Fixes",
+      "buy": "Jetzt kaufen",
+      "neverExpire": "Token-Pakete laufen nie ab und können jederzeit verwendet werden"
+    },
+    "tokenInfo": {
+      "title": "So funktionieren Tokens",
+      "whatAreTokens": "Was sind Tokens?",
+      "tokensExplained": "Tokens ermöglichen unsere KI-Fixes und Optimierungen. Ein KI-Fix verbraucht etwa 2.000 Tokens. Website-Analysen sind immer kostenlos und verbrauchen keine Tokens.",
+      "howManyNeeded": "Wie viele brauche ich?",
+      "usageExplained": "Die meisten Nutzer machen durchschnittlich 2-5 KI-Fixes pro Website. Der kostenlose Plan gibt Ihnen 5.000 Tokens (~2-3 Fixes) monatlich. Pro-Nutzer erhalten 100.000 Tokens (~50 Fixes)."
+    },
+    "faq": {
+      "title": "Häufig gestellte Fragen",
+      "q1": "Was passiert, wenn mir die Tokens ausgehen?",
+      "a1": "Kostenlose Nutzer können Token-Pakete kaufen, um fortzufahren. Pro- und Agentur-Nutzer können mit langsamerer Verarbeitung (Soft Cap) fortfahren oder zusätzliche Token-Pakete für sofortige Verarbeitung kaufen.",
+      "q2": "Laufen gekaufte Tokens ab?",
+      "a2": "Nein! Token-Pakete, die Sie kaufen, laufen niemals ab. Sie gehören Ihnen und können verwendet werden, wann immer Sie sie brauchen.",
+      "q3": "Kann ich meinen Plan jederzeit ändern?",
+      "a3": "Ja, Sie können Ihren Plan jederzeit upgraden oder downgraden. Upgrades sind sofort, Downgrades werden am Ende Ihres Abrechnungszeitraums wirksam.",
+      "q4": "Sind Website-Analysen wirklich unbegrenzt?",
+      "a4": "Absolut! Sie können so viele Websites analysieren, wie Sie möchten, so oft Sie möchten. Wir berechnen nur KI-basierte Fixes und Optimierungen."
+    }
   },
   "terms": {
     "date": "Datum des Inkrafttretens:"

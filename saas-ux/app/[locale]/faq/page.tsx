@@ -40,7 +40,7 @@ export default async function FAQPage({ params }: Props) {
       a: (
         <p>
           {t('a3.part1')}{' '}
-          <Link href="/pricing" className="underline decoration-sky-500/60 underline-offset-4">
+          <Link href="/plans" className="underline decoration-sky-500/60 underline-offset-4">
             {t('a3.link')}
           </Link>{' '}
           {t('a3.part2')}

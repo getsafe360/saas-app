@@ -1,6 +1,6 @@
 {
   "Nav": {
-    "pricing": "Prezzi",
+    "pricing": "Piani",
     "accessibility": "Accessibilità",
     "dashboard": "Pannello di Controllo",
     "faq": "FAQ",
@@ -32,7 +32,7 @@
     "title": "La mia Dashboard - GetSafe 360",
     "description": "Gestisci i tuoi siti nella dashboard."
   },
-    "metaRoot": {
+  "metaRoot": {
     "title": "GetSafe 360 — Copilota IA per l’ottimizzazione dei siti web",
     "description": "Offre a proprietari di siti e sviluppatori strumenti IA per SEO in tempo reale, ottimizzazione delle prestazioni e monitoraggio."
   },
@@ -83,7 +83,7 @@
     "intro_left": "Analizza e ottimizza qualunque sito all’istante. SEO, performance, sicurezza, accessibilità e conformità legale inclusi.",
     "intro_right": "Insight azionabili. Ottimizzazione immediata. Mantieni ogni sito al massimo. Inizia gratis!"
   },
-    "infobox": {
+  "infobox": {
     "sectionLabel": "Vantaggi mirati per proprietari di siti e sviluppatori",
     "owners": {
       "title": "Per proprietari di siti e webmaster",
@@ -216,5 +216,52 @@
   },
   "terms": {
     "date": "Data di entrata in vigore:"
+  },
+  "plans": {
+    "headline1": "Piani per ogni livello di sito web",
+    "headline2": "Analisi illimitate. Paga solo per le correzioni IA.",
+    "subheadline": "Tutti i piani includono analisi di siti gratuite e illimitate. Paghi solo per il lavoro IA che usi – giusto, trasparente e flessibile.",
+    "subscriptions": {
+      "title": "Piani Mensili",
+      "popular": "Più Popolare",
+      "free": {
+        "description": "Perfetto per provare GetSafe 360",
+        "cta": "Inizia Gratis"
+      },
+      "pro": {
+        "description": "Ideale per professionisti e siti in crescita",
+        "cta": "Inizia Piano Pro"
+      },
+      "agency": {
+        "description": "Per agenzie che gestiscono più clienti",
+        "cta": "Inizia Piano Agenzia"
+      }
+    },
+    "tokenPacks": {
+      "title": "Pacchetti Token Una Tantum",
+      "description": "Hai bisogno di più token? Acquista pacchetti di token che non scadono mai.",
+      "tokens": "token",
+      "approx": "~{fixes} correzioni IA",
+      "buy": "Acquista Ora",
+      "neverExpire": "I pacchetti di token non scadono mai"
+    },
+    "tokenInfo": {
+      "title": "Come funzionano i Token",
+      "whatAreTokens": "Cosa sono i token?",
+      "tokensExplained": "I token alimentano le nostre correzioni e ottimizzazioni IA. Una correzione IA utilizza circa 2.000 token.",
+      "howManyNeeded": "Quanti ne ho bisogno?",
+      "usageExplained": "La maggior parte degli utenti fa in media 2-5 correzioni IA per sito. Il piano gratuito ti dà 5K token (~2-3 correzioni) mensili."
+    },
+    "faq": {
+      "title": "Domande Frequenti",
+      "q1": "Cosa succede quando finiscono i token?",
+      "a1": "Gli utenti gratuiti possono acquistare pacchetti di token per continuare. Gli utenti Pro e Agenzia possono continuare con elaborazione più lenta.",
+      "q2": "I token acquistati scadono?",
+      "a2": "No! I pacchetti di token che acquisti non scadono mai.",
+      "q3": "Posso cambiare il mio piano in qualsiasi momento?",
+      "a3": "Sì, puoi aggiornare o ridurre il tuo piano in qualsiasi momento.",
+      "q4": "Le analisi dei siti sono davvero illimitate?",
+      "a4": "Assolutamente! Puoi analizzare tutti i siti che vuoi, tutte le volte che vuoi."
+    }
   }
 }
