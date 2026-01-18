@@ -10,6 +10,7 @@ export interface PlanConfig {
   price: number; // in cents (EUR)
   priceDisplay: string;
   stripePriceId: string | null; // null for free plan
+  stripeBuyButtonId: string | null; // null for free plan
   tokensIncluded: number; // Monthly token allowance
   features: string[];
   isPopular?: boolean;
@@ -22,6 +23,7 @@ export interface TokenPackConfig {
   price: number; // in cents (EUR)
   priceDisplay: string;
   stripePriceId: string;
+  stripeBuyButtonId: string;
   savingsPercent?: number;
 }
 
@@ -45,6 +47,7 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     price: 0,
     priceDisplay: '€0',
     stripePriceId: null,
+    stripeBuyButtonId: null,
     tokensIncluded: 5000, // ~2-3 AI fixes
     features: [
       'Unlimited site analyses',
@@ -61,6 +64,7 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     price: 1900, // €19.00
     priceDisplay: '€19',
     stripePriceId: 'price_1SpxHnCs6GUQsp1IUuZiUj99',
+    stripeBuyButtonId: 'buy_btn_1Sr2sSCs6GUQsp1IxgHcbCpJ',
     tokensIncluded: 100000, // ~50 AI fixes
     features: [
       'Unlimited site analyses',
@@ -79,6 +83,7 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     price: 4900, // €49.00
     priceDisplay: '€49',
     stripePriceId: 'price_1SpxuBCs6GUQsp1IriBKXbat',
+    stripeBuyButtonId: 'buy_btn_1Sr2ybCs6GUQsp1IMUpTefbp',
     tokensIncluded: 300000, // ~150 AI fixes
     features: [
       'Unlimited site analyses',
@@ -106,6 +111,7 @@ export const TOKEN_PACKS: TokenPackConfig[] = [
     price: 500, // €5.00
     priceDisplay: '€5',
     stripePriceId: 'price_1SqaxtCs6GUQsp1IL0d9dOgV',
+    stripeBuyButtonId: 'buy_btn_1Sr34XCs6GUQsp1IkA8tPkeC',
   },
   {
     id: 'medium',
@@ -114,6 +120,7 @@ export const TOKEN_PACKS: TokenPackConfig[] = [
     price: 1000, // €10.00
     priceDisplay: '€10',
     stripePriceId: 'price_1SqazKCs6GUQsp1IP9mYvV5n',
+    stripeBuyButtonId: 'buy_btn_1Sr32bCs6GUQsp1IBbqDko7o',
     savingsPercent: 25, // 25% more tokens than 2x small
   },
   {
@@ -123,6 +130,7 @@ export const TOKEN_PACKS: TokenPackConfig[] = [
     price: 1500, // €15.00
     priceDisplay: '€15',
     stripePriceId: 'price_1Sqb0CCs6GUQsp1INNhNduLq',
+    stripeBuyButtonId: 'buy_btn_1Sr35qCs6GUQsp1IpsO9Wuil',
     savingsPercent: 33, // 33% more tokens than 3x small
   },
 ];

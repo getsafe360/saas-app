@@ -6,6 +6,7 @@ import { SignUpButton } from '@clerk/clerk-react';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { CheckCircle2, Sparkles, Zap } from 'lucide-react';
 import { PLANS, TOKEN_PACKS } from '@/lib/plans/config';
+import { StripeBuyButton } from '@/components/stripe/stripe-buy-button';
 
 export function PricingCards() {
   const t = useTranslations('plans');
@@ -76,11 +77,12 @@ export function PricingCards() {
               </ul>
 
               <div className="mt-auto w-full">
-                <SignUpButton mode="modal">
-                  <SubmitButton variant="blue" className="w-full">
-                    {t('subscriptions.pro.cta')}
-                  </SubmitButton>
-                </SignUpButton>
+                {PLANS.pro.stripeBuyButtonId && (
+                  <StripeBuyButton
+                    buyButtonId={PLANS.pro.stripeBuyButtonId}
+                    className="w-full"
+                  />
+                )}
               </div>
             </CardContent>
           </Card>
@@ -111,11 +113,12 @@ export function PricingCards() {
               </ul>
 
               <div className="mt-auto w-full">
-                <SignUpButton mode="modal">
-                  <SubmitButton variant="purple" className="w-full">
-                    {t('subscriptions.agency.cta')}
-                  </SubmitButton>
-                </SignUpButton>
+                {PLANS.agency.stripeBuyButtonId && (
+                  <StripeBuyButton
+                    buyButtonId={PLANS.agency.stripeBuyButtonId}
+                    className="w-full"
+                  />
+                )}
               </div>
             </CardContent>
           </Card>
@@ -160,11 +163,10 @@ export function PricingCards() {
                     {t('tokenPacks.approx', { fixes: Math.floor(pack.tokens / 2000) })}
                   </div>
                 </div>
-                <SignUpButton mode="modal">
-                  <button className="w-full px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-semibold transition-colors">
-                    {t('tokenPacks.buy')}
-                  </button>
-                </SignUpButton>
+                <StripeBuyButton
+                  buyButtonId={pack.stripeBuyButtonId}
+                  className="w-full"
+                />
               </CardContent>
             </Card>
           ))}
