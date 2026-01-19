@@ -1,0 +1,158 @@
+{
+  "privacy": {
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: 19 de enero de 2026",
+    "intro": {
+      "title": "Introducción",
+      "content": "GetSafe 360 AI Limited (\"nosotros\", \"nuestro\" o \"nos\") se compromete a proteger su privacidad. Esta Política de Privacidad explica cómo recopilamos, usamos, divulgamos y protegemos su información cuando utiliza nuestros servicios de análisis y optimización de sitios web."
+    },
+    "informationWeCollect": {
+      "title": "Información que Recopilamos",
+      "personal": {
+        "title": "Información Personal",
+        "content": "Recopilamos información que usted nos proporciona directamente, incluyendo:",
+        "items": {
+          "1": "Nombre y dirección de correo electrónico cuando crea una cuenta",
+          "2": "Información de pago y facturación para servicios de suscripción",
+          "3": "URLs de sitios web que envía para análisis",
+          "4": "Comunicaciones que envía a nuestro equipo de soporte"
+        }
+      },
+      "automated": {
+        "title": "Información Recopilada Automáticamente",
+        "content": "Cuando usa nuestros servicios, recopilamos automáticamente:",
+        "items": {
+          "1": "Datos de registro que incluyen dirección IP, tipo de navegador y sistema operativo",
+          "2": "Datos de uso que incluyen funciones utilizadas y tiempo dedicado en nuestra plataforma",
+          "3": "Cookies y tecnologías de seguimiento similares para mejorar su experiencia"
+        }
+      },
+      "analyzed": {
+        "title": "Datos de Análisis de Sitios Web",
+        "content": "Cuando analiza un sitio web, recopilamos:",
+        "items": {
+          "1": "Datos técnicos del sitio web analizado (HTML, CSS, scripts)",
+          "2": "Métricas de rendimiento y puntuaciones de accesibilidad",
+          "3": "Resultados de evaluación de SEO y seguridad"
+        }
+      }
+    },
+    "howWeUse": {
+      "title": "Cómo Usamos Su Información",
+      "content": "Utilizamos la información recopilada para:",
+      "items": {
+        "1": "Proporcionar, mantener y mejorar nuestros servicios de optimización de sitios web con IA",
+        "2": "Procesar sus pagos y gestionar su suscripción",
+        "3": "Enviarle avisos técnicos, actualizaciones y mensajes de soporte",
+        "4": "Responder a sus solicitudes, preguntas y comentarios",
+        "5": "Monitorear y analizar patrones de uso para mejorar nuestros modelos de IA",
+        "6": "Detectar, prevenir y abordar problemas técnicos y amenazas de seguridad",
+        "7": "Cumplir con obligaciones legales y hacer cumplir nuestros Términos de Servicio"
+      }
+    },
+    "disclosure": {
+      "title": "Compartir y Divulgación de Información",
+      "intro": "Compartimos su información solo en las siguientes circunstancias:",
+      "serviceProviders": {
+        "title": "Proveedores de Servicios",
+        "content": "Compartimos datos con proveedores de servicios de terceros de confianza que nos ayudan a operar nuestra plataforma, incluyendo:",
+        "items": {
+          "1": "Procesadores de pagos (Stripe) para facturación de suscripciones",
+          "2": "Proveedores de alojamiento en la nube para almacenamiento y procesamiento de datos",
+          "3": "Servicios de autenticación (Clerk) para gestión segura de cuentas",
+          "4": "Herramientas de análisis para comprender el uso del servicio"
+        }
+      },
+      "legal": {
+        "title": "Requisitos Legales",
+        "content": "Podemos divulgar su información si así lo exige la ley o en respuesta a solicitudes legales válidas de autoridades públicas."
+      },
+      "businessTransfer": {
+        "title": "Transferencias Comerciales",
+        "content": "Si estamos involucrados en una fusión, adquisición o venta de activos, su información puede transferirse como parte de esa transacción."
+      },
+      "consent": {
+        "title": "Con Su Consentimiento",
+        "content": "Podemos compartir información para cualquier otro propósito con su consentimiento explícito."
+      }
+    },
+    "security": {
+      "title": "Prácticas de Seguridad",
+      "content": "Implementamos medidas de seguridad estándar de la industria para proteger su información:",
+      "items": {
+        "1": "Cifrado de datos en tránsito usando protocolos TLS/SSL",
+        "2": "Almacenamiento cifrado de información personal y de pago sensible",
+        "3": "Evaluaciones de seguridad y pruebas de vulnerabilidad regulares",
+        "4": "Controles de acceso que limitan el acceso de empleados a datos personales",
+        "5": "Autenticación segura usando proveedores líderes en la industria",
+        "6": "Copias de seguridad regulares y procedimientos de recuperación ante desastres"
+      },
+      "note": "Sin embargo, ningún método de transmisión por Internet es 100% seguro. Aunque nos esforzamos por proteger sus datos, no podemos garantizar seguridad absoluta."
+    },
+    "dataRetention": {
+      "title": "Retención de Datos",
+      "content": "Conservamos su información personal durante el tiempo necesario para proporcionar nuestros servicios y cumplir con obligaciones legales. Específicamente:",
+      "items": {
+        "1": "La información de la cuenta se conserva mientras su cuenta esté activa",
+        "2": "Los datos de análisis de sitios web se conservan durante 12 meses para permitir comparaciones históricas",
+        "3": "Los registros de pago se conservan durante 7 años para cumplir con regulaciones fiscales",
+        "4": "Tras la eliminación de la cuenta, los datos personales se anonimizan o eliminan en 30 días"
+      }
+    },
+    "yourRights": {
+      "title": "Sus Derechos de Privacidad",
+      "intro": "Dependiendo de su ubicación, puede tener los siguientes derechos:",
+      "items": {
+        "1": "Acceso: Solicitar una copia de la información personal que tenemos sobre usted",
+        "2": "Corrección: Solicitar la corrección de información inexacta o incompleta",
+        "3": "Eliminación: Solicitar la eliminación de su información personal",
+        "4": "Portabilidad: Solicitar la transferencia de sus datos en un formato legible por máquina",
+        "5": "Objeción: Oponerse al procesamiento de su información personal",
+        "6": "Restricción: Solicitar la restricción del procesamiento en ciertas circunstancias",
+        "7": "Retirar Consentimiento: Retirar el consentimiento para el procesamiento de datos en cualquier momento"
+      },
+      "exercise": "Para ejercer estos derechos, contáctenos en privacy@getsafe360.ai. Responderemos dentro de 30 días."
+    },
+    "gdpr": {
+      "title": "Cumplimiento del RGPD (Usuarios de la UE)",
+      "content": "Si se encuentra en el Espacio Económico Europeo (EEE), procesamos sus datos según las siguientes bases legales:",
+      "items": {
+        "1": "Contrato: Ejecución de nuestro acuerdo de servicio con usted",
+        "2": "Consentimiento: Cuando ha dado su consentimiento explícito",
+        "3": "Intereses Legítimos: Para prevención de fraude y mejora del servicio",
+        "4": "Obligación Legal: Para cumplir con leyes y regulaciones aplicables"
+      },
+      "transfer": "Cuando transferimos datos fuera del EEE, nos aseguramos de que existan salvaguardias apropiadas, incluyendo Cláusulas Contractuales Estándar."
+    },
+    "cookies": {
+      "title": "Cookies y Seguimiento",
+      "content": "Utilizamos cookies y tecnologías similares para:",
+      "items": {
+        "1": "Mantenerle conectado a su cuenta",
+        "2": "Recordar sus preferencias y configuraciones",
+        "3": "Analizar cómo usa nuestros servicios",
+        "4": "Prevenir actividad fraudulenta y mejorar la seguridad"
+      },
+      "control": "Puede controlar las cookies a través de la configuración de su navegador. Sin embargo, deshabilitar las cookies puede limitar su capacidad para usar ciertas funciones."
+    },
+    "childrenPrivacy": {
+      "title": "Privacidad de Menores",
+      "content": "Nuestros servicios no están dirigidos a personas menores de 16 años. No recopilamos conscientemente información personal de menores. Si cree que hemos recopilado información de un menor, contáctenos inmediatamente."
+    },
+    "international": {
+      "title": "Transferencias Internacionales de Datos",
+      "content": "Su información puede transferirse y procesarse en países distintos al de su residencia. Estos países pueden tener leyes de protección de datos diferentes. Nos aseguramos de que existan salvaguardias apropiadas para dichas transferencias."
+    },
+    "changes": {
+      "title": "Cambios a Esta Política de Privacidad",
+      "content": "Podemos actualizar esta Política de Privacidad de vez en cuando. Le notificaremos de cualquier cambio material publicando la nueva Política de Privacidad en esta página y actualizando la fecha de \"Última actualización\". Su uso continuado de nuestros servicios después de los cambios constituye la aceptación de la política actualizada."
+    },
+    "contact": {
+      "title": "Contáctenos",
+      "content": "Si tiene preguntas o inquietudes sobre esta Política de Privacidad o nuestras prácticas de datos, contáctenos:",
+      "email": "Correo electrónico: privacy@getsafe360.ai",
+      "address": "GetSafe 360 AI Limited",
+      "mail": "Para correspondencia escrita, utilice el formulario de contacto en nuestro sitio web."
+    }
+  }
+}
