@@ -21,6 +21,9 @@ export function Footer() {
                     <Link href="/terms" className="hover:underline text-gray-600 dark:text-gray-300 text-sm">
                         {t('terms')}
                     </Link>
+                    <Link href="/privacy" className="hover:underline text-gray-600 dark:text-gray-300 text-sm">
+                        {t('privacy')}
+                    </Link>
                     <Link href="/contact" className="hover:underline text-gray-600 dark:text-gray-300 text-sm">
                         {t('contact')}
                     </Link>
