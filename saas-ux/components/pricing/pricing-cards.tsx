@@ -7,6 +7,7 @@ import { SubmitButton } from '@/components/ui/submit-button';
 import { CheckCircle2, Sparkles, Zap } from 'lucide-react';
 import { PLANS, TOKEN_PACKS } from '@/lib/plans/config';
 import { CheckoutButton } from '@/components/checkout/checkout-button';
+import { StripeBuyButton } from '@/components/stripe/stripe-buy-button';
 
 export function PricingCards() {
   const t = useTranslations('plans');
@@ -83,6 +84,11 @@ export function PricingCards() {
                   </CheckoutButton>
                 ) : (
                   <div className="text-sm text-red-500">Price not configured</div>
+                {PLANS.pro.stripeBuyButtonId && (
+                  <StripeBuyButton
+                    buyButtonId={PLANS.pro.stripeBuyButtonId}
+                    className="w-full"
+                  />
                 )}
               </div>
             </CardContent>
@@ -120,6 +126,11 @@ export function PricingCards() {
                   </CheckoutButton>
                 ) : (
                   <div className="text-sm text-red-500">Price not configured</div>
+                {PLANS.agency.stripeBuyButtonId && (
+                  <StripeBuyButton
+                    buyButtonId={PLANS.agency.stripeBuyButtonId}
+                    className="w-full"
+                  />
                 )}
               </div>
             </CardContent>
@@ -168,6 +179,10 @@ export function PricingCards() {
                 <CheckoutButton priceId={pack.stripePriceId} variant="default" className="w-full">
                   {t('tokenPacks.buy')}
                 </CheckoutButton>
+                <StripeBuyButton
+                  buyButtonId={pack.stripeBuyButtonId}
+                  className="w-full"
+                />
               </CardContent>
             </Card>
           ))}
