@@ -6,6 +6,16 @@ import { SignUpButton } from '@clerk/clerk-react';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { CheckCircle2, Sparkles, Zap } from 'lucide-react';
 import { PLANS, TOKEN_PACKS } from '@/lib/plans/config';
+import Link from 'next/link';
+
+// Stripe Payment Links
+const PAYMENT_LINKS = {
+  pro: 'https://pay.getsafe360.ai/8x214mfQud5mbNf84abAs00',
+  agency: 'https://pay.getsafe360.ai/14AbJ09s61mE2cF5W2bAs01',
+  tokenSmall: 'https://pay.getsafe360.ai/8x214m9s69Ta5oR4RYbAs03',
+  tokenMedium: 'https://pay.getsafe360.ai/dRm8wO9s6d5mbNf2JQbAs02',
+  tokenLarge: 'https://pay.getsafe360.ai/eVq14m1ZE4yQg3v706bAs04',
+} as const;
 
 export function PricingCards() {
   const t = useTranslations('plans');
@@ -76,11 +86,11 @@ export function PricingCards() {
               </ul>
 
               <div className="mt-auto w-full">
-                <SignUpButton mode="modal">
+                <Link href={PAYMENT_LINKS.pro} className="block">
                   <SubmitButton variant="blue" className="w-full">
                     {t('subscriptions.pro.cta')}
                   </SubmitButton>
-                </SignUpButton>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -111,11 +121,11 @@ export function PricingCards() {
               </ul>
 
               <div className="mt-auto w-full">
-                <SignUpButton mode="modal">
+                <Link href={PAYMENT_LINKS.agency} className="block">
                   <SubmitButton variant="purple" className="w-full">
                     {t('subscriptions.agency.cta')}
                   </SubmitButton>
-                </SignUpButton>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -131,43 +141,49 @@ export function PricingCards() {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          {TOKEN_PACKS.map((pack) => (
-            <Card
-              key={pack.id}
-              className="hover:shadow-lg transition-shadow dark:bg-[#1f2123] border-[--thin-border] rounded-xl"
-            >
-              <CardHeader>
-                <CardTitle className="text-xl mb-2 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-yellow-500" />
-                  {pack.name}
-                </CardTitle>
-                <div className="text-3xl font-bold">
-                  {pack.priceDisplay}
-                </div>
-                {pack.savingsPercent && (
-                  <div className="text-xs text-green-600 dark:text-green-400 font-semibold">
-                    Save {pack.savingsPercent}%
-                  </div>
-                )}
-              </CardHeader>
+          {TOKEN_PACKS.map((pack) => {
+            const paymentLink = pack.id === 'small' ? PAYMENT_LINKS.tokenSmall :
+                               pack.id === 'medium' ? PAYMENT_LINKS.tokenMedium :
+                               PAYMENT_LINKS.tokenLarge;
 
-              <CardContent>
-                <div className="mb-4">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {pack.tokens.toLocaleString()} {t('tokenPacks.tokens')}
+            return (
+              <Card
+                key={pack.id}
+                className="hover:shadow-lg transition-shadow dark:bg-[#1f2123] border-[--thin-border] rounded-xl"
+              >
+                <CardHeader>
+                  <CardTitle className="text-xl mb-2 flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-yellow-500" />
+                    {pack.name}
+                  </CardTitle>
+                  <div className="text-3xl font-bold">
+                    {pack.priceDisplay}
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {t('tokenPacks.approx', { fixes: Math.floor(pack.tokens / 2000) })}
+                  {pack.savingsPercent && (
+                    <div className="text-xs text-green-600 dark:text-green-400 font-semibold">
+                      Save {pack.savingsPercent}%
+                    </div>
+                  )}
+                </CardHeader>
+
+                <CardContent>
+                  <div className="mb-4">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {pack.tokens.toLocaleString()} {t('tokenPacks.tokens')}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {t('tokenPacks.approx', { fixes: Math.floor(pack.tokens / 2000) })}
+                    </div>
                   </div>
-                </div>
-                <SignUpButton mode="modal">
-                  <button className="w-full px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-semibold transition-colors">
-                    {t('tokenPacks.buy')}
-                  </button>
-                </SignUpButton>
-              </CardContent>
-            </Card>
-          ))}
+                  <Link href={paymentLink} className="block">
+                    <button className="w-full px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-semibold transition-colors">
+                      {t('tokenPacks.buy')}
+                    </button>
+                  </Link>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
         <p className="text-center text-sm text-muted-foreground mt-6">
           {t('tokenPacks.neverExpire')}
