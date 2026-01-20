@@ -77,9 +77,13 @@ export function PricingCards() {
               </ul>
 
               <div className="mt-auto w-full">
-                <CheckoutButton priceId={PLANS.pro.stripePriceId!} variant="blue" className="w-full">
-                  {t('subscriptions.pro.cta')}
-                </CheckoutButton>
+                {PLANS.pro.stripePriceId ? (
+                  <CheckoutButton priceId={PLANS.pro.stripePriceId} variant="blue" className="w-full">
+                    {t('subscriptions.pro.cta')}
+                  </CheckoutButton>
+                ) : (
+                  <div className="text-sm text-red-500">Price not configured</div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -110,9 +114,13 @@ export function PricingCards() {
               </ul>
 
               <div className="mt-auto w-full">
-                <CheckoutButton priceId={PLANS.agency.stripePriceId!} variant="purple" className="w-full">
-                  {t('subscriptions.agency.cta')}
-                </CheckoutButton>
+                {PLANS.agency.stripePriceId ? (
+                  <CheckoutButton priceId={PLANS.agency.stripePriceId} variant="purple" className="w-full">
+                    {t('subscriptions.agency.cta')}
+                  </CheckoutButton>
+                ) : (
+                  <div className="text-sm text-red-500">Price not configured</div>
+                )}
               </div>
             </CardContent>
           </Card>
