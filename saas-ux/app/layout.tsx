@@ -23,6 +23,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-NN7RBQ42');`}
         </Script>
+
+        {/* Stripe Buy Button Script */}
+        <Script
+          src="https://js.stripe.com/v3/buy-button.js"
+          strategy="lazyOnload"
+        />
       </head>
       <body className="min-h-[100dvh] antialiased bg-stone-50 dark:bg-[#0d1117] text-gray-900 dark:text-gray-100">
         <ClerkProvider>
