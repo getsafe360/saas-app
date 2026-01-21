@@ -8,7 +8,6 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { CheckCircle2, Sparkles, Zap } from "lucide-react";
 import { PLANS, TOKEN_PACKS } from "@/lib/plans/config";
 import { CheckoutButton } from "@/components/checkout/checkout-button";
-import { StripeBuyButton } from "@/components/stripe/stripe-buy-button";
 
 export function PricingCards() {
   const t = useTranslations("plans");
@@ -89,25 +88,13 @@ export function PricingCards() {
               </ul>
 
               <div className="mt-auto w-full">
-                {PLANS.pro.stripePriceId ? (
-                  <CheckoutButton
-                    priceId={PLANS.pro.stripePriceId}
-                    variant="blue"
-                    className="w-full"
-                  >
-                    {t("subscriptions.pro.cta")}
-                  </CheckoutButton>
-                ) : (
-                  <div className="text-sm text-red-500">
-                    Price not configured
-                  </div>
-                )}
-                {PLANS.pro.stripeBuyButtonId && (
-                  <StripeBuyButton
-                    buyButtonId={PLANS.pro.stripeBuyButtonId}
-                    className="w-full"
-                  />
-                )}
+                <CheckoutButton
+                  stripeCheckoutUrl={PLANS.pro.stripeCheckoutUrl}
+                  variant="blue"
+                  className="w-full"
+                >
+                  {t("subscriptions.pro.cta")}
+                </CheckoutButton>
               </div>
             </CardContent>
           </Card>
@@ -142,25 +129,13 @@ export function PricingCards() {
               </ul>
 
               <div className="mt-auto w-full">
-                {PLANS.agency.stripePriceId ? (
-                  <CheckoutButton
-                    priceId={PLANS.agency.stripePriceId}
-                    variant="purple"
-                    className="w-full"
-                  >
-                    {t("subscriptions.agency.cta")}
-                  </CheckoutButton>
-                ) : (
-                  <div className="text-sm text-red-500">
-                    Price not configured
-                  </div>
-                )}
-                {PLANS.agency.stripeBuyButtonId && (
-                  <StripeBuyButton
-                    buyButtonId={PLANS.agency.stripeBuyButtonId}
-                    className="w-full"
-                  />
-                )}
+                <CheckoutButton
+                  stripeCheckoutUrl={PLANS.agency.stripeCheckoutUrl}
+                  variant="purple"
+                  className="w-full"
+                >
+                  {t("subscriptions.agency.cta")}
+                </CheckoutButton>
               </div>
             </CardContent>
           </Card>
@@ -206,16 +181,12 @@ export function PricingCards() {
                   </div>
                 </div>
                 <CheckoutButton
-                  priceId={pack.stripePriceId}
+                  stripeCheckoutUrl={pack.stripeCheckoutUrl}
                   variant="default"
                   className="w-full"
                 >
                   {t("tokenPacks.buy")}
                 </CheckoutButton>
-                <StripeBuyButton
-                  buyButtonId={pack.stripeBuyButtonId}
-                  className="w-full"
-                />
               </CardContent>
             </Card>
           ))}
