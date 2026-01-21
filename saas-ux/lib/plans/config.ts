@@ -11,6 +11,7 @@ export interface PlanConfig {
   priceDisplay: string;
   stripePriceId: string | null; // null for free plan
   stripeBuyButtonId: string | null; // null for free plan
+  stripeCheckoutUrl: string | null; // Direct link to Stripe checkout
   tokensIncluded: number; // Monthly token allowance
   features: string[];
   isPopular?: boolean;
@@ -24,6 +25,7 @@ export interface TokenPackConfig {
   priceDisplay: string;
   stripePriceId: string;
   stripeBuyButtonId: string;
+  stripeCheckoutUrl: string; // Direct link to Stripe checkout
   savingsPercent?: number;
 }
 
@@ -48,6 +50,7 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     priceDisplay: '€0',
     stripePriceId: null,
     stripeBuyButtonId: null,
+    stripeCheckoutUrl: null,
     tokensIncluded: 5000, // ~2-3 AI fixes
     features: [
       'Unlimited site analyses',
@@ -65,6 +68,7 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     priceDisplay: '€19',
     stripePriceId: 'price_1SpxHnCs6GUQsp1IUuZiUj99',
     stripeBuyButtonId: 'buy_btn_1Sr2sSCs6GUQsp1IxgHcbCpJ',
+    stripeCheckoutUrl: null, // TODO: Add Pro plan Stripe checkout URL
     tokensIncluded: 100000, // ~50 AI fixes
     features: [
       'Unlimited site analyses',
@@ -84,6 +88,7 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     priceDisplay: '€49',
     stripePriceId: 'price_1SpxuBCs6GUQsp1IriBKXbat',
     stripeBuyButtonId: 'buy_btn_1Sr2ybCs6GUQsp1IMUpTefbp',
+    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/14AbJ09s61mE2cF5W2bAs01?locale=en',
     tokensIncluded: 300000, // ~150 AI fixes
     features: [
       'Unlimited site analyses',
@@ -112,6 +117,7 @@ export const TOKEN_PACKS: TokenPackConfig[] = [
     priceDisplay: '€5',
     stripePriceId: 'price_1SqaxtCs6GUQsp1IL0d9dOgV',
     stripeBuyButtonId: 'buy_btn_1Sr34XCs6GUQsp1IkA8tPkeC',
+    stripeCheckoutUrl: '', // TODO: Add Small Pack Stripe checkout URL
   },
   {
     id: 'medium',
@@ -121,6 +127,7 @@ export const TOKEN_PACKS: TokenPackConfig[] = [
     priceDisplay: '€10',
     stripePriceId: 'price_1SqazKCs6GUQsp1IP9mYvV5n',
     stripeBuyButtonId: 'buy_btn_1Sr32bCs6GUQsp1IBbqDko7o',
+    stripeCheckoutUrl: '', // TODO: Add Medium Pack Stripe checkout URL
     savingsPercent: 25, // 25% more tokens than 2x small
   },
   {
@@ -131,6 +138,7 @@ export const TOKEN_PACKS: TokenPackConfig[] = [
     priceDisplay: '€15',
     stripePriceId: 'price_1Sqb0CCs6GUQsp1INNhNduLq',
     stripeBuyButtonId: 'buy_btn_1Sr35qCs6GUQsp1IpsO9Wuil',
+    stripeCheckoutUrl: '', // TODO: Add Large Pack Stripe checkout URL
     savingsPercent: 33, // 33% more tokens than 3x small
   },
 ];
