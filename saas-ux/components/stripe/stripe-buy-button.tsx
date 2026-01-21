@@ -1,7 +1,7 @@
 // saas-ux/components/stripe/stripe-buy-button.tsx
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 const STRIPE_PUBLISHABLE_KEY =
   "pk_live_51RcPVICs6GUQsp1IaEnIePJEsDVsET7sakCSd6ruWgSPX2eKOU1NTJYuRQR6Cxmmqlza2BAcxeLziwLUxbnUJsHh00XgIR3bub";
@@ -15,8 +15,6 @@ export function StripeBuyButton({
   buyButtonId,
   className,
 }: StripeBuyButtonProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     // Load Stripe buy button script if not already loaded
     if (
@@ -29,18 +27,13 @@ export function StripeBuyButton({
       script.async = true;
       document.head.appendChild(script);
     }
+  }, []);
 
-    // Create the stripe-buy-button element
-    if (containerRef.current) {
-      const stripeBuyButton = document.createElement("stripe-buy-button");
-      stripeBuyButton.setAttribute("buy-button-id", buyButtonId);
-      stripeBuyButton.setAttribute("publishable-key", STRIPE_PUBLISHABLE_KEY);
-
-      // Clear any existing content and append the button
-      containerRef.current.innerHTML = "";
-      containerRef.current.appendChild(stripeBuyButton);
-    }
-  }, [buyButtonId]);
-
-  return <div ref={containerRef} className={className} />;
+  return (
+    <stripe-buy-button
+      buy-button-id={buyButtonId}
+      publishable-key={STRIPE_PUBLISHABLE_KEY}
+      className={className}
+    />
+  );
 }
