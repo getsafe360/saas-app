@@ -1,3 +1,4 @@
+// saas-ux/components/pricing/pricing-cards.tsx
 "use client";
 
 import { useTranslations } from "next-intl";
