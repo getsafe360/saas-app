@@ -218,6 +218,43 @@
   "terms": {
     "date": "Data de vigência:"
   },
+  "faq": {
+    "title": "Perguntas frequentes",
+    "lead": "Estes conceitos básicos ajudarão você a começar. Expandiremos esta página à medida que novos recursos forem lançados.",
+    "q1": "O que é GetSafe 360?",
+    "a1": {
+      "part1": "Um copiloto de IA para otimização de sites que funciona com seu site ao vivo – sem ",
+      "part2": "– apenas resultados em minutos."
+    },
+    "q2": "Como funciona?",
+    "a2": "Cole sua URL. Analisamos SEO, desempenho e UX, propomos mudanças e ajudamos você a aplicá-las rapidamente.",
+    "q3": "Existe um plano gratuito?",
+    "a3": {
+      "part1": "Sim, você pode começar gratuitamente e fazer upgrade a qualquer momento.",
+      "link": "Ver planos",
+      "part2": "para limites e recursos de cada plano."
+    },
+    "q4": "Quais plataformas são suportadas?",
+    "a4": "Funciona com a maioria dos sites modernos. Oferecemos ferramentas extras para WordPress e WooCommerce.",
+    "q5": "Como começar?",
+    "a5": {
+      "part1": "Vá para a página inicial e cole sua URL.",
+      "link": "Começar aqui",
+      "part2": "– nenhuma configuração do GitHub necessária."
+    },
+    "q6": "Preciso saber programar?",
+    "a6": "Não! GetSafe 360 foi projetado para todos. Seja você proprietário de empresa, profissional de marketing ou desenvolvedor, pode usar nossas ferramentas alimentadas por IA sem escrever uma única linha de código.",
+    "q7": "Os dados do meu site são seguros?",
+    "a7": "Absolutamente. Analisamos apenas os dados públicos do seu site. Não armazenamos informações sensíveis, senhas ou conteúdo privado. Todas as análises são processadas com segurança e em conformidade com os padrões GDPR.",
+    "q8": "Posso cancelar minha assinatura a qualquer momento?",
+    "a8": "Sim, você pode cancelar a qualquer momento pelo seu painel. Sua assinatura permanecerá ativa até o final do período de faturamento, e você manterá os tokens comprados para sempre.",
+    "q9": "Quais métodos de pagamento vocês aceitam?",
+    "a9": "Aceitamos todos os principais cartões de crédito (Visa, Mastercard, American Express) através do nosso sistema de pagamento seguro Stripe. Todas as transações são criptografadas e em conformidade com PCI.",
+    "footer": {
+      "hint": "Precisa de uma versão acessível desta página?",
+      "link": "Leia nossas informações de acessibilidade"
+    }
+  },
   "plans": {
     "headline1": "Planos para cada nível de site",
     "headline2": "Análises ilimitadas. Pague apenas por correções de IA.",

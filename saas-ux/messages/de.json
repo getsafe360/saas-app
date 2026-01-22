@@ -220,6 +220,43 @@
     "headline2": "Starte kostenlos und zahle, während du wächst.",
     "subheadline": "Unsere Pläne enthalten deinen Co-Piloten, der mit KI End-to-End-Workflows analysiert und optimiert."
   },
+  "faq": {
+    "title": "Häufig gestellte Fragen",
+    "lead": "Diese Grundlagen helfen Ihnen beim Einstieg. Wir werden diese Seite erweitern, wenn neue Funktionen verfügbar werden.",
+    "q1": "Was ist GetSafe 360?",
+    "a1": {
+      "part1": "Ein KI-Copilot für Website-Optimierung, der mit Ihrer Live-Site funktioniert – ohne ",
+      "part2": "– einfach Ergebnisse in Minuten."
+    },
+    "q2": "Wie funktioniert es?",
+    "a2": "Fügen Sie Ihre URL ein. Wir analysieren SEO, Performance und UX, schlagen Änderungen vor und helfen Ihnen, diese schnell umzusetzen.",
+    "q3": "Gibt es einen kostenlosen Plan?",
+    "a3": {
+      "part1": "Ja, Sie können kostenlos starten und jederzeit upgraden.",
+      "link": "Pläne ansehen",
+      "part2": "für Planlimits und Funktionen."
+    },
+    "q4": "Welche Plattformen werden unterstützt?",
+    "a4": "Funktioniert mit den meisten modernen Websites. Wir bieten zusätzliche Tools für WordPress & WooCommerce.",
+    "q5": "Wie fange ich an?",
+    "a5": {
+      "part1": "Gehen Sie zur Startseite und fügen Sie Ihre URL ein.",
+      "link": "Hier starten",
+      "part2": "– keine GitHub-Einrichtung erforderlich."
+    },
+    "q6": "Muss ich programmieren können?",
+    "a6": "Nein! GetSafe 360 ist für jeden konzipiert. Ob Sie Geschäftsinhaber, Vermarkter oder Entwickler sind, Sie können unsere KI-gestützten Tools verwenden, ohne eine einzige Codezeile zu schreiben.",
+    "q7": "Sind meine Website-Daten sicher?",
+    "a7": "Absolut. Wir analysieren nur die öffentlichen Daten Ihrer Website. Wir speichern keine sensiblen Informationen, Passwörter oder privaten Inhalte. Alle Analysen werden sicher verarbeitet und entsprechen den DSGVO-Standards.",
+    "q8": "Kann ich mein Abonnement jederzeit kündigen?",
+    "a8": "Ja, Sie können jederzeit über Ihr Dashboard kündigen. Ihr Abonnement bleibt bis zum Ende Ihres Abrechnungszeitraums aktiv, und Sie behalten gekaufte Tokens für immer.",
+    "q9": "Welche Zahlungsmethoden akzeptieren Sie?",
+    "a9": "Wir akzeptieren alle gängigen Kreditkarten (Visa, Mastercard, American Express) über unser sicheres Stripe-Zahlungssystem. Alle Transaktionen sind verschlüsselt und PCI-konform.",
+    "footer": {
+      "hint": "Benötigen Sie eine barrierefreie Version dieser Seite?",
+      "link": "Lesen Sie unsere Informationen zur Barrierefreiheit"
+    }
+  },
   "plans": {
     "headline1": "Pläne für jede Website-Größe",
     "headline2": "Unbegrenzte Analysen. Nur für KI-Fixes bezahlen.",

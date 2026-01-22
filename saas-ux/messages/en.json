@@ -144,6 +144,14 @@
       "link": "Start here",
       "part2": "– no GitHub setup required."
     },
+    "q6": "Do I need to know how to code?",
+    "a6": "No! GetSafe 360 is designed for everyone. Whether you're a business owner, marketer, or developer, you can use our AI-powered tools without writing a single line of code.",
+    "q7": "Is my website data secure?",
+    "a7": "Absolutely. We analyze your public website data only. We don't store sensitive information, passwords, or private content. All analyses are processed securely and comply with GDPR standards.",
+    "q8": "Can I cancel my subscription anytime?",
+    "a8": "Yes, you can cancel anytime from your dashboard. Your subscription will remain active until the end of your billing period, and you'll keep any purchased tokens forever.",
+    "q9": "What payment methods do you accept?",
+    "a9": "We accept all major credit cards (Visa, Mastercard, American Express) through our secure Stripe payment system. All transactions are encrypted and PCI-compliant.",
     "footer": {
       "hint": "Need an accessible version of this page?",
       "link": "Read our accessibility info"
