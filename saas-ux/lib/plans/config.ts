@@ -68,7 +68,7 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     priceDisplay: '€19',
     stripePriceId: 'price_1SpxHnCs6GUQsp1IUuZiUj99',
     stripeBuyButtonId: 'buy_btn_1Sr2sSCs6GUQsp1IxgHcbCpJ',
-    stripeCheckoutUrl: null, // TODO: Add Pro plan Stripe checkout URL
+    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/8x214mfQud5mbNf84abAs00',
     tokensIncluded: 100000, // ~50 AI fixes
     features: [
       'Unlimited site analyses',
@@ -88,7 +88,7 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     priceDisplay: '€49',
     stripePriceId: 'price_1SpxuBCs6GUQsp1IriBKXbat',
     stripeBuyButtonId: 'buy_btn_1Sr2ybCs6GUQsp1IMUpTefbp',
-    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/14AbJ09s61mE2cF5W2bAs01?locale=en',
+    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/14AbJ09s61mE2cF5W2bAs01',
     tokensIncluded: 300000, // ~150 AI fixes
     features: [
       'Unlimited site analyses',
@@ -117,7 +117,7 @@ export const TOKEN_PACKS: TokenPackConfig[] = [
     priceDisplay: '€5',
     stripePriceId: 'price_1SqaxtCs6GUQsp1IL0d9dOgV',
     stripeBuyButtonId: 'buy_btn_1Sr34XCs6GUQsp1IkA8tPkeC',
-    stripeCheckoutUrl: '', // TODO: Add Small Pack Stripe checkout URL
+    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/8x214m9s69Ta5oR4RYbAs03',
   },
   {
     id: 'medium',
@@ -127,7 +127,7 @@ export const TOKEN_PACKS: TokenPackConfig[] = [
     priceDisplay: '€10',
     stripePriceId: 'price_1SqazKCs6GUQsp1IP9mYvV5n',
     stripeBuyButtonId: 'buy_btn_1Sr32bCs6GUQsp1IBbqDko7o',
-    stripeCheckoutUrl: '', // TODO: Add Medium Pack Stripe checkout URL
+    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/dRm8wO9s6d5mbNf2JQbAs02',
     savingsPercent: 25, // 25% more tokens than 2x small
   },
   {
@@ -138,7 +138,7 @@ export const TOKEN_PACKS: TokenPackConfig[] = [
     priceDisplay: '€15',
     stripePriceId: 'price_1Sqb0CCs6GUQsp1INNhNduLq',
     stripeBuyButtonId: 'buy_btn_1Sr35qCs6GUQsp1IpsO9Wuil',
-    stripeCheckoutUrl: '', // TODO: Add Large Pack Stripe checkout URL
+    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/eVq14m1ZE4yQg3v706bAs04',
     savingsPercent: 33, // 33% more tokens than 3x small
   },
 ];
