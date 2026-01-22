@@ -300,6 +300,24 @@
       "a4": "Absolutely! You can analyze as many sites as you want, as often as you want. We only charge for AI-powered fixes and optimizations."
     }
   },
+  "checkout": {
+    "success": {
+      "title": "Payment Successful!",
+      "thankYou": "Thank you for your purchase.",
+      "signInPrompt": "To access your subscription, please sign in or create an account.",
+      "emailNote": "Use the same email address you used for your Stripe payment to ensure your purchase is automatically linked to your account.",
+      "processing": "Processing Your Purchase",
+      "activating": "We're activating your subscription. You'll be redirected to your dashboard shortly...",
+      "redirecting": "Redirecting to your dashboard...",
+      "createAccount": "Create Account",
+      "signIn": "Sign In",
+      "alreadyHaveAccount": "Already have an account? Sign in to access your purchase immediately.",
+      "invalidSession": "Invalid Session",
+      "noSession": "No checkout session found. Please contact support if you completed a payment.",
+      "error": "Error",
+      "tryAgain": "Try Again"
+    }
+  },
   "terms": {
     "date": "Effective Date:"
   }
