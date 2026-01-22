@@ -60,7 +60,11 @@ export default async function FAQPage({ params }: Props) {
           {t('a5.part2')}
         </p>
       )
-    }
+    },
+    { id: 'coding-required', q: t('q6'), a: <p>{t('a6')}</p> },
+    { id: 'data-security', q: t('q7'), a: <p>{t('a7')}</p> },
+    { id: 'cancel-anytime', q: t('q8'), a: <p>{t('a8')}</p> },
+    { id: 'payment-methods', q: t('q9'), a: <p>{t('a9')}</p> }
   ];
 
   return (

@@ -216,7 +216,44 @@
     "subheadline": "Nos offres incluent votre Co-pilote pour analyser et optimiser des workflows de bout en bout grâce à l’IA."
   },
   "terms": {
-    "date": "Date d’effet :"
+    "date": "Date d'effet :"
+  },
+  "faq": {
+    "title": "Questions fréquentes",
+    "lead": "Ces bases vous aideront à démarrer. Nous étendrons cette page au fur et à mesure du lancement de nouvelles fonctionnalités.",
+    "q1": "Qu'est-ce que GetSafe 360 ?",
+    "a1": {
+      "part1": "Un copilote IA pour l'optimisation de sites web qui fonctionne avec votre site en direct – sans ",
+      "part2": "– juste des résultats en quelques minutes."
+    },
+    "q2": "Comment ça marche ?",
+    "a2": "Collez votre URL. Nous analysons le SEO, les performances et l'UX, proposons des changements et vous aidons à les appliquer rapidement.",
+    "q3": "Y a-t-il un plan gratuit ?",
+    "a3": {
+      "part1": "Oui, vous pouvez commencer gratuitement et passer à un plan supérieur à tout moment.",
+      "link": "Voir les plans",
+      "part2": "pour les limites et fonctionnalités de chaque plan."
+    },
+    "q4": "Quelles plateformes sont prises en charge ?",
+    "a4": "Fonctionne avec la plupart des sites modernes. Nous fournissons des outils supplémentaires pour WordPress et WooCommerce.",
+    "q5": "Comment démarrer ?",
+    "a5": {
+      "part1": "Allez sur la page d'accueil et collez votre URL.",
+      "link": "Commencer ici",
+      "part2": "– aucune configuration GitHub requise."
+    },
+    "q6": "Dois-je savoir coder ?",
+    "a6": "Non ! GetSafe 360 est conçu pour tout le monde. Que vous soyez propriétaire d'entreprise, marketeur ou développeur, vous pouvez utiliser nos outils alimentés par l'IA sans écrire une seule ligne de code.",
+    "q7": "Les données de mon site web sont-elles sécurisées ?",
+    "a7": "Absolument. Nous analysons uniquement les données publiques de votre site web. Nous ne stockons pas d'informations sensibles, de mots de passe ou de contenu privé. Toutes les analyses sont traitées de manière sécurisée et conformes aux normes RGPD.",
+    "q8": "Puis-je annuler mon abonnement à tout moment ?",
+    "a8": "Oui, vous pouvez annuler à tout moment depuis votre tableau de bord. Votre abonnement restera actif jusqu'à la fin de votre période de facturation, et vous conserverez vos tokens achetés pour toujours.",
+    "q9": "Quels moyens de paiement acceptez-vous ?",
+    "a9": "Nous acceptons toutes les principales cartes de crédit (Visa, Mastercard, American Express) via notre système de paiement sécurisé Stripe. Toutes les transactions sont cryptées et conformes PCI.",
+    "footer": {
+      "hint": "Besoin d'une version accessible de cette page ?",
+      "link": "Lisez nos informations sur l'accessibilité"
+    }
   },
   "plans": {
     "headline1": "Plans pour chaque niveau de site web",
