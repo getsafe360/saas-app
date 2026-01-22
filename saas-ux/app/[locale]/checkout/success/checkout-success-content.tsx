@@ -14,15 +14,19 @@ export function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const { isSignedIn, userId } = useAuth();
   const sessionId = searchParams.get('session_id');
+  const demoMode = searchParams.get('demo'); // Demo mode for previewing
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Skip auto-linking in demo mode
+    if (demoMode) return;
+
     // If user is signed in and we have a session ID, link the purchase to their account
     if (isSignedIn && userId && sessionId && !isProcessing) {
       linkPurchaseToAccount();
     }
-  }, [isSignedIn, userId, sessionId]);
+  }, [isSignedIn, userId, sessionId, demoMode]);
 
   async function linkPurchaseToAccount() {
     setIsProcessing(true);
@@ -51,6 +55,120 @@ export function CheckoutSuccessContent() {
       setError(err instanceof Error ? err.message : 'An error occurred');
       setIsProcessing(false);
     }
+  }
+
+  // Demo mode for previewing different states
+  if (demoMode) {
+    // Show different states based on demo parameter value
+    if (demoMode === 'processing') {
+      return (
+        <div className="container max-w-2xl mx-auto py-12">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                <CardTitle>{t('checkout.success.processing')}</CardTitle>
+              </div>
+              <CardDescription>
+                {t('checkout.success.activating')}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            Demo Mode: Processing State
+          </p>
+        </div>
+      );
+    }
+
+    if (demoMode === 'signed-in') {
+      return (
+        <div className="container max-w-2xl mx-auto py-12">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-6 w-6 text-green-500" />
+                <CardTitle>{t('checkout.success.title')}</CardTitle>
+              </div>
+              <CardDescription>
+                {t('checkout.success.redirecting')}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            Demo Mode: Signed In State
+          </p>
+        </div>
+      );
+    }
+
+    if (demoMode === 'error') {
+      return (
+        <div className="container max-w-2xl mx-auto py-12">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-6 w-6 text-red-500" />
+                <CardTitle>{t('checkout.success.error')}</CardTitle>
+              </div>
+              <CardDescription>Failed to link purchase</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => window.location.reload()}>
+                {t('checkout.success.tryAgain')}
+              </Button>
+            </CardContent>
+          </Card>
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            Demo Mode: Error State
+          </p>
+        </div>
+      );
+    }
+
+    // Default demo: success state (not signed in)
+    return (
+      <div className="container max-w-2xl mx-auto py-12">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-6 w-6 text-green-500" />
+              <CardTitle>{t('checkout.success.title')}</CardTitle>
+            </div>
+            <CardDescription>
+              {t('checkout.success.thankYou')} {t('checkout.success.signInPrompt')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-4 border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Important:</strong> {t('checkout.success.emailNote')}
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <SignUpButton mode="modal">
+                <Button className="flex-1" size="lg">
+                  {t('checkout.success.createAccount')}
+                </Button>
+              </SignUpButton>
+              <SignInButton mode="modal">
+                <Button variant="outline" className="flex-1" size="lg">
+                  {t('checkout.success.signIn')}
+                </Button>
+              </SignInButton>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center">
+              {t('checkout.success.alreadyHaveAccount')}
+            </p>
+          </CardContent>
+        </Card>
+        <p className="text-center text-sm text-muted-foreground mt-4">
+          Demo Mode: Success State (Not Signed In)
+        </p>
+      </div>
+    );
   }
 
   if (!sessionId) {
