@@ -253,8 +253,8 @@
     "q9": "Welche Zahlungsmethoden akzeptieren Sie?",
     "a9": "Wir akzeptieren alle gängigen Kreditkarten (Visa, Mastercard, American Express) über unser sicheres Stripe-Zahlungssystem. Alle Transaktionen sind verschlüsselt und PCI-konform.",
     "footer": {
-      "hint": "Benötigen Sie eine barrierefreie Version dieser Seite?",
-      "link": "Lesen Sie unsere Informationen zur Barrierefreiheit"
+      "hint": "Können Sie die Antwort auf Ihre Frage nicht finden?",
+      "link": "Support kontaktieren"
     }
   },
   "plans": {
