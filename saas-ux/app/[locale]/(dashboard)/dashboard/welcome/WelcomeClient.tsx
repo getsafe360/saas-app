@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { WelcomeHero } from "@/components/onboarding/WelcomeHero";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface WelcomeData {
   url: string;
@@ -36,9 +37,37 @@ export function WelcomeClient({ data }: { data: WelcomeData }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Ensure client has hydrated before showing confetti
+    console.log("[WelcomeClient] Component mounted");
+    console.log("[WelcomeClient] Data received:", {
+      hasDomain: !!data?.domain,
+      hasUrl: !!data?.url,
+      hasSiteId: !!data?.siteId,
+      overallScore: data?.overallScore,
+      quickWinsCount: data?.quickWinsCount,
+      fullData: data
+    });
+
+    // Validate data
+    if (!data) {
+      console.error("[WelcomeClient] No data provided!");
+      setError("No welcome data received");
+      return;
+    }
+
+    if (!data.siteId) {
+      console.error("[WelcomeClient] Missing siteId in data!");
+      setError("Missing site ID");
+      return;
+    }
+
+    if (!data.url || !data.domain) {
+      console.error("[WelcomeClient] Missing required URL/domain!");
+      setError("Missing site information");
+      return;
+    }
+
     try {
-      console.log("[WelcomeClient] Mounting with data:", data);
+      console.log("[WelcomeClient] Data validation passed, setting ready state");
       setIsReady(true);
     } catch (err) {
       console.error("[WelcomeClient] Error during mount:", err);
@@ -47,25 +76,27 @@ export function WelcomeClient({ data }: { data: WelcomeData }) {
   }, [data]);
 
   const handleViewCockpit = () => {
-    // Track analytics here if needed
-    console.log("User viewed cockpit from welcome page");
+    console.log("[WelcomeClient] Navigating to cockpit for site:", data.siteId);
   };
 
   const handleConnectWordPress = () => {
-    // Track analytics here if needed
-    console.log("User initiated WordPress connection from welcome page");
+    console.log("[WelcomeClient] Initiating WordPress connection");
   };
 
   // Loading state
-  if (!isReady) {
+  if (!isReady && !error) {
+    console.log("[WelcomeClient] Rendering loading state");
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <Card>
+        <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Loading your results...
+              <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+              Preparing your celebration...
             </CardTitle>
+            <CardDescription>
+              Loading your site analysis results
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -74,29 +105,47 @@ export function WelcomeClient({ data }: { data: WelcomeData }) {
 
   // Error state
   if (error) {
+    console.error("[WelcomeClient] Rendering error state:", error);
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <Card>
+        <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-600">
               <AlertCircle className="w-5 h-5" />
               Error Loading Welcome Page
             </CardTitle>
+            <CardDescription>
+              {error}
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-600">{error}</p>
-            <button
-              onClick={() => router.push("/dashboard/sites")}
-              className="mt-4 text-sm text-blue-600 hover:underline"
-            >
-              Go to Dashboard
-            </button>
+          <CardContent className="space-y-4">
+            <div className="text-sm text-slate-600 space-y-2">
+              <p>We encountered an issue loading your results.</p>
+              <p className="font-mono text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded">
+                {error}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => router.push("/dashboard/sites")}
+                variant="default"
+              >
+                Go to Dashboard
+              </Button>
+              <Button
+                onClick={() => window.location.reload()}
+                variant="outline"
+              >
+                Retry
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
 
+  console.log("[WelcomeClient] Rendering success state with confetti");
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <WelcomeHero

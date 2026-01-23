@@ -11,12 +11,20 @@ export const runtime = "nodejs";
 
 async function fetchStashViaUrl(publicUrl: string): Promise<StashedTestResult | null> {
   try {
+    console.log("[fetchStashViaUrl] Attempting to fetch:", publicUrl);
     const r = await fetch(publicUrl, { cache: "no-store" });
-    if (!r.ok) return null;
+    console.log("[fetchStashViaUrl] Fetch response status:", r.status, r.statusText);
+
+    if (!r.ok) {
+      console.error("[fetchStashViaUrl] Fetch failed with status:", r.status);
+      return null;
+    }
+
     const data = await r.json();
+    console.log("[fetchStashViaUrl] Successfully parsed JSON, data keys:", Object.keys(data));
     return data as StashedTestResult;
   } catch (error) {
-    console.error("Failed to fetch stash:", error);
+    console.error("[fetchStashViaUrl] Exception during fetch:", error);
     return null;
   }
 }
@@ -98,24 +106,39 @@ export default async function WelcomePage({
   const stashKey = sp?.stash;
   const stashUrl = sp?.u;
 
+  console.log("[WelcomePage] Search params:", { stashKey, stashUrl });
+
   if (!stashKey && !stashUrl) {
+    console.error("[WelcomePage] No stash key or URL provided, redirecting to dashboard");
     redirect("/dashboard/sites?first=1");
   }
 
   // Retrieve stash
   let stash: StashedTestResult | null = null;
   if (stashUrl) {
+    console.log("[WelcomePage] Fetching stash from URL:", stashUrl);
     stash = await fetchStashViaUrl(stashUrl);
+    console.log("[WelcomePage] Stash fetch result:", stash ? "SUCCESS" : "FAILED");
   } else if (stashKey) {
     const composed = buildPublicUrlFromKey(stashKey);
+    console.log("[WelcomePage] Built public URL from key:", composed);
     if (composed) {
       stash = await fetchStashViaUrl(composed);
+      console.log("[WelcomePage] Stash fetch result:", stash ? "SUCCESS" : "FAILED");
     }
   }
 
   if (!stash) {
+    console.error("[WelcomePage] Failed to retrieve stash data, redirecting to dashboard");
     redirect("/dashboard/sites?first=1");
   }
+
+  console.log("[WelcomePage] Stash retrieved successfully:", {
+    url: stash.url,
+    hasScores: !!stash.scores,
+    findingsCount: stash.findings?.length || 0,
+    hasFacts: !!stash.facts,
+  });
 
   // Save site to database
   console.log("[WelcomePage] Saving site to database for user:", appUserId, "URL:", stash.url);
@@ -159,6 +182,14 @@ export default async function WelcomePage({
     quickWins,
     siteId,
   };
+
+  console.log("[WelcomePage] Preparing welcomeData for client:");
+  console.log("[WelcomePage] - URL:", welcomeData.url);
+  console.log("[WelcomePage] - Domain:", welcomeData.domain);
+  console.log("[WelcomePage] - SiteId:", welcomeData.siteId);
+  console.log("[WelcomePage] - OverallScore:", welcomeData.overallScore);
+  console.log("[WelcomePage] - QuickWinsCount:", welcomeData.quickWinsCount);
+  console.log("[WelcomePage] - Full welcomeData:", JSON.stringify(welcomeData, null, 2));
 
   return <WelcomeClient data={welcomeData} />;
 }
