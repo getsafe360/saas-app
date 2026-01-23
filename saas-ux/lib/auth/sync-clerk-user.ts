@@ -64,10 +64,33 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
         : clerkUser.firstName || primaryEmail.emailAddress.split('@')[0],
     };
 
-    const [createdUser] = await db
-      .insert(users)
-      .values(newUser)
-      .returning();
+    let createdUser;
+    try {
+      [createdUser] = await db
+        .insert(users)
+        .values(newUser)
+        .returning();
+    } catch (insertError: any) {
+      // Handle duplicate email error (user exists with same email but different/null clerk_user_id)
+      if (insertError?.code === '23505' && insertError?.constraint === 'users_email_unique') {
+        console.log('[syncClerkUser] User with email already exists, updating clerk_user_id');
+
+        // Find and update the existing user
+        const [updatedUser] = await db
+          .update(users)
+          .set({ clerkUserId: clerkUser.id })
+          .where(eq(users.email, primaryEmail.emailAddress))
+          .returning();
+
+        if (updatedUser) {
+          console.log('[syncClerkUser] Updated existing user:', updatedUser.id);
+          return updatedUser.id;
+        }
+      }
+
+      // Re-throw if it's a different error
+      throw insertError;
+    }
 
     if (!createdUser) {
       console.error('[syncClerkUser] Failed to create user');
