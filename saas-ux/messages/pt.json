@@ -251,8 +251,8 @@
     "q9": "Quais métodos de pagamento vocês aceitam?",
     "a9": "Aceitamos todos os principais cartões de crédito (Visa, Mastercard, American Express) através do nosso sistema de pagamento seguro Stripe. Todas as transações são criptografadas e em conformidade com PCI.",
     "footer": {
-      "hint": "Precisa de uma versão acessível desta página?",
-      "link": "Leia nossas informações de acessibilidade"
+      "hint": "Não consegue encontrar a resposta para sua pergunta?",
+      "link": "Entre em contato com o suporte"
     }
   },
   "plans": {

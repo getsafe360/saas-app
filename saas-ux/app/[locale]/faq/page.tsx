@@ -96,7 +96,7 @@ export default async function FAQPage({ params }: Props) {
       <div className="mt-8 rounded-lg border border-slate-200 dark:border-white/10 p-4 bg-white/60 dark:bg-white/[0.03]">
         <p className="text-sm text-slate-700 dark:text-slate-300">
           {t('footer.hint')}{' '}
-          <Link href="/accessibility" className="underline decoration-sky-500/60 underline-offset-4">
+          <Link href="/support" className="underline decoration-sky-500/60 underline-offset-4">
             {t('footer.link')}
           </Link>
           .
