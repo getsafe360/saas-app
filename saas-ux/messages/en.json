@@ -224,7 +224,8 @@
     "description": "Analyze and optimize your website with an AI co-pilot for targeted SEO, faster performance, best-in-class accessibility, and solid security."
   },
   "analysis": {
-    "headline1": "Make your website accessible and legally compliant in 10 minutes",
+    "headline1": "Sit back for a moment while I examine your website and prepare a snapshot...",
+    "headline1_analyzing": "Make your website accessible and legally compliant in 10 minutes",
     "subheadline": "Free BFSG/WCAG audit for all websites",
     "placeholder_url": "Enter your URL…",
     "invalid_url": "Please enter a valid URL",
