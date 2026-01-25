@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Globe, ArrowRight, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { CMSIcon } from "@/components/ui/cms-icon";
+import { getCMSIcon } from "@/lib/cms-icons";
 import { formatDistanceToNow } from "date-fns";
 
 interface SiteCardProps {
@@ -47,6 +49,7 @@ export function SiteCard({ site }: SiteCardProps) {
 
   const scoreColor = getScoreColor(site.overallScore);
   const scoreEmoji = getScoreEmoji(site.overallScore);
+  const cmsIconData = getCMSIcon(site.cms);
 
   let timeAgo = "Unknown";
   try {
@@ -95,10 +98,14 @@ export function SiteCard({ site }: SiteCardProps) {
             {scoreEmoji} Score: {site.overallScore}/100
           </Badge>
 
-          {/* CMS Badge */}
+          {/* CMS Badge with Icon */}
           {site.cms && (
-            <Badge variant="outline" className="text-xs">
-              {site.cms.charAt(0).toUpperCase() + site.cms.slice(1)}
+            <Badge
+              variant="outline"
+              className="text-xs flex items-center gap-1.5 px-2.5 py-1"
+            >
+              <CMSIcon cms={site.cms} size={14} showFallback={false} />
+              <span>{cmsIconData?.name || site.cms.charAt(0).toUpperCase() + site.cms.slice(1)}</span>
             </Badge>
           )}
         </div>
@@ -136,10 +143,10 @@ export function SiteCard({ site }: SiteCardProps) {
           )}
         </div>
 
-        {/* Action Button - Solid Blue */}
+        {/* Action Button - Solid Blue with Subtle Glow */}
         <Button
           onClick={handleOpenCockpit}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all"
         >
           Open Cockpit
           <ArrowRight className="w-4 h-4 ml-2" />
@@ -148,3 +155,4 @@ export function SiteCard({ site }: SiteCardProps) {
     </Card>
   );
 }
+

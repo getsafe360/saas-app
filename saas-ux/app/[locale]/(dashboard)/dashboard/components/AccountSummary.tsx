@@ -135,7 +135,7 @@ export function AccountSummary({ team }: AccountSummaryProps) {
           {isFreePlan ? (
             <Button
               onClick={handleUpgrade}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-md"
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-md hover:shadow-lg transition-all"
             >
               <Crown className="w-4 h-4 mr-2" />
               Upgrade to Pro
