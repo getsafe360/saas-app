@@ -6,6 +6,7 @@ import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
 import type { StashedTestResult } from "@/lib/stash/types";
 import { getOrCreateAppUserId } from "@/lib/auth/sync-clerk-user";
+import { eq, and } from "drizzle-orm";
 
 export const runtime = "nodejs";
 
@@ -42,15 +43,74 @@ async function saveSiteToDatabase(
 ): Promise<string | null> {
   try {
     const db = getDb();
-    const siteId = crypto.randomUUID();
 
     // Extract domain from URL
-    const domain = new URL(stash.url).hostname;
+    const urlObj = new URL(stash.url);
+    const domain = urlObj.hostname;
+    const canonicalHost = domain; // Use full hostname as canonical_host
+    const canonicalRoot = urlObj.origin;
+
+    console.log("[saveSiteToDatabase] Extracted:", { domain, canonicalHost, canonicalRoot });
+
+    // Check if site already exists for this user and host
+    const [existingSite] = await db
+      .select({ id: sites.id })
+      .from(sites)
+      .where(
+        and(
+          eq(sites.userId, appUserId),
+          eq(sites.canonicalHost, canonicalHost)
+        )
+      )
+      .limit(1);
+
+    if (existingSite) {
+      console.log("[saveSiteToDatabase] Site already exists, updating:", existingSite.id);
+
+      // Update existing site
+      await db
+        .update(sites)
+        .set({
+          siteUrl: stash.url,
+          status: "connected",
+          cms: stash.facts?.cms?.type || null,
+          lastScores: stash.scores ? JSON.stringify(stash.scores) : null,
+          updatedAt: new Date(),
+        } as any)
+        .where(eq(sites.id, existingSite.id));
+
+      // Update blob storage
+      const { put } = await import("@vercel/blob");
+      const blobKey = `sites/${existingSite.id}.json`;
+      await put(
+        blobKey,
+        JSON.stringify({
+          siteId: existingSite.id,
+          siteUrl: stash.url,
+          userId: appUserId,
+          status: "connected",
+          scores: stash.scores,
+          faviconUrl: stash.facts?.faviconUrl,
+          cms: stash.facts?.cms,
+          findings: stash.findings,
+          updatedAt: Date.now(),
+        }),
+        { access: "public", contentType: "application/json" }
+      );
+
+      return existingSite.id;
+    }
+
+    // Create new site
+    const siteId = crypto.randomUUID();
+    console.log("[saveSiteToDatabase] Creating new site:", siteId);
 
     await db.insert(sites).values({
       id: siteId,
       siteUrl: stash.url,
       userId: appUserId,
+      canonicalHost,
+      canonicalRoot,
       status: "connected",
       cms: stash.facts?.cms?.type || null,
       lastScores: stash.scores ? JSON.stringify(stash.scores) : null,
@@ -58,7 +118,7 @@ async function saveSiteToDatabase(
       updatedAt: new Date(),
     } as any);
 
-    // Also save to blob storage for quick access
+    // Save to blob storage for quick access
     const { put } = await import("@vercel/blob");
     const blobKey = `sites/${siteId}.json`;
     await put(
@@ -77,9 +137,10 @@ async function saveSiteToDatabase(
       { access: "public", contentType: "application/json" }
     );
 
+    console.log("[saveSiteToDatabase] Site created successfully:", siteId);
     return siteId;
   } catch (error) {
-    console.error("Failed to save site to database:", error);
+    console.error("[saveSiteToDatabase] Error:", error);
     return null;
   }
 }
