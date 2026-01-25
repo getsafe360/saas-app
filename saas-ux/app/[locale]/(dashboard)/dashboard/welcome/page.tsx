@@ -79,24 +79,34 @@ async function saveSiteToDatabase(
         } as any)
         .where(eq(sites.id, existingSite.id));
 
-      // Update blob storage
-      const { put } = await import("@vercel/blob");
-      const blobKey = `sites/${existingSite.id}.json`;
-      await put(
-        blobKey,
-        JSON.stringify({
-          siteId: existingSite.id,
-          siteUrl: stash.url,
-          userId: appUserId,
-          status: "connected",
-          scores: stash.scores,
-          faviconUrl: stash.facts?.faviconUrl,
-          cms: stash.facts?.cms,
-          findings: stash.findings,
-          updatedAt: Date.now(),
-        }),
-        { access: "public", contentType: "application/json" }
-      );
+      // Update blob storage (optional, just a cache)
+      try {
+        const { put } = await import("@vercel/blob");
+        const blobKey = `sites/${existingSite.id}.json`;
+        await put(
+          blobKey,
+          JSON.stringify({
+            siteId: existingSite.id,
+            siteUrl: stash.url,
+            userId: appUserId,
+            status: "connected",
+            scores: stash.scores,
+            faviconUrl: stash.facts?.faviconUrl,
+            cms: stash.facts?.cms,
+            findings: stash.findings,
+            updatedAt: Date.now(),
+          }),
+          {
+            access: "public",
+            contentType: "application/json",
+            addRandomSuffix: true // Generate unique filename for updates
+          }
+        );
+        console.log("[saveSiteToDatabase] Blob storage updated");
+      } catch (blobError) {
+        // Blob update is optional, database is already updated
+        console.warn("[saveSiteToDatabase] Blob update failed (non-critical):", blobError);
+      }
 
       return existingSite.id;
     }
@@ -118,24 +128,30 @@ async function saveSiteToDatabase(
       updatedAt: new Date(),
     } as any);
 
-    // Save to blob storage for quick access
-    const { put } = await import("@vercel/blob");
-    const blobKey = `sites/${siteId}.json`;
-    await put(
-      blobKey,
-      JSON.stringify({
-        siteId,
-        siteUrl: stash.url,
-        userId: appUserId,
-        status: "connected",
-        scores: stash.scores,
-        faviconUrl: stash.facts?.faviconUrl,
-        cms: stash.facts?.cms,
-        findings: stash.findings,
-        createdAt: Date.now(),
-      }),
-      { access: "public", contentType: "application/json" }
-    );
+    // Save to blob storage for quick access (optional cache)
+    try {
+      const { put } = await import("@vercel/blob");
+      const blobKey = `sites/${siteId}.json`;
+      await put(
+        blobKey,
+        JSON.stringify({
+          siteId,
+          siteUrl: stash.url,
+          userId: appUserId,
+          status: "connected",
+          scores: stash.scores,
+          faviconUrl: stash.facts?.faviconUrl,
+          cms: stash.facts?.cms,
+          findings: stash.findings,
+          createdAt: Date.now(),
+        }),
+        { access: "public", contentType: "application/json" }
+      );
+      console.log("[saveSiteToDatabase] Blob storage created");
+    } catch (blobError) {
+      // Blob creation is optional, database is already saved
+      console.warn("[saveSiteToDatabase] Blob creation failed (non-critical):", blobError);
+    }
 
     console.log("[saveSiteToDatabase] Site created successfully:", siteId);
     return siteId;
