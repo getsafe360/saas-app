@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { WelcomeHero } from "@/components/onboarding/WelcomeHero";
 
 interface WelcomeData {
   url: string;
@@ -147,83 +148,38 @@ export function WelcomeClient({ data }: { data: WelcomeData }) {
 
   console.log("[WelcomeClient] Rendering success state with confetti");
 
-  // TEMPORARY: Simple visible test to verify component renders
-  // Once this works, we'll enable WelcomeHero
+  const handleViewCockpit = () => {
+    console.log("[WelcomeClient] Navigating to cockpit for site:", data?.siteId);
+    if (data?.siteId) {
+      router.push(`/dashboard/sites/${data.siteId}/cockpit`);
+    }
+  };
+
+  const handleConnectWordPress = () => {
+    console.log("[WelcomeClient] Initiating WordPress connection for site:", data?.siteId);
+    if (data?.siteId) {
+      router.push(`/dashboard/sites/connect?siteId=${data.siteId}`);
+    }
+  };
+
+  // Render the full WelcomeHero component with confetti and animations
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-      <Card className="w-full max-w-4xl shadow-2xl">
-        <CardHeader className="text-center space-y-4 pb-8">
-          <div className="text-6xl">🎉</div>
-          <CardTitle className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-            Welcome to GetSafe 360!
-          </CardTitle>
-          <CardDescription className="text-lg">
-            Your site analysis is complete
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Site Info */}
-          <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-6 space-y-2">
-            <div className="text-sm text-slate-600 dark:text-slate-400">Analyzed Website</div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              {data?.domain || "Unknown"}
-            </div>
-            <div className="text-sm text-slate-500 break-all">{data?.url || "No URL"}</div>
-          </div>
-
-          {/* Score */}
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-8 text-center text-white">
-            <div className="text-sm font-medium opacity-90 mb-2">Overall Score</div>
-            <div className="text-7xl font-bold">{data?.overallScore ?? 0}</div>
-            <div className="text-2xl font-semibold mt-2">out of 100</div>
-          </div>
-
-          {/* Quick Wins */}
-          {data?.quickWinsCount > 0 && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border-2 border-blue-200 dark:border-blue-800">
-              <div className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                ✨ {data.quickWinsCount} Quick Wins Available
-              </div>
-              <div className="text-sm text-blue-700 dark:text-blue-300">
-                Potential score increase: +{data.potentialScoreIncrease} points
-              </div>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex flex-col gap-3 pt-4">
-            <Button
-              size="lg"
-              className="w-full text-lg h-14 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700"
-              onClick={() => {
-                if (data?.siteId) {
-                  router.push(`/dashboard/sites/${data.siteId}/cockpit`);
-                }
-              }}
-            >
-              View Full Dashboard →
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full text-lg h-14"
-              onClick={() => router.push("/dashboard/sites")}
-            >
-              Go to Sites List
-            </Button>
-          </div>
-
-          {/* Debug Info */}
-          <details className="mt-6 text-xs">
-            <summary className="cursor-pointer text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
-              Debug Info (click to expand)
-            </summary>
-            <pre className="mt-2 p-4 bg-slate-100 dark:bg-slate-800 rounded overflow-auto text-xs">
-              {JSON.stringify(data, null, 2)}
-            </pre>
-          </details>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <WelcomeHero
+        url={data?.url || ""}
+        domain={data?.domain || "Unknown"}
+        faviconUrl={data?.faviconUrl}
+        overallScore={data?.overallScore ?? 0}
+        categoryScores={data?.categoryScores}
+        quickWinsCount={data?.quickWinsCount ?? 0}
+        potentialScoreIncrease={data?.potentialScoreIncrease ?? 0}
+        quickWins={data?.quickWins || []}
+        siteId={data?.siteId || ""}
+        onViewCockpit={handleViewCockpit}
+        onConnectWordPress={handleConnectWordPress}
+        showConfetti={true}
+        animated={true}
+      />
     </div>
   );
 }
