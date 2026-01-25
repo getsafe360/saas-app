@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { WelcomeHero } from "@/components/onboarding/WelcomeHero";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -35,8 +34,12 @@ export function WelcomeClient({ data }: { data: WelcomeData }) {
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Mark component as mounted
+    setMounted(true);
+
     console.log("[WelcomeClient] Component mounted");
     console.log("[WelcomeClient] Data received:", {
       hasDomain: !!data?.domain,
@@ -75,13 +78,10 @@ export function WelcomeClient({ data }: { data: WelcomeData }) {
     }
   }, [data]);
 
-  const handleViewCockpit = () => {
-    console.log("[WelcomeClient] Navigating to cockpit for site:", data.siteId);
-  };
-
-  const handleConnectWordPress = () => {
-    console.log("[WelcomeClient] Initiating WordPress connection");
-  };
+  // Prevent hydration issues - don't render until client-side mounted
+  if (!mounted) {
+    return null;
+  }
 
   // Loading state
   if (!isReady && !error) {
@@ -166,20 +166,20 @@ export function WelcomeClient({ data }: { data: WelcomeData }) {
           <div className="bg-slate-100 dark:bg-slate-800 rounded-lg p-6 space-y-2">
             <div className="text-sm text-slate-600 dark:text-slate-400">Analyzed Website</div>
             <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              {data.domain}
+              {data?.domain || "Unknown"}
             </div>
-            <div className="text-sm text-slate-500 break-all">{data.url}</div>
+            <div className="text-sm text-slate-500 break-all">{data?.url || "No URL"}</div>
           </div>
 
           {/* Score */}
           <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-8 text-center text-white">
             <div className="text-sm font-medium opacity-90 mb-2">Overall Score</div>
-            <div className="text-7xl font-bold">{data.overallScore}</div>
+            <div className="text-7xl font-bold">{data?.overallScore ?? 0}</div>
             <div className="text-2xl font-semibold mt-2">out of 100</div>
           </div>
 
           {/* Quick Wins */}
-          {data.quickWinsCount > 0 && (
+          {data?.quickWinsCount > 0 && (
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border-2 border-blue-200 dark:border-blue-800">
               <div className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
                 ✨ {data.quickWinsCount} Quick Wins Available
@@ -195,7 +195,11 @@ export function WelcomeClient({ data }: { data: WelcomeData }) {
             <Button
               size="lg"
               className="w-full text-lg h-14 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700"
-              onClick={() => router.push(`/dashboard/sites/${data.siteId}/cockpit`)}
+              onClick={() => {
+                if (data?.siteId) {
+                  router.push(`/dashboard/sites/${data.siteId}/cockpit`);
+                }
+              }}
             >
               View Full Dashboard →
             </Button>
@@ -211,7 +215,7 @@ export function WelcomeClient({ data }: { data: WelcomeData }) {
 
           {/* Debug Info */}
           <details className="mt-6 text-xs">
-            <summary className="cursor-pointer text-slate-500 hover:text-slate-700">
+            <summary className="cursor-pointer text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
               Debug Info (click to expand)
             </summary>
             <pre className="mt-2 p-4 bg-slate-100 dark:bg-slate-800 rounded overflow-auto text-xs">
