@@ -1,6 +1,7 @@
 // lib/cms-icons.tsx
-// CMS → Icon mapping layer for reliable icon display
+// CMS → Icon mapping layer for reliable icon display (Simple Icons)
 
+import type { SimpleIcon } from "simple-icons";
 import {
   siWordpress,
   siWoocommerce,
@@ -21,166 +22,146 @@ import {
   siStrapi,
   siSanity,
   siStoryblok,
+  siMagento,
+  siCraftcms,
 } from "simple-icons";
 
+/**
+ * For platforms not present in Simple Icons, we fall back to a generic glyph.
+ * Keep it tiny + neutral so it doesn't mislead users.
+ */
+const GENERIC_CMS_SVG = `<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 4h8v2H8v-2z"/>
+</svg>`;
+
 export interface CMSIconData {
-  icon: typeof siWordpress; // All icons follow this structure
-  color: string;
+  /** Canonical CMS key you use in your system */
+  key: string;
+
+  /** Display name (defaults to icon.title when icon exists) */
   name: string;
+
+  /**
+   * Brand color (defaults to icon.hex when icon exists).
+   * Always stored WITH leading '#'.
+   */
+  color: string;
+
+  /**
+   * Simple Icons object when available.
+   * If undefined, use `svg` for a generic/custom icon.
+   */
+  icon?: SimpleIcon;
+
+  /** SVG markup when icon isn't in Simple Icons (or you prefer custom) */
+  svg?: string;
 }
 
-// CMS name normalization (handles variations)
+/** CMS name normalization (handles variations) */
 function normalizeCMSName(cms: string | null | undefined): string {
   if (!cms) return "";
   return cms.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
 }
 
-// CMS → Icon mapping
-const CMS_ICONS: Record<string, CMSIconData> = {
-  wordpress: {
-    icon: siWordpress,
-    color: "#21759B",
-    name: "WordPress",
-  },
-  woocommerce: {
-    icon: siWoocommerce,
-    color: "#96588A",
-    name: "WooCommerce",
-  },
-  shopify: {
-    icon: siShopify,
-    color: "#7AB55C",
-    name: "Shopify",
-  },
-  wix: {
-    icon: siWix,
-    color: "#0C6EFC",
-    name: "Wix",
-  },
-  squarespace: {
-    icon: siSquarespace,
-    color: "#000000",
-    name: "Squarespace",
-  },
-  webflow: {
-    icon: siWebflow,
-    color: "#4353FF",
-    name: "Webflow",
-  },
-  joomla: {
-    icon: siJoomla,
-    color: "#5091CD",
-    name: "Joomla",
-  },
-  drupal: {
-    icon: siDrupal,
-    color: "#0678BE",
-    name: "Drupal",
-  },
-  magento: {
-    icon: siShopify, // Using Shopify as fallback (similar e-commerce platform)
-    color: "#EE672F",
-    name: "Magento",
-  },
-  adobecommerce: {
-    icon: siShopify, // Using Shopify as fallback (similar e-commerce platform)
-    color: "#EE672F",
-    name: "Adobe Commerce",
-  },
-  prestashop: {
-    icon: siPrestashop,
-    color: "#DF0067",
-    name: "PrestaShop",
-  },
-  bigcommerce: {
-    icon: siBigcommerce,
-    color: "#121118",
-    name: "BigCommerce",
-  },
-  weebly: {
-    icon: siWeebly,
-    color: "#4CABD7",
-    name: "Weebly",
-  },
-  duda: {
-    icon: siWebflow, // Using Webflow as fallback (similar service)
-    color: "#0C91E7",
-    name: "Duda",
-  },
-  typo3: {
-    icon: siTypo3,
-    color: "#FF8700",
-    name: "TYPO3",
-  },
-  ghost: {
-    icon: siGhost,
-    color: "#15171A",
-    name: "Ghost",
-  },
-  craftcms: {
-    icon: siWebflow, // Using as fallback
-    color: "#E5422B",
-    name: "Craft CMS",
-  },
-  craft: {
-    icon: siWebflow, // Using as fallback
-    color: "#E5422B",
-    name: "Craft CMS",
-  },
-  hubspot: {
-    icon: siHubspot,
-    color: "#FF7A59",
-    name: "HubSpot",
-  },
-  sharepoint: {
-    icon: siMicrosoftsharepoint,
-    color: "#0078D4",
-    name: "SharePoint",
-  },
-  contentful: {
-    icon: siContentful,
-    color: "#2478CC",
-    name: "Contentful",
-  },
-  strapi: {
-    icon: siStrapi,
-    color: "#2F2E8B",
-    name: "Strapi",
-  },
-  sanity: {
-    icon: siSanity,
-    color: "#F03E2F",
-    name: "Sanity",
-  },
-  storyblok: {
-    icon: siStoryblok,
-    color: "#09B3AF",
-    name: "Storyblok",
-  },
+/** Helper: convert Simple Icons hex -> CSS color */
+function iconHexToColor(icon: SimpleIcon): string {
+  // simple-icons uses hex without '#'
+  return `#${icon.hex}`;
+}
+
+/**
+ * Canonical icon registry.
+ * Only put "real" icons here. Aliases go into ALIASES below.
+ */
+const REGISTRY: Record<string, Omit<CMSIconData, "key">> = {
+  wordpress: { icon: siWordpress, name: siWordpress.title, color: iconHexToColor(siWordpress) },
+  woocommerce: { icon: siWoocommerce, name: siWoocommerce.title, color: iconHexToColor(siWoocommerce) },
+  shopify: { icon: siShopify, name: siShopify.title, color: iconHexToColor(siShopify) },
+  wix: { icon: siWix, name: siWix.title, color: iconHexToColor(siWix) },
+  squarespace: { icon: siSquarespace, name: siSquarespace.title, color: iconHexToColor(siSquarespace) },
+  webflow: { icon: siWebflow, name: siWebflow.title, color: iconHexToColor(siWebflow) },
+  joomla: { icon: siJoomla, name: siJoomla.title, color: iconHexToColor(siJoomla) },
+  drupal: { icon: siDrupal, name: siDrupal.title, color: iconHexToColor(siDrupal) },
+
+  // E-commerce / CMS that actually exist in Simple Icons:
+  magento: { icon: siMagento, name: siMagento.title, color: iconHexToColor(siMagento) },
+  prestashop: { icon: siPrestashop, name: siPrestashop.title, color: iconHexToColor(siPrestashop) },
+  bigcommerce: { icon: siBigcommerce, name: siBigcommerce.title, color: iconHexToColor(siBigcommerce) },
+
+  weebly: { icon: siWeebly, name: siWeebly.title, color: iconHexToColor(siWeebly) },
+  typo3: { icon: siTypo3, name: siTypo3.title, color: iconHexToColor(siTypo3) },
+  ghost: { icon: siGhost, name: siGhost.title, color: iconHexToColor(siGhost) },
+  hubspot: { icon: siHubspot, name: siHubspot.title, color: iconHexToColor(siHubspot) },
+  sharepoint: { icon: siMicrosoftsharepoint, name: "SharePoint", color: iconHexToColor(siMicrosoftsharepoint) },
+  contentful: { icon: siContentful, name: siContentful.title, color: iconHexToColor(siContentful) },
+  strapi: { icon: siStrapi, name: siStrapi.title, color: iconHexToColor(siStrapi) },
+  sanity: { icon: siSanity, name: siSanity.title, color: iconHexToColor(siSanity) },
+  storyblok: { icon: siStoryblok, name: siStoryblok.title, color: iconHexToColor(siStoryblok) },
+
+  craftcms: { icon: siCraftcms, name: siCraftcms.title, color: iconHexToColor(siCraftcms) },
+
+  // Not in Simple Icons? Keep as custom/generic.
+  duda: { name: "Duda", color: "#0C91E7", svg: GENERIC_CMS_SVG },
+};
+
+/**
+ * Aliases map normalized inputs to canonical REGISTRY keys.
+ * This keeps your REGISTRY clean and avoids duplicate icon entries.
+ */
+const ALIASES: Record<string, keyof typeof REGISTRY> = {
+  wp: "wordpress",
+  wordpresscom: "wordpress",
+  woocommerceplugin: "woocommerce",
+
+  adobecommerce: "magento",
+  adobecommercemagento: "magento",
+
+  craft: "craftcms",
+  craftcms: "craftcms",
+
+  microsoftsharepoint: "sharepoint",
+  sharepointonline: "sharepoint",
 };
 
 /**
  * Get CMS icon data for a given CMS type
- * @param cms - CMS name (case-insensitive, handles variations)
- * @returns Icon data or null if not found
  */
 export function getCMSIcon(cms: string | null | undefined): CMSIconData | null {
   const normalized = normalizeCMSName(cms);
   if (!normalized) return null;
 
-  return CMS_ICONS[normalized] || null;
+  const canonical = (ALIASES[normalized] ?? (normalized as keyof typeof REGISTRY));
+  const entry = REGISTRY[canonical];
+  if (!entry) return null;
+
+  return { key: String(canonical), ...entry };
 }
 
 /**
- * Get all supported CMS types
+ * Get all supported canonical CMS keys
  */
-export function getSupportedCMSTypes(): string[] {
-  return Object.values(CMS_ICONS).map((data) => data.name);
+export function getSupportedCMSKeys(): string[] {
+  return Object.keys(REGISTRY);
 }
 
 /**
- * Check if a CMS type is supported
+ * Check if a CMS type is supported (either canonical or alias)
  */
 export function isCMSSupported(cms: string | null | undefined): boolean {
   return getCMSIcon(cms) !== null;
+}
+
+/**
+ * Optional helper to get SVG markup consistently.
+ * - If Simple Icon exists, return its svg.
+ * - Else return custom/generic svg.
+ */
+export function getCMSIconSvg(cms: string | null | undefined): { svg: string; color: string; name: string } | null {
+  const data = getCMSIcon(cms);
+  if (!data) return null;
+
+  if (data.icon) return { svg: data.icon.svg, color: data.color, name: data.name };
+  if (data.svg) return { svg: data.svg, color: data.color, name: data.name };
+
+  return null;
 }
