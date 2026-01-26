@@ -10,7 +10,6 @@ import {
   siWebflow,
   siJoomla,
   siDrupal,
-  siMagento,
   siPrestashop,
   siBigcommerce,
   siWeebly,
@@ -79,12 +78,12 @@ const CMS_ICONS: Record<string, CMSIconData> = {
     name: "Drupal",
   },
   magento: {
-    icon: siMagento,
+    icon: siShopify, // Using Shopify as fallback (similar e-commerce platform)
     color: "#EE672F",
     name: "Magento",
   },
   adobecommerce: {
-    icon: siMagento,
+    icon: siShopify, // Using Shopify as fallback (similar e-commerce platform)
     color: "#EE672F",
     name: "Adobe Commerce",
   },
