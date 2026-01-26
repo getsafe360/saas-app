@@ -161,6 +161,9 @@ importers:
       sharp:
         specifier: ^0.34.3
         version: 0.34.4
+      simple-icons:
+        specifier: ^16.6.1
+        version: 16.6.1
       stripe:
         specifier: ^18.1.0
         version: 18.5.0(@types/node@22.18.11)
@@ -4628,6 +4631,10 @@ packages:
 
   simple-get@2.8.2:
     resolution: {integrity: sha512-Ijd/rV5o+mSBBs4F/x9oDPtTx9Zb6X9brmnXvMW4J7IR15ngi9q5xxqWBKU744jTZiaXtxaPL7uHG6vtN8kUkw==}
+
+  simple-icons@16.6.1:
+    resolution: {integrity: sha512-zg3g5RCnc3cJfxCclOvElfow2rtpeB+Ow/dj1uvGG3MkpT7OjPBrE2hotqW2Hmt2ZYbuXCx2u+Oh4yi5N+yg5Q==}
+    engines: {node: '>=0.12.18'}
 
   slash@1.0.0:
     resolution: {integrity: sha512-3TYDR7xWt4dIqV2JauJr+EJeW356RXijHeUlO+8djJ+uBXPn8/2dpzBc8yQhh583sVvc9CvFAeQVgijsH+PNNg==}
@@ -10370,6 +10377,8 @@ snapshots:
       decompress-response: 3.3.0
       once: 1.4.0
       simple-concat: 1.0.1
+
+  simple-icons@16.6.1: {}
 
   slash@1.0.0: {}
 
