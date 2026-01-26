@@ -63,22 +63,26 @@ export function SiteCard({ site }: SiteCardProps) {
       <CardContent className="p-6">
         {/* Site Header */}
         <div className="flex items-start gap-3 mb-4">
-          {/* Favicon or Globe Icon */}
-          <div className="flex-shrink-0">
+          {/* Favicon or Globe Icon - Enhanced with white background and subtle shadow */}
+          <div className="flex-shrink-0 relative">
             {site.faviconUrl ? (
-              <img
-                src={site.faviconUrl}
-                alt={site.domain}
-                className="w-10 h-10 rounded-lg"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                }}
-              />
-            ) : null}
-            <div className={site.faviconUrl ? "hidden" : "w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center"}>
-              <Globe className="w-5 h-5 text-slate-400" />
-            </div>
+              <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-center p-1.5">
+                <img
+                  src={site.faviconUrl}
+                  alt={site.domain}
+                  className="w-full h-full object-contain rounded"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    e.currentTarget.parentElement?.querySelector(".favicon-fallback")?.classList.remove("hidden");
+                  }}
+                />
+                <Globe className="favicon-fallback hidden w-5 h-5 text-slate-400" />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 flex items-center justify-center">
+                <Globe className="w-5 h-5 text-slate-400" />
+              </div>
+            )}
           </div>
 
           {/* Domain and URL */}
