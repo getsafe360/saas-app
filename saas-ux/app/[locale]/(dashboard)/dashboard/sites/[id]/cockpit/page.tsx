@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { SiteCockpit } from "@/components/site-cockpit/SiteCockpit";
 import { transformToSiteCockpitResponse } from "@/lib/cockpit/transform-api-data";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
@@ -84,7 +85,13 @@ async function getSiteAnalysis(
   siteUrl: string
 ): Promise<SiteCockpitResponse | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    // Dynamically construct the base URL from request headers
+    const headersList = await headers();
+    const host = headersList.get("host") || "localhost:3000";
+    const forwardedProto = headersList.get("x-forwarded-proto");
+    const protocol = forwardedProto || (host.includes("localhost") ? "http" : "https");
+    const baseUrl = `${protocol}://${host}`;
+
     const response = await fetch(
       `${baseUrl}/api/analyze-facts?url=${encodeURIComponent(siteUrl)}`,
       {
