@@ -91,10 +91,10 @@ export function DashboardClient({ data }: DashboardClientProps) {
             </Badge>
           )}
 
-          {/* Add Website Button - Solid Blue */}
+          {/* Add Website Button - Solid Blue with Subtle Glow */}
           <Button
             onClick={handleAddWebsite}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all"
           >
             <Plus className="w-4 h-4 mr-2" />
             {t("add_website")}
@@ -156,7 +156,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
                   </p>
                   <Button
                     onClick={handleAddWebsite}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     {t("add_website")}
