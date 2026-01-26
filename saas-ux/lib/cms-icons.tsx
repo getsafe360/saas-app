@@ -13,18 +13,15 @@ import {
   siDrupal,
   siPrestashop,
   siBigcommerce,
-  siWeebly,
   siTypo3,
   siGhost,
   siHubspot,
-  siMicrosoftsharepoint,
   siContentful,
   siStrapi,
   siSanity,
   siStoryblok,
-  siMagento,
   siCraftcms,
-} from "simple-icons";
+} from "simple-icons/icons";
 
 /**
  * For platforms not present in Simple Icons, we fall back to a generic glyph.
@@ -83,16 +80,13 @@ const REGISTRY: Record<string, Omit<CMSIconData, "key">> = {
   joomla: { icon: siJoomla, name: siJoomla.title, color: iconHexToColor(siJoomla) },
   drupal: { icon: siDrupal, name: siDrupal.title, color: iconHexToColor(siDrupal) },
 
-  // E-commerce / CMS that actually exist in Simple Icons:
-  magento: { icon: siMagento, name: siMagento.title, color: iconHexToColor(siMagento) },
+  // E-commerce / CMS (real icons)
   prestashop: { icon: siPrestashop, name: siPrestashop.title, color: iconHexToColor(siPrestashop) },
   bigcommerce: { icon: siBigcommerce, name: siBigcommerce.title, color: iconHexToColor(siBigcommerce) },
 
-  weebly: { icon: siWeebly, name: siWeebly.title, color: iconHexToColor(siWeebly) },
   typo3: { icon: siTypo3, name: siTypo3.title, color: iconHexToColor(siTypo3) },
   ghost: { icon: siGhost, name: siGhost.title, color: iconHexToColor(siGhost) },
   hubspot: { icon: siHubspot, name: siHubspot.title, color: iconHexToColor(siHubspot) },
-  sharepoint: { icon: siMicrosoftsharepoint, name: "SharePoint", color: iconHexToColor(siMicrosoftsharepoint) },
   contentful: { icon: siContentful, name: siContentful.title, color: iconHexToColor(siContentful) },
   strapi: { icon: siStrapi, name: siStrapi.title, color: iconHexToColor(siStrapi) },
   sanity: { icon: siSanity, name: siSanity.title, color: iconHexToColor(siSanity) },
@@ -100,7 +94,12 @@ const REGISTRY: Record<string, Omit<CMSIconData, "key">> = {
 
   craftcms: { icon: siCraftcms, name: siCraftcms.title, color: iconHexToColor(siCraftcms) },
 
-  // Not in Simple Icons? Keep as custom/generic.
+  // Not in Simple Icons (for your installed version): use generic glyph.
+  // Keep the key so detection still shows something meaningful.
+  magento: { name: "Magento", color: "#EE672F", svg: GENERIC_CMS_SVG },
+  sharepoint: { name: "SharePoint", color: "#0078D4", svg: GENERIC_CMS_SVG },
+
+  // Other custom/generic
   duda: { name: "Duda", color: "#0C91E7", svg: GENERIC_CMS_SVG },
 };
 
@@ -113,6 +112,7 @@ const ALIASES: Record<string, keyof typeof REGISTRY> = {
   wordpresscom: "wordpress",
   woocommerceplugin: "woocommerce",
 
+  // Treat Adobe Commerce as Magento in reporting
   adobecommerce: "magento",
   adobecommercemagento: "magento",
 
@@ -130,7 +130,7 @@ export function getCMSIcon(cms: string | null | undefined): CMSIconData | null {
   const normalized = normalizeCMSName(cms);
   if (!normalized) return null;
 
-  const canonical = (ALIASES[normalized] ?? (normalized as keyof typeof REGISTRY));
+  const canonical = ALIASES[normalized] ?? (normalized as keyof typeof REGISTRY);
   const entry = REGISTRY[canonical];
   if (!entry) return null;
 
@@ -156,7 +156,9 @@ export function isCMSSupported(cms: string | null | undefined): boolean {
  * - If Simple Icon exists, return its svg.
  * - Else return custom/generic svg.
  */
-export function getCMSIconSvg(cms: string | null | undefined): { svg: string; color: string; name: string } | null {
+export function getCMSIconSvg(
+  cms: string | null | undefined
+): { svg: string; color: string; name: string } | null {
   const data = getCMSIcon(cms);
   if (!data) return null;
 
