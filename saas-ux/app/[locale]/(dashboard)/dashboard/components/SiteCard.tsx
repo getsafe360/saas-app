@@ -95,16 +95,26 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
               {site.domain}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-              {site.url}
+              {site.url.replace(/^https?:\/\//, '')}
             </p>
           </div>
         </div>
 
-        {/* Score Badge */}
+        {/* Score Badge or Not Analyzed Pill */}
         <div className="flex items-center justify-between mb-4">
-          <Badge className={`px-3 py-1 text-sm font-semibold border ${scoreColor}`}>
-            {scoreEmoji} Score: {site.overallScore}/100
-          </Badge>
+          {site.overallScore > 0 ? (
+            <Badge className={`px-3 py-1 text-sm font-semibold border ${scoreColor}`}>
+              {scoreEmoji} Score: {site.overallScore}/100
+            </Badge>
+          ) : (
+            <Badge
+              variant="outline"
+              className="px-3 py-1 text-sm font-medium border-slate-300 bg-slate-100 text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400"
+            >
+              <Clock className="w-3 h-3 mr-1.5" />
+              Not analyzed yet
+            </Badge>
+          )}
 
           {/* CMS Badge with Icon */}
           {site.cms && (
@@ -174,7 +184,8 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
         {onRemove && (
           <button
             onClick={() => onRemove(site.id)}
-            className="mt-3 flex items-center justify-center gap-1 text-xs text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 transition-colors w-full"
+            title="Remove this site from your dashboard"
+            className="mt-3 flex items-center justify-center gap-1 text-xs text-slate-400 hover:text-[#E81224] dark:text-slate-500 dark:hover:text-[#E81224] transition-colors w-full cursor-pointer"
           >
             <Trash2 className="w-3 h-3" />
             Remove site

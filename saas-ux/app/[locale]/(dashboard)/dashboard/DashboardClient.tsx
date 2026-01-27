@@ -92,15 +92,12 @@ export function DashboardClient({ data }: DashboardClientProps) {
       {/* Hero Section */}
       <div className="mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-            {t("greeting", { name: data.user.name })}
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-1">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100">
             {t("welcome_headline")}
-          </p>
+          </h1>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Plan Badge */}
           {data.team && (
             <Badge
@@ -122,12 +119,13 @@ export function DashboardClient({ data }: DashboardClientProps) {
             </Badge>
           )}
 
-          {/* Add Website Button - Solid Blue with Subtle Glow */}
+          {/* Add Website Button */}
           <Button
             onClick={handleAddWebsite}
+            size="sm"
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4 mr-1.5" />
             {t("add_website")}
           </Button>
         </div>
