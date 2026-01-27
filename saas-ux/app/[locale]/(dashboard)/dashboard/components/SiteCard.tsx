@@ -1,11 +1,12 @@
 // app/[locale]/(dashboard)/dashboard/components/SiteCard.tsx
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Globe, ArrowRight, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { Globe, ArrowRight, AlertCircle, CheckCircle, Clock, Loader2, Trash2 } from "lucide-react";
 import { CMSIcon } from "@/components/ui/cms-icon";
 import { getCMSIcon } from "@/lib/cms-icons";
 import { formatDistanceToNow } from "date-fns";
@@ -24,6 +25,7 @@ interface SiteCardProps {
     faviconUrl: string | null;
     connectionStatus: string;
   };
+  onRemove?: (siteId: string) => void;
 }
 
 function getScoreColor(score: number): string {
@@ -40,10 +42,12 @@ function getScoreEmoji(score: number): string {
   return "🔴";
 }
 
-export function SiteCard({ site }: SiteCardProps) {
+export function SiteCard({ site, onRemove }: SiteCardProps) {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOpenCockpit = () => {
+    setIsLoading(true);
     router.push(`/dashboard/sites/${site.id}/cockpit`);
   };
 
@@ -150,11 +154,32 @@ export function SiteCard({ site }: SiteCardProps) {
         {/* Action Button - Solid Blue with Subtle Glow */}
         <Button
           onClick={handleOpenCockpit}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all"
+          disabled={isLoading}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all disabled:opacity-70"
         >
-          Open Cockpit
-          <ArrowRight className="w-4 h-4 ml-2" />
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Opening...
+            </>
+          ) : (
+            <>
+              Open Cockpit
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </>
+          )}
         </Button>
+
+        {/* Remove Site Link */}
+        {onRemove && (
+          <button
+            onClick={() => onRemove(site.id)}
+            className="mt-3 flex items-center justify-center gap-1 text-xs text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 transition-colors w-full"
+          >
+            <Trash2 className="w-3 h-3" />
+            Remove site
+          </button>
+        )}
       </CardContent>
     </Card>
   );

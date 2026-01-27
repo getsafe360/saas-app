@@ -1,6 +1,7 @@
 // app/[locale]/(dashboard)/dashboard/DashboardClient.tsx (CLIENT)
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Globe, TrendingUp, ArrowRight, Zap } from "lucide-react";
@@ -47,9 +48,39 @@ interface DashboardClientProps {
 export function DashboardClient({ data }: DashboardClientProps) {
   const t = useTranslations("dashboard");
   const router = useRouter();
+  const [sites, setSites] = useState(data.sites);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const handleAddWebsite = () => {
-    router.push("/");
+    router.push("/dashboard/sites/add");
+  };
+
+  const handleRemoveSite = async (siteId: string) => {
+    const site = sites.find((s) => s.id === siteId);
+    if (!site) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to remove "${site.domain}"? This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setRemovingId(siteId);
+    try {
+      const res = await fetch(`/api/sites/${siteId}`, {
+        method: "DELETE",
+      });
+      const result = await res.json();
+
+      if (res.ok && result.ok) {
+        setSites((prev) => prev.filter((s) => s.id !== siteId));
+      } else {
+        alert(result.error || "Failed to remove site");
+      }
+    } catch (err) {
+      alert("Failed to remove site. Please try again.");
+    } finally {
+      setRemovingId(null);
+    }
   };
 
   const tokensPercentage = data.team
@@ -112,15 +143,15 @@ export function DashboardClient({ data }: DashboardClientProps) {
                 {t("websites")}
               </h2>
               <span className="text-sm text-slate-500 dark:text-slate-400">
-                {data.sites.length} {data.sites.length === 1 ? "site" : "sites"}
+                {sites.length} {sites.length === 1 ? "site" : "sites"}
               </span>
             </div>
 
             {/* Sites Grid */}
-            {data.sites.length > 0 ? (
+            {sites.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {data.sites.map((site) => (
-                  <SiteCard key={site.id} site={site} />
+                {sites.map((site) => (
+                  <SiteCard key={site.id} site={site} onRemove={handleRemoveSite} />
                 ))}
 
                 {/* Add Website Card - Empty State */}
