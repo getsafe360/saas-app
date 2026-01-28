@@ -55,6 +55,10 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
   const scoreEmoji = getScoreEmoji(site.overallScore);
   const cmsIconData = getCMSIcon(site.cms);
 
+  // Use Google's favicon service as fallback for sites without stored favicon
+  const faviconUrl = site.faviconUrl ||
+    `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(site.url)}&size=32`;
+
   let timeAgo = "Unknown";
   try {
     timeAgo = formatDistanceToNow(new Date(site.lastUpdated), { addSuffix: true });
@@ -67,26 +71,20 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
       <CardContent className="p-6">
         {/* Site Header */}
         <div className="flex items-start gap-3 mb-4">
-          {/* Favicon or Globe Icon - Enhanced with white background and subtle shadow */}
+          {/* Favicon - with fallback to Google's favicon service */}
           <div className="flex-shrink-0 relative">
-            {site.faviconUrl ? (
-              <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-center p-1.5">
-                <img
-                  src={site.faviconUrl}
-                  alt={site.domain}
-                  className="w-full h-full object-contain rounded"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                    e.currentTarget.parentElement?.querySelector(".favicon-fallback")?.classList.remove("hidden");
-                  }}
-                />
-                <Globe className="favicon-fallback hidden w-5 h-5 text-slate-400" />
-              </div>
-            ) : (
-              <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 flex items-center justify-center">
-                <Globe className="w-5 h-5 text-slate-400" />
-              </div>
-            )}
+            <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 shadow-sm flex items-center justify-center p-1.5">
+              <img
+                src={faviconUrl}
+                alt={site.domain}
+                className="w-full h-full object-contain rounded"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.parentElement?.querySelector(".favicon-fallback")?.classList.remove("hidden");
+                }}
+              />
+              <Globe className="favicon-fallback hidden w-5 h-5 text-slate-400" />
+            </div>
           </div>
 
           {/* Domain and URL */}
@@ -104,7 +102,7 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
         <div className="flex items-center justify-between mb-4">
           {site.overallScore > 0 ? (
             <Badge className={`px-3 py-1 text-sm font-semibold border ${scoreColor}`}>
-              {scoreEmoji} Score: {site.overallScore}/100
+              {scoreEmoji} {site.overallScore}/100
             </Badge>
           ) : (
             <Badge

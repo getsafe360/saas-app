@@ -75,6 +75,7 @@ async function saveSiteToDatabase(
           status: "connected",
           cms: stash.facts?.cms?.type || null,
           lastScores: stash.scores ? JSON.stringify(stash.scores) : null,
+          lastFaviconUrl: stash.facts?.faviconUrl || null,
           updatedAt: new Date(),
         } as any)
         .where(eq(sites.id, existingSite.id));
@@ -124,6 +125,7 @@ async function saveSiteToDatabase(
       status: "connected",
       cms: stash.facts?.cms?.type || null,
       lastScores: stash.scores ? JSON.stringify(stash.scores) : null,
+      lastFaviconUrl: stash.facts?.faviconUrl || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as any);
