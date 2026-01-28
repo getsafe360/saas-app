@@ -104,7 +104,9 @@ export function DashboardClient({ data }: DashboardClientProps) {
               variant="outline"
               className="px-3 py-1 text-sm font-medium border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
             >
-              {data.team.planName === "free" ? "Free Plan" : data.team.planName.toUpperCase()}
+              {data.team.planName === "free"
+                ? "Free Plan"
+                : data.team.planName.toUpperCase()}
             </Badge>
           )}
 
@@ -115,7 +117,8 @@ export function DashboardClient({ data }: DashboardClientProps) {
               className="px-3 py-1 text-sm font-medium border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
             >
               <Zap className="w-3 h-3 mr-1" />
-              {data.team.tokensRemaining.toLocaleString()} / {data.team.tokensIncluded.toLocaleString()}
+              {data.team.tokensRemaining.toLocaleString()} /{" "}
+              {data.team.tokensIncluded.toLocaleString()}
             </Badge>
           )}
         </div>
@@ -124,14 +127,14 @@ export function DashboardClient({ data }: DashboardClientProps) {
       {/* Websites Section */}
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+          <h2 className="text-nowrap text-xl font-semibold text-slate-900 dark:text-slate-100">
             {sites.length} {sites.length === 1 ? "Website" : "Websites"}
           </h2>
           <Button
             onClick={handleAddWebsite}
             size="sm"
             variant="outline"
-            className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 font-medium"
+            className="lg:w-full lg:max-w-96 border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 font-medium"
           >
             <Plus className="w-4 h-4 mr-1" />
             {t("add_website")}

@@ -1,3 +1,4 @@
+// saas-ux/components/ui/button.tsx
 import * as React from "react";
 import { Slot as SlotPrimitive } from "radix-ui";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -12,12 +13,10 @@ const buttonVariants = cva(
           "bg-gradient-to-r from-blue-600 via-purple-500 to-sky-500 text-white border border-blue-300/50 shadow-xl hover:shadow-blue-400/30 hover:from-blue-700 hover:to-purple-600 hover:border-blue-200 focus-visible:ring-blue-400/60 transition-all duration-200",
         green:
           "border border-[--thin-border] border-green-700/20 bg-green-50 text-green-800 dark:border-green-400/40 dark:bg-green-600/60 dark:text-white/90 dark:hover:bg-green-500/60 transition-all duration-200",
-        blue:
-          "border border-[--thin-border] border-blue-700/20 bg-blue-50 text-blue-800 dark:border-blue-400/40 dark:bg-blue-600/60 dark:text-white/90 dark:hover:bg-blue-500/60 transition-all duration-200",
+        blue: "border border-[--thin-border] border-blue-700/20 bg-blue-50 text-blue-800 dark:border-blue-400/40 dark:bg-blue-600/60 dark:text-white/90 dark:hover:bg-blue-500/60 transition-all duration-200",
         purple:
           "border border-[--thin-border] border-purple-700/20 bg-purple-50 text-purple-800 dark:border-purple-400/40 dark:bg-purple-600/60 dark:text-white/90 dark:hover:bg-purple-500/60 transition-all duration-200",
-        free:
-          "bg-gradient-to-r from-green-600 via-emerald-500 to-lime-400 text-white border border-green-200/70 shadow-xl hover:shadow-lime-400/30 hover:from-green-700 hover:to-emerald-600 hover:border-lime-200 focus-visible:ring-lime-300/60 transition-all duration-200",
+        free: "bg-gradient-to-r from-green-600 via-emerald-500 to-lime-400 text-white border border-green-200/70 shadow-xl hover:shadow-lime-400/30 hover:from-green-700 hover:to-emerald-600 hover:border-lime-200 focus-visible:ring-lime-300/60 transition-all duration-200",
         default:
           "bg-gradient-to-r from-purple-500 via-blue-500 to-sky-400 text-white border border-blue-200/40 shadow-lg hover:from-purple-600 hover:to-blue-500 hover:shadow-blue-300/40 transition-all duration-200",
         destructive:
@@ -28,19 +27,19 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline"
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-5 py-1 w-95",
         sm: "h-10 rounded-xl gap-1.5 px-4 py-2",
         lg: "h-10 rounded-2xl px-10 py-3 text-lg w-95",
-        icon: "size-11"
-      }
+        icon: "size-11",
+      },
     },
     defaultVariants: {
       variant: "default",
-      size: "default"
-    }
+      size: "default",
+    },
   }
 );
 
