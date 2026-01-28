@@ -35,6 +35,9 @@ import type {
 interface SiteCockpitProps {
   data: SiteCockpitResponse;
   siteId?: string;
+  siteUrl?: string;
+  status?: string;
+  justConnected?: boolean;
   editable?: boolean;
   initialLayout?: CockpitLayoutData;
 }
@@ -104,6 +107,9 @@ function cardsToLayout(cards: CardConfig[]): CockpitLayoutData {
 export function SiteCockpit({
   data,
   siteId,
+  siteUrl,
+  status,
+  justConnected,
   editable = true,
   initialLayout,
 }: SiteCockpitProps) {
@@ -237,6 +243,10 @@ export function SiteCockpit({
         domain={data.domain}
         faviconUrl={data.faviconUrl}
         cms={data.cms}
+        siteId={siteId}
+        siteUrl={siteUrl}
+        status={status}
+        justConnected={justConnected}
       />
 
       {editable && (
