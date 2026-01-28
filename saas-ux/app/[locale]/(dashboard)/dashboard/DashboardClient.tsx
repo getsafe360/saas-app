@@ -121,84 +121,79 @@ export function DashboardClient({ data }: DashboardClientProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content - Sites Grid (2/3 width on desktop) */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Sites Section */}
-          <div>
-            <div className="flex items-center gap-4 mb-4">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                {t("websites")}
-              </h2>
+      {/* Websites Section */}
+      <div className="mb-6">
+        <div className="flex items-center gap-4 mb-4">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            {t("websites")}
+          </h2>
+          <Button
+            onClick={handleAddWebsite}
+            size="sm"
+            variant="outline"
+            className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 font-medium"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            {t("add_website")}
+          </Button>
+          <span className="text-sm text-slate-500 dark:text-slate-400 ml-auto">
+            {sites.length} {sites.length === 1 ? "site" : "sites"}
+          </span>
+        </div>
+
+        {/* Sites Grid */}
+        {sites.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {sites.map((site) => (
+              <SiteCard key={site.id} site={site} onRemove={handleRemoveSite} />
+            ))}
+
+            {/* Add Website Card - Empty State */}
+            <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors cursor-pointer group">
+              <CardContent
+                className="flex flex-col items-center justify-center h-full min-h-[200px] p-6"
+                onClick={handleAddWebsite}
+              >
+                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <Plus className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Add New Website
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Analyze another site
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          /* Empty State - No Sites Yet */
+          <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700">
+            <CardContent className="flex flex-col items-center justify-center py-12 px-6">
+              <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4">
+                <Globe className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                No websites yet
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 text-center max-w-sm mb-6">
+                {t("welcome_text")}
+              </p>
               <Button
                 onClick={handleAddWebsite}
-                size="sm"
-                variant="outline"
-                className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 font-medium"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all"
               >
-                <Plus className="w-4 h-4 mr-1" />
+                <Plus className="w-4 h-4 mr-2" />
                 {t("add_website")}
               </Button>
-              <span className="text-sm text-slate-500 dark:text-slate-400 ml-auto">
-                {sites.length} {sites.length === 1 ? "site" : "sites"}
-              </span>
-            </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
-            {/* Sites Grid */}
-            {sites.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {sites.map((site) => (
-                  <SiteCard key={site.id} site={site} onRemove={handleRemoveSite} />
-                ))}
-
-                {/* Add Website Card - Empty State */}
-                <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors cursor-pointer group">
-                  <CardContent
-                    className="flex flex-col items-center justify-center h-full min-h-[200px] p-6"
-                    onClick={handleAddWebsite}
-                  >
-                    <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                      <Plus className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Add New Website
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      Analyze another site
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              /* Empty State - No Sites Yet */
-              <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700">
-                <CardContent className="flex flex-col items-center justify-center py-12 px-6">
-                  <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4">
-                    <Globe className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                    No websites yet
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 text-center max-w-sm mb-6">
-                    {t("welcome_text")}
-                  </p>
-                  <Button
-                    onClick={handleAddWebsite}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    {t("add_website")}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar - Account Summary (1/3 width on desktop) */}
-        <div className="space-y-6">
-          <AccountSummary team={data.team} />
-        </div>
+      {/* Account Summary - Full Width Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <AccountSummary team={data.team} />
       </div>
     </div>
   );
