@@ -118,16 +118,6 @@ export function DashboardClient({ data }: DashboardClientProps) {
               {data.team.tokensRemaining.toLocaleString()} / {data.team.tokensIncluded.toLocaleString()}
             </Badge>
           )}
-
-          {/* Add Website Button */}
-          <Button
-            onClick={handleAddWebsite}
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all"
-          >
-            <Plus className="w-4 h-4 mr-1.5" />
-            {t("add_website")}
-          </Button>
         </div>
       </div>
 
@@ -136,11 +126,20 @@ export function DashboardClient({ data }: DashboardClientProps) {
         <div className="lg:col-span-2 space-y-6">
           {/* Sites Section */}
           <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4 mb-4">
               <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                 {t("websites")}
               </h2>
-              <span className="text-sm text-slate-500 dark:text-slate-400">
+              <Button
+                onClick={handleAddWebsite}
+                size="sm"
+                variant="outline"
+                className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 font-medium"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                {t("add_website")}
+              </Button>
+              <span className="text-sm text-slate-500 dark:text-slate-400 ml-auto">
                 {sites.length} {sites.length === 1 ? "site" : "sites"}
               </span>
             </div>
