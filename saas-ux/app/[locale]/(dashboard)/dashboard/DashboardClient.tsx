@@ -125,7 +125,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-            {t("websites")}
+            {sites.length} {sites.length === 1 ? "Website" : "Websites"}
           </h2>
           <Button
             onClick={handleAddWebsite}
@@ -136,9 +136,6 @@ export function DashboardClient({ data }: DashboardClientProps) {
             <Plus className="w-4 h-4 mr-1" />
             {t("add_website")}
           </Button>
-          <span className="text-sm text-slate-500 dark:text-slate-400 ml-auto">
-            {sites.length} {sites.length === 1 ? "site" : "sites"}
-          </span>
         </div>
 
         {/* Sites Grid */}
