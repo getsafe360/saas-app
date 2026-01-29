@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import MetricDonut from "@/components/report/MetricDonut";
 import { CategorySection } from "@/components/report/CategorySection";
@@ -304,6 +305,27 @@ export default function AnalyzeClient() {
           </span>
         </div>
       </div>
+
+      {/* Open Cockpit CTA - shown when analysis is complete */}
+      {report && (
+        <div className="border rounded-xl p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 flex items-center justify-between gap-4">
+          <div>
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+              Analysis complete!
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              View your site's health dashboard with detailed insights and quick wins.
+            </p>
+          </div>
+          <Link
+            href={`/dashboard/sites/${siteId}/cockpit`}
+            className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+          >
+            Open Cockpit
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      )}
 
       {/* Skeleton */}
       {busy && (
