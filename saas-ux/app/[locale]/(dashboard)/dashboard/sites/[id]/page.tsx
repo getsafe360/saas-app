@@ -178,7 +178,7 @@ export default async function SiteDetail({
             href={`/dashboard/sites/${site.siteId}/analyze`}
             className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700"
           >
-            Run full scan
+            Analyze
           </Link>
           <Link
             href={`/dashboard/sites/connect?url=${encodeURIComponent(
@@ -222,7 +222,7 @@ export default async function SiteDetail({
               href={`/dashboard/sites/${site.siteId}/analyze`}
               className="w-full inline-flex justify-center px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
             >
-              Start scan
+              Analyze
             </Link>
           </div>
         </div>

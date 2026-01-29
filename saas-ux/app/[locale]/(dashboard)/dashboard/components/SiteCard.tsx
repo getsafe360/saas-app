@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Globe, ArrowRight, AlertCircle, CheckCircle, Clock, Loader2, Trash2 } from "lucide-react";
+import { Globe, ArrowRight, AlertCircle, CheckCircle, Clock, Loader2, Trash2, Play } from "lucide-react";
 import { CMSIcon } from "@/components/ui/cms-icon";
 import { getCMSIcon } from "@/lib/cms-icons";
 import { formatDistanceToNow } from "date-fns";
@@ -46,9 +46,15 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleOpenCockpit = () => {
+  const isAnalyzed = site.overallScore > 0;
+
+  const handleAction = () => {
     setIsLoading(true);
-    router.push(`/dashboard/sites/${site.id}/cockpit`);
+    if (isAnalyzed) {
+      router.push(`/dashboard/sites/${site.id}/cockpit`);
+    } else {
+      router.push(`/dashboard/sites/${site.id}/analyze`);
+    }
   };
 
   const scoreColor = getScoreColor(site.overallScore);
@@ -159,21 +165,30 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
           )}
         </div>
 
-        {/* Action Button - Solid Blue with Subtle Glow */}
+        {/* Action Button - Contextual based on analysis status */}
         <Button
-          onClick={handleOpenCockpit}
+          onClick={handleAction}
           disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all disabled:opacity-70"
+          className={`w-full font-semibold shadow-sm hover:shadow-md transition-all disabled:opacity-70 ${
+            isAnalyzed
+              ? "bg-blue-600 hover:bg-blue-700 text-white"
+              : "bg-emerald-600 hover:bg-emerald-700 text-white"
+          }`}
         >
           {isLoading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Opening...
+              {isAnalyzed ? "Opening..." : "Starting..."}
             </>
-          ) : (
+          ) : isAnalyzed ? (
             <>
               Open Cockpit
               <ArrowRight className="w-4 h-4 ml-2" />
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4 mr-2" />
+              Analyze
             </>
           )}
         </Button>
