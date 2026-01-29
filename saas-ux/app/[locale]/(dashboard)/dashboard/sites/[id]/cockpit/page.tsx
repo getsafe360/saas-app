@@ -142,17 +142,10 @@ async function getSiteAnalysis(
 
 export default async function SiteCockpitPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id, locale } = await params;
-  const sp = (searchParams ? await searchParams : {}) ?? {};
-  const justConnected = Array.isArray(sp.connected)
-    ? sp.connected[0] === "1"
-    : sp.connected === "1";
-
   const t = await getTranslations({ locale, namespace: "SiteCockpit" });
 
   // Get site from database
@@ -176,14 +169,11 @@ export default async function SiteCockpitPage({
     );
   }
 
-  return (
-    <SiteCockpit
-      data={analysisData}
-      siteId={id}
-      siteUrl={site.siteUrl}
-      status={site.status ?? "unknown"}
-      justConnected={justConnected}
-      editable={true}
-    />
+  // 🐛 DEBUG: Log right before rendering
+  console.log(
+    "🎯 About to render SiteCockpit with data keys:",
+    Object.keys(analysisData)
   );
+
+  return <SiteCockpit data={analysisData} siteId={id} editable={true} />;
 }
