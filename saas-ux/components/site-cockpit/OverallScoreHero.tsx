@@ -1,10 +1,8 @@
 // components/site-cockpit/OverallScoreHero.tsx
 "use client";
 
-import Link from "next/link";
-import { TrendingUp, AlertCircle, CheckCircle, Scan, RefreshCw } from "lucide-react";
+import { TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
 import type { Summary } from "@/types/site-cockpit";
-import StatusBadge from "@/components/ui/StatusBadge";
 
 interface OverallScoreHeroProps {
   summary: Summary;
@@ -15,11 +13,6 @@ interface OverallScoreHeroProps {
     name?: string;
     version?: string;
   };
-  // New props for actions and status
-  siteId?: string;
-  siteUrl?: string;
-  status?: string;
-  justConnected?: boolean;
 }
 
 export function OverallScoreHero({
@@ -27,10 +20,6 @@ export function OverallScoreHero({
   domain,
   faviconUrl,
   cms,
-  siteId,
-  siteUrl,
-  status,
-  justConnected,
 }: OverallScoreHeroProps) {
   const getScoreColor = (score: number) => {
     if (score >= 90) return "text-green-400";
@@ -48,19 +37,6 @@ export function OverallScoreHero({
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-b border-gray-800">
-      {/* Just connected success banner */}
-      {justConnected && (
-        <div className="relative z-10 bg-green-500/10 border-b border-green-500/20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex items-center gap-2 text-green-400">
-              <CheckCircle className="h-5 w-5" />
-              <span className="font-medium">Connected successfully!</span>
-              <span className="text-green-400/70">Your site is now being monitored.</span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Animated background grid */}
       <div className="absolute inset-0 opacity-10">
         <div
@@ -99,50 +75,24 @@ export function OverallScoreHero({
               </div>
             )}
 
-            {/* Domain & CMS & Status */}
+            {/* Domain & CMS */}
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl lg:text-4xl font-bold text-white">
-                  {domain}
-                </h1>
-                {status && <StatusBadge status={status} size="sm" />}
-              </div>
-              <div className="flex items-center gap-4">
-                {cms && (
-                  <div className="flex items-center gap-2 text-gray-400">
-                    <span className="text-sm">Powered by</span>
-                    <span className="text-sm font-semibold text-blue-400">
-                      {cms.name || cms.type}
+              <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
+                {domain}
+              </h1>
+              {cms && (
+                <div className="flex items-center gap-2 text-gray-400">
+                  <span className="text-sm">Powered by</span>
+                  <span className="text-sm font-semibold text-blue-400">
+                    {cms.name || cms.type}
+                  </span>
+                  {cms.version && (
+                    <span className="text-xs text-gray-500">
+                      v{cms.version}
                     </span>
-                    {cms.version && (
-                      <span className="text-xs text-gray-500">
-                        v{cms.version}
-                      </span>
-                    )}
-                  </div>
-                )}
-                {/* Action buttons */}
-                {siteId && (
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/dashboard/sites/${siteId}/analyze`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-                    >
-                      <Scan className="h-3.5 w-3.5" />
-                      Run scan
-                    </Link>
-                    {siteUrl && (
-                      <Link
-                        href={`/dashboard/sites/connect?url=${encodeURIComponent(siteUrl)}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-600 text-gray-300 text-sm font-medium hover:bg-gray-800 transition-colors"
-                      >
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        Reconnect
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
