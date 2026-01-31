@@ -218,3 +218,154 @@ export function calculateUsagePercentage(
   if (total === 0) return 0;
   return Math.min(1, tokensUsedThisMonth / total);
 }
+
+// ============================================
+// Feature Gating - Plan-based feature access
+// ============================================
+
+/**
+ * Feature flags by plan
+ */
+export interface PlanFeatures {
+  // Report generation
+  reportGeneration: boolean;
+  whiteLabel: boolean;
+  exportFormats: ('pdf' | 'csv' | 'html')[];
+
+  // Advanced features
+  priorityProcessing: boolean;
+  teamCollaboration: boolean;
+  customIntegrations: boolean;
+  scheduledScans: boolean;
+
+  // Limits
+  maxSites: number;              // Max sites per account
+  maxTeamMembers: number;        // Max team members
+  reportRetentionDays: number;   // How long reports are stored
+}
+
+/**
+ * Feature configuration by plan
+ */
+export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
+  free: {
+    reportGeneration: false,
+    whiteLabel: false,
+    exportFormats: [],
+    priorityProcessing: false,
+    teamCollaboration: false,
+    customIntegrations: false,
+    scheduledScans: false,
+    maxSites: 3,
+    maxTeamMembers: 1,
+    reportRetentionDays: 0,
+  },
+  pro: {
+    reportGeneration: false,    // Upsell opportunity to Agency
+    whiteLabel: false,
+    exportFormats: [],
+    priorityProcessing: true,
+    teamCollaboration: false,
+    customIntegrations: false,
+    scheduledScans: true,
+    maxSites: 25,
+    maxTeamMembers: 3,
+    reportRetentionDays: 0,
+  },
+  agency: {
+    reportGeneration: true,
+    whiteLabel: true,
+    exportFormats: ['pdf', 'csv', 'html'],
+    priorityProcessing: true,
+    teamCollaboration: true,
+    customIntegrations: true,
+    scheduledScans: true,
+    maxSites: 100,
+    maxTeamMembers: 10,
+    reportRetentionDays: 365,
+  },
+};
+
+/**
+ * Check if a plan has access to a specific feature
+ */
+export function hasFeature<K extends keyof PlanFeatures>(
+  planName: PlanName,
+  feature: K
+): PlanFeatures[K] {
+  return PLAN_FEATURES[planName][feature];
+}
+
+/**
+ * Check if plan can generate reports
+ */
+export function canGenerateReports(planName: PlanName): boolean {
+  return PLAN_FEATURES[planName].reportGeneration;
+}
+
+/**
+ * Check if plan supports white-label branding
+ */
+export function canUseWhiteLabel(planName: PlanName): boolean {
+  return PLAN_FEATURES[planName].whiteLabel;
+}
+
+/**
+ * Get available export formats for a plan
+ */
+export function getAvailableExportFormats(planName: PlanName): ('pdf' | 'csv' | 'html')[] {
+  return PLAN_FEATURES[planName].exportFormats;
+}
+
+/**
+ * Check if a specific export format is available
+ */
+export function canExportFormat(planName: PlanName, format: 'pdf' | 'csv' | 'html'): boolean {
+  return PLAN_FEATURES[planName].exportFormats.includes(format);
+}
+
+/**
+ * Get the minimum plan required for a feature
+ */
+export function getMinimumPlanForFeature(feature: keyof PlanFeatures): PlanName {
+  const planOrder: PlanName[] = ['free', 'pro', 'agency'];
+
+  for (const plan of planOrder) {
+    const featureValue = PLAN_FEATURES[plan][feature];
+    // For boolean features, check if true
+    // For arrays, check if non-empty
+    // For numbers, check if greater than 0
+    if (
+      featureValue === true ||
+      (Array.isArray(featureValue) && featureValue.length > 0) ||
+      (typeof featureValue === 'number' && featureValue > 0)
+    ) {
+      return plan;
+    }
+  }
+
+  return 'agency'; // Default to highest tier
+}
+
+/**
+ * Get upgrade suggestion for a feature
+ */
+export function getUpgradeSuggestion(
+  currentPlan: PlanName,
+  feature: keyof PlanFeatures
+): { suggestedPlan: PlanName; price: string } | null {
+  const requiredPlan = getMinimumPlanForFeature(feature);
+  const planOrder: PlanName[] = ['free', 'pro', 'agency'];
+
+  const currentIndex = planOrder.indexOf(currentPlan);
+  const requiredIndex = planOrder.indexOf(requiredPlan);
+
+  if (requiredIndex > currentIndex) {
+    return {
+      suggestedPlan: requiredPlan,
+      price: PLANS[requiredPlan].priceDisplay,
+    };
+  }
+
+  return null;
+}
