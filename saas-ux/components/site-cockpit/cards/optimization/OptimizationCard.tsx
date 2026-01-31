@@ -258,7 +258,7 @@ export function OptimizationCard({
             </div>
             <GenerateReportButton
               siteId={siteId}
-              siteName={siteName || data?.siteUrl || "Site"}
+              siteName={siteName || data?.domain || "Site"}
               planName={planName}
               onReportGenerated={(report) => {
                 console.log("Report generated:", report);
