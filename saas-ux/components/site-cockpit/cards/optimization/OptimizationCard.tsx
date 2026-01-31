@@ -11,6 +11,7 @@ import { SavingsDisplay } from "./components/Summary/SavingsDisplay";
 import { QuickWinCard } from "./components/QuickWins/QuickWinCard";
 import { BackupButton } from "./components/Backup/BackupButton";
 import { PerformanceChart } from "./components/Charts/PerformanceChart";
+import { GenerateReportButton } from "@/components/reports/GenerateReportButton";
 import type {
   OptimizationCardProps,
   ConnectionInfo,
@@ -24,6 +25,8 @@ export function OptimizationCard({
   onToggleMinimize,
   editable,
   siteId,
+  siteName,
+  planName = "free",
   connection,
 }: OptimizationCardProps) {
   const [showBackupSection, setShowBackupSection] = useState(false);
@@ -237,6 +240,30 @@ export function OptimizationCard({
           </div>
           <div className="text-sm text-gray-400">
             Your site is performing at its best. Great job!
+          </div>
+        </div>
+      )}
+
+      {/* Generate Report Section */}
+      {siteId && (
+        <div className="mt-6 pt-6 border-t border-gray-700/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-white">
+                Performance Report
+              </h3>
+              <p className="text-xs text-gray-400">
+                Generate a detailed PDF report for your records or clients
+              </p>
+            </div>
+            <GenerateReportButton
+              siteId={siteId}
+              siteName={siteName || data?.domain || "Site"}
+              planName={planName}
+              onReportGenerated={(report) => {
+                console.log("Report generated:", report);
+              }}
+            />
           </div>
         </div>
       )}

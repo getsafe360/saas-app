@@ -89,3 +89,37 @@ export type { AdminAction, AdminNote } from './admin/actions';
 // AI Analysis
 export { aiAnalysisJobs, aiRepairActions } from './ai/analysis';
 export type { AiAnalysisJob, NewAiAnalysisJob, AiRepairAction, NewAiRepairAction } from './ai/analysis';
+
+// Reports & Branding
+export { reportBranding } from './reports/branding';
+export type {
+  ReportBranding,
+  NewReportBranding,
+  BrandingConfig,
+  BrandingColors,
+  BrandingContact
+} from './reports/branding';
+
+export {
+  generatedReports,
+  reportFormatEnum,
+  reportScopeEnum,
+  reportStatusEnum
+} from './reports/generated';
+export type {
+  GeneratedReport,
+  NewGeneratedReport,
+  ReportFormat,
+  ReportScope,
+  ReportStatus,
+  ReportMetadata
+} from './reports/generated';
+
+export { performanceScorecards } from './reports/performance-scorecard';
+export type {
+  PerformanceScorecard,
+  NewPerformanceScorecard,
+  PerformanceScorecardData,
+  PriorityAction,
+  CriterionScore
+} from './reports/performance-scorecard';

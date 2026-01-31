@@ -174,6 +174,8 @@ export interface OptimizationCardProps {
   onToggleMinimize?: () => void;
   editable?: boolean;
   siteId?: string;
+  siteName?: string;
+  planName?: "free" | "pro" | "agency";
   connection?: ConnectionInfo;
 }
 
