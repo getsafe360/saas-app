@@ -1,0 +1,111 @@
+This is a scorable (100-point) optimization checklist that maps each item to the closest Lighthouse audit (name + audit id where known). If Lighthouse doesn’t cover it well, I’ve added alternative audits/tools (WebPageTest, CrUX, DevTools, server metrics, etc.).
+How to score: each line item has points. 0 = not done, ½ = partial, full = done + verified.
+
+✅ Website Acceleration Scorecard (100 pts)
+A) Core Web Vitals KPI Layer (20 pts)
+These are our “business KPIs” — everything else should improve these.
+    1. LCP ≤ 2.5s (75th percentile) — 6 pts
+    • Lighthouse: Metrics → Largest Contentful Paint (metric) 
+    • Alt: CrUX / PageSpeed Insights field data, RUM (SpeedCurve / Cloudflare RUM / New Relic Browser)
+    2. INP ≤ 200ms (75th percentile) — 6 pts
+    • Lighthouse: Metrics → Interaction to Next Paint (metric) 
+    • Alt: RUM INP, Web Vitals JS library (field)
+    3. CLS ≤ 0.1 (75th percentile) — 4 pts
+    • Lighthouse: Metrics → Cumulative Layout Shift (metric) 
+    • Alt: RUM CLS + layout shift debugging in DevTools
+    4. Performance score stability (no regressions across deploys) — 4 pts
+    • Lighthouse: track score + metric deltas
+    • Alt: CI Lighthouse (LHCI), SpeedCurve deploy tracking, WebPageTest “Comparisons”
+
+B) Images (14 pts)
+    1. Serve next-gen formats (WebP/AVIF) — 3 pts
+    • Lighthouse audit: “Serve images in next-gen formats” (modern-image-formats) 
+    • Alt: WebPageTest “Image Optimization”, CDN image policy report
+    2. Compress/encode efficiently — 3 pts
+    • Lighthouse audit: “Efficiently encode images” (uses-optimized-images) 
+    3. Proper responsive sizing (srcset + correct sizes) — 3 pts
+    • Lighthouse audit: “Properly size images” (uses-responsive-images) 
+    4. Lazy load offscreen images (but not LCP image) — 3 pts
+    • Lighthouse audit: “Defer offscreen images” (offscreen-images) 
+    5. LCP hero image priority (preload / fetchpriority) — 2 pts
+    • Lighthouse audit: “Preload Largest Contentful Paint image” (name appears in perf audits list) 
+    • Alt: WebPageTest filmstrip + “LCP breakdown”, DevTools Performance panel
+
+C) CSS (10 pts)
+    1. Remove unused CSS — 4 pts
+    • Lighthouse audit: “Reduce unused CSS” (unused-css-rules) 
+    2. Minify CSS — 2 pts
+    • Lighthouse audit: “Minify CSS” 
+    3. Eliminate render-blocking CSS (critical CSS / defer non-critical) — 4 pts
+    • Lighthouse audit: “Eliminate render-blocking resources” (render-blocking-resources) 
+
+D) JavaScript (14 pts)
+    1. Remove unused JS — 4 pts
+    • Lighthouse audit: “Reduce unused JavaScript” (unused-javascript) 
+    • Alt: DevTools Coverage (line-level unused JS) 
+    2. Minify JS — 2 pts
+    • Lighthouse audit: “Minify JavaScript” 
+    3. Reduce JS execution cost — 4 pts
+    • Lighthouse audit: “Reduce JavaScript execution time” 
+    4. Minimize main-thread work — 2 pts
+    • Lighthouse audit: “Minimize main-thread work” 
+    5. Remove duplicate modules / bundle bloat — 2 pts
+    • Lighthouse audit: “Remove duplicate modules in JavaScript bundles” 
+    • Alt: webpack/rollup analyzer, source-map-explorer
+
+E) Fonts (8 pts)
+    1. Ensure text visible during webfont load (font-display: swap) — 3 pts
+    • Lighthouse audit: “Ensure text remains visible during webfont load” 
+    2. Preload critical fonts (only what’s needed) — 3 pts
+    • Lighthouse audit: “Preload key requests” 
+    • Alt: WebPageTest “Prioritize Render Path”, DevTools Network “Initiator” chains
+    3. Reduce font payload (subset, fewer weights) — 2 pts
+    • Lighthouse: partially reflected via “Keep request counts low and transfer sizes small” diagnostic 
+    • Alt: bundle report + Network “Transferred” sizes
+
+F) Network & Compression (10 pts)
+    1. Text compression (Brotli/Gzip) — 4 pts
+    • Lighthouse audit: “Enable text compression” (uses-text-compression) 
+    2. Use HTTP/2 (or HTTP/3 where available) — 3 pts
+    • Lighthouse audit: commonly “Use HTTP/2” (audit exists in many Lighthouse sets) 
+    • Alt: WebPageTest “Protocol”, curl/DevTools protocol column
+    3. Reduce redirects — 1 pt
+    • Lighthouse audit: “Avoid multiple page redirects” 
+    4. Keep requests & transfer sizes lean — 2 pts
+    • Lighthouse diagnostic: “Keep request counts low and transfer sizes small” 
+    • Alt: WebPageTest request map + coverage
+
+G) Caching (8 pts)
+    1. Efficient cache policy for static assets — 5 pts
+    • Lighthouse audit: “Serve static assets with an efficient cache policy” (commonly uses-long-cache-ttl)
+    • Alt: curl header audit, WebPageTest “Cache static content”
+    2. Correct caching split (HTML short/no-cache; assets long/immutable) — 3 pts
+    • Lighthouse: partially covered via cache policy findings
+    • Alt: automated curl checks in CI
+
+H) Server / TTFB / Backend (8 pts)
+    1. Reduce initial server response time (TTFB) — 6 pts
+    • Lighthouse audit: “Reduce initial server response time” 
+    • Alt: WebPageTest TTFB + Server Timing header + APM (New Relic, Datadog)
+    2. Server caching / CDN edge caching (hit ratio measured) — 2 pts
+    • Lighthouse: not reliable (can’t see cache HIT ratio)
+    • Alt: CDN analytics (Cloudflare/Fastly), origin logs, Server-Timing: cache;desc=HIT
+
+I) Third-Party Control (8 pts)
+    1. Reduce impact of third-party code — 4 pts
+    • Lighthouse audit: “Reduce the impact of third-party code” 
+    2. Lazy-load third-party with facades — 4 pts
+    • Lighthouse audit: “Lazy load third-party resources with facades” 
+
+J) DOM & Rendering Hygiene (6 pts)
+    1. Avoid excessive DOM size — 3 pts
+    • Lighthouse audit: “Avoid an excessive DOM size” 
+    2. Reduce render blocking resources overall (JS/CSS) — 3 pts
+    • Lighthouse audit: “Eliminate render-blocking resources” 
+
+🎯 Output Format (what we store per client)
+For each client/site, record:
+    • Score /100 + breakdown by category
+    • Lighthouse report links (mobile + desktop)
+    • Field data snapshot (CrUX or RUM): LCP/INP/CLS p75
+    • Top 5 “next actions” by estimated impact (ms saved / KB saved / requests saved)
