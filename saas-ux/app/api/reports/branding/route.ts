@@ -1,13 +1,45 @@
 // app/api/reports/branding/route.ts
 // White-label branding settings API (Agency plan only)
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db/drizzle';
-import { teams, teamMembers, reportBranding } from '@/lib/db/schema';
+import { teams, teamMembers, users, reportBranding } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { getSession } from '@/lib/auth/session';
+import { getUser } from '@/lib/db/queries';
+import { currentUser } from '@clerk/nextjs/server';
 import { canUseWhiteLabel, type PlanName } from '@/lib/plans/config';
 import type { BrandingConfig } from '@/lib/db/schema/reports/branding';
+
+/**
+ * Get the app user ID from either local session or Clerk
+ */
+async function getAppUserId(db: ReturnType<typeof getDb>): Promise<number | null> {
+  // 1) Try local session user
+  try {
+    const u = await getUser();
+    if (u?.id) return u.id;
+  } catch {
+    // ignore
+  }
+
+  // 2) Try Clerk user → map to app user
+  const cu = await currentUser().catch(() => null);
+  if (!cu) return null;
+
+  const clerkId = cu.id;
+
+  // Find existing mapping
+  const [row] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.clerkUserId, clerkId))
+    .limit(1);
+
+  return row?.id ?? null;
+}
 
 /**
  * GET /api/reports/branding
@@ -16,16 +48,15 @@ import type { BrandingConfig } from '@/lib/db/schema/reports/branding';
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user?.id) {
+    const db = getDb();
+
+    const userId = await getAppUserId(db);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
-    const db = getDb();
 
     // Get user's team and plan
     const [membership] = await db
@@ -91,16 +122,15 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user?.id) {
+    const db = getDb();
+
+    const userId = await getAppUserId(db);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
-    const db = getDb();
 
     // Get user's team and plan
     const [membership] = await db
@@ -222,16 +252,15 @@ export async function PUT(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user?.id) {
+    const db = getDb();
+
+    const userId = await getAppUserId(db);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
-    const db = getDb();
 
     // Get user's team
     const [membership] = await db
