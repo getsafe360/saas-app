@@ -1,11 +1,43 @@
 // app/api/sites/route.ts
 // List all sites for the authenticated user
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db/drizzle';
-import { sites, teamMembers } from '@/lib/db/schema';
+import { sites, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { getSession } from '@/lib/auth/session';
+import { getUser } from '@/lib/db/queries';
+import { currentUser } from '@clerk/nextjs/server';
+
+/**
+ * Get the app user ID from either local session or Clerk
+ */
+async function getAppUserId(db: ReturnType<typeof getDb>): Promise<number | null> {
+  // 1) Try local session user
+  try {
+    const u = await getUser();
+    if (u?.id) return u.id;
+  } catch {
+    // ignore
+  }
+
+  // 2) Try Clerk user → map to app user
+  const cu = await currentUser().catch(() => null);
+  if (!cu) return null;
+
+  const clerkId = cu.id;
+
+  // Find existing mapping
+  const [row] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.clerkUserId, clerkId))
+    .limit(1);
+
+  return row?.id ?? null;
+}
 
 /**
  * GET /api/sites
@@ -14,16 +46,15 @@ import { getSession } from '@/lib/auth/session';
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session?.user?.id) {
+    const db = getDb();
+
+    const userId = await getAppUserId(db);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
-    const db = getDb();
 
     // Get all sites for this user
     const userSites = await db
@@ -45,25 +76,36 @@ export async function GET(request: NextRequest) {
       .orderBy(sites.updatedAt);
 
     // Transform for frontend
-    const transformedSites = userSites.map(site => ({
-      id: site.id,
-      siteUrl: site.siteUrl,
-      canonicalHost: site.canonicalHost || new URL(site.siteUrl).hostname,
-      lastScores: site.lastScores as {
-        performance?: number;
-        security?: number;
-        seo?: number;
-        accessibility?: number;
-        overall?: number;
-      } | null,
-      lastFaviconUrl: site.lastFaviconUrl,
-      lastScreenshotUrl: site.lastScreenshotUrl,
-      cms: site.lastCms,
-      findingCount: site.lastFindingCount,
-      status: site.status,
-      createdAt: site.createdAt,
-      updatedAt: site.updatedAt,
-    }));
+    const transformedSites = userSites.map(site => {
+      let canonicalHost = site.canonicalHost;
+      if (!canonicalHost) {
+        try {
+          canonicalHost = new URL(site.siteUrl).hostname;
+        } catch {
+          canonicalHost = site.siteUrl;
+        }
+      }
+
+      return {
+        id: site.id,
+        siteUrl: site.siteUrl,
+        canonicalHost,
+        lastScores: site.lastScores as {
+          performance?: number;
+          security?: number;
+          seo?: number;
+          accessibility?: number;
+          overall?: number;
+        } | null,
+        lastFaviconUrl: site.lastFaviconUrl,
+        lastScreenshotUrl: site.lastScreenshotUrl,
+        cms: site.lastCms,
+        findingCount: site.lastFindingCount,
+        status: site.status,
+        createdAt: site.createdAt,
+        updatedAt: site.updatedAt,
+      };
+    });
 
     return NextResponse.json({
       success: true,

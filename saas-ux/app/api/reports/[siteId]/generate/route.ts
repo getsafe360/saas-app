@@ -1,14 +1,46 @@
 // app/api/reports/[siteId]/generate/route.ts
 // Report generation API - PDF, CSV, HTML formats (Agency plan only)
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db/drizzle';
-import { sites, teams, teamMembers, generatedReports, reportBranding } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
-import { getSession } from '@/lib/auth/session';
+import { sites, teams, teamMembers, users, generatedReports, reportBranding } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { getUser } from '@/lib/db/queries';
+import { currentUser } from '@clerk/nextjs/server';
 import { canGenerateReports, canExportFormat, type PlanName } from '@/lib/plans/config';
 import { put } from '@vercel/blob';
 import type { ReportFormat, ReportScope, ReportMetadata } from '@/lib/db/schema/reports/generated';
+
+/**
+ * Get the app user ID from either local session or Clerk
+ */
+async function getAppUserId(db: ReturnType<typeof getDb>): Promise<number | null> {
+  // 1) Try local session user
+  try {
+    const u = await getUser();
+    if (u?.id) return u.id;
+  } catch {
+    // ignore
+  }
+
+  // 2) Try Clerk user → map to app user
+  const cu = await currentUser().catch(() => null);
+  if (!cu) return null;
+
+  const clerkId = cu.id;
+
+  // Find existing mapping
+  const [row] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.clerkUserId, clerkId))
+    .limit(1);
+
+  return row?.id ?? null;
+}
 
 /**
  * POST /api/reports/[siteId]/generate
@@ -29,17 +61,16 @@ export async function POST(
   const { siteId } = params;
 
   try {
-    // Get session
-    const session = await getSession();
-    if (!session?.user?.id) {
+    const db = getDb();
+
+    // Get user ID via Clerk
+    const userId = await getAppUserId(db);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
-
-    const userId = session.user.id;
-    const db = getDb();
 
     // Get user's team and plan
     const [membership] = await db
@@ -244,15 +275,15 @@ export async function GET(
   const { siteId } = params;
 
   try {
-    const session = await getSession();
-    if (!session?.user?.id) {
+    const db = getDb();
+
+    const userId = await getAppUserId(db);
+    if (!userId) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
-
-    const db = getDb();
 
     // Get reports for this site
     const reports = await db
@@ -312,7 +343,6 @@ function generateFilename(siteHost: string, scope: ReportScope, format: ReportFo
 
 async function fetchCockpitData(siteId: string): Promise<any> {
   // Fetch the latest scan/cockpit data for the site
-  // This would typically come from your scan results or cockpit transform
   const db = getDb();
 
   const [site] = await db
@@ -341,9 +371,6 @@ async function generatePdfReport(
   scope: ReportScope,
   branding: any
 ): Promise<{ url: string; key: string; metadata: ReportMetadata }> {
-  // For PDF generation, we render HTML and convert to PDF using Puppeteer
-  // In a production environment, this would use a headless browser
-
   const scores = cockpitData.scores || {};
   const overallScore = scores.performance || scores.overall || 75;
   const grade = getGrade(overallScore);
@@ -352,10 +379,9 @@ async function generatePdfReport(
   const htmlContent = buildReportHtml(site, cockpitData, scope, branding, overallScore, grade);
 
   // Store as HTML for now (PDF conversion would happen via Puppeteer)
-  // In production, you'd use puppeteer.launch() and page.pdf()
   const blob = await put(
     `reports/${site.id}/${Date.now()}-${scope}.pdf`,
-    htmlContent, // This would be actual PDF bytes in production
+    htmlContent,
     {
       contentType: 'application/pdf',
       access: 'public',
