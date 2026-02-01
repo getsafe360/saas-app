@@ -23,9 +23,14 @@
     "onboardLine": "Wir haben deine Startseite analysiert und Chancen in SEO, Barrierefreiheit, Performance und Sicherheit gefunden. Klicke auf „Mit Copilot fixen“, um sichere Verbesserungen anzuwenden – ganz ohne Code."
   },
   "DashboardNav": {
+    "navigation": "Navigation",
+    "overview": "Dashboard",
     "websites": "Websites",
     "activity": "Aktivität",
+    "performance": "Leistung",
+    "seo": "SEO",
     "security": "Sicherheit",
+    "accessibility": "Barrierefreiheit",
     "settings": "Einstellungen"
   },
   "DashboardMeta": {

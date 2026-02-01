@@ -103,22 +103,6 @@ export function SiteSelectorDropdown({
     setIsOpen(false);
   }, [pathname]);
 
-  const getScoreColor = (score?: number) => {
-    if (!score) return "text-gray-500";
-    if (score >= 90) return "text-green-400";
-    if (score >= 70) return "text-yellow-400";
-    if (score >= 50) return "text-orange-400";
-    return "text-red-400";
-  };
-
-  const getScoreBg = (score?: number) => {
-    if (!score) return "bg-gray-500/10";
-    if (score >= 90) return "bg-green-500/10";
-    if (score >= 70) return "bg-yellow-500/10";
-    if (score >= 50) return "bg-orange-500/10";
-    return "bg-red-500/10";
-  };
-
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Trigger Button */}
@@ -130,21 +114,22 @@ export function SiteSelectorDropdown({
             : "border-gray-700 bg-gray-800/50 hover:border-gray-600"
         }`}
       >
-        <div className="p-1.5 rounded-lg bg-gray-700/50">
-          <Globe className="h-4 w-4 text-gray-400" />
+        {/* Favicon or placeholder */}
+        <div className="w-8 h-8 rounded-lg bg-gray-700/50 flex items-center justify-center overflow-hidden">
+          {currentSite?.lastFaviconUrl ? (
+            <img
+              src={currentSite.lastFaviconUrl}
+              alt=""
+              className="w-5 h-5"
+            />
+          ) : (
+            <Globe className="h-4 w-4 text-gray-400" />
+          )}
         </div>
         <div className="flex-1 text-left min-w-0">
           <div className="text-sm font-medium text-white truncate">
             {currentSite?.canonicalHost || "Select a site"}
           </div>
-          {currentSite?.lastScores?.overall && (
-            <div className="text-xs text-gray-500">
-              Score:{" "}
-              <span className={getScoreColor(currentSite.lastScores.overall)}>
-                {currentSite.lastScores.overall}
-              </span>
-            </div>
-          )}
         </div>
         <ChevronDown
           className={`h-4 w-4 text-gray-400 transition-transform ${
@@ -165,7 +150,6 @@ export function SiteSelectorDropdown({
             ) : (
               sites.map((site) => {
                 const isSelected = site.id === currentSiteId;
-                const overallScore = site.lastScores?.overall;
 
                 return (
                   <button
@@ -195,26 +179,7 @@ export function SiteSelectorDropdown({
                       <div className="text-sm font-medium text-white truncate">
                         {site.canonicalHost}
                       </div>
-                      {overallScore && (
-                        <div className="text-xs text-gray-500">
-                          Score:{" "}
-                          <span className={getScoreColor(overallScore)}>
-                            {overallScore}
-                          </span>
-                        </div>
-                      )}
                     </div>
-
-                    {/* Score badge */}
-                    {overallScore && (
-                      <div
-                        className={`px-2 py-1 rounded-lg text-xs font-medium ${getScoreColor(
-                          overallScore
-                        )} ${getScoreBg(overallScore)}`}
-                      >
-                        {overallScore}
-                      </div>
-                    )}
 
                     {/* Selected indicator */}
                     {isSelected && (

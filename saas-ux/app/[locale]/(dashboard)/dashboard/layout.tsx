@@ -45,7 +45,7 @@ export default function DashboardLayout({
   // Extract current site ID from URL if on a site-specific page
   const currentSiteId = typeof params?.id === 'string' ? params.id : undefined;
 
-  // Fetch user's sites
+  // Fetch user's sites - refetch when pathname changes (e.g., after adding/removing)
   useEffect(() => {
     async function fetchSites() {
       try {
@@ -61,7 +61,7 @@ export default function DashboardLayout({
       }
     }
     fetchSites();
-  }, []);
+  }, [pathname]);
 
   // Handle site change from dropdown
   const handleSiteChange = (siteId: string) => {
