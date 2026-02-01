@@ -133,11 +133,11 @@ export function CockpitCard({
           isDragging && "scale-105"
         )}
       >
-        {/* Gradient overlay */}
+        {/* Gradient overlay - subtle accent line only */}
         <div
           className={cn(
-            "absolute inset-0 bg-gradient-to-br opacity-50",
-            styles.gradient
+            "absolute top-0 left-0 right-0 h-1 bg-gradient-to-r",
+            styles.gradient.replace('/10', '/30').replace('/5', '/20')
           )}
         />
 

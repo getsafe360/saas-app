@@ -11,11 +11,14 @@ export function BeforeAfterComparison({
 }: BeforeAfterComparisonProps) {
   const { before, potential } = comparison;
 
+  // Safe percentage calculation (avoid division by zero / NaN)
+  const safePercent = (beforeVal: number, afterVal: number) =>
+    beforeVal > 0 ? ((beforeVal - afterVal) / beforeVal) * 100 : 0;
+
   const improvements = {
-    pageWeight:
-      ((before.pageWeight - potential.pageWeight) / before.pageWeight) * 100,
-    requests: ((before.requests - potential.requests) / before.requests) * 100,
-    loadTime: ((before.loadTime - potential.loadTime) / before.loadTime) * 100,
+    pageWeight: safePercent(before.pageWeight, potential.pageWeight),
+    requests: safePercent(before.requests, potential.requests),
+    loadTime: safePercent(before.loadTime, potential.loadTime),
     score: potential.score - before.score,
   };
 

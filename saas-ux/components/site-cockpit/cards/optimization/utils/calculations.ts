@@ -83,20 +83,24 @@ export function calculateSavings(
   const monthlyBandwidthBytes = weightSaved * monthlyVisits;
   const monthlyBandwidthGB = monthlyBandwidthBytes / (1024 * 1024 * 1024);
 
+  // Safe percentage calculation (avoid division by zero)
+  const safePercent = (saved: number, original: number) =>
+    original > 0 ? (saved / original) * 100 : 0;
+
   return {
     pageWeight: {
       absolute: weightSaved,
-      percentage: (weightSaved / before.pageWeight) * 100,
-      display: formatBytes(weightSaved),
+      percentage: safePercent(weightSaved, before.pageWeight),
+      display: formatBytes(Math.max(0, weightSaved)),
     },
     requests: {
       absolute: requestsSaved,
-      percentage: (requestsSaved / before.requests) * 100,
+      percentage: safePercent(requestsSaved, before.requests),
     },
     loadTime: {
       absolute: timeSaved,
-      percentage: (timeSaved / before.loadTime) * 100,
-      display: `${timeSaved.toFixed(1)}s`,
+      percentage: safePercent(timeSaved, before.loadTime),
+      display: `${Math.max(0, timeSaved).toFixed(1)}s`,
     },
     bandwidth: {
       monthly: `${monthlyBandwidthGB.toFixed(1)} GB/month`,
