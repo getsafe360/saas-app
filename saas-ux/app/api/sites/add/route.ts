@@ -108,16 +108,28 @@ export async function POST(req: NextRequest) {
   // Create site
   const siteId = crypto.randomUUID();
 
+  // Extract canonical host and root from URL for unique constraint
+  let canonicalHost: string;
+  let canonicalRoot: string;
+  try {
+    const urlObj = new URL(siteUrl);
+    canonicalHost = urlObj.hostname;
+    canonicalRoot = `${urlObj.protocol}//${urlObj.hostname}`;
+  } catch {
+    canonicalHost = siteUrl;
+    canonicalRoot = siteUrl;
+  }
+
   try {
     await db.insert(sites).values({
       id: siteId,
       siteUrl,
+      canonicalHost,
+      canonicalRoot,
       status: 'connected',
       createdAt: new Date(),
       updatedAt: new Date(),
-      // IMPORTANT: your schema requires this:
       userId
-      // If you also have teamId/ownerUserId cols, set them here as needed.
     } as any);
   } catch (e: any) {
     if (DEV) console.error('[sites/add] DB insert failed', e);
