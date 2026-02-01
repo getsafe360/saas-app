@@ -23,9 +23,14 @@
     "onboardLine": "Analisamos sua página inicial e encontramos oportunidades em SEO, Acessibilidade, Performance e Segurança. Clique em “Corrigir com o Copilot” para aplicar melhorias seguras – sem precisar de código."
   },
   "DashboardNav": {
+    "navigation": "Navegação",
+    "overview": "Painel",
     "websites": "Sites",
     "activity": "Atividade",
+    "performance": "Desempenho",
+    "seo": "SEO",
     "security": "Segurança",
+    "accessibility": "Acessibilidade",
     "settings": "Configurações"
   },
   "DashboardMeta": {

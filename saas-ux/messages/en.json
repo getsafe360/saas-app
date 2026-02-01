@@ -23,9 +23,14 @@
     "onboardLine": "We analyzed your homepage and found opportunities across SEO, Accessibility, Performance, and Security. Click “Fix with Copilot” to apply safe improvements – no code needed."
   },
   "DashboardNav": {
+    "navigation": "Navigation",
+    "overview": "Dashboard",
     "websites": "Websites",
     "activity": "Activity",
+    "performance": "Performance",
+    "seo": "SEO",
     "security": "Security",
+    "accessibility": "Accessibility",
     "settings": "Settings"
   },
   "DashboardMeta": {

@@ -164,7 +164,7 @@ export default function AddSitePage() {
                 <div className="flex items-center gap-3 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
                   <Loader2 className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
                   <span className="text-sm text-blue-700 dark:text-blue-300">
-                    {status === "analyzing" && "Analyzing website..."}
+                    {status === "analyzing" && "Adding website..."}
                     {status === "creating" && "Adding site to your dashboard..."}
                   </span>
                 </div>
@@ -179,7 +179,7 @@ export default function AddSitePage() {
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {status === "analyzing" ? "Analyzing..." : "Adding..."}
+                    {status === "analyzing" ? "Adding..." : "Adding..."}
                   </>
                 ) : (
                   "Add Website"
