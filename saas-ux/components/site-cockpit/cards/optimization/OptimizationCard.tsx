@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { CockpitCard } from "../CockpitCard";
-import { Zap, TrendingUp, Rocket, Play } from "lucide-react";
+import { Zap, TrendingUp } from "lucide-react";
 import { useOptimizationData } from "./hooks/useOptimizationData";
 import { useBackupSystem } from "./hooks/useBackupSystem";
 import { BeforeAfterComparison } from "./components/Summary/BeforeAfterComparison";
@@ -169,24 +169,23 @@ export function OptimizationCard({
         <div className="mb-6">
           <button
             onClick={() => setShowPreFlight(true)}
-            className="w-full p-4 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 hover:from-blue-600/30 hover:to-purple-600/30 transition-all text-left group"
+            className="w-full p-4 rounded-xl bg-gray-800/50 border border-gray-700 hover:border-gray-600 hover:bg-gray-800/70 transition-all text-left group"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 group-hover:scale-110 transition-transform">
-                  <Rocket className="h-6 w-6 text-white" />
+                <div className="p-3 rounded-xl bg-gray-700 group-hover:bg-gray-600 transition-colors">
+                  <Zap className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <div className="text-lg font-semibold text-white">
-                    Start Performance Optimization
+                  <div className="text-base font-medium text-white">
+                    Run Optimization
                   </div>
                   <div className="text-sm text-gray-400">
-                    Run pre-flight checks and optimize your site automatically
+                    Verify readiness and optimize your site
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400 font-medium group-hover:bg-blue-500/30 transition-colors">
-                <Play className="h-4 w-4" />
+              <div className="px-4 py-2 rounded-lg bg-white text-black text-sm font-medium group-hover:bg-gray-200 transition-colors">
                 Start
               </div>
             </div>
