@@ -245,16 +245,16 @@ export function PreFlightCheckModal({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-4">
                   <span className="text-green-400">
-                    {result?.summary.passed} passed
+                    {result?.summary?.passed ?? 0} passed
                   </span>
-                  {result?.summary.warnings > 0 && (
+                  {(result?.summary?.warnings ?? 0) > 0 && (
                     <span className="text-yellow-400">
-                      {result?.summary.warnings} warnings
+                      {result?.summary?.warnings} warnings
                     </span>
                   )}
-                  {result?.summary.failed > 0 && (
+                  {(result?.summary?.failed ?? 0) > 0 && (
                     <span className="text-red-400">
-                      {result?.summary.failed} failed
+                      {result?.summary?.failed} failed
                     </span>
                   )}
                 </div>
