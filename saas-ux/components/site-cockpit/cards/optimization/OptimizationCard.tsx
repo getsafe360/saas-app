@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { CockpitCard } from "../CockpitCard";
-import { Zap, TrendingUp } from "lucide-react";
+import { Zap, TrendingUp, Rocket, Play } from "lucide-react";
 import { useOptimizationData } from "./hooks/useOptimizationData";
 import { useBackupSystem } from "./hooks/useBackupSystem";
 import { BeforeAfterComparison } from "./components/Summary/BeforeAfterComparison";
@@ -11,12 +11,14 @@ import { SavingsDisplay } from "./components/Summary/SavingsDisplay";
 import { QuickWinCard } from "./components/QuickWins/QuickWinCard";
 import { BackupButton } from "./components/Backup/BackupButton";
 import { PerformanceChart } from "./components/Charts/PerformanceChart";
+import { PreFlightCheckModal } from "./components/PreFlight";
 import { GenerateReportButton } from "@/components/reports/GenerateReportButton";
 import type {
   OptimizationCardProps,
   ConnectionInfo,
   BackupInfo,
 } from "./types";
+import type { PreFlightResult } from "./components/PreFlight/types";
 
 export function OptimizationCard({
   id,
@@ -30,6 +32,9 @@ export function OptimizationCard({
   connection,
 }: OptimizationCardProps) {
   const [showBackupSection, setShowBackupSection] = useState(false);
+  const [showPreFlight, setShowPreFlight] = useState(false);
+  const [preFlightResult, setPreFlightResult] = useState<PreFlightResult | null>(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
   // Get optimization data
   const optimizationData = useOptimizationData(data, siteId);
@@ -159,34 +164,54 @@ export function OptimizationCard({
       {/* Estimated Savings */}
       {savings && <SavingsDisplay savings={savings} monthlyVisits={10000} />}
 
-      {/* Backup Section Toggle */}
-      {!showBackupSection && quickWins.length > 0 && (
+      {/* Start Optimization CTA */}
+      {quickWins.length > 0 && !isOptimizing && (
         <div className="mb-6">
           <button
-            onClick={() => setShowBackupSection(true)}
-            className="w-full p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-colors text-left"
+            onClick={() => setShowPreFlight(true)}
+            className="w-full p-4 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 hover:from-blue-600/30 hover:to-purple-600/30 transition-all text-left group"
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/20">
-                  <TrendingUp className="h-5 w-5 text-blue-400" />
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 group-hover:scale-110 transition-transform">
+                  <Rocket className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-white">
-                    Ready to Optimize?
+                  <div className="text-lg font-semibold text-white">
+                    Start Performance Optimization
                   </div>
-                  <div className="text-xs text-gray-400">
-                    Create a backup first for safety
+                  <div className="text-sm text-gray-400">
+                    Run pre-flight checks and optimize your site automatically
                   </div>
                 </div>
               </div>
-              <div className="text-blue-400">→</div>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400 font-medium group-hover:bg-blue-500/30 transition-colors">
+                <Play className="h-4 w-4" />
+                Start
+              </div>
             </div>
           </button>
         </div>
       )}
 
-      {/* Backup Section */}
+      {/* Pre-Flight Check Modal */}
+      <PreFlightCheckModal
+        isOpen={showPreFlight}
+        onClose={() => setShowPreFlight(false)}
+        onComplete={(result) => setPreFlightResult(result)}
+        onProceed={() => {
+          setShowPreFlight(false);
+          setIsOptimizing(true);
+          // TODO: Start actual optimization process
+          console.log("Starting optimization with result:", preFlightResult);
+        }}
+        config={{
+          siteId: siteId || "",
+          connectionType: connectionInfo.method === "wordpress" ? "wordpress" : "static",
+        }}
+      />
+
+      {/* Backup Section (shown after pre-flight or manually) */}
       {showBackupSection && (
         <div className="mb-6">
           <BackupButton
