@@ -1,0 +1,87 @@
+/* =========================================================
+   GetSafe360 – Design Tokens
+   Single source of truth for primitives + semantic roles
+   ========================================================= */
+
+:root {
+  /* Brand Colors (Azure family) */
+  --color-primary-100: #e0f2ff;
+  --color-primary-200: #b9e3ff;
+  --color-primary-300: #8cd2ff;
+  --color-primary-400: #4fbaff;
+  --color-primary-500: #127fc3; /* BRAND */
+  --color-primary-600: #0f6aa3;
+  --color-primary-700: #0c5684;
+  --color-primary-800: #094266;
+  --color-primary-900: #062f49;
+
+  /* Neutral Scale */
+  --color-neutral-100: #f9fafb;
+  --color-neutral-200: #f3f4f6;
+  --color-neutral-300: #e5e7eb;
+  --color-neutral-400: #d1d5db;
+  --color-neutral-500: #9ca3af;
+  --color-neutral-600: #6b7280;
+  --color-neutral-700: #4b5563;
+  --color-neutral-800: #374151;
+  --color-neutral-900: #1f2937;
+
+  /* Feedback */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+
+  /* Semantic Backgrounds */
+  --background-default: var(--color-neutral-100);
+  --background-primary: var(--color-primary-500);
+  --background-warning: var(--color-warning);
+
+  /* Semantic Text */
+  --text-default: var(--color-neutral-900);
+  --text-subtle: var(--color-neutral-600);
+  --text-inverted: #ffffff;
+  --text-primary: var(--color-primary-600);
+  --text-warning: var(--color-warning);
+
+  /* Semantic Icons */
+  --icon-default: var(--text-default);
+  --icon-primary: var(--text-primary);
+
+  /* Borders */
+  --border-default: var(--color-neutral-300);
+  --border-primary: var(--color-primary-500);
+  --border-warning: var(--color-warning);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.08);
+
+  /* Typography (mobile-first) */
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+}
+
+/* Dark Mode */
+.dark {
+  --background-default: #111827;
+  --text-default: #f9fafb;
+  --border-default: #374151;
+
+  /* Slightly brighter Azure for dark mode */
+  --color-primary-500: #4fbaff;
+}
