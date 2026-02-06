@@ -1,0 +1,116 @@
+/* =========================================================
+   Component-Level Tokens
+   ========================================================= */
+
+/* Cards */
+:root {
+  --card-bg: var(--background-default);
+  --card-border: var(--border-default);
+  --card-radius: var(--radius-lg);
+  --card-padding: var(--space-lg);
+  --card-shadow: var(--shadow-sm);
+}
+
+/* Buttons */
+:root {
+  --btn-primary-bg: var(--color-primary-500);
+  --btn-primary-text: var(--text-inverted);
+  --btn-primary-hover: var(--color-primary-600);
+
+  --btn-secondary-bg: var(--color-neutral-200);
+  --btn-secondary-text: var(--text-default);
+  --btn-secondary-hover: var(--color-neutral-300);
+
+  --btn-radius: var(--radius-md);
+  --btn-padding-y: var(--space-sm);
+  --btn-padding-x: var(--space-md);
+}
+
+/* Alerts */
+:root {
+  --alert-success-bg: var(--color-success);
+  --alert-warning-bg: var(--color-warning);
+  --alert-danger-bg: var(--color-danger);
+
+  --alert-text: var(--text-inverted);
+  --alert-radius: var(--radius-md);
+  --alert-padding: var(--space-md);
+}
+
+/* =========================================================
+   Component Tokens – GetSafe360
+   Layer above semantic tokens, below component styles
+   ========================================================= */
+
+/* Feature Card */
+:root {
+  --feature-card-bg: var(--background-default);
+  --feature-card-bg-dark: #111827;
+  --feature-card-border: var(--border-default);
+  --feature-card-radius: var(--radius-md);
+  --feature-card-padding: var(--space-lg);
+  --feature-card-shadow: var(--shadow-sm);
+
+  --feature-card-title-color: var(--text-default);
+  --feature-card-desc-color: var(--text-subtle);
+  --feature-card-icon-color: var(--text-primary);
+
+  /* Buttons */
+  --button-primary-bg: var(--color-primary-500);
+  --button-primary-text: var(--text-inverted);
+  --button-primary-border: rgba(255,255,255,0.08);
+  --button-primary-radius: var(--radius-sm);
+  --button-primary-shadow: var(--shadow-md);
+
+  --button-secondary-bg: transparent;
+  --button-secondary-text: var(--text-default);
+  --button-secondary-border: var(--border-default);
+  --button-secondary-radius: var(--radius-sm);
+  --button-secondary-shadow: none;
+
+  /* Button sizing */
+  --button-height: 44px;
+  --button-padding-x: 16px;
+  --button-font-size: var(--text-md);
+}
+
+/* =========================================================
+   Feature Card Component
+   ========================================================= */
+
+.feature-card {
+  background-color: var(--feature-card-bg);
+  border: 1px solid var(--feature-card-border);
+  border-radius: var(--feature-card-radius);
+  padding: var(--feature-card-padding);
+  box-shadow: var(--feature-card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark .feature-card {
+  background-color: var(--feature-card-bg-dark);
+}
+
+.feature-card:hover {
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.feature-card-icon {
+  color: var(--feature-card-icon-color);
+}
+
+.feature-card-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--feature-card-title-color);
+}
+
+.feature-card-desc {
+  font-size: var(--text-md);
+  color: var(--feature-card-desc-color);
+  line-height: 1.5;
+}
