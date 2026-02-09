@@ -15,6 +15,13 @@
       "when": 1767917219450,
       "tag": "0001_graceful_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769966295631,
+      "tag": "0002_sleepy_trauma",
+      "breakpoints": true
     }
   ]
 }

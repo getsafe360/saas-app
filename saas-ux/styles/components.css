@@ -1,5 +1,5 @@
 /* =========================================================
-   Component-Level Tokens
+   Component-Level Tokens 
    ========================================================= */
 
 /* Cards */
@@ -9,6 +9,11 @@
   --card-radius: var(--radius-lg);
   --card-padding: var(--space-lg);
   --card-shadow: var(--shadow-sm);
+}
+
+/* Dark Mode */
+.dark {
+  --card-bg: #1d1e20;
 }
 
 /* Buttons */
@@ -22,9 +27,83 @@
   --btn-secondary-hover: var(--color-neutral-300);
 
   --btn-radius: var(--radius-md);
-  --btn-padding-y: var(--space-sm);
   --btn-padding-x: var(--space-md);
+  --btn-padding-y: var(--space-sm);
+  --btn-font-weight: 600;
 }
+
+/* Glass highlight */
+:root {
+  --btn-glass-opacity: 0.3;
+  --btn-glass-blur: 2px;
+}
+
+/* Blue Button */
+:root {
+  --btn-blue-bg: #dbeafe;              /* bg-blue-100 */
+  --btn-blue-bg-hover: #e0edff;        /* bg-blue-100/50 */
+  --btn-blue-border: rgba(59, 130, 246, 0.2);
+}
+
+/* Dark Mode Blue */
+.dark {
+  --btn-blue-bg: rgba(59, 130, 246, 0.1);
+  --btn-blue-bg-hover: rgba(59, 130, 246, 0.2);
+  --btn-blue-border: rgba(59, 130, 246, 0.4);
+}
+
+/* Green Button */
+:root {
+  --btn-green-bg: #dcfce7;             /* bg-green-100 */
+  --btn-green-bg-hover: #e6fdea;       /* bg-green-100/50 */
+  --btn-green-border: rgba(34, 197, 94, 0.2);
+}
+
+/* Dark Mode Green */
+.dark {
+  --btn-green-bg: rgba(34, 197, 94, 0.1);
+  --btn-green-bg-hover: rgba(34, 197, 94, 0.2);
+  --btn-green-border: rgba(34, 197, 94, 0.4);
+}
+
+.btn {
+  @apply relative inline-flex items-center gap-2
+    font-semibold transition-colors
+    rounded-[var(--btn-radius)]
+    px-[var(--btn-padding-x)]
+    py-[var(--btn-padding-y)]
+    ring-1 text-[var(--text-primary)];
+
+  /* Glass highlight */
+  @apply after:content-[''] after:absolute after:left-0 after:top-0
+    after:w-full 
+    after:h-1/2 
+    after:rounded-t-md
+    after:bg-gradient-to-b
+    after:from-white/16
+    after:to-white/16
+    after:opacity-[var(--btn-glass-opacity)]
+    after:backdrop-blur-[var(--btn-glass-blur)]
+    after:pointer-events-none;
+}
+
+/* Color variants */
+.btn-blue {
+  background: var(--btn-blue-bg);
+  ring-color: var(--btn-blue-border);
+}
+.btn-blue:hover {
+  background: var(--btn-blue-bg-hover);
+}
+
+.btn-green {
+  background: var(--btn-green-bg);
+  ring-color: var(--btn-green-border);
+}
+.btn-green:hover {
+  background: var(--btn-green-bg-hover);
+}
+
 
 /* Alerts */
 :root {
@@ -72,6 +151,62 @@
   --button-height: 44px;
   --button-padding-x: 16px;
   --button-font-size: var(--text-md);
+}
+
+/* Light Mode Buttons */
+:root {
+  /* Primary Button */
+  --btn-primary-bg: oklch(from var(--color-primary-100) l c h / 1);
+  --btn-primary-bg-hover: oklch(from var(--color-primary-200) l c h / 1);
+  --btn-primary-border: oklch(from var(--color-primary-500) l c h / 0.25);
+
+  /* Success Button */
+  --btn-success-bg: oklch(from var(--color-success) l c h / 0.18);
+  --btn-success-bg-hover: oklch(from var(--color-success) l c h / 0.26);
+  --btn-success-border: oklch(from var(--color-success) l c h / 0.35);
+
+  /* Warning Button */
+  --btn-warning-bg: oklch(from var(--color-warning) l c h / 0.18);
+  --btn-warning-bg-hover: oklch(from var(--color-warning) l c h / 0.26);
+  --btn-warning-border: oklch(from var(--color-warning) l c h / 0.35);
+
+  /* Danger Button */
+  --btn-danger-bg: oklch(from var(--color-danger) l c h / 0.18);
+  --btn-danger-bg-hover: oklch(from var(--color-danger) l c h / 0.26);
+  --btn-danger-border: oklch(from var(--color-danger) l c h / 0.35);
+
+  /* Neutral Button */
+  --btn-neutral-bg: oklch(from var(--color-neutral-200) l c h / 1);
+  --btn-neutral-bg-hover: oklch(from var(--color-neutral-300) l c h / 1);
+  --btn-neutral-border: oklch(from var(--color-neutral-500) l c h / 0.25);
+}
+
+/* Dark Mode Buttons */
+.dark {
+  /* Primary Button */
+  --btn-primary-bg: oklch(from var(--color-primary-300) l c h / 0.18);
+  --btn-primary-bg-hover: oklch(from var(--color-primary-400) l c h / 0.26);
+  --btn-primary-border: oklch(from var(--color-primary-600) l c h / 0.40);
+
+  /* Success Button */
+  --btn-success-bg: oklch(from var(--color-success) l c h / 0.12);
+  --btn-success-bg-hover: oklch(from var(--color-success) l c h / 0.20);
+  --btn-success-border: oklch(from var(--color-success) l c h / 0.32);
+
+  /* Warning Button */
+  --btn-warning-bg: oklch(from var(--color-warning) l c h / 0.12);
+  --btn-warning-bg-hover: oklch(from var(--color-warning) l c h / 0.20);
+  --btn-warning-border: oklch(from var(--color-warning) l c h / 0.32);
+
+  /* Danger Button */
+  --btn-danger-bg: oklch(from var(--color-danger) l c h / 0.12);
+  --btn-danger-bg-hover: oklch(from var(--color-danger) l c h / 0.20);
+  --btn-danger-border: oklch(from var(--color-danger) l c h / 0.32);
+
+  /* Neutral Button */
+  --btn-neutral-bg: oklch(from var(--color-neutral-300) l c h / 0.20);
+  --btn-neutral-bg-hover: oklch(from var(--color-neutral-400) l c h / 0.28);
+  --btn-neutral-border: oklch(from var(--color-neutral-600) l c h / 0.40);
 }
 
 /* =========================================================

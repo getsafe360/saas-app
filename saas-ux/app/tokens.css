@@ -4,41 +4,43 @@
    ========================================================= */
 
 :root {
-  /* Brand Colors (Azure family) */
-  --color-primary-100: #e0f2ff;
-  --color-primary-200: #b9e3ff;
-  --color-primary-300: #8cd2ff;
-  --color-primary-400: #4fbaff;
-  --color-primary-500: #127fc3; /* BRAND */
-  --color-primary-600: #0f6aa3;
-  --color-primary-700: #0c5684;
-  --color-primary-800: #094266;
-  --color-primary-900: #062f49;
+/* Brand Colors (Azure family — OKLCH) */
+  --color-primary-100: oklch(96.63% 0.05 236.63);
+  --color-primary-200: oklch(92.41% 0.08 236.39);
+  --color-primary-300: oklch(87.39% 0.12 236.09);
+  --color-primary-400: oklch(79.79% 0.16 235.77);
+  --color-primary-500: oklch(63.39% 0.14 235.39); /* BRAND */
+  --color-primary-600: oklch(55.09% 0.13 235.31);
+  --color-primary-700: oklch(47.36% 0.12 235.12);
+  --color-primary-800: oklch(39.47% 0.10 234.94);
+  --color-primary-900: oklch(31.79% 0.08 234.73);
 
   /* Neutral Scale */
-  --color-neutral-100: #f9fafb;
-  --color-neutral-200: #f3f4f6;
-  --color-neutral-300: #e5e7eb;
-  --color-neutral-400: #d1d5db;
-  --color-neutral-500: #9ca3af;
-  --color-neutral-600: #6b7280;
-  --color-neutral-700: #4b5563;
-  --color-neutral-800: #374151;
-  --color-neutral-900: #1f2937;
+  --color-neutral-100: oklch(97% 0 0);
+  --color-neutral-200: oklch(92.2% 0 0);
+  --color-neutral-300: oklch(87% 0 0);
+  --color-neutral-400: oklch(70.8% 0 0);
+  --color-neutral-500: oklch(55.6% 0 0);
+  --color-neutral-600: oklch(43.9% 0 0);
+  --color-neutral-700: oklch(37.1% 0 0);
+  --color-neutral-800: oklch(26.9% 0 0);
+  --color-neutral-900: oklch(20.5% 0 0);
 
-  /* Feedback */
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
+  /* Feedback (OKLCH) */
+  --color-success: oklch(74.72% 0.17 163.28);
+  --color-warning: oklch(78.36% 0.17 83.66);
+  --color-danger:  oklch(63.33% 0.24 29.23);
+
 
   /* Semantic Backgrounds */
   --background-default: var(--color-neutral-100);
   --background-primary: var(--color-primary-500);
   --background-warning: var(--color-warning);
 
+
   /* Semantic Text */
   --text-default: var(--color-neutral-900);
-  --text-subtle: var(--color-neutral-600);
+  --text-subtle: var(--color-neutral-500);
   --text-inverted: #ffffff;
   --text-primary: var(--color-primary-600);
   --text-warning: var(--color-warning);
@@ -78,10 +80,37 @@
 
 /* Dark Mode */
 .dark {
-  --background-default: #111827;
-  --text-default: #f9fafb;
-  --border-default: #374151;
+/* Primary (Azure) — Dark Mode OKLCH */
+  --color-primary-100: oklch(22% 0.05 235);
+  --color-primary-200: oklch(28% 0.06 235);
+  --color-primary-300: oklch(34% 0.07 235);
+  --color-primary-400: oklch(41% 0.09 235);
+  --color-primary-500: oklch(48% 0.11 235); /* BRAND in dark mode */
+  --color-primary-600: oklch(56% 0.12 235);
+  --color-primary-700: oklch(64% 0.13 235);
+  --color-primary-800: oklch(72% 0.14 235);
+  --color-primary-900: oklch(80% 0.15 235);
 
-  /* Slightly brighter Azure for dark mode */
-  --color-primary-500: #4fbaff;
+  /* Neutral Scale — Dark Mode (OKLCH) */
+  --color-neutral-100: oklch(22% 0 0);
+  --color-neutral-200: oklch(26% 0 0);
+  --color-neutral-300: oklch(30% 0 0);
+  --color-neutral-400: oklch(36% 0 0);
+  --color-neutral-500: oklch(44% 0 0);
+  --color-neutral-600: oklch(52% 0 0);
+  --color-neutral-700: oklch(60% 0 0);
+  --color-neutral-800: oklch(70% 0 0);
+  --color-neutral-900: oklch(82% 0 0);
+
+  /* Feedback — Dark Mode (OKLCH) */
+  --color-success: oklch(65% 0.13 163.28);
+  --color-warning: oklch(70% 0.14 83.66);
+  --color-danger:  oklch(58% 0.20 29.23);
+
+  --background-default: var(--color-neutral-100);
+  --text-default: var(--color-neutral-900);
+  --text-subtle: var(--color-neutral-800);
+  --card-bg: var(--color-neutral-200);
+  --border-default: var(--color-neutral-300);
+
 }

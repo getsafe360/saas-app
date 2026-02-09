@@ -1,11 +1,12 @@
-import './globals.css';
-import type { ReactNode } from 'react';
-import { ClerkProvider } from '@clerk/nextjs';
-import { Geist, Geist_Mono } from 'next/font/google';
-import Script from 'next/script';
+// app/layout.tsx
+import "./globals.css";
+import type { ReactNode } from "react";
+import { ClerkProvider } from "@clerk/nextjs";
+import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 
-const geistSans = Geist({ subsets: ['latin'] });
-const geistMono = Geist_Mono({ subsets: ['latin'] });
+const geistSans = Geist({ subsets: ["latin"] });
+const geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -25,9 +26,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         </Script>
       </head>
       <body className="min-h-[100dvh] antialiased bg-stone-50 dark:bg-[#0d1117] text-gray-900 dark:text-gray-100">
-        <ClerkProvider>
-          {children}
-        </ClerkProvider>
+        <ClerkProvider>{children}</ClerkProvider>
 
         {/* GTM noscript fallback (uses /ns.html, not gtag/js) */}
         <noscript>
@@ -35,7 +34,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             src="https://www.googletagmanager.com/ns.html?id=GTM-NN7RBQ42"
             height="0"
             width="0"
-            style={{ display: 'none', visibility: 'hidden' }}
+            style={{ display: "none", visibility: "hidden" }}
           />
         </noscript>
       </body>
