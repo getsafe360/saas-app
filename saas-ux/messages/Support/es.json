@@ -108,6 +108,42 @@
     },
     "legal": {
       "disclaimer": "By contacting support, you agree that we may use your communication to improve our services. We never share your information with third parties without your consent."
+    },
+    "contactPage": {
+      "hero": {
+        "title": "Contact our Team",
+        "bodyLine1": "Whether you have a question, need help, or just want to share feedback — we’re here.",
+        "bodyLine2": "We typically respond within 24 hours. For urgent issues, please include your workspace email."
+      },
+      "direct": {
+        "inquiryTitle": "General inquiries",
+        "supportHint": "For support inquiries please go to /support. We usually reply within a few hours.",
+        "supportCta": "Go to support",
+        "salesTitle": "Sales",
+        "salesDescription": "Looking for team or enterprise plans? Our sales team responds within one business day."
+      },
+      "form": {
+        "title": "Tell us how we can help",
+        "typeLabel": "Inquiry type",
+        "emailLabel": "Your email",
+        "messageLabel": "Message",
+        "messagePlaceholder": "Share a bit of context so we can route your request quickly.",
+        "options": {
+          "sales": "Sales",
+          "support": "Support",
+          "suggestions": "Suggestions",
+          "featureRequest": "Feature Request"
+        },
+        "previewRecipient": "Sending to:",
+        "previewSubject": "Subject:",
+        "submit": "Open email draft"
+      },
+      "legal": {
+        "title": "Legal & company information",
+        "description": "We operate worldwide from the EU and are registered in Ireland.",
+        "privacy": "Privacy policy",
+        "imprint": "Imprint / Impressum (coming soon)"
+      }
     }
   }
 }

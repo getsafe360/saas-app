@@ -79,8 +79,12 @@
   padding-right: var(--btn-padding-x);
   padding-top: var(--btn-padding-y);
   padding-bottom: var(--btn-padding-y);
-  box-shadow: 0 0 0 1px var(--ring-color, rgba(0,0,0,0.05)); /* ring-1 approximation */
-  color: var(--text-primary);border-width: thin;
+  color: var(--text-primary);
+  border-width: thin;
+}
+
+.btn:hover {
+  cursor: pointer;
 }
 
 .btn::after {
