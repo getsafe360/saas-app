@@ -1,5 +1,5 @@
+// saas-ux/app/[locale]/(dashboard)/support/page.tsx
 "use client";
-
 import { useTranslations } from "next-intl";
 import {
   Mail,
@@ -9,10 +9,8 @@ import {
   Wrench,
   Shield,
   MessageCircle,
-  PhoneOff,
   Lightbulb,
   CheckCircle,
-  AlertCircle,
 } from "lucide-react";
 
 export default function SupportPage() {
@@ -264,93 +262,6 @@ export default function SupportPage() {
               </h3>
               <p className="text-[var(--text-subtle)]">
                 {t("commitment.values.resolution.description")}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Information */}
-        <div className="mb-16 p-[var(--card-padding)] rounded-[var(--card-radius)] bg-[var(--card-bg)] border border-[var(--card-border)] shadow-[var(--card-shadow)]">
-          <h2 className="text-2xl font-bold text-[var(--text-default)] mb-6">
-            {t("contactInfo.title")}
-          </h2>
-
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-[var(--text-default)] mb-2">
-              {t("contactInfo.company.name")}
-            </h3>
-            <p className="text-[var(--text-subtle)]">
-              {t("contactInfo.company.description")}
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-start gap-4 p-4 rounded-[var(--radius-md)] bg-[var(--color-neutral-200)] dark:bg-[var(--color-neutral-800)]">
-              <Mail className="h-5 w-5 text-[var(--text-primary)] mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-[var(--text-subtle)]">
-                  {t("contactInfo.email.supportLabel")}
-                </p>
-                <a
-                  href="mailto:support@getsafe360.ai"
-                  className="text-[var(--text-primary)] hover:underline font-mono"
-                >
-                  {t("contactInfo.email.support")}
-                </a>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 p-4 rounded-[var(--radius-md)] bg-[var(--color-neutral-200)] dark:bg-[var(--color-neutral-800)]">
-              <CreditCard className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-[var(--text-subtle)]">
-                  {t("contactInfo.email.billingLabel")}
-                </p>
-                <a
-                  href="mailto:support@getsafe360.ai"
-                  className="text-[var(--text-primary)] hover:underline font-mono"
-                >
-                  {t("contactInfo.email.billing")}
-                </a>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 p-4 rounded-[var(--radius-md)] bg-red-50 dark:bg-red-500/5">
-              <AlertCircle className="h-5 w-5 text-[var(--color-danger)] mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-[var(--text-subtle)]">
-                  {t("contactInfo.email.securityLabel")}
-                </p>
-                <a
-                  href="mailto:security@getsafe360.ai"
-                  className="text-[var(--text-primary)] hover:underline font-mono"
-                >
-                  {t("contactInfo.email.security")}
-                </a>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 p-4 rounded-[var(--radius-md)] bg-[var(--color-neutral-200)] dark:bg-[var(--color-neutral-800)]">
-              <Shield className="h-5 w-5 text-[var(--text-subtle)] mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-[var(--text-subtle)]">
-                  {t("contactInfo.email.legalLabel")}
-                </p>
-                <a
-                  href="mailto:legal@getsafe360.ai"
-                  className="text-[var(--text-primary)] hover:underline font-mono"
-                >
-                  {t("contactInfo.email.legal")}
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 p-4 rounded-[var(--radius-md)] bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-[var(--color-warning)] flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-[var(--text-subtle)]">
-                {t("contactInfo.emergencyNote")}
               </p>
             </div>
           </div>
