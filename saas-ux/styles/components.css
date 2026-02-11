@@ -79,8 +79,12 @@
   padding-right: var(--btn-padding-x);
   padding-top: var(--btn-padding-y);
   padding-bottom: var(--btn-padding-y);
-  box-shadow: 0 0 0 1px var(--ring-color, rgba(0,0,0,0.05)); /* ring-1 approximation */
-  color: var(--text-primary);border-width: thin;
+  color: var(--text-primary);
+  border-width: thin;
+}
+
+.btn:hover {
+  cursor: pointer;
 }
 
 .btn::after {
@@ -219,7 +223,6 @@
   --btn-neutral-bg-hover: oklch(from var(--color-neutral-400) l c h / 0.28);
   --btn-neutral-border: oklch(from var(--color-neutral-600) l c h / 0.40);
 }
-
 /* =========================================================
    Feature Card Component
    ========================================================= */
@@ -259,4 +262,15 @@
   font-size: var(--text-md);
   color: var(--feature-card-desc-color);
   line-height: 1.5;
+}
+
+/* =========================================================
+   Header Component   
+   ========================================================= */
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--color-neutral-200);
 }

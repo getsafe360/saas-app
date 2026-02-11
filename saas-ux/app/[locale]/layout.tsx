@@ -29,7 +29,7 @@ const ogLocaleMap: Record<Locale, string> = {
   de: "de_DE",
   fr: "fr_FR",
   es: "es_ES",
-  pt: "pt_PT",
+  pt: "pt_BR",
   it: "it_IT",
 };
 
