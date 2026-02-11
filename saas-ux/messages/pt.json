@@ -126,7 +126,8 @@
     "support": "Suporte",
     "terms": "Termos",
     "privacy": "Privacidade",
-    "contact": "Contato"
+    "contact": "Contato",
+    "imprint": "Informações legais"
   },
   "actions": {
     "learn_more": "Saiba mais",
@@ -306,5 +307,25 @@
       "q4": "As análises de sites são realmente ilimitadas?",
       "a4": "Absolutamente! Você pode analisar quantos sites quiser, quantas vezes quiser."
     }
+  },
+  "imprint": {
+    "title": "Informações legais",
+    "company": "GETSAFE 360 AI LIMITED",
+    "registeredOfficeLabel": "Registered Office:",
+    "registeredOffice": "77 Camden Street Lower\nDublin D02 XE80\nIreland",
+    "registrationNumberLabel": "Company Registration Number:",
+    "registrationNumber": "804647",
+    "contactTitle": "Contact:",
+    "contactTextBefore": "For all inquiries, please visit our",
+    "contactLinkLabel": "contact page",
+    "responsibleTitle": "Responsible for Content:",
+    "responsibleEntity": "GETSAFE 360 AI LIMITED",
+    "vatTitle": "VAT / Tax Information:",
+    "vatText": "GETSAFE 360 AI LIMITED exclusively provides services to business customers (B2B). In accordance with applicable tax regulations, no VAT is charged on invoices issued to business clients. If required, customers may provide their VAT identification number during checkout or onboarding.",
+    "disputeTitle": "Dispute Resolution:",
+    "disputeText": "We are not obligated nor willing to participate in dispute resolution proceedings before a consumer arbitration board.",
+    "legalNoticeTitle": "Legal Notice:",
+    "legalNoticeLine1": "This website and its content are operated by GETSAFE 360 AI LIMITED.",
+    "legalNoticeLine2": "All trademarks, product names, and logos are the property of their respective owners."
   }
 }
