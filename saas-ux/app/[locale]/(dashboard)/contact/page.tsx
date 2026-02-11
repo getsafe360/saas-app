@@ -3,7 +3,13 @@
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { ArrowRight, Building2, FileText, Mail, MessageSquareText } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  FileText,
+  Mail,
+  MessageSquareText,
+} from "lucide-react";
 
 type InquiryType = "sales" | "support" | "suggestions" | "featureRequest";
 
@@ -39,7 +45,9 @@ export default function ContactPage() {
       message || "(Please add your message)",
     ].join("\n");
 
-    return `mailto:${previewRecipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    return `mailto:${previewRecipient}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
   }, [message, previewRecipient, previewSubject, senderEmail]);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -51,9 +59,15 @@ export default function ContactPage() {
     <div className="min-h-screen bg-[var(--background-default)] text-[var(--text-default)]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-10">
         <section className="space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">{t("contactPage.hero.title")}</h1>
-          <p className="text-lg text-[var(--text-subtle)] max-w-3xl">{t("contactPage.hero.bodyLine1")}</p>
-          <p className="text-lg text-[var(--text-subtle)] max-w-3xl">{t("contactPage.hero.bodyLine2")}</p>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+            {t("contactPage.hero.title")}
+          </h1>
+          <p className="text-lg text-[var(--text-subtle)] max-w-4xl">
+            {t("contactPage.hero.bodyLine1")}
+          </p>
+          <p className="text-lg text-[var(--text-subtle)] max-w-4xl">
+            {t("contactPage.hero.bodyLine2")}
+          </p>
         </section>
 
         <section className="grid gap-6 md:grid-cols-2">
@@ -62,14 +76,25 @@ export default function ContactPage() {
               <div className="p-2 rounded-[var(--radius-md)] bg-blue-500/10 border border-blue-500/20">
                 <Mail className="h-5 w-5 text-[var(--text-primary)]" />
               </div>
-              <h2 className="text-xl font-semibold">{t("contactPage.direct.inquiryTitle")}</h2>
+              <h2 className="text-xl font-semibold">
+                {t("contactPage.direct.inquiryTitle")}
+              </h2>
             </div>
-            <a href="mailto:inquiry@getsafe360.ai" className="font-mono text-[var(--text-primary)] hover:underline">
+            <a
+              href="mailto:inquiry@getsafe360.ai"
+              className="font-mono text-[var(--text-primary)] hover:underline"
+            >
               inquiry@getsafe360.ai
             </a>
-            <p className="mt-3 text-sm text-[var(--text-subtle)]">{t("contactPage.direct.supportHint")}</p>
-            <Link href="/support" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[var(--text-primary)] hover:underline">
-              {t("contactPage.direct.supportCta")} <ArrowRight className="h-4 w-4" />
+            <p className="mt-3 text-sm text-[var(--text-subtle)]">
+              {t("contactPage.direct.supportHint")}
+            </p>
+            <Link
+              href="/support"
+              className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[var(--text-primary)] hover:underline"
+            >
+              {t("contactPage.direct.supportCta")}{" "}
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
@@ -78,12 +103,19 @@ export default function ContactPage() {
               <div className="p-2 rounded-[var(--radius-md)] bg-violet-500/10 border border-violet-500/20">
                 <Building2 className="h-5 w-5 text-violet-600 dark:text-violet-400" />
               </div>
-              <h2 className="text-xl font-semibold">{t("contactPage.direct.salesTitle")}</h2>
+              <h2 className="text-xl font-semibold">
+                {t("contactPage.direct.salesTitle")}
+              </h2>
             </div>
-            <a href="mailto:sales@company.com" className="font-mono text-[var(--text-primary)] hover:underline">
+            <a
+              href="mailto:sales@company.com"
+              className="font-mono text-[var(--text-primary)] hover:underline"
+            >
               sales@company.com
             </a>
-            <p className="mt-3 text-sm text-[var(--text-subtle)]">{t("contactPage.direct.salesDescription")}</p>
+            <p className="mt-3 text-sm text-[var(--text-subtle)]">
+              {t("contactPage.direct.salesDescription")}
+            </p>
           </div>
         </section>
 
@@ -92,27 +124,43 @@ export default function ContactPage() {
             <div className="p-2 rounded-[var(--radius-md)] bg-emerald-500/10 border border-emerald-500/20">
               <MessageSquareText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h2 className="text-2xl font-semibold">{t("contactPage.form.title")}</h2>
+            <h2 className="text-2xl font-semibold">
+              {t("contactPage.form.title")}
+            </h2>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <label className="space-y-2">
-                <span className="text-sm text-[var(--text-subtle)]">{t("contactPage.form.typeLabel")}</span>
+                <span className="text-sm text-[var(--text-subtle)]">
+                  {t("contactPage.form.typeLabel")}
+                </span>
                 <select
                   className="w-full rounded-[var(--radius-md)] border border-[var(--card-border)] bg-[var(--background-default)] px-3 py-2"
                   value={inquiryType}
-                  onChange={(event) => setInquiryType(event.target.value as InquiryType)}
+                  onChange={(event) =>
+                    setInquiryType(event.target.value as InquiryType)
+                  }
                 >
-                  <option value="sales">{t("contactPage.form.options.sales")}</option>
-                  <option value="support">{t("contactPage.form.options.support")}</option>
-                  <option value="suggestions">{t("contactPage.form.options.suggestions")}</option>
-                  <option value="featureRequest">{t("contactPage.form.options.featureRequest")}</option>
+                  <option value="sales">
+                    {t("contactPage.form.options.sales")}
+                  </option>
+                  <option value="support">
+                    {t("contactPage.form.options.support")}
+                  </option>
+                  <option value="suggestions">
+                    {t("contactPage.form.options.suggestions")}
+                  </option>
+                  <option value="featureRequest">
+                    {t("contactPage.form.options.featureRequest")}
+                  </option>
                 </select>
               </label>
 
               <label className="space-y-2">
-                <span className="text-sm text-[var(--text-subtle)]">{t("contactPage.form.emailLabel")}</span>
+                <span className="text-sm text-[var(--text-subtle)]">
+                  {t("contactPage.form.emailLabel")}
+                </span>
                 <input
                   type="email"
                   className="w-full rounded-[var(--radius-md)] border border-[var(--card-border)] bg-[var(--background-default)] px-3 py-2"
@@ -125,7 +173,9 @@ export default function ContactPage() {
             </div>
 
             <label className="space-y-2 block">
-              <span className="text-sm text-[var(--text-subtle)]">{t("contactPage.form.messageLabel")}</span>
+              <span className="text-sm text-[var(--text-subtle)]">
+                {t("contactPage.form.messageLabel")}
+              </span>
               <textarea
                 className="w-full min-h-36 rounded-[var(--radius-md)] border border-[var(--card-border)] bg-[var(--background-default)] px-3 py-2"
                 placeholder={t("contactPage.form.messagePlaceholder")}
@@ -137,10 +187,16 @@ export default function ContactPage() {
 
             <div className="rounded-[var(--radius-md)] border border-[var(--card-border)] bg-[var(--background-default)] p-3 text-sm text-[var(--text-subtle)]">
               <p>
-                <strong className="text-[var(--text-default)]">{t("contactPage.form.previewRecipient")}</strong> {previewRecipient}
+                <strong className="text-[var(--text-default)]">
+                  {t("contactPage.form.previewRecipient")}
+                </strong>{" "}
+                {previewRecipient}
               </p>
               <p>
-                <strong className="text-[var(--text-default)]">{t("contactPage.form.previewSubject")}</strong> {previewSubject}
+                <strong className="text-[var(--text-default)]">
+                  {t("contactPage.form.previewSubject")}
+                </strong>{" "}
+                {previewSubject}
               </p>
             </div>
 
@@ -153,15 +209,24 @@ export default function ContactPage() {
         <section className="p-[var(--card-padding)] rounded-[var(--card-radius)] bg-[var(--card-bg)] border border-[var(--card-border)]">
           <div className="flex items-center gap-3 mb-3">
             <FileText className="h-5 w-5 text-[var(--text-subtle)]" />
-            <h2 className="text-lg font-semibold">{t("contactPage.legal.title")}</h2>
+            <h2 className="text-lg font-semibold">
+              {t("contactPage.legal.title")}
+            </h2>
           </div>
-          <p className="text-sm text-[var(--text-subtle)] mb-4">{t("contactPage.legal.description")}</p>
+          <p className="text-sm text-[var(--text-subtle)] mb-4">
+            {t("contactPage.legal.description")}
+          </p>
           <div className="flex flex-wrap gap-4 text-sm">
-            <Link href="/privacy" className="text-[var(--text-primary)] hover:underline">
+            <Link
+              href="/privacy"
+              className="text-[var(--text-primary)] hover:underline"
+            >
               {t("contactPage.legal.privacy")}
             </Link>
             <span className="text-[var(--text-muted)]">•</span>
-            <span className="text-[var(--text-muted)]">{t("contactPage.legal.imprint")}</span>
+            <span className="text-[var(--text-muted)]">
+              {t("contactPage.legal.imprint")}
+            </span>
           </div>
         </section>
       </div>
