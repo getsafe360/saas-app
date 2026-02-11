@@ -205,30 +205,6 @@ export default function ContactPage() {
             </button>
           </form>
         </section>
-
-        <section className="p-[var(--card-padding)] rounded-[var(--card-radius)] bg-[var(--card-bg)] border border-[var(--card-border)]">
-          <div className="flex items-center gap-3 mb-3">
-            <FileText className="h-5 w-5 text-[var(--text-subtle)]" />
-            <h2 className="text-lg font-semibold">
-              {t("contactPage.legal.title")}
-            </h2>
-          </div>
-          <p className="text-sm text-[var(--text-subtle)] mb-4">
-            {t("contactPage.legal.description")}
-          </p>
-          <div className="flex flex-wrap gap-4 text-sm">
-            <Link
-              href="/privacy"
-              className="text-[var(--text-primary)] hover:underline"
-            >
-              {t("contactPage.legal.privacy")}
-            </Link>
-            <span className="text-[var(--text-muted)]">•</span>
-            <span className="text-[var(--text-muted)]">
-              {t("contactPage.legal.imprint")}
-            </span>
-          </div>
-        </section>
       </div>
     </div>
   );
