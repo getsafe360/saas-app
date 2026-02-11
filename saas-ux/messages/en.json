@@ -89,7 +89,7 @@
     "intro_right": "Actionable insights. Instant optimization. Keep every website at peak performance. Get started for free!"
   },
   "infobox": {
-  "sectionLabel": "Targeted benefits for site owners and developers",
+    "sectionLabel": "Targeted benefits for site owners and developers",
     "owners": {
       "title": "For Website Owners & Webmasters",
       "lead": "Let your AI Copilot maintain and optimize your sites – <b>without writing a single line of code</b>.",
@@ -121,7 +121,7 @@
       "cta": "Paste URL to analyze"
     }
   },
-    "metaFaq": {
+  "metaFaq": {
     "title": "FAQ – GetSafe 360",
     "description": "Quick answers about setup, pricing, platforms and getting started."
   },
@@ -167,7 +167,8 @@
     "support": "Support",
     "terms": "Terms",
     "privacy": "Privacy",
-    "contact": "Contact"
+    "contact": "Contact",
+    "imprint": "Imprint"
   },
   "actions": {
     "learn_more": "Learn more",
@@ -223,7 +224,7 @@
     },
     "strengths": "What's Working Well"
   },
-    "AnalyzeMeta": {
+  "AnalyzeMeta": {
     "title": "Fix My Website - GetSafe 360 Co-Pilot",
     "titleWithUrl": "Fix {url} - GetSafe 360 Co-Pilot",
     "description": "Analyze and optimize your website with an AI co-pilot for targeted SEO, faster performance, best-in-class accessibility, and solid security."
@@ -334,5 +335,25 @@
   },
   "terms": {
     "date": "Effective Date:"
+  },
+  "imprint": {
+    "title": "Imprint",
+    "company": "GETSAFE 360 AI LIMITED",
+    "registeredOfficeLabel": "Registered Office:",
+    "registeredOffice": "77 Camden Street Lower\nDublin D02 XE80\nIreland",
+    "registrationNumberLabel": "Company Registration Number:",
+    "registrationNumber": "804647",
+    "contactTitle": "Contact:",
+    "contactTextBefore": "For all inquiries, please visit our",
+    "contactLinkLabel": "contact page",
+    "responsibleTitle": "Responsible for Content:",
+    "responsibleEntity": "GETSAFE 360 AI LIMITED",
+    "vatTitle": "VAT / Tax Information:",
+    "vatText": "GETSAFE 360 AI LIMITED exclusively provides services to business customers (B2B). In accordance with applicable tax regulations, no VAT is charged on invoices issued to business clients. If required, customers may provide their VAT identification number during checkout or onboarding.",
+    "disputeTitle": "Dispute Resolution:",
+    "disputeText": "We are not obligated nor willing to participate in dispute resolution proceedings before a consumer arbitration board.",
+    "legalNoticeTitle": "Legal Notice:",
+    "legalNoticeLine1": "This website and its content are operated by GETSAFE 360 AI LIMITED.",
+    "legalNoticeLine2": "All trademarks, product names, and logos are the property of their respective owners."
   }
 }
