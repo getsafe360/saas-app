@@ -27,6 +27,9 @@ export function Footer() {
                     <Link href="/contact" className="hover:underline text-gray-600 dark:text-gray-300 text-sm">
                         {t('contact')}
                     </Link>
+                    <Link href="/imprint" className="hover:underline text-gray-600 dark:text-gray-300 text-sm">
+                        {t('imprint')}
+                    </Link>
                 </nav>
                 {/* Right: Social icons */}
                 <div className="flex gap-4">
