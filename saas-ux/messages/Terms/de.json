@@ -2,65 +2,121 @@
   "Terms": {
     "meta": {
       "title": "Nutzungsbedingungen | GetSafe 360",
-      "description": "Lesen Sie die Nutzungsbedingungen von GetSafe 360 zu Plattformzugang, Lizenzbedingungen, zulässiger Nutzung, Abrechnung und rechtlichen Bestimmungen."
+      "description": "Lesen Sie die Nutzungsbedingungen von GetSafe 360 ​​für Plattformzugriff, Lizenzbedingungen, Zahlungsbedingungen und rechtliche Verpflichtungen."
     },
     "title": "Nutzungsbedingungen",
-    "effectiveDateLabel": "Gültig ab:",
-    "effectiveDate": "2026-01-15",
-    "intro": "Bitte lesen Sie diese Nutzungsbedingungen sorgfältig, bevor Sie getsafe360.ai verwenden. Diese Bedingungen regeln den Zugang zu unserer Plattform sowie den Erwerb und die Nutzung unserer Software und Services.",
+    "effectiveDateLabel": "Letzte Aktualisierung:",
+    "effectiveDate": "Februar 2026",
+    "intro": "Bitte lesen Sie diese Nutzungsbedingungen sorgfältig durch, bevor Sie getsafe360.ai nutzen.",
     "sections": {
-      "acceptance": {
+      "s01": {
         "title": "1. Annahme der Bedingungen",
-        "body": "Durch den Zugriff auf den Service, dessen Nutzung oder den Kauf eines Softwarezugangs von GetSafe 360 stimmen Sie diesen Bedingungen, unserer EULA und unserer Datenschutzerklärung zu. Wenn Sie nicht zustimmen, dürfen Sie den Service nicht nutzen."
+        "body": "Diese Nutzungsbedingungen („Bedingungen“) regeln Ihren Zugriff auf und Ihre Nutzung der GetSafe360.ai-Website, -Plattform und -Dienste (zusammen der „Dienst“), betrieben von GetSafe 360 ​​AI Limited, einem in Irland unter der Firmennummer 804647 registrierten Unternehmen mit Sitz in 77 Camden Street Lower, Dublin D02 XE80, Irland („Unternehmen“, „wir“, „uns“ oder „unser“).\n\nIndem Sie auf den Dienst zugreifen oder ihn nutzen, erklären Sie sich mit diesen Bedingungen einverstanden. Wenn Sie den Dienst im Namen eines Unternehmens, einer Organisation oder einer anderen juristischen Person nutzen, erklären und gewährleisten Sie, dass Sie befugt sind, diese juristische Person an diese Bedingungen zu binden. Wenn Sie nicht über diese Befugnis verfügen oder diesen Bedingungen nicht zustimmen, dürfen Sie den Dienst nicht nutzen.\n\nSie versichern, dass Sie mindestens 18 Jahre alt sind oder das in Ihrer Gerichtsbarkeit geltende Mindestalter erreicht haben, je nachdem, welches Alter höher ist. Wenn Sie diese Anforderung nicht erfüllen, dürfen Sie den Dienst nicht nutzen."
       },
-      "license": {
-        "title": "2. Zugangsvertrag und GPL-Software",
-        "body": "Einige Komponenten können unter GPLv2 lizenziert sein. Ihre GPL-Rechte bleiben nach rechtmäßigem Erhalt der Software bestehen. Der Zugriff auf bereitgestellte Builds, Updates und gehostete Tools unterliegt jedoch einem separaten kommerziellen Zugangsvertrag."
+      "s02": {
+        "title": "2. Beschreibung des Dienstes",
+        "body": "GetSafe360.ai provides an AI-powered website optimization platform that assists with search engine optimization (SEO), website performance, security hardening, accessibility compliance, and automated bug fixing for WordPress and WooCommerce websites (the \"Service\"). The Service includes access to our web platform, application programming interfaces (APIs), documentation, and related support services.\n\n2.1 Beta-Funktionen\n\nDas Unternehmen bietet möglicherweise bestimmte Features, Produkte oder Funktionen an, die als „Beta“, „Vorschau“, „experimentell“, „Pilot“ oder ähnliche Bezeichnungen („Beta-Features“) gekennzeichnet sind. Beta-Funktionen werden „wie besehen“ ohne Garantien, Service-Level-Agreements oder dedizierten Support bereitgestellt. Das Unternehmen kann Beta-Funktionen jederzeit ohne Haftung ändern, einstellen oder entfernen. Durch die Nutzung der Beta-Funktionen haben Sie keinen Anspruch auf Servicegutschriften oder Rückerstattungen."
       },
-      "eligibility": {
-        "title": "3. Berechtigung und beabsichtigte Nutzung",
-        "body": "Sie versichern, dass Sie berechtigt sind, für Ihr Unternehmen zu handeln, und dass die Nutzung auf Websites beschränkt ist, die Ihr Unternehmen besitzt oder direkt betreibt, sofern nichts anderes schriftlich vereinbart wurde."
+      "s03": {
+        "title": "3. Teilnahmeberechtigung und Kontoverantwortung",
+        "body": "Um den Service nutzen zu können, müssen Sie ein Geschäftskunde (B2B) sein. Der Dienst ist nicht für die Nutzung durch Verbraucher bestimmt. Sie sind für die Wahrung der Vertraulichkeit Ihrer Kontodaten und aller Aktivitäten, die unter Ihrem Konto stattfinden, verantwortlich. Sie müssen uns unverzüglich über jeden unbefugten Zugriff oder jede Sicherheitsverletzung informieren. Sie sind für alle über Ihr Konto übermittelten Daten verantwortlich, unabhängig davon, ob Sie eine solche Übermittlung genehmigt haben."
       },
-      "restrictedUse": {
-        "title": "4. Eingeschränkte gewerbliche Nutzung",
-        "body": "Hosting-Anbieter, Agenturen und Managed-Service-Provider dürfen zugangsbeschränkte Software ohne Enterprise-Vertrag nicht für unabhängige Drittanbieter-Deployments nutzen."
+      "s04": {
+        "title": "4. Lizenzgewährung",
+        "body": "Vorbehaltlich Ihrer Einhaltung dieser Bedingungen gewährt Ihnen das Unternehmen eine nicht ausschließliche, nicht übertragbare, eingeschränkte Lizenz für den Zugriff auf den Dienst und dessen Nutzung ausschließlich für Ihre internen Geschäftszwecke. Diese Lizenz beinhaltet nicht das Recht, den Dienst unterzulizenzieren, weiterzuverkaufen oder an Dritte zu übertragen. Es ist Ihnen nicht gestattet, den Quellcode des Dienstes zurückzuentwickeln, zu dekompilieren oder zu versuchen, ihn abzuleiten."
       },
-      "orders": {
-        "title": "5. Bestellungen, Zahlungen und Zugriff",
-        "body": "Käufe sind Teil Ihres Zugangsvertrags. Wir können Transaktionen ablehnen, stornieren oder widerrufen, wenn ein begründeter Verdacht auf Missbrauch, Betrug oder Umgehung unserer Richtlinien besteht."
+      "s05": {
+        "title": "5. Geistige Eigentumsrechte",
+        "body": "5.1 Firmen-IP\n\nDas Unternehmen behält alle Rechte, Titel und Interessen an dem Dienst, einschließlich aller Software, Dokumentation, Designs und geistigem Eigentum. Sie erwerben keinerlei Eigentumsrechte an dem Dienst. Alle Rückmeldungen, Vorschläge oder Verbesserungen, die Sie dem Unternehmen zur Verfügung stellen, können vom Unternehmen ohne Verpflichtung oder Vergütung Ihnen gegenüber verwendet werden.\n\n5.2 Kundeninhalte\n\nSie behalten das Eigentum an allen Inhalten, die Sie dem Dienst bereitstellen („Kundeninhalte“), einschließlich Website-Dateien, Daten und Konfigurationen. Sie gewähren dem Unternehmen eine weltweite, gebührenfreie Lizenz zur Nutzung, Vervielfältigung und Verarbeitung Ihrer Kundeninhalte ausschließlich zur Bereitstellung des Dienstes und zur Einhaltung geltender Gesetze. Das Unternehmen wird Ihre Kundeninhalte ohne Ihre ausdrückliche schriftliche Zustimmung nicht für andere Zwecke, einschließlich der Schulung von KI-Modellen, verwenden.\n\n5.3 KI-generierte Ausgabe\n\nDer Dienst kann auf der Grundlage Ihrer Eingaben („Ausgabe“) Ausgaben, Empfehlungen, Code oder Inhalte generieren. Sie sind Eigentümer der vom Dienst generierten Ausgabe und dürfen sie für jeden rechtmäßigen Zweck verwenden. Sie erkennen jedoch an, dass die Ausgabe möglicherweise nicht eindeutig ist, Fehler enthalten kann und vor der Bereitstellung auf Richtigkeit und Angemessenheit überprüft werden sollte. Das Unternehmen übernimmt keine Gewähr für die Richtigkeit, Vollständigkeit oder Eignung der Ergebnisse für einen bestimmten Zweck."
       },
-      "enforcement": {
-        "title": "6. Überwachung und Durchsetzung",
-        "body": "Wir können die Nutzung prüfen, um die Einhaltung sicherzustellen, Lizenzen und Support bei Missbrauch aussetzen oder widerrufen und rechtliche Schritte gegen unautorisierte kommerzielle Nutzung einleiten."
+      "s06": {
+        "title": "6. Gebühren und Zahlung",
+        "body": "6.1 Abonnementpläne\n\nDer Dienst ist über Abonnementpläne mit unterschiedlichen Funktionen und Preisen verfügbar. Preis- und Plandetails finden Sie auf unserer Website. Das Unternehmen kann Preise, Funktionen oder Planverfügbarkeit mit einer Frist von 30 Tagen ändern. Preisänderungen werden zu Beginn Ihres nächsten Abrechnungszeitraums wirksam.\n\n6.2 Zahlungsbedingungen\n\nAlle Gebühren verstehen sich zuzüglich der anfallenden Steuern, für deren Zahlung Sie verantwortlich sind. Das Unternehmen nutzt Stripe als Zahlungsabwickler. Sie ermächtigen das Unternehmen, Ihre Zahlungsmethode mit allen Gebühren zu belasten, die mit Ihrem ausgewählten Plan verbunden sind. Zahlungen sind nicht erstattungsfähig, es sei denn, dies ist in diesen Bedingungen ausdrücklich vorgesehen oder gesetzlich vorgeschrieben.\n\n6.3 Abrechnung und Verlängerung\n\nIhr Abonnement verlängert sich automatisch am Ende jedes Abrechnungszeitraums, sofern Sie es nicht vor dem Verlängerungsdatum kündigen. Sie können Ihr Abonnement jederzeit über Ihr Konto-Dashboard kündigen. Die Kündigung wird zum Ende Ihres aktuellen Abrechnungszeitraums wirksam. Sie erhalten keine Rückerstattung für den ungenutzten Teil Ihres Abonnements.\n\n6.4 Fehlgeschlagene Zahlungen\n\nWenn Ihre Zahlungsmethode fehlschlägt, wird das Unternehmen versuchen, die Zahlung mit den hinterlegten Zahlungsinformationen erneut zu versuchen. Sollte die Zahlung endgültig fehlschlagen, kann das Unternehmen Ihren Zugriff auf den Dienst sperren, bis die Zahlung eingegangen ist. Sie sind für alle Gebühren verantwortlich, einschließlich Verzugszinsen oder Inkassokosten, die sich aus fehlgeschlagenen Zahlungen ergeben.\n\n6.5 Token-Credits\n\nSie können die Nutzung durch Token-Guthaben im Voraus bezahlen. Token-Gutschriften verfallen ein Jahr nach dem Ausstellungsdatum und können nicht auf nachfolgende Zeiträume übertragen werden. Nicht genutzte Credits verfallen bei Ablauf. Wenn Ihr Konto gekündigt wird, verfällt das verbleibende Guthaben."
       },
-      "termination": {
-        "title": "7. Sperrung und Beendigung",
-        "body": "Wir können den Zugriff bei Verstößen gegen diese Bedingungen aussetzen oder beenden. Die Beendigung hebt GPL-Rechte für bereits rechtmäßig erhaltene Software nicht auf, beendet jedoch den Zugriff auf Updates, Support und neue Versionen."
+      "s07": {
+        "title": "7. Richtlinien zur akzeptablen Nutzung",
+        "body": "Sie erklären sich damit einverstanden, den Dienst nicht für rechtswidrige Zwecke oder in einer Weise zu nutzen, die gegen diese Bedingungen verstößt. Insbesondere erklären Sie sich damit einverstanden, Folgendes nicht zu tun:\n\nDen Dienst nutzen, um Malware, Viren oder anderen schädlichen Code zu erstellen, zu generieren oder zu verbreiten; sich an unbefugtem Zugriff auf Computersysteme oder Netzwerke beteiligen; gegen geltende Gesetze oder Vorschriften verstoßen, einschließlich solcher zum Datenschutz, zum geistigen Eigentum oder zur Exportkontrolle; die Rechte Dritter verletzen, einschließlich der Rechte an geistigem Eigentum, der Privatsphäre oder der Veröffentlichungsrechte; eine Person oder Organisation zu belästigen, zu bedrohen, zu diffamieren oder zu missbrauchen; sich an Spam, Phishing oder anderen betrügerischen Praktiken zu beteiligen; oder versuchen, Sicherheitsmaßnahmen oder Zugangsbeschränkungen zu umgehen.\n\nDas Unternehmen behält sich das Recht vor, mutmaßliche Verstöße zu untersuchen und kann Ihr Konto sperren oder kündigen, wenn Sie gegen diese Richtlinie verstoßen."
       },
-      "intellectualProperty": {
-        "title": "8. Geistiges Eigentum und Marken",
-        "body": "Alle Marken, Produktnamen, Logos und nicht-open-source Materialien bleiben Eigentum ihrer jeweiligen Inhaber. Eine Markenlizenz wird nur gewährt, wenn dies ausdrücklich angegeben ist."
+      "s08": {
+        "title": "8. Datenschutz und Privatsphäre",
+        "body": "8.1 Datenschutzrichtlinie\n\nIhre Nutzung des Dienstes unterliegt unserer Datenschutzrichtlinie, die beschreibt, wie wir Ihre Daten erfassen, verwenden und schützen. Bitte lesen Sie die Datenschutzrichtlinie sorgfältig durch.\n\n8.2 DSGVO und Datenverarbeitung\n\nSoweit Sie ein Datenverantwortlicher gemäß der Datenschutz-Grundverordnung (DSGVO) oder ähnlichen Datenschutzgesetzen sind, fungiert das Unternehmen als Datenverarbeiter. Eine Datenverarbeitungsvereinbarung („DPA“) ist auf Anfrage erhältlich und regelt die Verarbeitung personenbezogener Daten. Das DPA enthält Standardvertragsklauseln für internationale Datenübermittlungen, wie sie nach geltendem Recht erforderlich sind.\n\n8.3 Datensicherheit\n\nDas Unternehmen implementiert branchenübliche Sicherheitsmaßnahmen zum Schutz Ihrer Daten. Allerdings ist kein Sicherheitssystem absolut sicher. Das Unternehmen übernimmt keine Garantie für die Sicherheit Ihrer Daten und haftet nicht für unbefugten Zugriff aufgrund von Umständen, die außerhalb unserer angemessenen Kontrolle liegen."
       },
-      "warranty": {
-        "title": "9. Gewährleistungsausschluss",
-        "body": "Der Service wird im gesetzlich zulässigen Umfang „wie besehen“ und „wie verfügbar“ bereitgestellt, ohne Gewähr für unterbrechungsfreien Betrieb oder Eignung für einen bestimmten geschäftlichen Zweck."
+      "s09": {
+        "title": "9. Serviceverfügbarkeit und Änderungen",
+        "body": "9.1 Verfügbarkeit\n\nDas Unternehmen garantiert keinen unterbrechungsfreien oder fehlerfreien Zugriff auf den Dienst. Der Dienst ist möglicherweise aufgrund von Wartungsarbeiten, Aktualisierungen oder Umständen, die außerhalb unserer Kontrolle liegen, nicht verfügbar. Das Unternehmen wird wirtschaftlich vertretbare Anstrengungen unternehmen, um Ausfallzeiten zu minimieren, und wird, wenn möglich, im Voraus über geplante Wartungsarbeiten informieren.\n\n9.2 Serviceänderungen\n\nDas Unternehmen kann jederzeit jede Funktion des Dienstes ändern, aussetzen oder einstellen. Wesentliche Änderungen werden Ihnen per E-Mail oder über den Service mitgeteilt. Durch Ihre fortgesetzte Nutzung des Dienstes nach der Benachrichtigung über die Änderung akzeptieren Sie die Änderung.\n\n9.3 Kein Service Level Agreement\n\nSofern nicht ausdrücklich in einer separaten schriftlichen Vereinbarung angegeben, garantiert das Unternehmen kein bestimmtes Maß an Betriebszeit, Leistung oder Verfügbarkeit. Der Service wird „wie verfügbar“ bereitgestellt."
       },
-      "liability": {
-        "title": "10. Haftungsbeschränkung",
-        "body": "Soweit gesetzlich zulässig, haftet GetSafe 360 nicht für indirekte oder Folgeschäden. Die Gesamthaftung ist auf die für den jeweiligen Zugangszeitraum gezahlten Beträge begrenzt."
+      "s10": {
+        "title": "10. Website-Optimierungsdienste",
+        "body": "Wenn Sie den Dienst zur Optimierung Ihrer Website nutzen, kann das Unternehmen im Rahmen des Optimierungsprozesses Dateien auf Ihrer Website ändern, hinzufügen, entfernen oder aktualisieren. Das Unternehmen wird angemessene Anstrengungen unternehmen, um Ausfallzeiten zu minimieren und sicherzustellen, dass Ihre Website weiterhin normal funktioniert. Sie sind für die Sicherung Ihrer Website verantwortlich. Das Unternehmen ist nicht verantwortlich für Datenverluste oder Fehlfunktionen der Website, die aus dem Optimierungsprozess resultieren, es sei denn, dies ist auf grobe Fahrlässigkeit oder vorsätzliches Fehlverhalten des Unternehmens zurückzuführen."
       },
-      "law": {
-        "title": "11. Anwendbares Recht und Streitbeilegung",
-        "body": "Diese Bedingungen unterliegen dem anwendbaren irischen Recht. Wir sind weder bereit noch verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+      "s11": {
+        "title": "11. Gewährleistungen und Haftungsausschlüsse",
+        "body": "11.1 Eingeschränkte Garantie\n\nDas Unternehmen gewährleistet, dass der Service im Wesentlichen der bereitgestellten Dokumentation entspricht. Diese Garantie gilt nicht für Beta-Funktionen, die „wie besehen“ bereitgestellt werden.\n\n11.2 Ausschluss sonstiger Gewährleistungen\n\nSOFERN NICHT AUSDRÜCKLICH IN ABSCHNITT 11.1 ANGEGEBEN, WIRD DER DIENST „WIE BESEHEN“ UND „WIE VERFÜGBAR“ OHNE AUSDRÜCKLICHE, STILLSCHWEIGENDE ODER GESETZLICHE GEWÄHRLEISTUNGEN JEGLICHER ART BEREITGESTELLT. DAS UNTERNEHMEN LEHNT ALLE STILLSCHWEIGENDEN GEWÄHRLEISTUNGEN AB, EINSCHLIESSLICH DER GEWÄHRLEISTUNG DER MARKTGÄNGIGKEIT, DER EIGNUNG FÜR EINEN BESTIMMTEN ZWECK, DES TITELS UND DER NICHTVERLETZUNG VON RECHTEN. DAS UNTERNEHMEN GARANTIERT NICHT, DASS DER DIENST IHRE BEDÜRFNISSE ERFÜLLT, UNUNTERBROCHEN, PÜNKTLICH, SICHER ODER FEHLERFREI IST ODER FREI VON VIREN ODER SCHÄDLICHEN KOMPONENTEN IST.\n\n11.3 Haftungsausschluss für AI-Ausgaben\n\nDas Unternehmen übernimmt keine Gewähr für die Richtigkeit, Vollständigkeit oder Eignung der KI-generierten Ergebnisse. Sie sind allein dafür verantwortlich, alle Ausgaben vor der Bereitstellung zu überprüfen, zu testen und zu validieren. Sie sollten sich nicht auf Ergebnisse als Ersatz für professionelle Beratung verlassen, einschließlich rechtlicher, finanzieller, medizinischer oder technischer Beratung. Das Unternehmen haftet nicht für Fehler, Auslassungen oder Ungenauigkeiten in der Ausgabe."
       },
-      "changes": {
-        "title": "12. Änderungen dieser Bedingungen",
-        "body": "Wir können diese Bedingungen von Zeit zu Zeit aktualisieren. Die fortgesetzte Nutzung des Service nach Inkrafttreten der Änderungen gilt als Zustimmung zu den überarbeiteten Bedingungen."
+      "s12": {
+        "title": "12. Haftungsbeschränkung",
+        "body": "12.1 Schadensersatzausschluss\n\nSOWEIT GESETZLICH ZULÄSSIG, HAFTET DAS UNTERNEHMEN IN KEINEM FALL FÜR INDIREKTE, ZUFÄLLIGE, BESONDERE, FOLGESCHÄDEN, STRAFSCHÄDEN ODER EXEMPLARISCHE SCHÄDEN, EINSCHLIESSLICH SCHADENSERSATZ FÜR ENTGANGENE GEWINNE, EINNAHMEN, DATEN ODER GESCHÄFTSUNTERBRECHUNG, SELBST WENN DAS UNTERNEHMEN HIERVON INFORMIERT WURDE MÖGLICHKEIT SOLCHER SCHÄDEN.\n\n12.2 Haftungshöchstgrenze\n\nDIE GESAMTHAFTUNG DES UNTERNEHMENS IHNEN GEGENÜBER FÜR JEGLICHE ANSPRÜCHE, DIE SICH AUS DIESEN BEDINGUNGEN ODER DEM DIENST ERGEBEN ODER IN ZUSAMMENHANG STEHEN, ÜBERSTEIGT NICHT DEN HÖHEREN VON (A) DIE GEBÜHREN, DIE SIE IN DEN 12 MONATEN VOR DEM ANSPRUCH AN DAS UNTERNEHMEN GEZAHLT HABEN, ODER (B) 100 $. Diese Obergrenze gilt für alle Ansprüche, unabhängig von der Rechtstheorie (Vertrag, unerlaubte Handlung, Fahrlässigkeit, Gefährdungshaftung usw.).\n\n12.3 Ausnahmen\n\nDie Haftungsbeschränkungen in diesem Abschnitt 12 gelten nicht für: (i) die Entschädigungsverpflichtungen einer Partei; (ii) die Verletzung von Vertraulichkeitspflichten durch eine der Parteien; (iii) grobe Fahrlässigkeit oder vorsätzliches Fehlverhalten des Unternehmens; oder (iv) jegliche Haftung, die nach geltendem Recht nicht eingeschränkt werden kann."
+      },
+      "s13": {
+        "title": "13. Schadensersatz",
+        "body": "Sie erklären sich damit einverstanden, das Unternehmen, seine leitenden Angestellten, Direktoren, Mitarbeiter und Vertreter von allen Ansprüchen, Schäden, Verlusten, Verbindlichkeiten, Kosten und Ausgaben (einschließlich angemessener Anwaltskosten) zu verteidigen, zu entschädigen und schadlos zu halten, die sich aus Folgendem ergeben oder damit in Zusammenhang stehen: (i) Ihre Nutzung des Dienstes; (ii) Ihr Verstoß gegen diese Bedingungen; (iii) Ihr Verstoß gegen geltende Gesetze oder Vorschriften; oder (iv) Ihre Verletzung von geistigem Eigentum, Datenschutz oder anderen Rechten Dritter. Diese Verpflichtung gilt unabhängig davon, ob das Unternehmen Kenntnis von dem Verstoß hatte."
+      },
+      "s14": {
+        "title": "14. Kündigung",
+        "body": "14.1 Kündigung durch Sie\n\nSie können Ihr Abonnement jederzeit kündigen, indem Sie es über Ihr Konto-Dashboard kündigen oder den Support kontaktieren. Die Kündigung wird zum Ende Ihres aktuellen Abrechnungszeitraums wirksam.\n\n14.2 Kündigung durch das Unternehmen\n\nDas Unternehmen kann Ihren Zugriff auf den Dienst sofort und ohne Vorankündigung aussetzen oder beenden, wenn: (i) Sie gegen diese Bedingungen verstoßen; (ii) Sie sich an illegalen Aktivitäten beteiligen; (iii) Sie verstoßen gegen die Richtlinien zur akzeptablen Nutzung; oder (iv) das Unternehmen gesetzlich dazu verpflichtet ist. Das Unternehmen kann Ihr Konto auch aus praktischen Gründen mit einer Frist von 30 Tagen schriftlich kündigen.\n\n14.3 Wirkung der Kündigung\n\nMit der Kündigung erlischt Ihr Recht auf Zugriff auf den Dienst sofort. Das Unternehmen haftet nicht für Daten- oder Funktionsverluste, die aus der Kündigung resultieren. Abschnitte, die ihrer Natur nach über die Kündigung hinaus fortbestehen (einschließlich Rechte an geistigem Eigentum, Haftungsbeschränkung, Entschädigung und geltendes Recht), bleiben in Kraft.\n\n14.4 Datenaufbewahrung\n\nNach der Kündigung speichert das Unternehmen Ihre Daten 30 Tage lang, um den Datenexport oder die Datenwiederherstellung zu ermöglichen. Nach 30 Tagen kann das Unternehmen Ihre Daten löschen. Sie sind für die Sicherung Ihrer Daten verantwortlich."
+      },
+      "s15": {
+        "title": "15. Vertraulichkeit",
+        "body": "Jede Partei verpflichtet sich, die Vertraulichkeit der vertraulichen Informationen der anderen Partei zu wahren und diese Informationen ausschließlich zum Zwecke der Erfüllung ihrer Verpflichtungen gemäß diesen Bedingungen zu verwenden. Zu den vertraulichen Informationen zählen keine Informationen, die öffentlich zugänglich sind, unabhängig entwickelt wurden oder von Dritten ohne Geheimhaltungspflichten erhalten wurden. Jede Partei kann vertrauliche Informationen offenlegen, wenn dies gesetzlich oder durch einen Gerichtsbeschluss erforderlich ist, vorausgesetzt, dass die offenlegende Partei dies unverzüglich mitteilt, damit die andere Partei Schutzmaßnahmen ergreifen kann."
+      },
+      "s16": {
+        "title": "16. Höhere Gewalt",
+        "body": "Das Unternehmen haftet nicht für die Nichterfüllung seiner Verpflichtungen aus diesen Bedingungen, die auf Ursachen zurückzuführen sind, die außerhalb seiner angemessenen Kontrolle liegen, einschließlich höherer Gewalt, Naturkatastrophen, Krieg, Terrorismus, Streiks, Regierungsmaßnahmen oder Ausfall von Telekommunikations- oder Versorgungsdiensten. Das Unternehmen wird angemessene Anstrengungen unternehmen, um die Leistung so schnell wie möglich wieder aufzunehmen."
+      },
+      "s17": {
+        "title": "17. Änderungen dieser Bedingungen",
+        "body": "Das Unternehmen kann diese Bedingungen jederzeit ändern. Wesentliche Änderungen werden Ihnen per E-Mail oder über den Dienst mindestens 30 Tage vor Inkrafttreten der Änderungen mitgeteilt. Durch Ihre fortgesetzte Nutzung des Dienstes nach Bekanntgabe der Änderungen akzeptieren Sie die geänderten Bedingungen. Wenn Sie die geänderten Bedingungen nicht akzeptieren, müssen Sie die Nutzung des Dienstes einstellen."
+      },
+      "s18": {
+        "title": "18. Streitbeilegung und Schiedsverfahren",
+        "body": "18.1 Informelle Lösung\n\nBevor ein formelles Verfahren eingeleitet wird, vereinbaren Sie und das Unternehmen, zu versuchen, etwaige Streitigkeiten durch gutgläubige Verhandlungen beizulegen. Jede Partei kann diesen Prozess einleiten, indem sie der anderen Partei eine schriftliche Mitteilung sendet, in der sie den Streit beschreibt und eine Lösung vorschlägt.\n\n18.2 Schiedsverfahren\n\nWenn der Streit nicht innerhalb von 30 Tagen nach schriftlicher Mitteilung beigelegt wird, vereinbaren Sie und das Unternehmen, den Streit einem verbindlichen Schiedsverfahren zu unterziehen, das von einem einvernehmlich vereinbarten Schiedsrichter oder einer Schlichtungsorganisation durchgeführt wird. Das Schiedsverfahren wird in englischer Sprache nach den Regeln der International Chamber of Commerce (ICC) durchgeführt. Jede Partei trägt ihre eigenen Kosten und die Parteien teilen sich die Honorare des Schiedsrichters zu gleichen Teilen. Das Schiedsverfahren wird vertraulich durchgeführt und der Schiedsspruch ist endgültig und bindend.\n\n18.3 Verzicht auf Sammelklagen\n\nSie und das Unternehmen vereinbaren, dass jedes Schiedsverfahren oder Gerichtsverfahren auf individueller Basis und nicht als Sammelklage, Sammelklage oder Verbandsklage durchgeführt wird. Sie verzichten auf das Recht, an einer Sammelklage gegen das Unternehmen teilzunehmen.\n\n18.4 Opt-Out\n\nSie können dem Schiedsverfahren widersprechen, indem Sie innerhalb von 30 Tagen nach der ersten Annahme dieser Bedingungen eine schriftliche Mitteilung an das Unternehmen senden. Die Mitteilung muss Ihren Namen, Ihre Adresse, Ihre E-Mail-Adresse und eine klare Erklärung enthalten, dass Sie sich von der Schiedsvereinbarung abmelden.\n\n18.5 Ausnahme\n\nUngeachtet des Vorstehenden kann jede Partei vor Gericht einen Unterlassungsanspruch beantragen, um irreparablen Schaden abzuwenden oder geistige Eigentumsrechte durchzusetzen."
+      },
+      "s19": {
+        "title": "19. Anwendbares Recht",
+        "body": "Diese Bedingungen unterliegen den Gesetzen Irlands und werden in Übereinstimmung mit diesen ausgelegt, ohne Rücksicht auf die Kollisionsnormen. Wenn kein Schiedsverfahren angestrebt wird, erklären Sie sich damit einverstanden, sich der ausschließlichen Zuständigkeit und dem Gerichtsstand der Gerichte in Dublin, Irland, zu unterwerfen."
+      },
+      "s20": {
+        "title": "20. Hinweise",
+        "body": "Alle gemäß diesen Bedingungen erforderlichen Mitteilungen können per E-Mail an die mit Ihrem Konto verknüpfte E-Mail-Adresse oder an das Unternehmen unter legal@getsafe360.ai gesendet werden. Per E-Mail versandte Mitteilungen sind mit der Absendung wirksam. Sie sind für die Pflege aktueller Kontaktinformationen verantwortlich."
+      },
+      "s21": {
+        "title": "21. Gesamte Vereinbarung",
+        "body": "Diese Bedingungen bilden zusammen mit der Datenschutzrichtlinie und allen anderen Vereinbarungen, die Sie mit dem Unternehmen abschließen, die gesamte Vereinbarung zwischen Ihnen und dem Unternehmen bezüglich des Dienstes. Sollte sich herausstellen, dass eine Bestimmung dieser Bedingungen ungültig oder nicht durchsetzbar ist, bleiben die übrigen Bestimmungen weiterhin in vollem Umfang in Kraft. Das Versäumnis des Unternehmens, ein Recht oder eine Bestimmung durchzusetzen, stellt keinen Verzicht auf dieses Recht oder diese Bestimmung dar."
+      },
+      "s22": {
+        "title": "22. Salvatorische Klausel",
+        "body": "Sollte eine Bestimmung dieser Bedingungen von einem zuständigen Gericht für ungültig, rechtswidrig oder nicht durchsetzbar befunden werden, wird diese Bestimmung im Mindestmaß geändert, das erforderlich ist, um sie gültig und durchsetzbar zu machen, oder wenn eine solche Änderung nicht möglich ist, wird die Bestimmung abgetrennt. Die übrigen Bestimmungen bleiben in vollem Umfang in Kraft und wirksam."
+      },
+      "s23": {
+        "title": "23. Verzicht",
+        "body": "Ein Verzicht auf eine Bestimmung dieser Bedingungen ist nur dann wirksam, wenn er schriftlich erfolgt und vom Unternehmen unterzeichnet wurde. Das Versäumnis des Unternehmens, ein Recht oder eine Bestimmung durchzusetzen, stellt keinen Verzicht auf dieses Recht oder diese Bestimmung dar und hindert das Unternehmen nicht daran, dieses Recht oder diese Bestimmung in Zukunft durchzusetzen."
+      },
+      "s24": {
+        "title": "24. Auftrag",
+        "body": "Das Unternehmen kann diese Bedingungen oder seine Rechte oder Pflichten aus diesen Bedingungen ohne Vorankündigung oder Ihre Zustimmung an einen Rechtsnachfolger oder ein verbundenes Unternehmen abtreten. Sie dürfen diese Bedingungen oder Ihre Rechte oder Pflichten nicht ohne vorherige schriftliche Zustimmung des Unternehmens abtreten."
+      },
+      "s25": {
+        "title": "25. Verjährung von Ansprüchen",
+        "body": "Jegliche Ansprüche, die sich aus diesen Bedingungen oder dem Service ergeben oder damit in Zusammenhang stehen, müssen innerhalb eines Jahres nach Entstehung des Klagegrundes geltend gemacht werden. Nach Ablauf dieser Frist geltend gemachte Ansprüche sind ausgeschlossen."
+      },
+      "s26": {
+        "title": "26. Kontaktinformationen",
+        "body": "Wenn Sie Fragen zu diesen Bedingungen haben oder Verstöße melden möchten, rufen Sie bitte unsere Kontaktseite (/contact) auf."
       }
     },
     "contact": {
       "title": "Kontakt",
-      "before": "Für rechtliche, lizenzbezogene oder kontobezogene Fragen nutzen Sie bitte unsere",
+      "before": "Wenn Sie Fragen zu diesen Bedingungen haben oder Verstöße melden möchten, besuchen Sie bitte unsere",
       "link": "Kontaktseite",
       "after": "."
     }

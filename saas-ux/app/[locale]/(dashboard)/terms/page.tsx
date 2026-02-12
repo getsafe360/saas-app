@@ -16,18 +16,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 const sectionKeys = [
-  "acceptance",
-  "license",
-  "eligibility",
-  "restrictedUse",
-  "orders",
-  "enforcement",
-  "termination",
-  "intellectualProperty",
-  "warranty",
-  "liability",
-  "law",
-  "changes",
+  "s01",
+  "s02",
+  "s03",
+  "s04",
+  "s05",
+  "s06",
+  "s07",
+  "s08",
+  "s09",
+  "s10",
+  "s11",
+  "s12",
+  "s13",
+  "s14",
+  "s15",
+  "s16",
+  "s17",
+  "s18",
+  "s19",
+  "s20",
+  "s21",
+  "s22",
+  "s23",
+  "s24",
+  "s25",
+  "s26",
 ] as const;
 
 export default async function TermsPage({ params }: Props) {
@@ -55,7 +69,13 @@ export default async function TermsPage({ params }: Props) {
               className="p-[var(--card-padding)] rounded-[var(--card-radius)] bg-[var(--card-bg)] border border-[var(--card-border)] shadow-[var(--card-shadow)]"
             >
               <h2 className="text-xl font-semibold mb-3">{t(`sections.${key}.title`)}</h2>
-              <p className="text-[var(--text-subtle)] leading-relaxed">{t(`sections.${key}.body`)}</p>
+              <div className="text-[var(--text-subtle)] leading-relaxed space-y-3">
+                {t(`sections.${key}.body`)
+                  .split("\n\n")
+                  .map((paragraph, index) => (
+                    <p key={`${key}-${index}`}>{paragraph}</p>
+                  ))}
+              </div>
             </article>
           ))}
         </section>
