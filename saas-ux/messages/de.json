@@ -12,7 +12,7 @@
     "openMenu": "Menü öffnen",
     "closeMenu": "Menü schließen"
   },
-   "ctaRoot": {
+  "ctaRoot": {
     "headline": "Verbessere deine Website – noch heute!",
     "support": "Lass die KI jede Website in Minuten optimieren – automatisiere das Langweilige.",
     "primary": "Erstelle dein kostenloses Konto",
@@ -126,7 +126,8 @@
     "support": "Support",
     "terms": "AGB",
     "privacy": "Datenschutz",
-    "contact": "Kontakt"
+    "contact": "Kontakt",
+    "imprint": "Impressum gemäß § 5 TMG"
   },
   "actions": {
     "learn_more": "Mehr erfahren",
@@ -182,7 +183,7 @@
     },
     "strengths": "Was gut funktioniert"
   },
-    "AnalyzeMeta": {
+  "AnalyzeMeta": {
     "title": "Website fixen - GetSafe 360 Co-Pilot",
     "titleWithUrl": "{url} fixen - GetSafe 360 Co-Pilot",
     "description": "Analysiere und optimiere deine Website mit einem KI-Co-Piloten - für gezieltes SEO, schnellere Performance, top Barrierefreiheit und starke Sicherheit."
@@ -309,7 +310,24 @@
       "a4": "Absolut! Sie können so viele Websites analysieren, wie Sie möchten, so oft Sie möchten. Wir berechnen nur KI-basierte Fixes und Optimierungen."
     }
   },
-  "terms": {
-    "date": "Datum des Inkrafttretens:"
+  "imprint": {
+    "title": "Impressum gemäß § 5 TMG",
+    "company": "GETSAFE 360 AI LIMITED",
+    "registeredOfficeLabel": "Geschäftsanschrift:",
+    "registeredOffice": "77 Camden Street Lower\nDublin D02 XE80\nIrland",
+    "registrationNumberLabel": "Handelsregisternummer:",
+    "registrationNumber": "804647",
+    "contactTitle": "Kontakt:",
+    "contactTextBefore": "Für alle Anfragen besuchen Sie bitte unsere",
+    "contactLinkLabel": "Kontaktseite",
+    "responsibleTitle": "Verantwortlich für den Inhalt gemäß § 18 Abs. 2 MStV:",
+    "responsibleEntity": "GETSAFE 360 AI LIMITED",
+    "vatTitle": "Umsatzsteuer / Steuerinformationen:",
+    "vatText": "GETSAFE 360 AI LIMITED bietet seine Dienstleistungen ausschließlich für Geschäftskunden (B2B) an. Gemäß den geltenden steuerrechtlichen Bestimmungen wird auf Rechnungen an Geschäftskunden keine Umsatzsteuer ausgewiesen. Falls erforderlich, können Kunden ihre Umsatzsteuer-Identifikationsnummer während des Bestell-Prozesses angeben.",
+    "disputeTitle": "Streitbeilegung:",
+    "disputeText": "Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.",
+    "legalNoticeTitle": "Haftungsausschluss:",
+    "legalNoticeLine1": "Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für die Inhalte externer Links.",
+    "legalNoticeLine2": "Für den Inhalt verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich."
   }
 }

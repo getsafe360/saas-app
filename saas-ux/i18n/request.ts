@@ -23,6 +23,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     siteCockpitMessages,
     supportMessages,
     privacyMessages,
+    termsMessages,
     // Add more as you create them:
     // dashboardMessages,
     // settingsMessages,
@@ -33,6 +34,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     import(`@/messages/SiteCockpit/${locale}.json`),
     import(`@/messages/Support/${locale}.json`),
     import(`@/messages/Privacy/${locale}.json`),
+    import(`@/messages/Terms/${locale}.json`),
     // import(`@/messages/Dashboard/${locale}.json`),
     // import(`@/messages/Settings/${locale}.json`),
     // import(`@/messages/i18n/${locale}.json`),
@@ -49,6 +51,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       SiteCockpit: siteCockpitMessages.default.SiteCockpit,
       Support: supportMessages.default.Support,
       privacy: privacyMessages.default.privacy,
+      Terms: termsMessages.default.Terms,
 
       // Future features (uncomment as you add them):
       // Dashboard: dashboardMessages.default.Dashboard,

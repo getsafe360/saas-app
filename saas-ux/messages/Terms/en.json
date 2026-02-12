@@ -1,0 +1,68 @@
+{
+  "Terms": {
+    "meta": {
+      "title": "Terms of Service | GetSafe 360",
+      "description": "Read the GetSafe 360 Terms of Service for platform access, licensing conditions, acceptable use, billing, and legal terms."
+    },
+    "title": "Terms of Service",
+    "effectiveDateLabel": "Effective Date:",
+    "effectiveDate": "2026-01-15",
+    "intro": "Please read these Terms of Service carefully before using getsafe360.ai. These terms govern access to our platform, including purchase and use of our software and services.",
+    "sections": {
+      "acceptance": {
+        "title": "1. Acceptance of Terms",
+        "body": "By accessing or using the Service, or by purchasing software access from GetSafe 360, you agree to these Terms, our EULA, and our Privacy Policy. If you do not agree, you must not use the Service."
+      },
+      "license": {
+        "title": "2. Access Contract and GPL Software",
+        "body": "Some components may be licensed under GPLv2. Your GPL rights remain intact after lawful receipt of software. However, access to distributed builds, updates, and hosted tooling is subject to a separate commercial access agreement."
+      },
+      "eligibility": {
+        "title": "3. Eligibility and Intended Use",
+        "body": "You represent that you are authorized to act for your business and that use is limited to websites your organization owns or directly operates, unless otherwise agreed in writing."
+      },
+      "restrictedUse": {
+        "title": "4. Restricted Commercial Use",
+        "body": "Hosting providers, agencies, and managed service providers may not use access-gated software for unrelated third-party deployments without an enterprise agreement."
+      },
+      "orders": {
+        "title": "5. Orders, Payments, and Access",
+        "body": "Purchases form part of your access contract. We may reject, cancel, or revoke transactions where misuse, fraud, or policy circumvention is reasonably suspected."
+      },
+      "enforcement": {
+        "title": "6. Monitoring and Enforcement",
+        "body": "We may audit usage to verify compliance, suspend or revoke licenses and support for misuse, and pursue legal remedies for unauthorized commercial deployment."
+      },
+      "termination": {
+        "title": "7. Suspension and Termination",
+        "body": "We may suspend or terminate access for violations of these Terms. Termination does not revoke GPL rights for software already lawfully received, but it ends access to updates, support, and new releases."
+      },
+      "intellectualProperty": {
+        "title": "8. Intellectual Property and Branding",
+        "body": "All trademarks, product names, logos, and non-open-source materials remain the property of their respective owners. No trademark license is granted unless explicitly stated."
+      },
+      "warranty": {
+        "title": "9. Disclaimer of Warranties",
+        "body": "The Service is provided on an “as is” and “as available” basis to the maximum extent permitted by law, without warranties of uninterrupted operation or fitness for a specific business purpose."
+      },
+      "liability": {
+        "title": "10. Limitation of Liability",
+        "body": "To the maximum extent permitted by law, GetSafe 360 is not liable for indirect or consequential damages. Aggregate liability is limited to amounts paid for the relevant access period."
+      },
+      "law": {
+        "title": "11. Governing Law and Dispute Resolution",
+        "body": "These Terms are governed by applicable Irish law. We are not obligated or willing to participate in consumer arbitration proceedings before a consumer arbitration board."
+      },
+      "changes": {
+        "title": "12. Changes to These Terms",
+        "body": "We may update these Terms from time to time. Continued use of the Service after updates become effective constitutes acceptance of the revised Terms."
+      }
+    },
+    "contact": {
+      "title": "Contact",
+      "before": "For legal, licensing, or account questions, please use our",
+      "link": "contact page",
+      "after": "."
+    }
+  }
+}

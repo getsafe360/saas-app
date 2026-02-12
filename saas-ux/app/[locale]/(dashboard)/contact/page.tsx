@@ -1,101 +1,169 @@
-// saas-ux/app/[locale]/(dashboard)/contact/page.tsx
+"use client";
+
+import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Mail, CreditCard, Shield, AlertCircle } from "lucide-react";
+import { ArrowRight, Building2, FileText, Mail, MessageSquareText } from "lucide-react";
+
+type InquiryType = "sales" | "support" | "suggestions" | "featureRequest";
+
+const inquirySubjectMap: Record<InquiryType, string> = {
+  sales: "Sales Inquiry",
+  support: "Support Request",
+  suggestions: "Suggestion",
+  featureRequest: "Feature Request",
+};
+
+const inquiryRecipientMap: Record<InquiryType, string> = {
+  sales: "sales@company.com",
+  support: "support@getsafe360.ai",
+  suggestions: "inquiry@getsafe360.ai",
+  featureRequest: "inquiry@getsafe360.ai",
+};
+
 export default function ContactPage() {
   const t = useTranslations("Support");
+  const [inquiryType, setInquiryType] = useState<InquiryType>("sales");
+  const [senderEmail, setSenderEmail] = useState("");
+  const [message, setMessage] = useState("");
+
+  const previewRecipient = inquiryRecipientMap[inquiryType];
+  const previewSubject = inquirySubjectMap[inquiryType];
+
+  const mailtoHref = useMemo(() => {
+    const subject = `${previewSubject} - ${senderEmail || "No email provided"}`;
+    const body = [
+      `Inquiry type: ${previewSubject}`,
+      `Sender email: ${senderEmail || "Not provided"}`,
+      "",
+      message || "(Please add your message)",
+    ].join("\n");
+
+    return `mailto:${previewRecipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }, [message, previewRecipient, previewSubject, senderEmail]);
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    window.location.href = mailtoHref;
+  };
 
   return (
-    <div className="max-w-full px-4 sm:px-6 lg:px-8 min-h-64 md:min-h-80">
-      {/* Hero Section */}
-      <div className="text-[var(--text-default)]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-5xl font-bold mb-4">{t("contactInfo.title")}</h1>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[var(--background-default)] text-[var(--text-default)]">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-10">
+        <section className="space-y-4">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">{t("contactPage.hero.title")}</h1>
+          <p className="text-lg text-[var(--text-subtle)] max-w-3xl">{t("contactPage.hero.bodyLine1")}</p>
+          <p className="text-lg text-[var(--text-subtle)] max-w-3xl">{t("contactPage.hero.bodyLine2")}</p>
+        </section>
 
-      {/* Contact Information */}
-      <div className="mb-16 p-[var(--card-padding)] rounded-[var(--card-radius)] bg-[var(--card-bg)] border border-[var(--card-border)]">
-        <h2 className="text-2xl font-bold text-[var(--text-default)] mb-6"></h2>
-
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold text-[var(--text-default)] mb-2">
-            {t("contactInfo.company.name")}
-          </h3>
-          <p className="text-[var(--text-subtle)]">
-            {t("contactInfo.company.description")}
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-start gap-4 p-4 rounded-[var(--radius-md)] bg-[var(--card-bg)] border border-[var(--card-border)]">
-            <Mail className="h-5 w-5 text-[var(--text-primary)] mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-[var(--text-subtle)]">
-                {t("contactInfo.email.supportLabel")}
-              </p>
-              <a
-                href="mailto:support@getsafe360.ai"
-                className="text-[var(--text-primary)] hover:underline font-mono"
-              >
-                {t("contactInfo.email.support")}
-              </a>
+        <section className="grid gap-6 md:grid-cols-2">
+          <div className="p-[var(--card-padding)] rounded-[var(--card-radius)] bg-[var(--card-bg)] border border-[var(--card-border)] shadow-[var(--card-shadow)]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-[var(--radius-md)] bg-blue-500/10 border border-blue-500/20">
+                <Mail className="h-5 w-5 text-[var(--text-primary)]" />
+              </div>
+              <h2 className="text-xl font-semibold">{t("contactPage.direct.inquiryTitle")}</h2>
             </div>
+            <a href="mailto:inquiry@getsafe360.ai" className="font-mono text-[var(--text-primary)] hover:underline">
+              inquiry@getsafe360.ai
+            </a>
+            <p className="mt-3 text-sm text-[var(--text-subtle)]">{t("contactPage.direct.supportHint")}</p>
+            <Link href="/support" className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[var(--text-primary)] hover:underline">
+              {t("contactPage.direct.supportCta")} <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
 
-          <div className="flex items-start gap-4 p-4 rounded-[var(--radius-md)] bg-[var(--card-bg)] border border-[var(--card-border)]">
-            <CreditCard className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-[var(--text-subtle)]">
-                {t("contactInfo.email.billingLabel")}
-              </p>
-              <a
-                href="mailto:support@getsafe360.ai"
-                className="text-[var(--text-primary)] hover:underline font-mono"
-              >
-                {t("contactInfo.email.billing")}
-              </a>
+          <div className="p-[var(--card-padding)] rounded-[var(--card-radius)] bg-[var(--card-bg)] border border-[var(--card-border)] shadow-[var(--card-shadow)]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-[var(--radius-md)] bg-violet-500/10 border border-violet-500/20">
+                <Building2 className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+              </div>
+              <h2 className="text-xl font-semibold">{t("contactPage.direct.salesTitle")}</h2>
             </div>
+            <a href="mailto:sales@company.com" className="font-mono text-[var(--text-primary)] hover:underline">
+              sales@company.com
+            </a>
+            <p className="mt-3 text-sm text-[var(--text-subtle)]">{t("contactPage.direct.salesDescription")}</p>
           </div>
+        </section>
 
-          <div className="flex items-start gap-4 p-4 rounded-[var(--radius-md)] bg-red-50 dark:bg-red-500/5">
-            <AlertCircle className="h-5 w-5 text-[var(--color-danger)] mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-[var(--text-subtle)]">
-                {t("contactInfo.email.securityLabel")}
-              </p>
-              <a
-                href="mailto:security@getsafe360.ai"
-                className="text-[var(--text-primary)] hover:underline font-mono"
-              >
-                {t("contactInfo.email.security")}
-              </a>
+        <section className="p-[var(--card-padding)] rounded-[var(--card-radius)] bg-[var(--card-bg)] border border-[var(--card-border)] shadow-[var(--card-shadow)]">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-[var(--radius-md)] bg-emerald-500/10 border border-emerald-500/20">
+              <MessageSquareText className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
+            <h2 className="text-2xl font-semibold">{t("contactPage.form.title")}</h2>
           </div>
 
-          <div className="flex items-start gap-4 p-4 rounded-[var(--radius-md)] bg-[var(--card-bg)] border border-[var(--card-border)]">
-            <Shield className="h-5 w-5 text-[var(--text-subtle)] mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-[var(--text-subtle)]">
-                {t("contactInfo.email.legalLabel")}
-              </p>
-              <a
-                href="mailto:legal@getsafe360.ai"
-                className="text-[var(--text-primary)] hover:underline font-mono"
-              >
-                {t("contactInfo.email.legal")}
-              </a>
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="space-y-2">
+                <span className="text-sm text-[var(--text-subtle)]">{t("contactPage.form.typeLabel")}</span>
+                <select
+                  className="w-full rounded-[var(--radius-md)] border border-[var(--card-border)] bg-[var(--background-default)] px-3 py-2"
+                  value={inquiryType}
+                  onChange={(event) => setInquiryType(event.target.value as InquiryType)}
+                >
+                  <option value="sales">{t("contactPage.form.options.sales")}</option>
+                  <option value="support">{t("contactPage.form.options.support")}</option>
+                  <option value="suggestions">{t("contactPage.form.options.suggestions")}</option>
+                  <option value="featureRequest">{t("contactPage.form.options.featureRequest")}</option>
+                </select>
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm text-[var(--text-subtle)]">{t("contactPage.form.emailLabel")}</span>
+                <input
+                  type="email"
+                  className="w-full rounded-[var(--radius-md)] border border-[var(--card-border)] bg-[var(--background-default)] px-3 py-2"
+                  placeholder="you@workspace.com"
+                  value={senderEmail}
+                  onChange={(event) => setSenderEmail(event.target.value)}
+                  required
+                />
+              </label>
             </div>
-          </div>
-        </div>
 
-        <div className="mt-6 p-4 rounded-[var(--radius-md)] bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/20">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-[var(--color-warning)] flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-[var(--text-subtle)]">
-              {t("contactInfo.emergencyNote")}
-            </p>
+            <label className="space-y-2 block">
+              <span className="text-sm text-[var(--text-subtle)]">{t("contactPage.form.messageLabel")}</span>
+              <textarea
+                className="w-full min-h-36 rounded-[var(--radius-md)] border border-[var(--card-border)] bg-[var(--background-default)] px-3 py-2"
+                placeholder={t("contactPage.form.messagePlaceholder")}
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                required
+              />
+            </label>
+
+            <div className="rounded-[var(--radius-md)] border border-[var(--card-border)] bg-[var(--background-default)] p-3 text-sm text-[var(--text-subtle)]">
+              <p>
+                <strong className="text-[var(--text-default)]">{t("contactPage.form.previewRecipient")}</strong> {previewRecipient}
+              </p>
+              <p>
+                <strong className="text-[var(--text-default)]">{t("contactPage.form.previewSubject")}</strong> {previewSubject}
+              </p>
+            </div>
+
+            <button type="submit" className="btn btn-blue">
+              {t("contactPage.form.submit")}
+            </button>
+          </form>
+        </section>
+
+        <section className="p-[var(--card-padding)] rounded-[var(--card-radius)] bg-[var(--card-bg)] border border-[var(--card-border)]">
+          <div className="flex items-center gap-3 mb-3">
+            <FileText className="h-5 w-5 text-[var(--text-subtle)]" />
+            <h2 className="text-lg font-semibold">{t("contactPage.legal.title")}</h2>
           </div>
-        </div>
+          <p className="text-sm text-[var(--text-subtle)] mb-4">{t("contactPage.legal.description")}</p>
+          <div className="flex flex-wrap gap-4 text-sm">
+            <Link href="/privacy" className="text-[var(--text-primary)] hover:underline">
+              {t("contactPage.legal.privacy")}
+            </Link>
+            <span className="text-[var(--text-muted)]">•</span>
+            <span className="text-[var(--text-muted)]">{t("contactPage.legal.imprint")}</span>
+          </div>
+        </section>
       </div>
     </div>
   );
