@@ -2,65 +2,121 @@
   "Terms": {
     "meta": {
       "title": "Conditions d'utilisation | GetSafe 360",
-      "description": "Consultez les Conditions d'utilisation de GetSafe 360 concernant l'accès à la plateforme, les licences, l'usage autorisé, la facturation et les dispositions juridiques."
+      "description": "Lisez les conditions d'utilisation de GetSafe 360 ​​pour connaître l'accès à la plateforme, les conditions de licence, les conditions de paiement et les obligations légales."
     },
     "title": "Conditions d'utilisation",
-    "effectiveDateLabel": "Date d'entrée en vigueur :",
-    "effectiveDate": "2026-01-15",
-    "intro": "Veuillez lire attentivement ces Conditions d'utilisation avant d'utiliser getsafe360.ai. Elles régissent l'accès à notre plateforme, y compris l'achat et l'utilisation de nos logiciels et services.",
+    "effectiveDateLabel": "Dernière mise à jour :",
+    "effectiveDate": "février 2026",
+    "intro": "Veuillez lire attentivement ces conditions d'utilisation avant d'utiliser getsafe360.ai.",
     "sections": {
-      "acceptance": {
+      "s01": {
         "title": "1. Acceptation des conditions",
-        "body": "En accédant au Service, en l'utilisant ou en achetant un accès logiciel GetSafe 360, vous acceptez ces Conditions, notre EULA et notre Politique de confidentialité. Si vous n'êtes pas d'accord, vous ne devez pas utiliser le Service."
+        "body": "Les présentes conditions d'utilisation (« Conditions ») régissent votre accès et votre utilisation du site Web, de la plateforme et des services GetSafe360.ai (collectivement, le « Service ») exploités par GetSafe 360 ​​AI Limited, une société enregistrée en Irlande sous le numéro d'entreprise 804647 dont le siège social est situé 77 Camden Street Lower, Dublin D02 XE80, Irlande (« Société », « nous », « notre » ou « notre »).\n\nEn accédant ou en utilisant le Service, vous acceptez d'être lié par ces Conditions. Si vous utilisez le Service au nom d'une entreprise, d'une organisation ou d'une autre entité juridique, vous déclarez et garantissez que vous avez le pouvoir de lier cette entité aux présentes Conditions. Si vous ne disposez pas d'une telle autorité ou n'acceptez pas ces Conditions, vous ne pouvez pas utiliser le Service.\n\nVous déclarez que vous avez au moins 18 ans ou l'âge de la majorité légale dans votre juridiction, selon la date la plus élevée. Si vous ne remplissez pas cette condition, vous ne pouvez pas utiliser le Service."
       },
-      "license": {
-        "title": "2. Contrat d'accès et logiciel GPL",
-        "body": "Certains composants peuvent être sous licence GPLv2. Vos droits GPL restent valables après réception légale du logiciel. Toutefois, l'accès aux builds distribués, mises à jour et outils hébergés est soumis à un contrat d'accès commercial distinct."
+      "s02": {
+        "title": "2. Description du service",
+        "body": "GetSafe360.ai fournit une plate-forme d'optimisation de sites Web basée sur l'IA qui facilite l'optimisation des moteurs de recherche (SEO), les performances des sites Web, le renforcement de la sécurité, la conformité en matière d'accessibilité et la correction automatisée des bogues pour les sites Web WordPress et WooCommerce (le « Service »). Le Service comprend l'accès à notre plateforme Web, aux interfaces de programmation d'applications (API), à la documentation et aux services d'assistance associés.\n\n2.1 Fonctionnalités bêta\n\nLa Société peut proposer certaines fonctionnalités, produits ou fonctionnalités désignés comme « bêta », « aperçu », « expérimental », « pilote » ou des désignations similaires (« fonctionnalités bêta »). Les fonctionnalités bêta sont fournies « telles quelles », sans garantie, sans accord de niveau de service ou support dédié. La Société peut modifier, interrompre ou supprimer les fonctionnalités bêta à tout moment sans responsabilité. Votre utilisation des fonctionnalités bêta ne vous donne droit à aucun crédit de service ni remboursement."
       },
-      "eligibility": {
-        "title": "3. Éligibilité et usage prévu",
-        "body": "Vous déclarez être autorisé à agir pour votre entreprise et que l'usage est limité aux sites web détenus ou exploités directement par votre organisation, sauf accord écrit contraire."
+      "s03": {
+        "title": "3. Éligibilité et responsabilité du compte",
+        "body": "Vous devez être un client professionnel (B2B) pour utiliser le Service. Le Service n'est pas destiné à une utilisation par les consommateurs. Vous êtes responsable du maintien de la confidentialité des informations d'identification de votre compte et de toutes les activités qui se produisent sous votre compte. Vous devez nous informer immédiatement de tout accès non autorisé ou violation de la sécurité. Vous êtes responsable de toutes les données transmises via votre compte, que vous ayez ou non autorisé cette transmission."
       },
-      "restrictedUse": {
-        "title": "4. Usage commercial restreint",
-        "body": "Les hébergeurs, agences et prestataires de services managés ne peuvent pas utiliser les logiciels à accès restreint pour des déploiements tiers non liés sans contrat entreprise."
+      "s04": {
+        "title": "4. Octroi de licence",
+        "body": "Sous réserve de votre respect des présentes Conditions, la Société vous accorde une licence non exclusive, non transférable et limitée pour accéder et utiliser le Service uniquement à des fins commerciales internes. Cette licence n'inclut pas le droit de sous-licencier, de revendre ou de transférer le Service à des tiers. Vous ne pouvez pas procéder à une ingénierie inverse, décompiler ou tenter de dériver le code source du Service."
       },
-      "orders": {
-        "title": "5. Commandes, paiements et accès",
-        "body": "Les achats font partie de votre contrat d'accès. Nous pouvons refuser, annuler ou révoquer des transactions en cas de suspicion raisonnable d'abus, de fraude ou de contournement des politiques."
+      "s05": {
+        "title": "5. Droits de propriété intellectuelle",
+        "body": "5.1 Propriété intellectuelle de l'entreprise\n\nLa Société conserve tous les droits, titres et intérêts liés au Service, y compris tous les logiciels, documentations, conceptions et propriété intellectuelle. Vous n'acquérez aucun droit de propriété sur le Service. Tous les commentaires, suggestions ou améliorations que vous fournissez à la Société peuvent être utilisés par la Société sans obligation ni compensation envers vous.\n\n5.2 Contenu client\n\nVous conservez la propriété de tout contenu que vous fournissez au Service (« Contenu client »), y compris les fichiers, données et configurations du site Web. Vous accordez à la Société une licence mondiale et libre de droits pour utiliser, reproduire et traiter votre contenu client uniquement pour fournir le service et vous conformer à la loi applicable. La Société n'utilisera pas votre contenu client à d'autres fins, y compris la formation de modèles d'IA, sans votre consentement écrit explicite.\n\n5.3 Sortie générée par l'IA\n\nLe Service peut générer des sorties, des recommandations, du code ou du contenu en fonction de vos entrées (« Sortie »). Vous êtes propriétaire du résultat généré par le service et pouvez l'utiliser à toute fin licite. Cependant, vous reconnaissez que le résultat peut ne pas être unique, peut contenir des erreurs et doit être vérifié pour en vérifier l'exactitude et la pertinence avant le déploiement. La Société ne garantit pas l'exactitude, l'exhaustivité ou l'adéquation des résultats à un usage particulier."
       },
-      "enforcement": {
-        "title": "6. Contrôle et application",
-        "body": "Nous pouvons auditer l'usage pour vérifier la conformité, suspendre ou révoquer licences et support en cas d'abus, et engager des recours juridiques en cas de déploiement commercial non autorisé."
+      "s06": {
+        "title": "6. Frais et paiement",
+        "body": "6.1 Plans d'abonnement\n\nLe Service est disponible via des plans d'abonnement avec des fonctionnalités et des tarifs variables. Les détails des tarifs et des forfaits sont disponibles sur notre site Web. La Société peut modifier les prix, les fonctionnalités ou la disponibilité du forfait moyennant un préavis de 30 jours. Les modifications de prix prendront effet au début de votre prochaine période de facturation.\n\n6.2 Conditions de paiement\n\nTous les frais excluent les taxes applicables, que vous êtes responsable de payer. La Société utilise Stripe comme processeur de paiement. Vous autorisez la Société à facturer sur votre mode de paiement tous les frais associés au forfait sélectionné. Les paiements ne sont pas remboursables, sauf dans les cas expressément prévus dans les présentes Conditions ou dans la mesure requise par la loi applicable.\n\n6.3 Facturation et renouvellement\n\nVotre abonnement sera automatiquement renouvelé à la fin de chaque période de facturation, sauf si vous l'annulez avant la date de renouvellement. Vous pouvez annuler votre abonnement à tout moment via le tableau de bord de votre compte. L'annulation prend effet à la fin de votre période de facturation en cours. Vous ne recevrez pas de remboursement pour la partie non utilisée de votre abonnement.\n\n6.4 Échec des paiements\n\nSi votre mode de paiement échoue, la Société tentera de réessayer de payer en utilisant les informations de paiement enregistrées. Si le paiement échoue finalement, la Société peut suspendre votre accès au Service jusqu'à ce que le paiement soit reçu. Vous êtes responsable de tous les frais, y compris les frais de retard ou les frais de recouvrement, résultant d'échecs de paiement.\n\n6.5 Crédits de jetons\n\nVous pouvez prépayer l'utilisation via des crédits symboliques. Les crédits de jetons expirent un an à compter de la date d'émission et ne sont pas reportés aux périodes suivantes. Les crédits non utilisés sont perdus à leur expiration. Si votre compte est résilié, tous les crédits restants seront perdus."
       },
-      "termination": {
-        "title": "7. Suspension et résiliation",
-        "body": "Nous pouvons suspendre ou résilier l'accès en cas de violation de ces Conditions. La résiliation ne supprime pas les droits GPL sur les logiciels déjà reçus légalement, mais met fin à l'accès aux mises à jour, au support et aux nouvelles versions."
+      "s07": {
+        "title": "7. Politique d'utilisation acceptable",
+        "body": "Vous acceptez de ne pas utiliser le Service à des fins illégales ou d'une manière qui viole les présentes Conditions. Plus précisément, vous vous engagez à ne pas :\n\nUtiliser le Service pour créer, générer ou distribuer des logiciels malveillants, des virus ou tout autre code nuisible ; se livrer à un accès non autorisé à des systèmes ou des réseaux informatiques ; violer les lois ou réglementations applicables, y compris celles régissant la protection des données, la propriété intellectuelle ou les contrôles à l'exportation ; porter atteinte aux droits de tiers, y compris les droits de propriété intellectuelle, de confidentialité ou de publicité ; harceler, menacer, diffamer ou abuser de toute personne ou entité ; vous livrer au spam, au phishing ou à d'autres pratiques trompeuses ; ou tenter de contourner les mesures de sécurité ou les restrictions d’accès.\n\nLa Société se réserve le droit d'enquêter sur des violations présumées et peut suspendre ou résilier votre compte si vous violez cette politique."
       },
-      "intellectualProperty": {
-        "title": "8. Propriété intellectuelle et marque",
-        "body": "Toutes les marques, noms de produits, logos et contenus non open-source restent la propriété de leurs détenteurs respectifs. Aucune licence de marque n'est accordée sauf mention expresse."
+      "s08": {
+        "title": "8. Protection des données et confidentialité",
+        "body": "8.1 Politique de confidentialité\n\nVotre utilisation du Service est régie par notre Politique de confidentialité, qui décrit la manière dont nous collectons, utilisons et protégeons vos données. Veuillez lire attentivement la politique de confidentialité.\n\n8.2 RGPD et traitement des données\n\nDans la mesure où vous êtes un responsable du traitement des données en vertu du Règlement général sur la protection des données (RGPD) ou de lois similaires sur la protection des données, la Société agit en tant que sous-traitant. Un accord de traitement des données (« DPA ») est disponible sur demande et régira le traitement des données personnelles. Le DPA intègre des clauses contractuelles standard pour les transferts internationaux de données, comme l'exige la loi applicable.\n\n8.3 Sécurité des données\n\nLa Société met en œuvre des mesures de sécurité conformes aux normes de l'industrie pour protéger vos données. Cependant, aucun système de sécurité n’est totalement sécurisé. La Société ne garantit pas la sécurité de vos données et n'est pas responsable des accès non autorisés résultant de circonstances indépendantes de notre contrôle raisonnable."
       },
-      "warranty": {
-        "title": "9. Exclusion de garantie",
-        "body": "Le Service est fourni \"en l'état\" et \"selon disponibilité\", dans la limite maximale autorisée par la loi, sans garantie de fonctionnement ininterrompu ni d'adéquation à un objectif commercial particulier."
+      "s09": {
+        "title": "9. Disponibilité du service et modifications",
+        "body": "9.1 Disponibilité\n\nLa Société ne garantit pas un accès ininterrompu ou sans erreur au Service. Le Service peut être indisponible en raison de maintenance, de mises à jour ou de circonstances indépendantes de notre volonté. La Société déploiera des efforts commercialement raisonnables pour minimiser les temps d'arrêt et fournira un préavis de maintenance programmée lorsque cela est possible.\n\n9.2 Modifications des services\n\nLa Société peut modifier, suspendre ou interrompre toute fonctionnalité du Service à tout moment. Les modifications matérielles vous seront communiquées par e-mail ou via le Service. Votre utilisation continue du Service après avis de modification constitue l’acceptation de la modification.\n\n9.3 Aucun accord de niveau de service\n\nSauf indication expresse dans un accord écrit distinct, la Société ne garantit aucun niveau spécifique de disponibilité, de performance ou de disponibilité. Le Service est fourni « selon la disponibilité »."
       },
-      "liability": {
-        "title": "10. Limitation de responsabilité",
-        "body": "Dans la limite maximale autorisée par la loi, GetSafe 360 ne pourra être tenu responsable des dommages indirects ou consécutifs. La responsabilité globale est limitée aux montants payés pour la période d'accès concernée."
+      "s10": {
+        "title": "10. Services d'optimisation de sites Web",
+        "body": "Lorsque vous utilisez le Service pour optimiser votre site Web, la Société peut modifier, ajouter, supprimer ou mettre à jour des fichiers sur votre site Web dans le cadre du processus d'optimisation. La Société fera des efforts raisonnables pour minimiser les temps d'arrêt et garantir que votre site Web continue de fonctionner normalement. Vous êtes responsable de la maintenance des sauvegardes de votre site Web. La Société n'est pas responsable de la perte de données ou du dysfonctionnement du site Web résultant du processus d'optimisation, sauf en cas de négligence grave ou de faute intentionnelle de la Société."
       },
-      "law": {
-        "title": "11. Droit applicable et règlement des litiges",
-        "body": "Ces Conditions sont régies par le droit irlandais applicable. Nous ne sommes ni obligés ni disposés à participer à une procédure d'arbitrage de consommation devant une commission de médiation des consommateurs."
+      "s11": {
+        "title": "11. Garanties et clauses de non-responsabilité",
+        "body": "11.1 Garantie limitée\n\nLa Société garantit que le Service sera substantiellement conforme à la documentation fournie. Cette garantie ne s'applique pas aux fonctionnalités bêta, qui sont fournies « telles quelles ».\n\n11.2 Exonération d'autres garanties\n\nSAUF INDICATION EXPRESSE DE LA SECTION 11.1, LE SERVICE EST FOURNI « TEL QUEL » ET « SELON LA DISPONIBILITÉ » SANS GARANTIE D'AUCUNE SORTE, EXPRESSE, IMPLICITE OU LÉGALE. LA SOCIÉTÉ DÉCLINE TOUTES LES GARANTIES IMPLICITES, Y COMPRIS LES GARANTIES DE QUALITÉ MARCHANDE, D'ADAPTATION À UN USAGE PARTICULIER, DE TITRE ET DE NON-VIOLATION. LA SOCIÉTÉ NE GARANTIT PAS QUE LE SERVICE RÉPONDRA À VOS BESOINS, SERA ININTERROMPU, OPPORTUN, SÉCURISÉ OU EXEMPT D'ERREURS, OU EST EXEMPT DE VIRUS OU DE COMPOSANTS NUISIBLES.\n\n11.3 Avis de non-responsabilité sur les sorties IA\n\nLa Société ne garantit pas l'exactitude, l'exhaustivité ou l'adéquation des résultats générés par l'IA. Vous êtes seul responsable de l’examen, du test et de la validation de toutes les sorties avant le déploiement. Vous ne devez pas vous fier aux résultats comme substitut aux conseils professionnels, notamment juridiques, financiers, médicaux ou techniques. La Société n'est pas responsable des erreurs, omissions ou inexactitudes dans les résultats."
       },
-      "changes": {
-        "title": "12. Modifications des présentes conditions",
-        "body": "Nous pouvons mettre à jour ces Conditions de temps à autre. La poursuite de l'utilisation du Service après l'entrée en vigueur des modifications vaut acceptation des Conditions révisées."
+      "s12": {
+        "title": "12. Limitation de responsabilité",
+        "body": "12.1 Exclusion des dommages\n\nDANS TOUTE LA MESURE PERMISE PAR LA LOI, LA SOCIÉTÉ NE POURRA EN AUCUN CAS ÊTRE RESPONSABLE DE TOUT DOMMAGE INDIRECT, ACCESSOIRE, SPÉCIAL, CONSÉCUTIF, PUNITIF OU EXEMPLAIRE, Y COMPRIS LES DOMMAGES POUR PERTE DE PROFITS, DE REVENUS, DE DONNÉES OU D'INTERRUPTION D'ACTIVITÉ, MÊME SI LA SOCIÉTÉ A ÉTÉ AVISÉE DE LA POSSIBILITÉ DE TELS DOMMAGES DOMMAGES.\n\n12.2 Plafond de responsabilité\n\nLA RESPONSABILITÉ TOTALE DE LA SOCIÉTÉ ENVERS VOUS POUR TOUTE RÉCLAMATION DÉCOULANT DE OU LIÉE À CES CONDITIONS OU AU SERVICE NE DOIT PAS DÉPASSER LE PLUS ÉLEVÉ DES FRAIS PAYÉS PAR VOUS À LA SOCIÉTÉ DANS LES 12 MOIS PRÉCÉDANT LA RÉCLAMATION OU (B) 100 $. CE PLAFOND S'APPLIQUE À TOUTES LES RÉCLAMATIONS, QUELLE QUE SOIT LA THÉORIE JURIDIQUE (CONTRAT, DÉLIT, NÉGLIGENCE, RESPONSABILITÉ STRICTE, ETC.).\n\n12.3 Exceptions\n\nLes limitations de responsabilité énoncées dans le présent article 12 ne s'appliquent pas : (i) aux obligations d'indemnisation de l'une ou l'autre des parties ; (ii) la violation par l'une ou l'autre des parties de ses obligations de confidentialité ; (iii) la négligence grave ou la faute intentionnelle de la Société ; ou (iv) toute responsabilité qui ne peut être limitée en vertu de la loi applicable."
+      },
+      "s13": {
+        "title": "13. Indemnisation",
+        "body": "Vous acceptez de défendre, d'indemniser et de dégager de toute responsabilité la Société, ses dirigeants, administrateurs, employés et agents contre toute réclamation, dommage, perte, responsabilité, coût et dépense (y compris les honoraires d'avocat raisonnables) découlant de ou liés à : (i) votre utilisation du Service ; (ii) votre violation des présentes Conditions ; (iii) votre violation de toute loi ou réglementation applicable ; ou (iv) votre violation de tout droit de propriété intellectuelle, de confidentialité ou d'autres droits de tiers. Cette obligation s'applique indépendamment du fait que la Société ait ou non eu connaissance de la violation."
+      },
+      "s14": {
+        "title": "14. Résiliation",
+        "body": "14.1 Résiliation par vous\n\nVous pouvez résilier votre abonnement à tout moment en l'annulant via le tableau de bord de votre compte ou en contactant le support. La résiliation prend effet à la fin de votre période de facturation en cours.\n\n14.2 Résiliation par la Société\n\nLa Société peut suspendre ou résilier votre accès au Service immédiatement et sans préavis si : (i) vous violez les présentes Conditions ; (ii) vous vous engagez dans une activité illégale ; (iii) vous violez la Politique d'utilisation acceptable ; ou (iv) la Société est tenue de le faire par la loi. La Société peut également résilier votre compte pour des raisons de commodité sur préavis écrit de 30 jours.\n\n14.3 Effet de la résiliation\n\nEn cas de résiliation, votre droit d'accès au Service cesse immédiatement. La Société ne sera pas responsable de toute perte de données ou de fonctionnalités résultant de la résiliation. Les sections qui, de par leur nature, survivent à la résiliation (y compris les droits de propriété intellectuelle, la limitation de responsabilité, l'indemnisation et la loi applicable) resteront en vigueur.\n\n14.4 Conservation des données\n\nEn cas de résiliation, la Société conservera vos données pendant 30 jours pour permettre l'exportation ou la récupération des données. Après 30 jours, la Société pourra supprimer vos données. Vous êtes responsable de la maintenance des sauvegardes de vos données."
+      },
+      "s15": {
+        "title": "15. Confidentialité",
+        "body": "Chaque partie s'engage à maintenir la confidentialité des informations confidentielles de l'autre partie et à utiliser ces informations uniquement dans le but de remplir ses obligations en vertu des présentes Conditions. Les informations confidentielles n'incluent pas les informations accessibles au public, développées de manière indépendante ou reçues d'un tiers sans obligations de confidentialité. Chaque partie peut divulguer des informations confidentielles si la loi ou une ordonnance du tribunal l'exige, à condition que la partie divulgatrice fournisse un préavis rapide pour permettre à l'autre partie de demander des mesures de protection."
+      },
+      "s16": {
+        "title": "16. Force majeure",
+        "body": "La Société ne sera pas responsable de tout manquement à ses obligations en vertu des présentes Conditions résultant de causes échappant à son contrôle raisonnable, notamment les catastrophes naturelles, les catastrophes naturelles, la guerre, le terrorisme, les grèves, l'action gouvernementale ou la défaillance des télécommunications ou des services publics. La Société déploiera des efforts raisonnables pour reprendre les performances dès que possible."
+      },
+      "s17": {
+        "title": "17. Modifications de ces conditions",
+        "body": "La Société peut modifier les présentes Conditions à tout moment. Les modifications importantes vous seront communiquées par e-mail ou via le Service au moins 30 jours avant l'entrée en vigueur des modifications. Votre utilisation continue du Service après avis de modifications constitue l’acceptation des Conditions modifiées. Si vous n'acceptez pas les Conditions modifiées, vous devez cesser d'utiliser le Service."
+      },
+      "s18": {
+        "title": "18. Résolution des litiges et arbitrage",
+        "body": "18.1 Résolution informelle\n\nAvant d'engager une procédure formelle, vous et la Société acceptez de tenter de résoudre tout différend par le biais de négociations de bonne foi. Chaque partie peut initier ce processus en envoyant un avis écrit à l'autre partie décrivant le différend et proposant une résolution.\n\n18.2 Arbitrage\n\nSi le différend n'est pas résolu dans les 30 jours suivant un avis écrit, vous et la Société acceptez de soumettre le différend à un arbitrage exécutoire administré par un arbitre ou une organisation d'arbitrage mutuellement convenu. L'arbitrage se déroulera en anglais selon les règles de la Chambre de commerce internationale (CCI). Chaque partie supportera ses propres frais et les parties partageront à parts égales les honoraires de l'arbitre. L'arbitrage se déroulera de manière confidentielle et la sentence sera définitive et exécutoire.\n\n18.3 Renonciation au recours collectif\n\nVous et la Société convenez que tout arbitrage ou procédure judiciaire sera mené sur une base individuelle et non comme un recours collectif, une action collective ou une action représentative. Vous renoncez au droit de participer à tout recours collectif contre la Société.\n\n18.4 Désinscription\n\nVous pouvez vous retirer de l'arbitrage en envoyant un avis écrit à la Société dans les 30 jours suivant la première acceptation des présentes Conditions. L'avis doit inclure votre nom, votre adresse, votre adresse e-mail et une déclaration claire indiquant que vous vous retirez de la convention d'arbitrage.\n\n18.5 Exception\n\nNonobstant ce qui précède, chaque partie peut demander une injonction au tribunal pour éviter un préjudice irréparable ou pour faire respecter ses droits de propriété intellectuelle."
+      },
+      "s19": {
+        "title": "19. Loi applicable",
+        "body": "Les présentes Conditions sont régies et interprétées conformément aux lois irlandaises, sans égard à ses dispositions en matière de conflits de lois. Si l'arbitrage n'est pas poursuivi, vous acceptez de vous soumettre à la juridiction et au lieu exclusifs des tribunaux situés à Dublin, en Irlande."
+      },
+      "s20": {
+        "title": "20. Avis",
+        "body": "Tous les avis requis en vertu des présentes Conditions peuvent être envoyés par e-mail à l'adresse e-mail associée à votre compte ou à la Société à legal@getsafe360.ai. Les avis envoyés par courrier électronique prennent effet dès leur envoi. Vous êtes responsable de maintenir les informations de contact à jour."
+      },
+      "s21": {
+        "title": "21. Intégralité de l'accord",
+        "body": "Ces Conditions, ainsi que la Politique de confidentialité et tout autre accord que vous concluez avec la Société, constituent l'intégralité de l'accord entre vous et la Société concernant le Service. Si une disposition des présentes Conditions s’avère invalide ou inapplicable, les dispositions restantes resteront pleinement en vigueur. Le fait que la Société ne fasse pas valoir un droit ou une disposition ne constitue pas une renonciation à ce droit ou à cette disposition."
+      },
+      "s22": {
+        "title": "22. Divisibilité",
+        "body": "Si une disposition des présentes Conditions est jugée invalide, illégale ou inapplicable par un tribunal compétent, cette disposition sera modifiée dans la mesure minimale nécessaire pour la rendre valide et exécutoire, ou si une telle modification n'est pas possible, la disposition sera supprimée. Les dispositions restantes resteront pleinement en vigueur."
+      },
+      "s23": {
+        "title": "23. Renonciation",
+        "body": "Aucune renonciation à une disposition des présentes Conditions n’est effective sauf si elle est écrite et signée par la Société. Le fait que la Société ne fasse pas valoir un droit ou une disposition ne constitue pas une renonciation à ce droit ou à cette disposition et n'empêche pas la Société de faire valoir ce droit ou cette disposition à l'avenir."
+      },
+      "s24": {
+        "title": "24. Affectation",
+        "body": "La Société peut céder ces Conditions ou l'un de ses droits ou obligations en vertu des présentes Conditions à tout successeur ou affilié sans préavis ni votre consentement. Vous ne pouvez pas céder ces Conditions ou l'un de vos droits ou obligations sans le consentement écrit préalable de la Société."
+      },
+      "s25": {
+        "title": "25. Limitation des réclamations",
+        "body": "Toute réclamation découlant de ou liée aux présentes Conditions ou au Service doit être intentée dans un délai d'un an après la survenance de la cause d'action. Les réclamations introduites après ce délai sont prescrites."
+      },
+      "s26": {
+        "title": "26. Coordonnées",
+        "body": "Pour toute question concernant ces Conditions ou pour signaler des violations, veuillez accéder à notre page de contact (/contact)."
       }
     },
     "contact": {
       "title": "Contact",
-      "before": "Pour toute question juridique, de licence ou de compte, veuillez utiliser notre",
+      "before": "Pour toute question sur ces conditions ou pour signaler des violations, veuillez visiter notre",
       "link": "page de contact",
       "after": "."
     }

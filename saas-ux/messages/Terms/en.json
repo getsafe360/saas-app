@@ -2,65 +2,121 @@
   "Terms": {
     "meta": {
       "title": "Terms of Service | GetSafe 360",
-      "description": "Read the GetSafe 360 Terms of Service for platform access, licensing conditions, acceptable use, billing, and legal terms."
+      "description": "Read the GetSafe 360 Terms of Service for platform access, licensing terms, payment conditions, and legal obligations."
     },
     "title": "Terms of Service",
-    "effectiveDateLabel": "Effective Date:",
-    "effectiveDate": "2026-01-15",
-    "intro": "Please read these Terms of Service carefully before using getsafe360.ai. These terms govern access to our platform, including purchase and use of our software and services.",
+    "effectiveDateLabel": "Last Updated:",
+    "effectiveDate": "February 2026",
+    "intro": "Please review these Terms of Service carefully before using getsafe360.ai.",
     "sections": {
-      "acceptance": {
+      "s01": {
         "title": "1. Acceptance of Terms",
-        "body": "By accessing or using the Service, or by purchasing software access from GetSafe 360, you agree to these Terms, our EULA, and our Privacy Policy. If you do not agree, you must not use the Service."
+        "body": "These Terms of Service (\"Terms\") govern your access to and use of the GetSafe360.ai website, platform, and services (collectively, the \"Service\") operated by GetSafe 360 AI Limited, a company registered in Ireland under company number 804647 with registered office at 77 Camden Street Lower, Dublin D02 XE80, Ireland (\"Company,\" \"we,\" \"us,\" or \"our\").\n\nBy accessing or using the Service, you agree to be bound by these Terms. If you are using the Service on behalf of a company, organization, or other legal entity, you represent and warrant that you have the authority to bind that entity to these Terms. If you do not have such authority or do not agree to these Terms, you may not use the Service.\n\nYou represent that you are at least 18 years of age or the age of legal majority in your jurisdiction, whichever is greater. If you do not meet this requirement, you may not use the Service."
       },
-      "license": {
-        "title": "2. Access Contract and GPL Software",
-        "body": "Some components may be licensed under GPLv2. Your GPL rights remain intact after lawful receipt of software. However, access to distributed builds, updates, and hosted tooling is subject to a separate commercial access agreement."
+      "s02": {
+        "title": "2. Description of Service",
+        "body": "GetSafe360.ai provides an AI-powered website optimization platform that assists with search engine optimization (SEO), website performance, security hardening, accessibility compliance, and automated bug fixing for WordPress and WooCommerce websites (the \"Service\"). The Service includes access to our web platform, application programming interfaces (APIs), documentation, and related support services.\n\n2.1 Beta Features\n\nThe Company may offer certain features, products, or functionality designated as \"beta,\" \"preview,\" \"experimental,\" \"pilot,\" or similar designations (\"Beta Features\"). Beta Features are provided on an \"as-is\" basis without warranties, service level agreements, or dedicated support. The Company may modify, discontinue, or remove Beta Features at any time without liability. Your use of Beta Features does not entitle you to any service credits or refunds."
       },
-      "eligibility": {
-        "title": "3. Eligibility and Intended Use",
-        "body": "You represent that you are authorized to act for your business and that use is limited to websites your organization owns or directly operates, unless otherwise agreed in writing."
+      "s03": {
+        "title": "3. Eligibility and Account Responsibility",
+        "body": "You must be a business customer (B2B) to use the Service. The Service is not intended for consumer use. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized access or security breach. You are responsible for all data transmitted through your account, regardless of whether you authorized such transmission."
       },
-      "restrictedUse": {
-        "title": "4. Restricted Commercial Use",
-        "body": "Hosting providers, agencies, and managed service providers may not use access-gated software for unrelated third-party deployments without an enterprise agreement."
+      "s04": {
+        "title": "4. License Grant",
+        "body": "Subject to your compliance with these Terms, the Company grants you a non-exclusive, non-transferable, limited license to access and use the Service solely for your internal business purposes. This license does not include the right to sublicense, resell, or transfer the Service to third parties. You may not reverse engineer, decompile, or attempt to derive the source code of the Service."
       },
-      "orders": {
-        "title": "5. Orders, Payments, and Access",
-        "body": "Purchases form part of your access contract. We may reject, cancel, or revoke transactions where misuse, fraud, or policy circumvention is reasonably suspected."
+      "s05": {
+        "title": "5. Intellectual Property Rights",
+        "body": "5.1 Company IP\n\nThe Company retains all right, title, and interest in the Service, including all software, documentation, designs, and intellectual property. You acquire no ownership rights in the Service. Any feedback, suggestions, or improvements you provide to the Company may be used by the Company without obligation or compensation to you.\n\n5.2 Customer Content\n\nYou retain ownership of any content you provide to the Service (\"Customer Content\"), including website files, data, and configurations. You grant the Company a worldwide, royalty-free license to use, reproduce, and process your Customer Content solely to provide the Service and comply with applicable law. The Company will not use your Customer Content for any other purpose, including training AI models, without your explicit written consent.\n\n5.3 AI-Generated Output\n\nThe Service may generate output, recommendations, code, or content based on your inputs (\"Output\"). You own the Output generated by the Service and may use it for any lawful purpose. However, you acknowledge that Output may not be unique, may contain errors, and should be reviewed for accuracy and appropriateness before deployment. The Company does not warrant the accuracy, completeness, or suitability of Output for any particular purpose."
       },
-      "enforcement": {
-        "title": "6. Monitoring and Enforcement",
-        "body": "We may audit usage to verify compliance, suspend or revoke licenses and support for misuse, and pursue legal remedies for unauthorized commercial deployment."
+      "s06": {
+        "title": "6. Fees and Payment",
+        "body": "6.1 Subscription Plans\n\nThe Service is available through subscription plans with varying features and pricing. Pricing and plan details are available on our website. The Company may modify pricing, features, or plan availability upon 30 days' notice. Price changes will take effect at the start of your next billing period.\n\n6.2 Payment Terms\n\nAll fees are exclusive of applicable taxes, which you are responsible for paying. The Company uses Stripe as its payment processor. You authorize the Company to charge your payment method for all fees associated with your selected plan. Payments are non-refundable except as expressly provided in these Terms or as required by applicable law.\n\n6.3 Billing and Renewal\n\nYour subscription will automatically renew at the end of each billing period unless you cancel before the renewal date. You can cancel your subscription at any time through your account dashboard. Cancellation takes effect at the end of your current billing period. You will not receive a refund for the unused portion of your subscription.\n\n6.4 Failed Payments\n\nIf your payment method fails, the Company will attempt to retry payment using the payment information on file. If payment ultimately fails, the Company may suspend your access to the Service until payment is received. You are responsible for any fees, including late fees or collection costs, resulting from failed payments.\n\n6.5 Token Credits\n\nYou may prepay for usage through token credits. Token credits expire one year from the date of issuance and do not roll over to subsequent periods. Unused credits are forfeited upon expiration. If your account is terminated, any remaining credits will be forfeited."
       },
-      "termination": {
-        "title": "7. Suspension and Termination",
-        "body": "We may suspend or terminate access for violations of these Terms. Termination does not revoke GPL rights for software already lawfully received, but it ends access to updates, support, and new releases."
+      "s07": {
+        "title": "7. Acceptable Use Policy",
+        "body": "You agree not to use the Service for any unlawful purpose or in any way that violates these Terms. Specifically, you agree not to:\n\nUse the Service to create, generate, or distribute malware, viruses, or other harmful code; engage in unauthorized access to computer systems or networks; violate any applicable laws or regulations, including those governing data protection, intellectual property, or export controls; infringe on the rights of third parties, including intellectual property, privacy, or publicity rights; harass, threaten, defame, or abuse any person or entity; engage in spam, phishing, or other deceptive practices; or attempt to circumvent security measures or access restrictions.\n\nThe Company reserves the right to investigate suspected violations and may suspend or terminate your account if you violate this policy."
       },
-      "intellectualProperty": {
-        "title": "8. Intellectual Property and Branding",
-        "body": "All trademarks, product names, logos, and non-open-source materials remain the property of their respective owners. No trademark license is granted unless explicitly stated."
+      "s08": {
+        "title": "8. Data Protection and Privacy",
+        "body": "8.1 Privacy Policy\n\nYour use of the Service is governed by our Privacy Policy, which describes how we collect, use, and protect your data. Please review the Privacy Policy carefully.\n\n8.2 GDPR and Data Processing\n\nTo the extent you are a data controller under the General Data Protection Regulation (GDPR) or similar data protection laws, the Company acts as a data processor. A Data Processing Agreement (\"DPA\") is available upon request and will govern the processing of personal data. The DPA incorporates standard contractual clauses for international data transfers as required by applicable law.\n\n8.3 Data Security\n\nThe Company implements industry-standard security measures to protect your data. However, no security system is completely secure. The Company does not guarantee the security of your data and is not liable for unauthorized access resulting from circumstances beyond our reasonable control."
       },
-      "warranty": {
-        "title": "9. Disclaimer of Warranties",
-        "body": "The Service is provided on an “as is” and “as available” basis to the maximum extent permitted by law, without warranties of uninterrupted operation or fitness for a specific business purpose."
+      "s09": {
+        "title": "9. Service Availability and Modifications",
+        "body": "9.1 Availability\n\nThe Company does not guarantee uninterrupted or error-free access to the Service. The Service may be unavailable due to maintenance, updates, or circumstances beyond our control. The Company will use commercially reasonable efforts to minimize downtime and will provide advance notice of scheduled maintenance when practicable.\n\n9.2 Service Modifications\n\nThe Company may modify, suspend, or discontinue any feature of the Service at any time. Material modifications will be communicated to you via email or through the Service. Your continued use of the Service following notice of modification constitutes acceptance of the modification.\n\n9.3 No Service Level Agreement\n\nExcept as expressly stated in a separate written agreement, the Company does not guarantee any specific level of uptime, performance, or availability. The Service is provided on an \"as available\" basis."
       },
-      "liability": {
-        "title": "10. Limitation of Liability",
-        "body": "To the maximum extent permitted by law, GetSafe 360 is not liable for indirect or consequential damages. Aggregate liability is limited to amounts paid for the relevant access period."
+      "s10": {
+        "title": "10. Website Optimization Services",
+        "body": "When you use the Service to optimize your website, the Company may modify, add, remove, or update files on your website as part of the optimization process. The Company will make reasonable efforts to minimize downtime and ensure your website continues to function normally. You are responsible for maintaining backups of your website. The Company is not responsible for data loss or website malfunction resulting from the optimization process, except as caused by the Company's gross negligence or willful misconduct."
       },
-      "law": {
-        "title": "11. Governing Law and Dispute Resolution",
-        "body": "These Terms are governed by applicable Irish law. We are not obligated or willing to participate in consumer arbitration proceedings before a consumer arbitration board."
+      "s11": {
+        "title": "11. Warranties and Disclaimers",
+        "body": "11.1 Limited Warranty\n\nThe Company warrants that the Service will substantially conform to the documentation provided. This warranty does not apply to Beta Features, which are provided \"as-is.\"\n\n11.2 Disclaimer of Other Warranties\n\nEXCEPT AS EXPRESSLY STATED IN SECTION 11.1, THE SERVICE IS PROVIDED \"AS-IS\" AND \"AS AVAILABLE\" WITHOUT WARRANTIES OF ANY KIND, EXPRESS, IMPLIED, OR STATUTORY. THE COMPANY DISCLAIMS ALL IMPLIED WARRANTIES, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. THE COMPANY DOES NOT WARRANT THAT THE SERVICE WILL MEET YOUR NEEDS, BE UNINTERRUPTED, TIMELY, SECURE, OR ERROR-FREE, OR BE FREE FROM VIRUSES OR HARMFUL COMPONENTS.\n\n11.3 AI Output Disclaimer\n\nThe Company does not warrant the accuracy, completeness, or suitability of AI-generated output. You are solely responsible for reviewing, testing, and validating all output before deployment. You should not rely on output as a substitute for professional advice, including legal, financial, medical, or technical advice. The Company is not liable for any errors, omissions, or inaccuracies in output."
       },
-      "changes": {
-        "title": "12. Changes to These Terms",
-        "body": "We may update these Terms from time to time. Continued use of the Service after updates become effective constitutes acceptance of the revised Terms."
+      "s12": {
+        "title": "12. Limitation of Liability",
+        "body": "12.1 Exclusion of Damages\n\nTO THE FULLEST EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE COMPANY BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES, INCLUDING DAMAGES FOR LOSS OF PROFITS, REVENUE, DATA, OR BUSINESS INTERRUPTION, EVEN IF THE COMPANY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.\n\n12.2 Liability Cap\n\nTHE COMPANY'S TOTAL LIABILITY TO YOU FOR ANY CLAIM ARISING OUT OF OR RELATED TO THESE TERMS OR THE SERVICE SHALL NOT EXCEED THE GREATER OF (A) THE FEES PAID BY YOU TO THE COMPANY IN THE 12 MONTHS PRECEDING THE CLAIM, OR (B) $100. THIS CAP APPLIES TO ALL CLAIMS, REGARDLESS OF THE LEGAL THEORY (CONTRACT, TORT, NEGLIGENCE, STRICT LIABILITY, ETC.).\n\n12.3 Exceptions\n\nThe liability limitations in this Section 12 do not apply to: (i) either party's indemnification obligations; (ii) either party's breach of confidentiality obligations; (iii) the Company's gross negligence or willful misconduct; or (iv) any liability that cannot be limited under applicable law."
+      },
+      "s13": {
+        "title": "13. Indemnification",
+        "body": "You agree to defend, indemnify, and hold harmless the Company, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising from or related to: (i) your use of the Service; (ii) your violation of these Terms; (iii) your violation of any applicable law or regulation; or (iv) your infringement of any third-party intellectual property, privacy, or other rights. This obligation applies regardless of whether the Company had knowledge of the violation."
+      },
+      "s14": {
+        "title": "14. Termination",
+        "body": "14.1 Termination by You\n\nYou may terminate your subscription at any time by canceling through your account dashboard or by contacting support. Termination takes effect at the end of your current billing period.\n\n14.2 Termination by Company\n\nThe Company may suspend or terminate your access to the Service immediately and without notice if: (i) you violate these Terms; (ii) you engage in illegal activity; (iii) you violate the Acceptable Use Policy; or (iv) the Company is required to do so by law. The Company may also terminate your account for convenience upon 30 days' written notice.\n\n14.3 Effect of Termination\n\nUpon termination, your right to access the Service ceases immediately. The Company will not be liable for any loss of data or functionality resulting from termination. Sections that by their nature survive termination (including Intellectual Property Rights, Limitation of Liability, Indemnification, and Governing Law) will continue in effect.\n\n14.4 Data Retention\n\nUpon termination, the Company will retain your data for 30 days to allow for data export or recovery. After 30 days, the Company may delete your data. You are responsible for maintaining backups of your data."
+      },
+      "s15": {
+        "title": "15. Confidentiality",
+        "body": "Each party agrees to maintain the confidentiality of the other party's confidential information and to use such information solely for the purposes of performing its obligations under these Terms. Confidential information does not include information that is publicly available, independently developed, or received from a third party without confidentiality obligations. Either party may disclose confidential information if required by law or court order, provided that the disclosing party provides prompt notice to allow the other party to seek protective measures."
+      },
+      "s16": {
+        "title": "16. Force Majeure",
+        "body": "The Company will not be liable for any failure to perform its obligations under these Terms that results from causes beyond its reasonable control, including acts of God, natural disasters, war, terrorism, strikes, government action, or failure of telecommunications or utility services. The Company will use reasonable efforts to resume performance as soon as practicable."
+      },
+      "s17": {
+        "title": "17. Changes to These Terms",
+        "body": "The Company may modify these Terms at any time. Material changes will be communicated to you via email or through the Service at least 30 days before the changes take effect. Your continued use of the Service following notice of changes constitutes acceptance of the modified Terms. If you do not accept the modified Terms, you must discontinue use of the Service."
+      },
+      "s18": {
+        "title": "18. Dispute Resolution and Arbitration",
+        "body": "18.1 Informal Resolution\n\nBefore initiating formal proceedings, you and the Company agree to attempt to resolve any dispute through good-faith negotiation. Either party may initiate this process by sending written notice to the other party describing the dispute and proposing a resolution.\n\n18.2 Arbitration\n\nIf the dispute is not resolved within 30 days of written notice, you and the Company agree to submit the dispute to binding arbitration administered by a mutually agreed-upon arbitrator or arbitration organization. The arbitration will be conducted in English under the rules of the International Chamber of Commerce (ICC). Each party will bear its own costs, and the parties will share the arbitrator's fees equally. The arbitration will be conducted confidentially and the award will be final and binding.\n\n18.3 Class Action Waiver\n\nYou and the Company agree that any arbitration or court proceeding will be conducted on an individual basis and not as a class action, collective action, or representative action. You waive the right to participate in any class action against the Company.\n\n18.4 Opt-Out\n\nYou may opt out of arbitration by sending written notice to the Company within 30 days of first accepting these Terms. The notice must include your name, address, email, and a clear statement that you are opting out of the arbitration agreement.\n\n18.5 Exception\n\nNotwithstanding the above, either party may seek injunctive relief in court to prevent irreparable harm or to enforce intellectual property rights."
+      },
+      "s19": {
+        "title": "19. Governing Law",
+        "body": "These Terms are governed by and construed in accordance with the laws of Ireland, without regard to its conflict of law provisions. If arbitration is not pursued, you agree to submit to the exclusive jurisdiction and venue of the courts located in Dublin, Ireland."
+      },
+      "s20": {
+        "title": "20. Notices",
+        "body": "Any notices required under these Terms may be sent by email to the email address associated with your account or to the Company at legal@getsafe360.ai. Notices sent by email are effective when sent. You are responsible for maintaining current contact information."
+      },
+      "s21": {
+        "title": "21. Entire Agreement",
+        "body": "These Terms, together with the Privacy Policy and any other agreements you enter into with the Company, constitute the entire agreement between you and the Company regarding the Service. If any provision of these Terms is found to be invalid or unenforceable, the remaining provisions will continue in full force and effect. The Company's failure to enforce any right or provision does not constitute a waiver of that right or provision."
+      },
+      "s22": {
+        "title": "22. Severability",
+        "body": "If any provision of these Terms is held to be invalid, illegal, or unenforceable by a court of competent jurisdiction, that provision will be modified to the minimum extent necessary to make it valid and enforceable, or if such modification is not possible, the provision will be severed. The remaining provisions will continue in full force and effect."
+      },
+      "s23": {
+        "title": "23. Waiver",
+        "body": "No waiver of any provision of these Terms is effective unless in writing and signed by the Company. The Company's failure to enforce any right or provision does not constitute a waiver of that right or provision, and does not prevent the Company from enforcing that right or provision in the future."
+      },
+      "s24": {
+        "title": "24. Assignment",
+        "body": "The Company may assign these Terms or any of its rights or obligations under these Terms to any successor or affiliate without notice or your consent. You may not assign these Terms or any of your rights or obligations without the Company's prior written consent."
+      },
+      "s25": {
+        "title": "25. Limitation on Claims",
+        "body": "Any claim arising out of or related to these Terms or the Service must be brought within one year after the cause of action arises. Claims brought after this period are barred."
+      },
+      "s26": {
+        "title": "26. Contact Information",
+        "body": "For questions about these Terms or to report violations, please access our contact page (/contact)."
       }
     },
     "contact": {
       "title": "Contact",
-      "before": "For legal, licensing, or account questions, please use our",
+      "before": "For questions about these terms or to report violations, please visit our",
       "link": "contact page",
       "after": "."
     }

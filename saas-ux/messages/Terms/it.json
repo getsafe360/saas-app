@@ -1,67 +1,123 @@
 {
   "Terms": {
     "meta": {
-      "title": "Termini di Servizio | GetSafe 360",
-      "description": "Leggi i Termini di Servizio di GetSafe 360 su accesso alla piattaforma, condizioni di licenza, uso consentito, fatturazione e condizioni legali."
+      "title": "Termini di servizio | GetSafe 360",
+      "description": "Leggi i Termini di servizio GetSafe 360 ​​per l'accesso alla piattaforma, i termini di licenza, le condizioni di pagamento e gli obblighi legali."
     },
-    "title": "Termini di Servizio",
-    "effectiveDateLabel": "Data di entrata in vigore:",
-    "effectiveDate": "2026-01-15",
-    "intro": "Leggi attentamente questi Termini di Servizio prima di usare getsafe360.ai. Questi termini regolano l'accesso alla nostra piattaforma, inclusi acquisto e uso del nostro software e dei nostri servizi.",
+    "title": "Termini di servizio",
+    "effectiveDateLabel": "Ultimo aggiornamento:",
+    "effectiveDate": "Febbraio 2026",
+    "intro": "Si prega di leggere attentamente i presenti Termini di servizio prima di utilizzare getsafe360.ai.",
     "sections": {
-      "acceptance": {
-        "title": "1. Accettazione dei termini",
-        "body": "Accedendo o utilizzando il Servizio, oppure acquistando accesso al software di GetSafe 360, accetti questi Termini, il nostro EULA e la nostra Informativa sulla Privacy. Se non accetti, non devi usare il Servizio."
+      "s01": {
+        "title": "1. Accettazione dei Termini",
+        "body": "I presenti Termini di servizio (\"Termini\") regolano l'accesso e l'utilizzo del sito web, della piattaforma e dei servizi GetSafe360.ai (collettivamente, il \"Servizio\") gestiti da GetSafe 360 ​​AI Limited, una società registrata in Irlanda con il numero di società 804647 con sede legale a 77 Camden Street Lower, Dublino D02 XE80, Irlanda (\"Società\", \"noi\", \"ci\" o \"nostro\").\n\nAccedendo o utilizzando il Servizio, accetti di essere vincolato dai presenti Termini. Se utilizzi il Servizio per conto di una società, organizzazione o altra entità legale, dichiari e garantisci di avere l'autorità per vincolare tale entità ai presenti Termini. Se non disponi di tale autorità o non accetti i presenti Termini, non puoi utilizzare il Servizio.\n\nDichiari di avere almeno 18 anni o la maggiore età legale nella tua giurisdizione, a seconda di quale sia maggiore. Se non soddisfi questo requisito, non potrai utilizzare il Servizio."
       },
-      "license": {
-        "title": "2. Contratto di accesso e software GPL",
-        "body": "Alcuni componenti possono essere concessi in licenza GPLv2. I tuoi diritti GPL restano validi dopo la ricezione legittima del software. Tuttavia, l'accesso a build distribuite, aggiornamenti e strumenti ospitati è soggetto a un separato accordo commerciale di accesso."
+      "s02": {
+        "title": "2. Descrizione del Servizio",
+        "body": "GetSafe360.ai fornisce una piattaforma di ottimizzazione del sito Web basata sull'intelligenza artificiale che assiste con l'ottimizzazione dei motori di ricerca (SEO), le prestazioni del sito Web, il rafforzamento della sicurezza, la conformità all'accessibilità e la correzione automatica dei bug per i siti Web WordPress e WooCommerce (il \"Servizio\"). Il Servizio include l'accesso alla nostra piattaforma web, alle interfacce di programmazione delle applicazioni (API), alla documentazione e ai relativi servizi di supporto.\n\n2.1 Funzionalità beta\n\nLa Società può offrire determinate caratteristiche, prodotti o funzionalità designati come \"beta\", \"anteprima\", \"sperimentale\", \"pilota\" o designazioni simili (\"Funzionalità Beta\"). Le funzionalità beta vengono fornite \"così come sono\" senza garanzie, accordi sul livello di servizio o supporto dedicato. La Società può modificare, interrompere o rimuovere le Funzionalità Beta in qualsiasi momento senza alcuna responsabilità. L'utilizzo delle Funzionalità Beta non dà diritto ad alcun credito o rimborso di servizio."
       },
-      "eligibility": {
-        "title": "3. Idoneità e uso previsto",
-        "body": "Dichiari di essere autorizzato ad agire per conto della tua azienda e che l'uso è limitato a siti web posseduti o gestiti direttamente dalla tua organizzazione, salvo diverso accordo scritto."
+      "s03": {
+        "title": "3. Idoneità e responsabilità dell'account",
+        "body": "Per utilizzare il Servizio è necessario essere un cliente aziendale (B2B). Il Servizio non è destinato all'uso da parte dei consumatori. Sei responsabile del mantenimento della riservatezza delle credenziali del tuo account e di tutte le attività che si verificano sotto il tuo account. È necessario avvisarci immediatamente di qualsiasi accesso non autorizzato o violazione della sicurezza. Sei responsabile di tutti i dati trasmessi tramite il tuo account, indipendentemente dal fatto che tu abbia autorizzato tale trasmissione."
       },
-      "restrictedUse": {
-        "title": "4. Uso commerciale limitato",
-        "body": "Provider di hosting, agenzie e managed service provider non possono usare software ad accesso limitato per deployment di terze parti non correlate senza un accordo enterprise."
+      "s04": {
+        "title": "4. Concessione della licenza",
+        "body": "A condizione che tu rispetti i presenti Termini, la Società ti concede una licenza non esclusiva, non trasferibile e limitata per accedere e utilizzare il Servizio esclusivamente per scopi aziendali interni. Questa licenza non include il diritto di concedere in sublicenza, rivendere o trasferire il Servizio a terzi. Non è possibile decodificare, decompilare o tentare di ricavare il codice sorgente del Servizio."
       },
-      "orders": {
-        "title": "5. Ordini, pagamenti e accesso",
-        "body": "Gli acquisti fanno parte del tuo contratto di accesso. Possiamo rifiutare, annullare o revocare transazioni in presenza di ragionevole sospetto di uso improprio, frode o elusione delle policy."
+      "s05": {
+        "title": "5. Diritti di proprietà intellettuale",
+        "body": "5.1 Proprietà intellettuale aziendale\n\nLa Società conserva tutti i diritti, titoli e interessi nel Servizio, inclusi tutto il software, la documentazione, i progetti e la proprietà intellettuale. Non acquisisci alcun diritto di proprietà sul Servizio. Qualsiasi feedback, suggerimento o miglioramento fornito alla Società può essere utilizzato dalla Società senza obblighi o compensi nei tuoi confronti.\n\n5.2 Contenuto del cliente\n\nMantieni la proprietà di qualsiasi contenuto fornito al Servizio (\"Contenuto del cliente\"), inclusi file, dati e configurazioni del sito web. Concedi alla Società una licenza mondiale ed esente da royalty per utilizzare, riprodurre ed elaborare i Contenuti del cliente esclusivamente per fornire il Servizio e rispettare la legge applicabile. La Società non utilizzerà i Contenuti del cliente per nessun altro scopo, incluso l'addestramento di modelli di intelligenza artificiale, senza il tuo esplicito consenso scritto.\n\n5.3 Output generato dall'intelligenza artificiale\n\nIl Servizio può generare output, consigli, codice o contenuti in base ai tuoi input (\"Output\"). Possiedi l'Output generato dal Servizio e puoi utilizzarlo per qualsiasi scopo legittimo. Tuttavia, riconosci che l'output potrebbe non essere univoco, potrebbe contenere errori e dovrebbe essere esaminato per verificarne l'accuratezza e l'adeguatezza prima della distribuzione. La Società non garantisce l'accuratezza, la completezza o l'idoneità dell'Output per uno scopo particolare."
       },
-      "enforcement": {
-        "title": "6. Monitoraggio e applicazione",
-        "body": "Possiamo verificare l'uso per controllare la conformità, sospendere o revocare licenze e supporto in caso di uso improprio, e intraprendere azioni legali per deployment commerciali non autorizzati."
+      "s06": {
+        "title": "6. Commissioni e pagamenti",
+        "body": "6.1 Piani di abbonamento\n\nIl Servizio è disponibile tramite piani di abbonamento con caratteristiche e prezzi diversi. I prezzi e i dettagli del piano sono disponibili sul nostro sito web. La Società può modificare prezzi, caratteristiche o disponibilità del piano con un preavviso di 30 giorni. Le modifiche ai prezzi entreranno in vigore all'inizio del prossimo periodo di fatturazione.\n\n6.2 Termini di pagamento\n\nTutte le tariffe sono escluse le tasse applicabili, che sei tenuto a pagare. La Società utilizza Stripe come processore di pagamento. Autorizzi la Società ad addebitare sul tuo metodo di pagamento tutte le commissioni associate al piano selezionato. I pagamenti non sono rimborsabili, salvo quanto espressamente previsto nei presenti Termini o come richiesto dalla legge applicabile.\n\n6.3 Fatturazione e rinnovo\n\nIl tuo abbonamento si rinnoverà automaticamente alla fine di ogni periodo di fatturazione, a meno che non lo annulli prima della data di rinnovo. Puoi annullare il tuo abbonamento in qualsiasi momento tramite la dashboard del tuo account. La cancellazione ha effetto alla fine del periodo di fatturazione corrente. Non riceverai un rimborso per la parte non utilizzata del tuo abbonamento.\n\n6.4 Pagamenti non riusciti\n\nSe il tuo metodo di pagamento fallisce, la Società tenterà di ritentare il pagamento utilizzando le informazioni di pagamento archiviate. Se il pagamento alla fine non va a buon fine, la Società può sospendere l'accesso al Servizio fino al ricevimento del pagamento. Sei responsabile di eventuali commissioni, comprese penali per ritardo o costi di riscossione, derivanti da pagamenti non riusciti.\n\n6.5 Crediti simbolici\n\nPuoi pagare in anticipo per l'utilizzo tramite crediti token. I crediti token scadono un anno dalla data di emissione e non si trasferiscono ai periodi successivi. I crediti non utilizzati verranno persi alla scadenza. Se il tuo account viene chiuso, tutti i crediti rimanenti verranno persi."
       },
-      "termination": {
-        "title": "7. Sospensione e risoluzione",
-        "body": "Possiamo sospendere o terminare l'accesso in caso di violazione di questi Termini. La risoluzione non revoca i diritti GPL sul software già ricevuto legittimamente, ma interrompe l'accesso ad aggiornamenti, supporto e nuove versioni."
+      "s07": {
+        "title": "7. Politica di utilizzo accettabile",
+        "body": "Accetti di non utilizzare il Servizio per scopi illegali o in qualsiasi modo che violi i presenti Termini. Nello specifico, accetti di non:\n\nUtilizzare il Servizio per creare, generare o distribuire malware, virus o altro codice dannoso; impegnarsi in accessi non autorizzati a sistemi o reti di computer; violare qualsiasi legge o regolamento applicabile, compresi quelli che regolano la protezione dei dati, la proprietà intellettuale o i controlli sulle esportazioni; violare i diritti di terzi, inclusi i diritti di proprietà intellettuale, privacy o pubblicità; molestare, minacciare, diffamare o abusare di qualsiasi persona o entità; impegnarsi in spam, phishing o altre pratiche ingannevoli; o tentare di eludere le misure di sicurezza o le restrizioni di accesso.\n\nLa Società si riserva il diritto di indagare su sospette violazioni e può sospendere o chiudere il tuo account in caso di violazione di questa politica."
       },
-      "intellectualProperty": {
-        "title": "8. Proprietà intellettuale e marchi",
-        "body": "Tutti i marchi, nomi di prodotto, loghi e materiali non open-source restano di proprietà dei rispettivi titolari. Nessuna licenza d'uso dei marchi è concessa salvo esplicita indicazione."
+      "s08": {
+        "title": "8. Protezione dei dati e privacy",
+        "body": "8.1 Informativa sulla privacy\n\nIl tuo utilizzo del Servizio è regolato dalla nostra Informativa sulla privacy, che descrive come raccogliamo, utilizziamo e proteggiamo i tuoi dati. Si prega di leggere attentamente l'Informativa sulla privacy.\n\n8.2 GDPR e trattamento dei dati\n\nNella misura in cui sei titolare del trattamento dei dati ai sensi del Regolamento generale sulla protezione dei dati (GDPR) o di leggi simili sulla protezione dei dati, la Società agisce come responsabile del trattamento dei dati. Un accordo sul trattamento dei dati (\"DPA\") è disponibile su richiesta e regolerà il trattamento dei dati personali. Il DPA incorpora clausole contrattuali standard per i trasferimenti internazionali di dati come richiesto dalla legge applicabile.\n\n8.3 Sicurezza dei dati\n\nLa Società implementa misure di sicurezza standard del settore per proteggere i tuoi dati. Tuttavia, nessun sistema di sicurezza è completamente sicuro. La Società non garantisce la sicurezza dei tuoi dati e non è responsabile per l'accesso non autorizzato derivante da circostanze al di fuori del nostro ragionevole controllo."
       },
-      "warranty": {
-        "title": "9. Esclusione di garanzie",
-        "body": "Il Servizio è fornito \"così com'è\" e \"come disponibile\", nella misura massima consentita dalla legge, senza garanzie di funzionamento ininterrotto o idoneità a uno specifico scopo aziendale."
+      "s09": {
+        "title": "9. Disponibilità e modifiche del servizio",
+        "body": "9.1 Disponibilità\n\nLa Società non garantisce l'accesso ininterrotto o privo di errori al Servizio. Il Servizio potrebbe non essere disponibile a causa di manutenzione, aggiornamenti o circostanze al di fuori del nostro controllo. La Società compirà sforzi commercialmente ragionevoli per ridurre al minimo i tempi di inattività e fornirà un preavviso di manutenzione programmata quando possibile.\n\n9.2 Modifiche al servizio\n\nLa Società può modificare, sospendere o interrompere qualsiasi funzionalità del Servizio in qualsiasi momento. Le modifiche materiali ti verranno comunicate via email o tramite il Servizio. L'uso continuato del Servizio dopo l'avviso di modifica costituisce accettazione della modifica.\n\n9.3 Nessun accordo sul livello di servizio\n\nSalvo quanto espressamente indicato in un accordo scritto separato, la Società non garantisce alcun livello specifico di uptime, prestazioni o disponibilità. Il Servizio viene fornito \"come disponibile\"."
       },
-      "liability": {
-        "title": "10. Limitazione di responsabilità",
-        "body": "Nella misura massima consentita dalla legge, GetSafe 360 non è responsabile per danni indiretti o consequenziali. La responsabilità complessiva è limitata agli importi pagati per il relativo periodo di accesso."
+      "s10": {
+        "title": "10. Servizi di ottimizzazione del sito web",
+        "body": "Quando utilizzi il Servizio per ottimizzare il tuo sito web, la Società può modificare, aggiungere, rimuovere o aggiornare file sul tuo sito web come parte del processo di ottimizzazione. La Società farà ogni ragionevole sforzo per ridurre al minimo i tempi di inattività e garantire che il tuo sito web continui a funzionare normalmente. Sei responsabile del mantenimento dei backup del tuo sito web. La Società non è responsabile per la perdita di dati o il malfunzionamento del sito web derivanti dal processo di ottimizzazione, ad eccezione di quelli causati da negligenza grave o dolo della Società."
       },
-      "law": {
-        "title": "11. Legge applicabile e risoluzione delle controversie",
-        "body": "Questi Termini sono regolati dalla legge irlandese applicabile. Non siamo obbligati né disponibili a partecipare a procedure di arbitrato dei consumatori davanti a un organismo di conciliazione dei consumatori."
+      "s11": {
+        "title": "11. Garanzie e dichiarazioni di non responsabilità",
+        "body": "11.1 Garanzia limitata\n\nLa Società garantisce che il Servizio sarà sostanzialmente conforme alla documentazione fornita. La presente garanzia non si applica alle Funzionalità Beta, che vengono fornite \"così come sono\".\n\n11.2 Esclusione di altre garanzie\n\nSALVO QUANTO ESPRESSAMENTE DICHIARATO NELLA SEZIONE 11.1, IL SERVIZIO VIENE FORNITO \"COSÌ COM'È\" E \"COME DISPONIBILE\" SENZA GARANZIE DI ALCUN TIPO, ESPLICITE, IMPLICITE O LEGALI. L'AZIENDA NEGA TUTTE LE GARANZIE IMPLICITE, INCLUSE LE GARANZIE DI COMMERCIABILITÀ, IDONEITÀ PER UNO SCOPO PARTICOLARE, TITOLO E NON VIOLAZIONE. L'AZIENDA NON GARANTISCE CHE IL SERVIZIO SODDISFERÀ LE VOSTRE ESIGENZE, SIA ININTERROTTO, TEMPESTIVO, SICURO O PRIVO DI ERRORI O SIA ESENTE DA VIRUS O COMPONENTI DANNOSI.\n\n11.3 Dichiarazione di non responsabilità sull'output AI\n\nLa Società non garantisce l'accuratezza, la completezza o l'idoneità dei risultati generati dall'intelligenza artificiale. Sei l'unico responsabile della revisione, del test e della convalida di tutto l'output prima della distribuzione. Non dovresti fare affidamento sui risultati come sostituti di una consulenza professionale, inclusa la consulenza legale, finanziaria, medica o tecnica. La Società non è responsabile per eventuali errori, omissioni o imprecisioni nell'output."
       },
-      "changes": {
-        "title": "12. Modifiche ai presenti termini",
-        "body": "Possiamo aggiornare questi Termini periodicamente. L'uso continuato del Servizio dopo l'entrata in vigore delle modifiche costituisce accettazione dei Termini aggiornati."
+      "s12": {
+        "title": "12. Limitazione di responsabilità",
+        "body": "12.1 Esclusione Danni\n\nNELLA MISURA MASSIMA CONSENTITA DALLA LEGGE, IN NESSUN CASO LA SOCIETÀ SARÀ RESPONSABILE PER DANNI INDIRETTI, ACCIDENTALI, SPECIALI, CONSEQUENZIALI, PUNITIVI O ESEMPLARI, INCLUSI DANNI PER PERDITA DI PROFITTI, RICAVI, DATI O INTERRUZIONE DI ATTIVITÀ, ANCHE SE LA SOCIETÀ È STATA AVVISATA DELLA POSSIBILITÀ DI TALI DANNI.\n\n12.2 Limite di responsabilità\n\nLA RESPONSABILITÀ TOTALE DELL'AZIENDA VERSO L'UTENTE PER QUALSIASI RECLAMO DERIVANTE DA O CORRELATO A QUESTI TERMINI O AL SERVIZIO NON SUPERERÀ IL MAGGIORE TRA (A) LE COMMISSIONI PAGATE ALL'AZIENDA NEI 12 MESI PRECEDENTI IL RECLAMO O (B) $ 100. QUESTO TAPPO SI APPLICA A TUTTI I RECLAMI, INDIPENDENTEMENTE DALLA TEORIA GIURIDICA (CONTRATTO, ILLECITO, NEGLIGENZA, RESPONSABILITÀ OGGETTIVA, ECC.).\n\n12.3 Eccezioni\n\nLe limitazioni di responsabilità di cui alla presente Sezione 12 non si applicano a: (i) obblighi di indennizzo di ciascuna delle parti; (ii) violazione degli obblighi di riservatezza da parte di una delle parti; (iii) colpa grave o dolo della Società; o (iv) qualsiasi responsabilità che non può essere limitata dalla legge applicabile."
+      },
+      "s13": {
+        "title": "13. Indennizzo",
+        "body": "Accetti di difendere, indennizzare e tenere indenne la Società, i suoi funzionari, direttori, dipendenti e agenti da qualsiasi reclamo, danno, perdita, responsabilità, costo e spesa (comprese ragionevoli spese legali) derivanti da o relativi a: (i) il tuo utilizzo del Servizio; (ii) la violazione dei presenti Termini da parte dell'utente; (iii) la violazione da parte dell'utente di qualsiasi legge o regolamento applicabile; o (iv) la violazione da parte dell'utente di qualsiasi proprietà intellettuale, privacy o altri diritti di terzi. Tale obbligo si applica indipendentemente dal fatto che la Società fosse a conoscenza della violazione."
+      },
+      "s14": {
+        "title": "14. Risoluzione",
+        "body": "14.1 Risoluzione da parte tua\n\nPuoi terminare il tuo abbonamento in qualsiasi momento annullandolo tramite la dashboard del tuo account o contattando l'assistenza. La risoluzione ha effetto alla fine del periodo di fatturazione corrente.\n\n14.2 Risoluzione da parte della Società\n\nLa Società può sospendere o interrompere l'accesso al Servizio immediatamente e senza preavviso se: (i) violi i presenti Termini; (ii) sei impegnato in attività illegali; (iii) violi la Politica di utilizzo accettabile; o (iv) la Società è tenuta a farlo per legge. La Società può anche chiudere il tuo account per comodità con un preavviso scritto di 30 giorni.\n\n14.3 Effetti della risoluzione\n\nIn caso di risoluzione, il tuo diritto di accedere al Servizio cessa immediatamente. La Società non sarà responsabile per eventuali perdite di dati o funzionalità derivanti dalla risoluzione. Le sezioni che per loro natura sopravvivono alla risoluzione (compresi i diritti di proprietà intellettuale, la limitazione di responsabilità, l'indennizzo e la legge applicabile) continueranno a essere in vigore.\n\n14.4 Conservazione dei dati\n\nIn caso di risoluzione, la Società conserverà i tuoi dati per 30 giorni per consentire l'esportazione o il recupero dei dati. Dopo 30 giorni la Società potrà cancellare i tuoi dati. Sei responsabile del mantenimento dei backup dei tuoi dati."
+      },
+      "s15": {
+        "title": "15. Riservatezza",
+        "body": "Ciascuna parte si impegna a mantenere la riservatezza delle informazioni riservate dell'altra parte e a utilizzare tali informazioni esclusivamente allo scopo di adempiere ai propri obblighi ai sensi dei presenti Termini. Le informazioni riservate non includono informazioni disponibili al pubblico, sviluppate in modo indipendente o ricevute da terzi senza obblighi di riservatezza. Ciascuna delle parti può divulgare informazioni riservate se richiesto dalla legge o da un'ordinanza del tribunale, a condizione che la parte divulgante fornisca un tempestivo avviso per consentire all'altra parte di richiedere misure protettive."
+      },
+      "s16": {
+        "title": "16. Forza maggiore",
+        "body": "La Società non sarà responsabile per qualsiasi mancato adempimento dei propri obblighi ai sensi dei presenti Termini derivante da cause al di fuori del suo ragionevole controllo, inclusi atti di forza maggiore, disastri naturali, guerre, terrorismo, scioperi, azioni governative o guasto delle telecomunicazioni o dei servizi di pubblica utilità. La Società compirà ogni ragionevole sforzo per riprendere le prestazioni non appena possibile."
+      },
+      "s17": {
+        "title": "17. Modifiche alle presenti Condizioni",
+        "body": "La Società può modificare le presenti Condizioni in qualsiasi momento. Le modifiche sostanziali ti verranno comunicate via e-mail o tramite il Servizio almeno 30 giorni prima che le modifiche entrino in vigore. L'uso continuato del Servizio dopo la notifica delle modifiche costituisce l'accettazione dei Termini modificati. Se non accetti i Termini modificati, dovrai interrompere l'utilizzo del Servizio."
+      },
+      "s18": {
+        "title": "18. Risoluzione delle controversie e arbitrato",
+        "body": "18.1 Risoluzione informale\n\nPrima di avviare un procedimento formale, tu e la Società accettate di tentare di risolvere qualsiasi controversia attraverso una negoziazione in buona fede. Ciascuna delle parti può avviare questo processo inviando una comunicazione scritta all'altra parte descrivendo la controversia e proponendo una risoluzione.\n\n18.2 Arbitrato\n\nSe la controversia non viene risolta entro 30 giorni dalla notifica scritta, l'utente e la Società accettano di sottoporre la controversia ad un arbitrato vincolante amministrato da un arbitro o da un'organizzazione arbitrale concordata di comune accordo. L'arbitrato sarà condotto in inglese secondo le regole della Camera di commercio internazionale (ICC). Ciascuna parte sopporterà le proprie spese e le parti divideranno equamente gli onorari dell'arbitro. L'arbitrato si svolgerà in modo confidenziale e il lodo sarà definitivo e vincolante.\n\n18.3 Rinuncia all'azione collettiva\n\nTu e la Società concordate che qualsiasi arbitrato o procedimento giudiziario sarà condotto su base individuale e non come azione collettiva, azione collettiva o azione rappresentativa. Rinunci al diritto di partecipare a qualsiasi azione collettiva contro la Società.\n\n18.4 Rinuncia\n\nÈ possibile rinunciare all'arbitrato inviando una comunicazione scritta alla Società entro 30 giorni dalla prima accettazione delle presenti Condizioni. L'avviso deve includere il tuo nome, indirizzo, e-mail e una dichiarazione chiara che stai rinunciando all'accordo arbitrale.\n\n18.5 Eccezione\n\nNonostante quanto sopra, ciascuna delle parti può chiedere un provvedimento ingiuntivo in tribunale per prevenire danni irreparabili o per far valere i diritti di proprietà intellettuale."
+      },
+      "s19": {
+        "title": "19. Legge applicabile",
+        "body": "Le presenti Condizioni sono regolate e interpretate in conformità con le leggi irlandesi, indipendentemente dalle disposizioni sui conflitti di legge. Se non si procede all'arbitrato, l'utente accetta di sottoporsi alla giurisdizione e alla sede esclusive dei tribunali situati a Dublino, Irlanda."
+      },
+      "s20": {
+        "title": "20. Avvisi",
+        "body": "Eventuali comunicazioni richieste ai sensi dei presenti Termini possono essere inviate via e-mail all'indirizzo e-mail associato al tuo account o alla Società all'indirizzo legal@getsafe360.ai. Le comunicazioni inviate via e-mail sono efficaci al momento dell'invio. Sei responsabile del mantenimento delle informazioni di contatto aggiornate."
+      },
+      "s21": {
+        "title": "21. Intero accordo",
+        "body": "I presenti Termini, insieme all'Informativa sulla privacy e a qualsiasi altro accordo stipulato con la Società, costituiscono l'intero accordo tra te e la Società in merito al Servizio. Se una qualsiasi disposizione delle presenti Condizioni risultasse non valida o inapplicabile, le restanti disposizioni continueranno ad avere pieno vigore ed effetto. La mancata applicazione da parte della Società di qualsiasi diritto o disposizione non costituisce una rinuncia a tale diritto o disposizione."
+      },
+      "s22": {
+        "title": "22. Separabilità",
+        "body": "Se una qualsiasi disposizione delle presenti Condizioni è ritenuta non valida, illegale o inapplicabile da un tribunale della giurisdizione competente, tale disposizione sarà modificata nella misura minima necessaria per renderla valida e applicabile, o se tale modifica non è possibile, la disposizione sarà cancellata. Le restanti disposizioni continueranno ad avere pieno vigore ed efficacia."
+      },
+      "s23": {
+        "title": "23. Rinuncia",
+        "body": "Nessuna rinuncia a qualsiasi disposizione delle presenti Condizioni è efficace se non per iscritto e firmata dalla Società. La mancata applicazione da parte della Società di qualsiasi diritto o disposizione non costituisce una rinuncia a tale diritto o disposizione e non impedisce alla Società di far valere tale diritto o disposizione in futuro."
+      },
+      "s24": {
+        "title": "24. Cessione",
+        "body": "La Società può cedere i presenti Termini o qualsiasi dei suoi diritti o obblighi ai sensi dei presenti Termini a qualsiasi successore o affiliato senza preavviso o consenso dell'utente. Non è possibile cedere i presenti Termini o uno qualsiasi dei propri diritti o obblighi senza il previo consenso scritto della Società."
+      },
+      "s25": {
+        "title": "25. Limitazione dei reclami",
+        "body": "Qualsiasi reclamo derivante da o correlato ai presenti Termini o al Servizio deve essere presentato entro un anno dal verificarsi della causa dell'azione. Le pretese avanzate dopo tale termine sono prescritte."
+      },
+      "s26": {
+        "title": "26. Informazioni di contatto",
+        "body": "Per domande sui presenti Termini o per segnalare violazioni, accedi alla nostra pagina di contatto (/contact)."
       }
     },
     "contact": {
       "title": "Contatto",
-      "before": "Per domande legali, di licenza o sull'account, utilizza la nostra",
-      "link": "pagina di contatto",
+      "before": "Per domande su questi termini o per segnalare violazioni, visitare il nostro",
+      "link": "pagina dei contatti",
       "after": "."
     }
   }
