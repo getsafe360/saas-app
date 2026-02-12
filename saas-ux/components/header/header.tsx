@@ -65,12 +65,12 @@ export function Header() {
         {t("skipToContent")}
       </a>
 
-      <header className="sticky top-0 z-40 border-b border-slate-200/70 dark:border-[#1b2430] bg-white/70 dark:bg-[#080B0E]/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <header className="bg-[oklch(from_var(--color-neutral-900)_l_c_h_/_0.7)] dark:bg-[oklch(from_var(--color-neutral-50)_l_c_h_/_0.6)] backdrop-blur">
         <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
           <div className="h-16 flex items-center justify-between">
             {/* Left: Logo */}
             <Link
-              title="GetSafe 360"
+              title="GetSafe 360 AI"
               href="/"
               className="flex items-center min-w-0"
             >

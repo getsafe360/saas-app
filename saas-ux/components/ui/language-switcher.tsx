@@ -33,7 +33,15 @@ const ALL_LANG: readonly LangOption[] = [
 function FlagIcon({ src, alt }: { src: string; alt: string }) {
   return (
     <span className="relative block w-5 h-5 overflow-hidden rounded-sm">
-      <Image src={src} alt={alt} fill sizes="20px" className="object-cover" />
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="30px"
+        className="object-contain"
+        priority
+        aria-hidden={alt === ""}
+      />
     </span>
   );
 }
@@ -46,7 +54,7 @@ export function LanguageSwitcher() {
 
   const languages = useMemo(
     () => ALL_LANG.filter((l) => LOCALES.includes(l.code)),
-    []
+    [],
   );
 
   const active = languages.find((l) => l.code === locale) ?? languages[0];

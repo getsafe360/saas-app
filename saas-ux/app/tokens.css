@@ -16,27 +16,29 @@
   --color-primary-900: oklch(31.79% 0.08 234.73);
 
   /* Neutral Scale */
-  --color-neutral-100: oklch(97% 0 0);
-  --color-neutral-200: oklch(92.2% 0 0);
-  --color-neutral-300: oklch(87% 0 0);
-  --color-neutral-400: oklch(70.8% 0 0);
-  --color-neutral-500: oklch(55.6% 0 0);
-  --color-neutral-600: oklch(43.9% 0 0);
-  --color-neutral-700: oklch(37.1% 0 0);
-  --color-neutral-800: oklch(26.9% 0 0);
-  --color-neutral-900: oklch(20.5% 0 0);
+  --color-neutral-50: oklch(99% 0 0);
+  --color-neutral-100: oklch(97% 0.00 0);
+  --color-neutral-200: oklch(92% 0.00 0);
+  --color-neutral-300: oklch(87% 0.00 0);
+  --color-neutral-400: oklch(72% 0.00 0);
+  --color-neutral-500: oklch(56% 0.00 0);
+  --color-neutral-600: oklch(44% 0.00 0);
+  --color-neutral-700: oklch(37% 0.00 0);
+  --color-neutral-800: oklch(27% 0.00 0);
+  --color-neutral-900: oklch(21% 0.00 0);
+  --color-neutral-950: oklch(14% 0.00 0);
 
   /* Feedback (OKLCH) */
-  --color-success: oklch(74.72% 0.17 163.28);
-  --color-warning: oklch(78.36% 0.17 83.66);
-  --color-danger:  oklch(63.33% 0.24 29.23);
-
+  --color-success: oklch(0.75 0.17 163.28);
+  --color-warning: oklch(0.78 0.17 83.66);
+  --color-danger:  oklch(0.63 0.24 29.23);
 
   /* Semantic Backgrounds */
   --background-default: var(--color-neutral-100);
   --background-primary: var(--color-primary-500);
   --background-warning: var(--color-warning);
-
+  --header-bg: oklch(from var(--color-neutral-50) l c h / 0.8);
+  
   /* Semantic Text */
   --text-default: var(--color-neutral-900);
   --text-subtle: var(--color-neutral-500);
@@ -91,7 +93,7 @@
   --color-primary-900: oklch(80% 0.15 235);
 
   /* Neutral Scale — Dark Mode (OKLCH) */
-  --color-neutral-50: oklch(0.14 0.00 0);
+  --color-neutral-50: oklch(14% 0.00 0);
   --color-neutral-100: oklch(0.20 0.00 0);
   --color-neutral-200: oklch(0.27 0.00 0);
   --color-neutral-300: oklch(0.37 0.00 0);
@@ -112,4 +114,5 @@
   --border-default: var(--color-neutral-300);
   --text-default: var(--color-neutral-950);
   --text-subtle: var(--color-neutral-600);
+  --header-bg: oklch(from var(--color-neutral-50) l c h / 0.6);
 }

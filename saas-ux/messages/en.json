@@ -333,6 +333,9 @@
       "tryAgain": "Try Again"
     }
   },
+  "terms": {
+    "date": "Effective Date:"
+  },
   "imprint": {
     "title": "Imprint",
     "company": "GETSAFE 360 AI LIMITED",
