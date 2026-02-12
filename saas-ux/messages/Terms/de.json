@@ -1,0 +1,68 @@
+{
+  "Terms": {
+    "meta": {
+      "title": "Nutzungsbedingungen | GetSafe 360",
+      "description": "Lesen Sie die Nutzungsbedingungen von GetSafe 360 zu Plattformzugang, Lizenzbedingungen, zulässiger Nutzung, Abrechnung und rechtlichen Bestimmungen."
+    },
+    "title": "Nutzungsbedingungen",
+    "effectiveDateLabel": "Gültig ab:",
+    "effectiveDate": "2026-01-15",
+    "intro": "Bitte lesen Sie diese Nutzungsbedingungen sorgfältig, bevor Sie getsafe360.ai verwenden. Diese Bedingungen regeln den Zugang zu unserer Plattform sowie den Erwerb und die Nutzung unserer Software und Services.",
+    "sections": {
+      "acceptance": {
+        "title": "1. Annahme der Bedingungen",
+        "body": "Durch den Zugriff auf den Service, dessen Nutzung oder den Kauf eines Softwarezugangs von GetSafe 360 stimmen Sie diesen Bedingungen, unserer EULA und unserer Datenschutzerklärung zu. Wenn Sie nicht zustimmen, dürfen Sie den Service nicht nutzen."
+      },
+      "license": {
+        "title": "2. Zugangsvertrag und GPL-Software",
+        "body": "Einige Komponenten können unter GPLv2 lizenziert sein. Ihre GPL-Rechte bleiben nach rechtmäßigem Erhalt der Software bestehen. Der Zugriff auf bereitgestellte Builds, Updates und gehostete Tools unterliegt jedoch einem separaten kommerziellen Zugangsvertrag."
+      },
+      "eligibility": {
+        "title": "3. Berechtigung und beabsichtigte Nutzung",
+        "body": "Sie versichern, dass Sie berechtigt sind, für Ihr Unternehmen zu handeln, und dass die Nutzung auf Websites beschränkt ist, die Ihr Unternehmen besitzt oder direkt betreibt, sofern nichts anderes schriftlich vereinbart wurde."
+      },
+      "restrictedUse": {
+        "title": "4. Eingeschränkte gewerbliche Nutzung",
+        "body": "Hosting-Anbieter, Agenturen und Managed-Service-Provider dürfen zugangsbeschränkte Software ohne Enterprise-Vertrag nicht für unabhängige Drittanbieter-Deployments nutzen."
+      },
+      "orders": {
+        "title": "5. Bestellungen, Zahlungen und Zugriff",
+        "body": "Käufe sind Teil Ihres Zugangsvertrags. Wir können Transaktionen ablehnen, stornieren oder widerrufen, wenn ein begründeter Verdacht auf Missbrauch, Betrug oder Umgehung unserer Richtlinien besteht."
+      },
+      "enforcement": {
+        "title": "6. Überwachung und Durchsetzung",
+        "body": "Wir können die Nutzung prüfen, um die Einhaltung sicherzustellen, Lizenzen und Support bei Missbrauch aussetzen oder widerrufen und rechtliche Schritte gegen unautorisierte kommerzielle Nutzung einleiten."
+      },
+      "termination": {
+        "title": "7. Sperrung und Beendigung",
+        "body": "Wir können den Zugriff bei Verstößen gegen diese Bedingungen aussetzen oder beenden. Die Beendigung hebt GPL-Rechte für bereits rechtmäßig erhaltene Software nicht auf, beendet jedoch den Zugriff auf Updates, Support und neue Versionen."
+      },
+      "intellectualProperty": {
+        "title": "8. Geistiges Eigentum und Marken",
+        "body": "Alle Marken, Produktnamen, Logos und nicht-open-source Materialien bleiben Eigentum ihrer jeweiligen Inhaber. Eine Markenlizenz wird nur gewährt, wenn dies ausdrücklich angegeben ist."
+      },
+      "warranty": {
+        "title": "9. Gewährleistungsausschluss",
+        "body": "Der Service wird im gesetzlich zulässigen Umfang „wie besehen“ und „wie verfügbar“ bereitgestellt, ohne Gewähr für unterbrechungsfreien Betrieb oder Eignung für einen bestimmten geschäftlichen Zweck."
+      },
+      "liability": {
+        "title": "10. Haftungsbeschränkung",
+        "body": "Soweit gesetzlich zulässig, haftet GetSafe 360 nicht für indirekte oder Folgeschäden. Die Gesamthaftung ist auf die für den jeweiligen Zugangszeitraum gezahlten Beträge begrenzt."
+      },
+      "law": {
+        "title": "11. Anwendbares Recht und Streitbeilegung",
+        "body": "Diese Bedingungen unterliegen dem anwendbaren irischen Recht. Wir sind weder bereit noch verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen."
+      },
+      "changes": {
+        "title": "12. Änderungen dieser Bedingungen",
+        "body": "Wir können diese Bedingungen von Zeit zu Zeit aktualisieren. Die fortgesetzte Nutzung des Service nach Inkrafttreten der Änderungen gilt als Zustimmung zu den überarbeiteten Bedingungen."
+      }
+    },
+    "contact": {
+      "title": "Kontakt",
+      "before": "Für rechtliche, lizenzbezogene oder kontobezogene Fragen nutzen Sie bitte unsere",
+      "link": "Kontaktseite",
+      "after": "."
+    }
+  }
+}

@@ -45,9 +45,7 @@ export default function ContactPage() {
       message || "(Please add your message)",
     ].join("\n");
 
-    return `mailto:${previewRecipient}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`;
+    return `mailto:${previewRecipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }, [message, previewRecipient, previewSubject, senderEmail]);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -59,15 +57,9 @@ export default function ContactPage() {
     <div className="min-h-screen bg-[var(--background-default)] text-[var(--text-default)]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-10">
         <section className="space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            {t("contactPage.hero.title")}
-          </h1>
-          <p className="text-lg text-[var(--text-subtle)] max-w-4xl">
-            {t("contactPage.hero.bodyLine1")}
-          </p>
-          <p className="text-lg text-[var(--text-subtle)] max-w-4xl">
-            {t("contactPage.hero.bodyLine2")}
-          </p>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">{t("contactPage.hero.title")}</h1>
+          <p className="text-lg text-[var(--text-subtle)] max-w-3xl">{t("contactPage.hero.bodyLine1")}</p>
+          <p className="text-lg text-[var(--text-subtle)] max-w-3xl">{t("contactPage.hero.bodyLine2")}</p>
         </section>
 
         <section className="grid gap-6 md:grid-cols-2">

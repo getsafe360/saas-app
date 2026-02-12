@@ -1,0 +1,68 @@
+{
+  "Terms": {
+    "meta": {
+      "title": "Términos del Servicio | GetSafe 360",
+      "description": "Consulta los Términos del Servicio de GetSafe 360 sobre acceso a la plataforma, licencias, uso permitido, facturación y condiciones legales."
+    },
+    "title": "Términos del Servicio",
+    "effectiveDateLabel": "Fecha de entrada en vigor:",
+    "effectiveDate": "2026-01-15",
+    "intro": "Lee atentamente estos Términos del Servicio antes de usar getsafe360.ai. Estos términos regulan el acceso a nuestra plataforma, incluida la compra y el uso de nuestro software y servicios.",
+    "sections": {
+      "acceptance": {
+        "title": "1. Aceptación de los términos",
+        "body": "Al acceder o usar el Servicio, o al comprar acceso al software de GetSafe 360, aceptas estos Términos, nuestro EULA y nuestra Política de Privacidad. Si no estás de acuerdo, no debes usar el Servicio."
+      },
+      "license": {
+        "title": "2. Contrato de acceso y software GPL",
+        "body": "Algunos componentes pueden tener licencia GPLv2. Tus derechos GPL se mantienen tras la recepción legal del software. No obstante, el acceso a compilaciones distribuidas, actualizaciones y herramientas alojadas está sujeto a un contrato comercial de acceso independiente."
+      },
+      "eligibility": {
+        "title": "3. Elegibilidad y uso previsto",
+        "body": "Declaras que estás autorizado para actuar en nombre de tu empresa y que el uso se limita a sitios web que tu organización posee u opera directamente, salvo acuerdo escrito en contrario."
+      },
+      "restrictedUse": {
+        "title": "4. Uso comercial restringido",
+        "body": "Los proveedores de hosting, agencias y proveedores de servicios gestionados no pueden usar software con acceso restringido para despliegues de terceros no relacionados sin un acuerdo empresarial."
+      },
+      "orders": {
+        "title": "5. Pedidos, pagos y acceso",
+        "body": "Las compras forman parte de tu contrato de acceso. Podemos rechazar, cancelar o revocar transacciones cuando exista una sospecha razonable de uso indebido, fraude o evasión de políticas."
+      },
+      "enforcement": {
+        "title": "6. Supervisión y cumplimiento",
+        "body": "Podemos auditar el uso para verificar el cumplimiento, suspender o revocar licencias y soporte por uso indebido, y ejercer acciones legales ante despliegues comerciales no autorizados."
+      },
+      "termination": {
+        "title": "7. Suspensión y terminación",
+        "body": "Podemos suspender o terminar el acceso por incumplimiento de estos Términos. La terminación no revoca los derechos GPL sobre software ya recibido legalmente, pero finaliza el acceso a actualizaciones, soporte y nuevas versiones."
+      },
+      "intellectualProperty": {
+        "title": "8. Propiedad intelectual y marca",
+        "body": "Todas las marcas, nombres de producto, logotipos y materiales no open-source siguen siendo propiedad de sus respectivos titulares. No se concede licencia de marca salvo indicación expresa."
+      },
+      "warranty": {
+        "title": "9. Exención de garantías",
+        "body": "El Servicio se proporciona \"tal cual\" y \"según disponibilidad\", en la máxima medida permitida por la ley, sin garantías de funcionamiento ininterrumpido o idoneidad para un fin empresarial específico."
+      },
+      "liability": {
+        "title": "10. Limitación de responsabilidad",
+        "body": "En la máxima medida permitida por la ley, GetSafe 360 no será responsable de daños indirectos o consecuenciales. La responsabilidad total se limita a los importes pagados por el periodo de acceso correspondiente."
+      },
+      "law": {
+        "title": "11. Ley aplicable y resolución de disputas",
+        "body": "Estos Términos se rigen por la legislación irlandesa aplicable. No estamos obligados ni dispuestos a participar en procedimientos de arbitraje de consumo ante una junta de arbitraje de consumo."
+      },
+      "changes": {
+        "title": "12. Cambios en estos términos",
+        "body": "Podemos actualizar estos Términos periódicamente. El uso continuado del Servicio tras la entrada en vigor de los cambios constituye aceptación de los Términos revisados."
+      }
+    },
+    "contact": {
+      "title": "Contacto",
+      "before": "Para consultas legales, de licencia o de cuenta, utiliza nuestra",
+      "link": "página de contacto",
+      "after": "."
+    }
+  }
+}

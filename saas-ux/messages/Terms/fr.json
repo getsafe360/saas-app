@@ -1,0 +1,68 @@
+{
+  "Terms": {
+    "meta": {
+      "title": "Conditions d'utilisation | GetSafe 360",
+      "description": "Consultez les Conditions d'utilisation de GetSafe 360 concernant l'accès à la plateforme, les licences, l'usage autorisé, la facturation et les dispositions juridiques."
+    },
+    "title": "Conditions d'utilisation",
+    "effectiveDateLabel": "Date d'entrée en vigueur :",
+    "effectiveDate": "2026-01-15",
+    "intro": "Veuillez lire attentivement ces Conditions d'utilisation avant d'utiliser getsafe360.ai. Elles régissent l'accès à notre plateforme, y compris l'achat et l'utilisation de nos logiciels et services.",
+    "sections": {
+      "acceptance": {
+        "title": "1. Acceptation des conditions",
+        "body": "En accédant au Service, en l'utilisant ou en achetant un accès logiciel GetSafe 360, vous acceptez ces Conditions, notre EULA et notre Politique de confidentialité. Si vous n'êtes pas d'accord, vous ne devez pas utiliser le Service."
+      },
+      "license": {
+        "title": "2. Contrat d'accès et logiciel GPL",
+        "body": "Certains composants peuvent être sous licence GPLv2. Vos droits GPL restent valables après réception légale du logiciel. Toutefois, l'accès aux builds distribués, mises à jour et outils hébergés est soumis à un contrat d'accès commercial distinct."
+      },
+      "eligibility": {
+        "title": "3. Éligibilité et usage prévu",
+        "body": "Vous déclarez être autorisé à agir pour votre entreprise et que l'usage est limité aux sites web détenus ou exploités directement par votre organisation, sauf accord écrit contraire."
+      },
+      "restrictedUse": {
+        "title": "4. Usage commercial restreint",
+        "body": "Les hébergeurs, agences et prestataires de services managés ne peuvent pas utiliser les logiciels à accès restreint pour des déploiements tiers non liés sans contrat entreprise."
+      },
+      "orders": {
+        "title": "5. Commandes, paiements et accès",
+        "body": "Les achats font partie de votre contrat d'accès. Nous pouvons refuser, annuler ou révoquer des transactions en cas de suspicion raisonnable d'abus, de fraude ou de contournement des politiques."
+      },
+      "enforcement": {
+        "title": "6. Contrôle et application",
+        "body": "Nous pouvons auditer l'usage pour vérifier la conformité, suspendre ou révoquer licences et support en cas d'abus, et engager des recours juridiques en cas de déploiement commercial non autorisé."
+      },
+      "termination": {
+        "title": "7. Suspension et résiliation",
+        "body": "Nous pouvons suspendre ou résilier l'accès en cas de violation de ces Conditions. La résiliation ne supprime pas les droits GPL sur les logiciels déjà reçus légalement, mais met fin à l'accès aux mises à jour, au support et aux nouvelles versions."
+      },
+      "intellectualProperty": {
+        "title": "8. Propriété intellectuelle et marque",
+        "body": "Toutes les marques, noms de produits, logos et contenus non open-source restent la propriété de leurs détenteurs respectifs. Aucune licence de marque n'est accordée sauf mention expresse."
+      },
+      "warranty": {
+        "title": "9. Exclusion de garantie",
+        "body": "Le Service est fourni \"en l'état\" et \"selon disponibilité\", dans la limite maximale autorisée par la loi, sans garantie de fonctionnement ininterrompu ni d'adéquation à un objectif commercial particulier."
+      },
+      "liability": {
+        "title": "10. Limitation de responsabilité",
+        "body": "Dans la limite maximale autorisée par la loi, GetSafe 360 ne pourra être tenu responsable des dommages indirects ou consécutifs. La responsabilité globale est limitée aux montants payés pour la période d'accès concernée."
+      },
+      "law": {
+        "title": "11. Droit applicable et règlement des litiges",
+        "body": "Ces Conditions sont régies par le droit irlandais applicable. Nous ne sommes ni obligés ni disposés à participer à une procédure d'arbitrage de consommation devant une commission de médiation des consommateurs."
+      },
+      "changes": {
+        "title": "12. Modifications des présentes conditions",
+        "body": "Nous pouvons mettre à jour ces Conditions de temps à autre. La poursuite de l'utilisation du Service après l'entrée en vigueur des modifications vaut acceptation des Conditions révisées."
+      }
+    },
+    "contact": {
+      "title": "Contact",
+      "before": "Pour toute question juridique, de licence ou de compte, veuillez utiliser notre",
+      "link": "page de contact",
+      "after": "."
+    }
+  }
+}
