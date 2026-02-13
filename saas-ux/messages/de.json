@@ -127,7 +127,8 @@
     "terms": "AGB",
     "privacy": "Datenschutz",
     "contact": "Kontakt",
-    "imprint": "Impressum gemäß § 5 TMG"
+    "imprint": "Impressum",
+    "securePayment": "Sichere Zahlung mit"
   },
   "actions": {
     "learn_more": "Mehr erfahren",
