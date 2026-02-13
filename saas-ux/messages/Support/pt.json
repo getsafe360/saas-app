@@ -110,39 +110,43 @@
       "disclaimer": "By contacting support, you agree that we may use your communication to improve our services. We never share your information with third parties without your consent."
     },
     "contactPage": {
+      "meta": {
+        "title": "Contato | GetSafe360",
+        "description": "Fale com a equipe da GetSafe360 para vendas, suporte, feedback e solicitações de funcionalidades."
+      },
       "hero": {
-        "title": "Contact our Team",
-        "bodyLine1": "Whether you have a question, need help, or just want to share feedback — we’re here.",
-        "bodyLine2": "We typically respond within 24 hours. For urgent issues, please include your workspace email."
+        "title": "Entre em contato com nossa equipe",
+        "bodyLine1": "Se você tem uma pergunta, precisa de ajuda ou quer compartilhar feedback, estamos aqui.",
+        "bodyLine2": "Normalmente respondemos em até 24 horas. Para assuntos urgentes, inclua seu e-mail do workspace."
       },
       "direct": {
-        "inquiryTitle": "General inquiries",
-        "supportHint": "For support inquiries please go to /support. We usually reply within a few hours.",
-        "supportCta": "Go to support",
-        "salesTitle": "Sales",
-        "salesDescription": "Looking for team or enterprise plans? Our sales team responds within one business day."
+        "inquiryTitle": "Consultas gerais",
+        "supportHint": "Para solicitações de suporte, acesse /support. Normalmente respondemos em poucas horas.",
+        "supportCta": "Ir para suporte",
+        "salesTitle": "Vendas",
+        "salesDescription": "Está procurando planos para equipes ou enterprise? Nossa equipe de vendas responde em um dia útil."
       },
       "form": {
-        "title": "Tell us how we can help",
-        "typeLabel": "Inquiry type",
-        "emailLabel": "Your email",
-        "messageLabel": "Message",
-        "messagePlaceholder": "Share a bit of context so we can route your request quickly.",
+        "title": "Conte como podemos ajudar",
+        "typeLabel": "Tipo de solicitação",
+        "emailLabel": "Seu e-mail",
+        "messageLabel": "Mensagem",
+        "messagePlaceholder": "Compartilhe um pouco de contexto para que possamos direcionar sua solicitação rapidamente.",
         "options": {
-          "sales": "Sales",
-          "support": "Support",
-          "suggestions": "Suggestions",
-          "featureRequest": "Feature Request"
+          "sales": "Vendas",
+          "support": "Suporte",
+          "suggestions": "Sugestões",
+          "featureRequest": "Solicitação de funcionalidade"
         },
-        "previewRecipient": "Sending to:",
-        "previewSubject": "Subject:",
-        "submit": "Open email draft"
+        "previewRecipient": "Enviando para:",
+        "previewSubject": "Assunto:",
+        "submit": "Abrir rascunho de e-mail"
       },
       "legal": {
-        "title": "Legal & company information",
-        "description": "We operate worldwide from the EU and are registered in Ireland.",
-        "privacy": "Privacy policy",
-        "imprint": "Imprint / Impressum (coming soon)"
+        "title": "Informações legais e da empresa",
+        "description": "Operamos mundialmente a partir da UE e somos registrados na Irlanda.",
+        "privacy": "Política de privacidade",
+        "imprint": "Imprint / Impressum (em breve)"
       }
     }
   }

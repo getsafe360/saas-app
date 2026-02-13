@@ -143,6 +143,10 @@
         "description": "We operate worldwide from the EU and are registered in Ireland.",
         "privacy": "Privacy policy",
         "imprint": "Imprint / Impressum (coming soon)"
+      },
+      "meta": {
+        "title": "Contact | GetSafe360",
+        "description": "Contact the GetSafe360 team for sales, support, feedback, and feature requests."
       }
     }
   }
