@@ -80,23 +80,23 @@ export default function DashboardLayout({
       {/* Mobile header */}
       <div className="lg:hidden flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
         <span className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-          Dashboard
+          {t("overview")}
         </span>
         <Button
           variant="ghost"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
           <Menu className="h-6 w-6" />
-          <span className="sr-only">Toggle sidebar</span>
+          <span className="sr-only">{t("toggleSidebar")}</span>
         </Button>
       </div>
 
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
         <aside
-          className={`w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900
+          className={`cockpit-sidebar w-64 border-r
             lg:block ${isSidebarOpen ? "block" : "hidden"}
-            lg:relative absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out
+            lg:relative absolute inset-y-0 left-0 z-20 transform transition-transform duration-300 ease-in-out
             lg:translate-x-0 ${
               isSidebarOpen ? "translate-x-0" : "-translate-x-full"
             }
@@ -137,15 +137,9 @@ export default function DashboardLayout({
                 <Link key={item.href} href={item.href} passHref>
                   <Button
                     variant="ghost"
-                    className={`
-                      shadow-none my-1 w-full justify-start gap-3 rounded-xl transition
-                      border
-                      ${
-                        isActive
-                          ? "border-blue-500 dark:border-blue-400 font-bold text-blue-700 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/30"
-                          : "border-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      }
-                    `}
+                  className={`cockpit-nav-item shadow-none my-1 w-full justify-start gap-3 rounded-xl transition ${
+                    isActive ? "cockpit-nav-item--active font-bold" : ""
+                  }`}
                     onClick={() => setIsSidebarOpen(false)}
                   >
                     <item.icon className="h-5 w-5" />

@@ -223,6 +223,47 @@
   --btn-neutral-bg-hover: oklch(from var(--color-neutral-400) l c h / 0.28);
   --btn-neutral-border: oklch(from var(--color-neutral-600) l c h / 0.40);
 }
+
+/* Cockpit Sidebar */
+:root {
+  --cockpit-sidebar-bg: var(--color-neutral-50);
+  --cockpit-sidebar-border: var(--border-default);
+  --cockpit-sidebar-item-text: var(--text-subtle);
+  --cockpit-sidebar-item-hover-bg: oklch(from var(--color-neutral-200) l c h / 0.7);
+  --cockpit-sidebar-item-active-bg: oklch(from var(--color-primary-100) l c h / 1);
+  --cockpit-sidebar-item-active-border: oklch(from var(--color-primary-500) l c h / 0.4);
+  --cockpit-sidebar-item-active-text: var(--text-primary);
+}
+
+.dark {
+  --cockpit-sidebar-bg: oklch(from var(--color-neutral-50) l c h / 0.92);
+  --cockpit-sidebar-border: oklch(from var(--color-neutral-300) l c h / 0.7);
+  --cockpit-sidebar-item-text: oklch(from var(--color-neutral-800) l c h / 0.9);
+  --cockpit-sidebar-item-hover-bg: oklch(from var(--color-neutral-200) l c h / 0.4);
+  --cockpit-sidebar-item-active-bg: oklch(from var(--color-primary-300) l c h / 0.16);
+  --cockpit-sidebar-item-active-border: oklch(from var(--color-primary-700) l c h / 0.5);
+  --cockpit-sidebar-item-active-text: oklch(from var(--color-primary-800) l c h / 1);
+}
+
+.cockpit-sidebar {
+  background: var(--cockpit-sidebar-bg);
+  border-color: var(--cockpit-sidebar-border);
+}
+
+.cockpit-nav-item {
+  border: 1px solid transparent;
+  color: var(--cockpit-sidebar-item-text);
+}
+
+.cockpit-nav-item:hover {
+  background: var(--cockpit-sidebar-item-hover-bg);
+}
+
+.cockpit-nav-item--active {
+  background: var(--cockpit-sidebar-item-active-bg);
+  border-color: var(--cockpit-sidebar-item-active-border);
+  color: var(--cockpit-sidebar-item-active-text);
+}
 /* =========================================================
    Feature Card Component
    ========================================================= */
