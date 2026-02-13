@@ -31,7 +31,15 @@
     "seo": "SEO",
     "security": "Sicurezza",
     "accessibility": "Accessibilità",
-    "settings": "Impostazioni"
+    "settings": "Impostazioni",
+    "selectSite": "Seleziona un sito",
+    "noSites": "Nessun sito aggiunto",
+    "addNewSite": "Aggiungi nuovo sito",
+    "optimize": "Ottimizza",
+    "connected": "Connesso",
+    "connectNow": "Connetti ora",
+    "geoNew": "NUOVO · GEO",
+    "toggleSidebar": "Mostra/nascondi barra laterale"
   },
   "DashboardMeta": {
     "title": "La mia Dashboard - GetSafe 360",

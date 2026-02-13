@@ -31,7 +31,15 @@
     "seo": "SEO",
     "security": "Sécurité",
     "accessibility": "Accessibilité",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "selectSite": "Sélectionner un site",
+    "noSites": "Aucun site ajouté",
+    "addNewSite": "Ajouter un site",
+    "optimize": "Optimiser",
+    "connected": "Connecté",
+    "connectNow": "Connecter maintenant",
+    "geoNew": "NOUVEAU · GEO",
+    "toggleSidebar": "Afficher/masquer la barre latérale"
   },
   "DashboardMeta": {
     "title": "Mon Tableau de bord - GetSafe 360",

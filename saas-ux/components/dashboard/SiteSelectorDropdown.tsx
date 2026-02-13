@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "@/navigation";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Globe,
   ChevronDown,
@@ -12,7 +13,6 @@ import {
   Shield,
   Search,
   Accessibility,
-  ExternalLink,
   Check,
 } from "lucide-react";
 
@@ -20,6 +20,7 @@ interface SiteData {
   id: string;
   siteUrl: string;
   canonicalHost: string;
+  status?: "pending" | "connected" | "disconnected" | string;
   lastScores?: {
     performance?: number;
     security?: number;
@@ -40,37 +41,42 @@ interface SiteSelectorDropdownProps {
 const CATEGORY_LINKS = [
   {
     id: "performance",
-    label: "Performance",
+    labelKey: "performance",
     icon: Zap,
+    color: "text-blue-300",
+    iconBg: "bg-blue-500/15",
     href: (siteId: string) => `/dashboard/sites/${siteId}/cockpit?category=performance`,
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/10",
   },
   {
     id: "security",
-    label: "Security",
+    labelKey: "security",
     icon: Shield,
+    color: "text-green-300",
+    iconBg: "bg-green-500/15",
     href: (siteId: string) => `/dashboard/sites/${siteId}/cockpit?category=security`,
-    color: "text-green-400",
-    bgColor: "bg-green-500/10",
   },
   {
     id: "seo",
-    label: "SEO",
+    labelKey: "seo",
     icon: Search,
+    color: "text-purple-300",
+    iconBg: "bg-purple-500/15",
     href: (siteId: string) => `/dashboard/sites/${siteId}/cockpit?category=seo`,
-    color: "text-purple-400",
-    bgColor: "bg-purple-500/10",
   },
   {
     id: "accessibility",
-    label: "Accessibility",
+    labelKey: "accessibility",
     icon: Accessibility,
+    color: "text-orange-300",
+    iconBg: "bg-orange-500/15",
     href: (siteId: string) => `/dashboard/sites/${siteId}/cockpit?category=accessibility`,
-    color: "text-orange-400",
-    bgColor: "bg-orange-500/10",
   },
-];
+] as const;
+
+function formatHost(host: string) {
+  if (!host) return host;
+  return host.startsWith("www.") ? host.slice(4) : host;
+}
 
 export function SiteSelectorDropdown({
   sites,
@@ -80,10 +86,10 @@ export function SiteSelectorDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const tNav = useTranslations("DashboardNav");
 
   const currentSite = sites.find((s) => s.id === currentSiteId);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -98,14 +104,14 @@ export function SiteSelectorDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Close dropdown when route changes
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
 
+  const isConnected = currentSite?.status === "connected";
+
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all ${
@@ -114,12 +120,11 @@ export function SiteSelectorDropdown({
             : "border-gray-700 bg-gray-800/50 hover:border-gray-600"
         }`}
       >
-        {/* Favicon or placeholder */}
         <div className="w-8 h-8 rounded-lg bg-gray-700/50 flex items-center justify-center overflow-hidden">
           {currentSite?.lastFaviconUrl ? (
             <img
               src={currentSite.lastFaviconUrl}
-              alt=""
+              alt={formatHost(currentSite.canonicalHost)}
               className="w-5 h-5"
             />
           ) : (
@@ -128,7 +133,7 @@ export function SiteSelectorDropdown({
         </div>
         <div className="flex-1 text-left min-w-0">
           <div className="text-sm font-medium text-white truncate">
-            {currentSite?.canonicalHost || "Select a site"}
+            {currentSite ? formatHost(currentSite.canonicalHost) : tNav("selectSite")}
           </div>
         </div>
         <ChevronDown
@@ -138,14 +143,12 @@ export function SiteSelectorDropdown({
         />
       </button>
 
-      {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute left-0 right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
-          {/* Sites List */}
           <div className="max-h-[300px] overflow-y-auto">
             {sites.length === 0 ? (
               <div className="p-4 text-center text-gray-500 text-sm">
-                No sites added yet
+                {tNav("noSites")}
               </div>
             ) : (
               sites.map((site) => {
@@ -162,12 +165,11 @@ export function SiteSelectorDropdown({
                       isSelected ? "bg-blue-500/10" : ""
                     }`}
                   >
-                    {/* Favicon or placeholder */}
                     <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center overflow-hidden">
                       {site.lastFaviconUrl ? (
                         <img
                           src={site.lastFaviconUrl}
-                          alt=""
+                          alt={formatHost(site.canonicalHost)}
                           className="w-5 h-5"
                         />
                       ) : (
@@ -177,11 +179,10 @@ export function SiteSelectorDropdown({
 
                     <div className="flex-1 text-left min-w-0">
                       <div className="text-sm font-medium text-white truncate">
-                        {site.canonicalHost}
+                        {formatHost(site.canonicalHost)}
                       </div>
                     </div>
 
-                    {/* Selected indicator */}
                     {isSelected && (
                       <Check className="h-4 w-4 text-blue-400 flex-shrink-0" />
                     )}
@@ -191,27 +192,44 @@ export function SiteSelectorDropdown({
             )}
           </div>
 
-          {/* Add Site Link */}
           <div className="border-t border-gray-700">
             <Link
               href="/dashboard/sites/add"
-              className="flex items-center gap-3 px-3 py-2.5 text-blue-400 hover:bg-gray-800/50 transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 text-blue-300 hover:bg-gray-800/50 transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              <div className="p-1.5 rounded-lg bg-blue-500/10">
+              <div className="p-1.5 rounded-lg border border-blue-500/30 bg-blue-500/15">
                 <Plus className="h-4 w-4" />
               </div>
-              <span className="text-sm font-medium">Add New Site</span>
+              <span className="text-sm font-medium">{tNav("addNewSite")}</span>
             </Link>
           </div>
         </div>
       )}
 
-      {/* Category Links (show when site is selected) */}
       {currentSite && !isOpen && (
         <div className="mt-3 space-y-1">
-          <div className="px-2 py-1 text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Optimize
+          <div className="flex items-center justify-between gap-2 px-2 py-1">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+              {tNav("optimize")}
+            </span>
+            <div className="flex items-center gap-1.5 text-xs text-gray-300">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  isConnected ? "bg-emerald-400" : "bg-amber-400"
+                }`}
+              />
+              {isConnected ? (
+                <span>{tNav("connected")}</span>
+              ) : (
+                <Link
+                  href={`/dashboard/sites/connect?siteId=${currentSite.id}`}
+                  className="text-amber-300 hover:text-amber-200 underline underline-offset-2"
+                >
+                  {tNav("connectNow")}
+                </Link>
+              )}
+            </div>
           </div>
           {CATEGORY_LINKS.map((category) => {
             const Icon = category.icon;
@@ -222,14 +240,21 @@ export function SiteSelectorDropdown({
               <Link
                 key={category.id}
                 href={href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  isActive
-                    ? `${category.bgColor} ${category.color}`
-                    : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-300"
+                className={`cockpit-nav-item flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                  isActive ? "cockpit-nav-item--active" : "hover:text-gray-200"
                 }`}
               >
-                <Icon className="h-4 w-4" />
-                <span className="text-sm">{category.label}</span>
+                <span className={`inline-flex items-center justify-center rounded-md p-1.5 ${category.iconBg}`}>
+                  <Icon className={`h-4 w-4 ${category.color}`} />
+                </span>
+                <span className="text-sm flex items-center gap-2">
+                  {tNav(category.labelKey)}
+                  {category.id === "seo" && (
+                    <span className="inline-flex items-center rounded-full border border-purple-400/50 bg-purple-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-purple-200">
+                      {tNav("geoNew")}
+                    </span>
+                  )}
+                </span>
               </Link>
             );
           })}

@@ -31,7 +31,15 @@
     "seo": "SEO",
     "security": "Segurança",
     "accessibility": "Acessibilidade",
-    "settings": "Configurações"
+    "settings": "Configurações",
+    "selectSite": "Selecionar um site",
+    "noSites": "Nenhum site adicionado ainda",
+    "addNewSite": "Adicionar novo site",
+    "optimize": "Otimizar",
+    "connected": "Conectado",
+    "connectNow": "Conectar agora",
+    "geoNew": "NOVO · GEO",
+    "toggleSidebar": "Alternar barra lateral"
   },
   "DashboardMeta": {
     "title": "Meu Painel - GetSafe 360",

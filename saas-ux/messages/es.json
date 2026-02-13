@@ -31,7 +31,15 @@
     "seo": "SEO",
     "security": "Seguridad",
     "accessibility": "Accesibilidad",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "selectSite": "Seleccionar un sitio",
+    "noSites": "Aún no hay sitios añadidos",
+    "addNewSite": "Añadir nuevo sitio",
+    "optimize": "Optimizar",
+    "connected": "Conectado",
+    "connectNow": "Conectar ahora",
+    "geoNew": "NUEVO · GEO",
+    "toggleSidebar": "Alternar barra lateral"
   },
   "DashboardMeta": {
     "title": "Mi Panel - GetSafe 360",
