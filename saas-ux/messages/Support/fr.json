@@ -108,6 +108,46 @@
     },
     "legal": {
       "disclaimer": "By contacting support, you agree that we may use your communication to improve our services. We never share your information with third parties without your consent."
+    },
+    "contactPage": {
+      "meta": {
+        "title": "Contact | GetSafe360",
+        "description": "Contactez l’équipe GetSafe360 pour les ventes, le support, les retours et les demandes de fonctionnalités."
+      },
+      "hero": {
+        "title": "Contactez notre équipe",
+        "bodyLine1": "Que vous ayez une question, besoin d’aide ou souhaitiez partager un retour, nous sommes là pour vous.",
+        "bodyLine2": "Nous répondons généralement sous 24 heures. Pour les demandes urgentes, veuillez inclure votre e-mail workspace."
+      },
+      "direct": {
+        "inquiryTitle": "Demandes générales",
+        "supportHint": "Pour les demandes de support, rendez-vous sur /support. Nous répondons généralement en quelques heures.",
+        "supportCta": "Aller au support",
+        "salesTitle": "Ventes",
+        "salesDescription": "Vous recherchez des offres équipe ou enterprise ? Notre équipe commerciale répond sous un jour ouvré."
+      },
+      "form": {
+        "title": "Dites-nous comment nous pouvons vous aider",
+        "typeLabel": "Type de demande",
+        "emailLabel": "Votre e-mail",
+        "messageLabel": "Message",
+        "messagePlaceholder": "Partagez un peu de contexte pour que nous puissions traiter votre demande rapidement.",
+        "options": {
+          "sales": "Ventes",
+          "support": "Support",
+          "suggestions": "Suggestions",
+          "featureRequest": "Demande de fonctionnalité"
+        },
+        "previewRecipient": "Envoi à :",
+        "previewSubject": "Objet :",
+        "submit": "Ouvrir le brouillon d’e-mail"
+      },
+      "legal": {
+        "title": "Informations légales et société",
+        "description": "Nous opérons dans le monde entier depuis l’UE et sommes enregistrés en Irlande.",
+        "privacy": "Politique de confidentialité",
+        "imprint": "Mentions légales / Impressum (bientôt disponible)"
+      }
     }
   }
 }
