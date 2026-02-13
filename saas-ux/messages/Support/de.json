@@ -108,6 +108,46 @@
     },
     "legal": {
       "disclaimer": "By contacting support, you agree that we may use your communication to improve our services. We never share your information with third parties without your consent."
+    },
+    "contactPage": {
+      "meta": {
+        "title": "Kontakt | GetSafe360",
+        "description": "Kontaktieren Sie das GetSafe360-Team für Vertrieb, Support, Feedback und Funktionsanfragen."
+      },
+      "hero": {
+        "title": "Kontaktieren Sie unser Team",
+        "bodyLine1": "Ob Sie eine Frage haben, Hilfe brauchen oder Feedback teilen möchten — wir sind für Sie da.",
+        "bodyLine2": "Wir antworten in der Regel innerhalb von 24 Stunden. Bei dringenden Anliegen geben Sie bitte Ihre Workspace-E-Mail an."
+      },
+      "direct": {
+        "inquiryTitle": "Allgemeine Anfragen",
+        "supportHint": "Für Support-Anfragen besuchen Sie bitte /support. Wir antworten meist innerhalb weniger Stunden.",
+        "supportCta": "Zum Support",
+        "salesTitle": "Vertrieb",
+        "salesDescription": "Sie suchen Team- oder Enterprise-Pläne? Unser Vertrieb antwortet innerhalb eines Werktags."
+      },
+      "form": {
+        "title": "Sagen Sie uns, wie wir helfen können",
+        "typeLabel": "Anfragetyp",
+        "emailLabel": "Ihre E-Mail",
+        "messageLabel": "Nachricht",
+        "messagePlaceholder": "Teilen Sie uns kurz den Kontext mit, damit wir Ihre Anfrage schnell zuordnen können.",
+        "options": {
+          "sales": "Vertrieb",
+          "support": "Support",
+          "suggestions": "Vorschläge",
+          "featureRequest": "Funktionsanfrage"
+        },
+        "previewRecipient": "Wird gesendet an:",
+        "previewSubject": "Betreff:",
+        "submit": "E-Mail-Entwurf öffnen"
+      },
+      "legal": {
+        "title": "Rechtliche & Unternehmensinformationen",
+        "description": "Wir sind weltweit tätig, mit Sitz in der EU und in Irland registriert.",
+        "privacy": "Datenschutzerklärung",
+        "imprint": "Impressum (bald verfügbar)"
+      }
     }
   }
 }

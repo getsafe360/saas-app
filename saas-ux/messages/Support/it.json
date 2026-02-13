@@ -108,6 +108,46 @@
     },
     "legal": {
       "disclaimer": "By contacting support, you agree that we may use your communication to improve our services. We never share your information with third parties without your consent."
+    },
+    "contactPage": {
+      "meta": {
+        "title": "Contatti | GetSafe360",
+        "description": "Contatta il team di GetSafe360 per vendite, supporto, feedback e richieste di funzionalità."
+      },
+      "hero": {
+        "title": "Contatta il nostro team",
+        "bodyLine1": "Che tu abbia una domanda, abbia bisogno di aiuto o voglia condividere un feedback, siamo qui per te.",
+        "bodyLine2": "Di solito rispondiamo entro 24 ore. Per questioni urgenti, includi la tua e-mail del workspace."
+      },
+      "direct": {
+        "inquiryTitle": "Richieste generali",
+        "supportHint": "Per richieste di supporto vai su /support. Di solito rispondiamo entro poche ore.",
+        "supportCta": "Vai al supporto",
+        "salesTitle": "Vendite",
+        "salesDescription": "Cerchi piani team o enterprise? Il nostro team vendite risponde entro un giorno lavorativo."
+      },
+      "form": {
+        "title": "Dicci come possiamo aiutarti",
+        "typeLabel": "Tipo di richiesta",
+        "emailLabel": "La tua e-mail",
+        "messageLabel": "Messaggio",
+        "messagePlaceholder": "Condividi un po’ di contesto così possiamo instradare rapidamente la tua richiesta.",
+        "options": {
+          "sales": "Vendite",
+          "support": "Supporto",
+          "suggestions": "Suggerimenti",
+          "featureRequest": "Richiesta funzionalità"
+        },
+        "previewRecipient": "Invio a:",
+        "previewSubject": "Oggetto:",
+        "submit": "Apri bozza e-mail"
+      },
+      "legal": {
+        "title": "Informazioni legali e aziendali",
+        "description": "Operiamo in tutto il mondo dall’UE e siamo registrati in Irlanda.",
+        "privacy": "Informativa sulla privacy",
+        "imprint": "Imprint / Impressum (prossimamente)"
+      }
     }
   }
 }
