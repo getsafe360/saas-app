@@ -3,6 +3,7 @@
 
 import { CockpitCard } from "../CockpitCard";
 import { WordPressIcon } from "@/components/icons/WordPress";
+import { useTranslations } from "next-intl";
 import { useWordPressConnection } from "./hooks/useWordPressConnection";
 import { useWordPressPairing } from "./hooks/useWordPressPairing";
 import { ConnectionBanner } from "./components/ConnectionStatus/ConnectionBanner";
@@ -12,21 +13,7 @@ import { NoWordPress } from "./components/EmptyStates/NoWordPress";
 import { VersionStatus } from "./components/Analysis/VersionStatus";
 import { SecurityOverview } from "./components/Analysis/SecurityOverview";
 import { PluginsPanel } from "./components/Analysis/PluginsPanel";
-import { ThemePanel } from "./components/Analysis/ThemePanel";
-import { PerformancePanel } from "./components/Analysis/PerformancePanel";
 import type { WordPressCardProps } from "./types";
-import type { WordPressRecommendation as SiteWordPressRecommendation } from "@/types/site-cockpit";
-
-interface VersionStatusProps {
-  version: {
-    current: string;
-    latest: string;
-    outdated: boolean;
-    daysOld: number;
-  };
-  recommendations: SiteWordPressRecommendation[];
-}
-
 export function WordPressCard({
   id,
   data,
@@ -37,6 +24,7 @@ export function WordPressCard({
   connectionStatus: initialStatus = "disconnected",
   lastConnected,
 }: WordPressCardProps) {
+  const t = useTranslations("SiteCockpit");
   const { wordpress, cms } = data;
 
   // Custom hooks handle all logic
@@ -56,7 +44,7 @@ export function WordPressCard({
         title={
           <div className="flex items-center gap-3">
             <WordPressIcon size={24} className="text-gray-500" />
-            <span className="text-gray-400">WordPress</span>
+            <span className="text-gray-400">{t("wordpress.notDetected")}</span>
           </div>
         }
         category="wordpress"
@@ -78,7 +66,7 @@ export function WordPressCard({
         title={
           <div className="flex items-center gap-3">
             <WordPressIcon size={24} className="text-[#21759B]" />
-            <span className="text-blue-400">WordPress Detected</span>
+            <span className="text-blue-400">{t("wordpress.detected")}</span>
           </div>
         }
         category="wordpress"
@@ -99,7 +87,7 @@ export function WordPressCard({
       title={
         <div className="flex items-center gap-3">
           <WordPressIcon size={24} className="text-[#21759B]" />
-          <span className="text-blue-400">WordPress Insights</span>
+          <span className="text-blue-400">{t("wordpress.title")}</span>
         </div>
       }
       category="wordpress"
@@ -134,14 +122,11 @@ export function WordPressCard({
       )}
 
       {/* WordPress Analysis Panels */}
-      <VersionStatus
-        version={wordpress.version}
-        recommendations={wordpress.recommendations}
-      />
-      <SecurityOverview security={wordpress.security} />
-      <PluginsPanel plugins={wordpress.plugins} />
-      <ThemePanel theme={wordpress.themes} />
-      <PerformancePanel performance={wordpress.performanceData} />
+      <div className="space-y-4">
+        <VersionStatus version={wordpress.version} recommendations={wordpress.recommendations} />
+        <SecurityOverview security={wordpress.security} />
+        <PluginsPanel plugins={wordpress.plugins} />
+      </div>
     </CockpitCard>
   );
 }

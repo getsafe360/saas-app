@@ -1,245 +1,135 @@
-// components/site-cockpit/OverallScoreHero.tsx
 "use client";
 
-import { TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
-import type { Summary } from "@/types/site-cockpit";
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
+import { AlertCircle, CheckCircle, Globe, Loader2, ShieldAlert } from "lucide-react";
+import { getCMSInfo } from "@/components/analyzer/cms/cms-signatures";
+import type { CategoryType, Summary } from "@/types/site-cockpit";
 
 interface OverallScoreHeroProps {
   summary: Summary;
   domain: string;
-  faviconUrl?: string;
+  finalUrl: string;
   cms?: {
     type: string;
     name?: string;
     version?: string;
   };
+  onOptimizeCategory?: (category: Extract<CategoryType, "performance" | "security" | "seo" | "accessibility">) => Promise<void>;
+  optimizingCategory?: string | null;
 }
+
+const categoryConfig: Array<{ key: Extract<CategoryType, "performance" | "security" | "seo" | "accessibility">; color: string }> = [
+  { key: "performance", color: "#10B981" },
+  { key: "security", color: "#EF4444" },
+  { key: "seo", color: "#3B82F6" },
+  { key: "accessibility", color: "#8B5CF6" },
+];
 
 export function OverallScoreHero({
   summary,
   domain,
-  faviconUrl,
+  finalUrl,
   cms,
+  onOptimizeCategory,
+  optimizingCategory,
 }: OverallScoreHeroProps) {
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return "text-green-400";
-    if (score >= 70) return "text-yellow-400";
-    if (score >= 50) return "text-orange-400";
-    return "text-red-400";
-  };
+  const t = useTranslations("SiteCockpit");
+  const [imageError, setImageError] = useState(false);
 
-  const getScoreGradient = (score: number) => {
-    if (score >= 90) return "from-green-500 to-emerald-500";
-    if (score >= 70) return "from-yellow-500 to-amber-500";
-    if (score >= 50) return "from-orange-500 to-red-500";
-    return "from-red-500 to-rose-600";
-  };
+  const screenshotUrl = useMemo(
+    () => `/api/screenshot?w=360&q=55&url=${encodeURIComponent(finalUrl)}`,
+    [finalUrl]
+  );
+
+  const cmsInfo = getCMSInfo((cms?.type || "custom") as any);
+  const CmsIcon = typeof cmsInfo?.icon === "function" ? cmsInfo.icon : null;
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-b border-gray-800">
-      {/* Animated background grid */}
-      <div className="absolute inset-0 opacity-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `
-            linear-gradient(to right, rgb(59 130 246 / 0.3) 1px, transparent 1px),
-            linear-gradient(to bottom, rgb(59 130 246 / 0.3) 1px, transparent 1px)
-          `,
-            backgroundSize: "40px 40px",
-          }}
-        />
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-          {/* Left: Site Info */}
-          <div className="flex items-center gap-6">
-            {/* Favicon */}
-            {faviconUrl && (
-              <div className="relative">
-                <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 p-1 border border-gray-700">
-                  <div className="h-full w-full rounded-xl bg-white flex items-center justify-center overflow-hidden">
+    <div className="border-b" style={{ background: "var(--background-default)", borderColor: "var(--border-default)" }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 rounded-2xl border p-4" style={{ background: "var(--header-bg)", borderColor: "var(--border-default)" }}>
+            <div className="grid grid-cols-3 gap-4 items-center">
+              <div className="col-span-1">
+                <div className="aspect-[4/3] overflow-hidden rounded-xl border" style={{ borderColor: "var(--border-default)", background: "var(--color-neutral-200)" }}>
+                  {!imageError ? (
                     <img
-                      src={faviconUrl}
-                      alt={`${domain} favicon`}
-                      className="h-full w-full object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
+                      src={screenshotUrl}
+                      alt={t("summary.title")}
+                      className="h-full w-full object-cover"
+                      onError={() => setImageError(true)}
                     />
-                  </div>
-                </div>
-                {/* Glow effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl blur-lg opacity-20 -z-10" />
-              </div>
-            )}
-
-            {/* Domain & CMS */}
-            <div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
-                {domain}
-              </h1>
-              {cms && (
-                <div className="flex items-center gap-2 text-gray-400">
-                  <span className="text-sm">Powered by</span>
-                  <span className="text-sm font-semibold text-blue-400">
-                    {cms.name || cms.type}
-                  </span>
-                  {cms.version && (
-                    <span className="text-xs text-gray-500">
-                      v{cms.version}
-                    </span>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center"><Globe className="h-5 w-5" /></div>
                   )}
                 </div>
-              )}
+              </div>
+              <div className="col-span-2 min-w-0">
+                <h1 className="text-2xl font-semibold truncate" style={{ color: "var(--text-default)" }}>{domain}</h1>
+                <p className="text-sm truncate" style={{ color: "var(--text-subtle)" }}>{finalUrl}</p>
+                <p className="text-sm mt-1 truncate" style={{ color: "var(--text-subtle)" }}>
+                  {t("seo.meta.title")}: {cms?.name || t("common.unknown")}
+                </p>
+                {cms && (
+                  <div className="mt-2 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs border" style={{ borderColor: "var(--border-default)", color: "var(--text-subtle)" }}>
+                    {CmsIcon ? <CmsIcon size={14} /> : <Globe className="h-3.5 w-3.5" />}
+                    <span>{cms.name || cms.type}</span>
+                    {cms.version && <span>v{cms.version}</span>}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Center: Score Circle */}
-          <div className="relative">
-            {/* Animated rings */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="h-48 w-48 rounded-full border-2 border-blue-500/20 animate-ping"
-                style={{ animationDuration: "3s" }}
-              />
+          <div className="rounded-2xl border p-4" style={{ background: "var(--header-bg)", borderColor: "var(--border-default)" }}>
+            <div className="flex items-center gap-4">
+              <div className="relative h-24 w-24">
+                <svg className="h-24 w-24 -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="42" stroke="var(--border-default)" strokeWidth="10" fill="none" />
+                  <circle cx="50" cy="50" r="42" stroke="var(--color-primary-500)" strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray={`${(summary.overallScore / 100) * 264} 264`} />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div className="text-xl font-bold">{summary.overallScore}</div>
+                  <div className="text-[10px]">{summary.grade}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-2 text-sm">
+                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" />{t("summary.passed")}: {summary.passed}</div>
+                <div className="flex items-center gap-2"><AlertCircle className="h-4 w-4 text-yellow-500" />{t("summary.warnings")}: {summary.warnings}</div>
+                <div className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-red-500" />{t("summary.criticalIssues")}: {summary.criticalIssues}</div>
+              </div>
             </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="h-40 w-40 rounded-full border-2 border-blue-500/30 animate-ping"
-                style={{ animationDuration: "2s" }}
-              />
-            </div>
+          </div>
+        </div>
 
-            {/* Score circle */}
-            <div className="relative h-32 w-32 flex items-center justify-center">
-              {/* Background circle */}
-              <svg className="absolute inset-0 w-full h-full -rotate-90">
-                <circle
-                  cx="64"
-                  cy="64"
-                  r="58"
-                  className="stroke-gray-800"
-                  strokeWidth="8"
-                  fill="none"
-                />
-                {/* Progress circle */}
-                <circle
-                  cx="64"
-                  cy="64"
-                  r="58"
-                  className={`stroke-current ${getScoreColor(
-                    summary.overallScore
-                  )}`}
-                  strokeWidth="8"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(summary.overallScore / 100) * 364} 364`}
-                  style={{
-                    filter: "drop-shadow(0 0 8px currentColor)",
-                    transition: "stroke-dasharray 1s ease-in-out",
-                  }}
-                />
-              </svg>
-
-              {/* Score text */}
-              <div className="text-center">
-                <div
-                  className={`text-4xl font-bold ${getScoreColor(
-                    summary.overallScore
-                  )}`}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {categoryConfig.map(({ key, color }) => {
+            const score = summary.categoryScores[key] ?? 0;
+            return (
+              <div key={key} className="rounded-xl border p-4" style={{ borderColor: `${color}55`, background: "var(--header-bg)" }}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="font-medium capitalize" style={{ color }}>{t(`${key}.title`)}</div>
+                  <div className="text-lg font-bold" style={{ color }}>{score}</div>
+                </div>
+                <div className="h-1.5 rounded-full mb-3" style={{ background: "var(--color-neutral-300)" }}>
+                  <div className="h-full rounded-full" style={{ width: `${score}%`, background: color }} />
+                </div>
+                <div className="text-xs mb-3" style={{ color: "var(--text-subtle)" }}>
+                  {t("summary.passed")}: {Math.max(summary.passed - Math.floor((100 - score) / 8), 0)} · {t("summary.warnings")}: {summary.warnings} · {t("summary.criticalIssues")}: {summary.criticalIssues}
+                </div>
+                <button
+                  className="w-full rounded-lg px-3 py-2 text-sm font-medium border"
+                  style={{ borderColor: `${color}80`, color }}
+                  onClick={() => onOptimizeCategory?.(key)}
+                  disabled={optimizingCategory === key}
                 >
-                  {summary.overallScore}
-                </div>
-                <div className="text-xs text-gray-500 uppercase tracking-wider">
-                  {summary.grade}
-                </div>
+                  {optimizingCategory === key ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{t("common.loading")}</span> : t("actions.optimize")}
+                </button>
               </div>
-            </div>
-          </div>
-
-          {/* Right: Quick Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            {/* Passed */}
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="h-12 w-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-green-400">
-                {summary.passed}
-              </div>
-              <div className="text-xs text-gray-500">Passed</div>
-            </div>
-
-            {/* Warnings */}
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="h-12 w-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
-                  <AlertCircle className="h-6 w-6 text-yellow-400" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-yellow-400">
-                {summary.warnings}
-              </div>
-              <div className="text-xs text-gray-500">Warnings</div>
-            </div>
-
-            {/* Critical */}
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="h-12 w-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                  <AlertCircle className="h-6 w-6 text-red-400" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-red-400">
-                {summary.criticalIssues}
-              </div>
-              <div className="text-xs text-gray-500">Critical</div>
-            </div>
-          </div>
+            );
+          })}
         </div>
-
-        {/* Category Scores Bar */}
-        <div className="mt-8 grid grid-cols-2 lg:grid-cols-5 gap-4">
-          {Object.entries(summary.categoryScores).map(([category, score]) => (
-            <div key={category} className="relative">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-400 capitalize">
-                  {category}
-                </span>
-                <span className={`text-sm font-bold ${getScoreColor(score)}`}>
-                  {score}
-                </span>
-              </div>
-              <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                <div
-                  className={`h-full bg-gradient-to-r ${getScoreGradient(
-                    score
-                  )} transition-all duration-500`}
-                  style={{ width: `${score}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Strengths (if any) */}
-        {summary.strengths && summary.strengths.length > 0 && (
-          <div className="mt-6 flex flex-wrap gap-2">
-            {summary.strengths.slice(0, 4).map((strength, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-sm text-green-400"
-              >
-                <TrendingUp className="h-3 w-3" />
-                {strength}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
