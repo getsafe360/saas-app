@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useCallback, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import {
   DndContext,
   DragEndEvent,
@@ -15,16 +16,8 @@ import {
   arrayMove,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
-import { QuickWinsCard } from "./cards/QuickWinsCard";
-import { PerformanceCard } from "./cards/PerformanceCard";
-import { SecurityCard } from "./cards/SecurityCard";
-import { SEOCard } from "./cards/SEOCard";
-import { AccessibilityCard } from "./cards/AccessibilityCard";
 import { WordPressCard } from "./cards/wordpress/WordPressCard";
-import { TechnologyCard } from "./cards/TechnologyCard";
 import { OptimizationCard } from "./cards/optimization";
-// import { MobileCard } from "./cards/MobileCard";
-// import { NetworkCard } from "./cards/NetworkCard";
 import { OverallScoreHero } from "./OverallScoreHero";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type {
@@ -47,28 +40,14 @@ interface CardConfig {
   order: number;
 }
 
-// Card component registry
 const CARD_COMPONENTS: Record<string, React.ComponentType<any>> = {
-  "quick-wins": QuickWinsCard,
-  performance: PerformanceCard,
-  security: SecurityCard,
-  seo: SEOCard,
-  accessibility: AccessibilityCard,
   wordpress: WordPressCard,
-  technology: TechnologyCard,
   optimization: OptimizationCard,
 };
 
-// Default card order
 const DEFAULT_CARDS: CockpitCardLayout[] = [
-  { id: "quick-wins", visible: true, minimized: false, order: 0 },
-  { id: "performance", visible: true, minimized: false, order: 1 },
-  { id: "security", visible: true, minimized: false, order: 2 },
-  { id: "seo", visible: true, minimized: false, order: 3 },
-  { id: "accessibility", visible: true, minimized: false, order: 4 },
-  { id: "wordpress", visible: true, minimized: false, order: 5 },
-  { id: "technology", visible: true, minimized: false, order: 6 },
-  { id: "optimization", visible: true, minimized: false, order: 7 },
+  { id: "wordpress", visible: true, minimized: false, order: 0 },
+  { id: "optimization", visible: true, minimized: false, order: 1 },
 ];
 
 const DEFAULT_LAYOUT: CockpitLayoutData = {
@@ -107,11 +86,13 @@ export function SiteCockpit({
   editable = true,
   initialLayout,
 }: SiteCockpitProps) {
+  const t = useTranslations("SiteCockpit");
   const [cards, setCards] = useState<CardConfig[]>(() =>
     layoutToCards(initialLayout || DEFAULT_LAYOUT)
   );
+  const [optimizingCategory, setOptimizingCategory] = useState<string | null>(null);
 
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
@@ -173,40 +154,6 @@ export function SiteCockpit({
     }
   };
 
-  const toggleMinimize = useCallback(
-    (cardId: string) => {
-      setCards((items) => {
-        const newCards = items.map((card) =>
-          card.id === cardId ? { ...card, minimized: !card.minimized } : card
-        );
-
-        startTransition(() => {
-          saveLayout(newCards);
-        });
-
-        return newCards;
-      });
-    },
-    [saveLayout]
-  );
-
-  const toggleVisibility = useCallback(
-    (cardId: string) => {
-      setCards((items) => {
-        const newCards = items.map((card) =>
-          card.id === cardId ? { ...card, visible: !card.visible } : card
-        );
-
-        startTransition(() => {
-          saveLayout(newCards);
-        });
-
-        return newCards;
-      });
-    },
-    [saveLayout]
-  );
-
   const resetLayout = useCallback(async () => {
     const defaultCards = layoutToCards(DEFAULT_LAYOUT);
     setCards(defaultCards);
@@ -223,6 +170,32 @@ export function SiteCockpit({
     }
   }, [siteId]);
 
+  const handleOptimizeCategory = useCallback(async (category: "performance" | "security" | "seo" | "accessibility") => {
+    if (!siteId) return;
+    setOptimizingCategory(category);
+    try {
+      const response = await fetch(`/api/reports/${siteId}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ format: "pdf", scope: category }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || "Failed report generation");
+      }
+      if (payload.report?.downloadUrl) {
+        const link = document.createElement("a");
+        link.href = payload.report.downloadUrl;
+        link.download = payload.report.filename || `${category}-report.pdf`;
+        link.click();
+      }
+    } catch (error) {
+      console.error(`Failed to optimize ${category}:`, error);
+    } finally {
+      setOptimizingCategory(null);
+    }
+  }, [siteId]);
+
   const visibleCards = cards.filter((card) => {
     if (card.id === "wordpress" && data.cms.type !== "wordpress") {
       return false;
@@ -231,56 +204,23 @@ export function SiteCockpit({
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
+    <div className="min-h-screen" style={{ background: "var(--background-default)" }}>
       <OverallScoreHero
         summary={data.summary}
         domain={data.domain}
-        faviconUrl={data.faviconUrl}
+        finalUrl={data.finalUrl}
         cms={data.cms}
+        onOptimizeCategory={handleOptimizeCategory}
+        optimizingCategory={optimizingCategory}
       />
 
       {editable && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-          <div className="flex items-center justify-end gap-3">
-            <div className="flex items-center gap-2">
-              {saveStatus === "saving" && (
-                <span className="text-sm text-blue-400 flex items-center gap-1">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Saving...
-                </span>
-              )}
-              {saveStatus === "saved" && (
-                <span className="text-sm text-green-400">✓ Saved</span>
-              )}
-              {saveStatus === "error" && (
-                <span className="text-sm text-red-400">✗ Save failed</span>
-              )}
-            </div>
-
-            <button
-              onClick={resetLayout}
-              className="text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              Reset Layout
-            </button>
-            <div className="text-sm text-gray-500">
-              Drag cards to rearrange • Click to minimize
-            </div>
+          <div className="flex items-center justify-end gap-3 text-sm" style={{ color: "var(--text-subtle)" }}>
+            {saveStatus === "saving" && <span>{t("common.loading")}</span>}
+            {saveStatus === "saved" && <span>✓ {t("common.save")}</span>}
+            {saveStatus === "error" && <span>✗ {t("common.error")}</span>}
+            <button onClick={resetLayout} className="hover:underline">{t("common.refresh")}</button>
           </div>
         </div>
       )}
@@ -305,7 +245,6 @@ export function SiteCockpit({
                     data={data}
                     siteId={siteId}
                     minimized={card.minimized}
-                    onToggleMinimize={() => toggleMinimize(card.id)}
                     editable={editable}
                     connection={{
                       method: data.wordpress ? "wordpress" : "none",
