@@ -1,20 +1,24 @@
 // components/site-cockpit/cards/PerformanceCard.tsx
 import { CockpitCard } from "./CockpitCard";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import type { Performance } from "@/types/site-cockpit";
 
 interface PerformanceCardProps {
   data: Performance;
+  stats?: {
+    passed: number;
+    warnings: number;
+    criticalIssues: number;
+  };
+  onOptimize?: () => void;
+  optimizing?: boolean;
 }
 
-export function PerformanceCard({ data }: PerformanceCardProps) {
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return "text-green-600 dark:text-green-400";
-    if (score >= 50) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
-  };
-
-  // use a local, safely-typed variable for recommendations because Performance may not declare it
+export function PerformanceCard({
+  data,
+  stats,
+  onOptimize,
+  optimizing,
+}: PerformanceCardProps) {
   const recommendations = (data as any).recommendations as string[] | undefined;
 
   return (
@@ -24,9 +28,11 @@ export function PerformanceCard({ data }: PerformanceCardProps) {
       title="Performance"
       score={data.score}
       grade={data.grade}
+      stats={stats}
+      onOptimize={onOptimize}
+      optimizing={optimizing}
     >
       <div className="space-y-4">
-        {/* Metrics */}
         <div>
           <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Core Metrics
@@ -45,9 +51,8 @@ export function PerformanceCard({ data }: PerformanceCardProps) {
               ))}
           </div>
 
-          {/* Recommendations */}
           {recommendations && recommendations.length > 0 && (
-            <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-700 mt-3">
               <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Recommendations
               </h4>

@@ -5,26 +5,50 @@ import type { SEOData } from "@/types/site-cockpit";
 
 interface SEOCardProps {
   data: SEOData;
+  stats?: {
+    passed: number;
+    warnings: number;
+    criticalIssues: number;
+  };
+  onOptimize?: () => void;
+  optimizing?: boolean;
 }
 
-export function SEOCard({ data }: SEOCardProps) {
+export function SEOCard({ data, stats, onOptimize, optimizing }: SEOCardProps) {
   const title = data.meta?.title;
   const description = data.meta?.description;
 
   return (
-    <CockpitCard id="seo" category="seo" title="SEO" score={data.score} grade={data.grade}>
+    <CockpitCard
+      id="seo"
+      category="seo"
+      title="SEO"
+      score={data.score}
+      grade={data.grade}
+      stats={stats}
+      onOptimize={onOptimize}
+      optimizing={optimizing}
+    >
       <div className="space-y-4">
         {title && (
           <div>
-            <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title Tag</h4>
-            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{title}</p>
+            <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Title Tag
+            </h4>
+            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+              {title}
+            </p>
           </div>
         )}
 
         {description && (
           <div>
-            <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Meta Description</h4>
-            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{description}</p>
+            <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Meta Description
+            </h4>
+            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+              {description}
+            </p>
           </div>
         )}
 
@@ -41,12 +65,24 @@ export function SEOCard({ data }: SEOCardProps) {
 
         <div className="pt-3 border-t border-slate-200 dark:border-slate-700 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-600 dark:text-slate-400">Canonical</span>
-            {data.meta.hasCanonical ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
+            <span className="text-sm text-slate-600 dark:text-slate-400">
+              Canonical
+            </span>
+            {data.meta.hasCanonical ? (
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            ) : (
+              <XCircle className="h-4 w-4 text-red-500" />
+            )}
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-600 dark:text-slate-400">Structured data</span>
-            {data.structuredData.present ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
+            <span className="text-sm text-slate-600 dark:text-slate-400">
+              Structured data
+            </span>
+            {data.structuredData.present ? (
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            ) : (
+              <XCircle className="h-4 w-4 text-red-500" />
+            )}
           </div>
         </div>
       </div>
