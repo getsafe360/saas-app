@@ -43,33 +43,36 @@ const CATEGORY_LINKS = [
     id: "performance",
     labelKey: "performance",
     icon: Zap,
-    color: "text-blue-300",
-    iconBg: "bg-blue-500/15",
-    href: (siteId: string) => `/dashboard/sites/${siteId}/cockpit?category=performance`,
+    color: "var(--category-performance)",
+    iconBg: "oklch(from var(--category-performance) l c h / 0.15)",
+    href: (siteId: string) =>
+      `/dashboard/sites/${siteId}/cockpit?category=performance`,
   },
   {
     id: "security",
     labelKey: "security",
     icon: Shield,
-    color: "text-green-300",
-    iconBg: "bg-green-500/15",
-    href: (siteId: string) => `/dashboard/sites/${siteId}/cockpit?category=security`,
+    color: "var(--category-security)",
+    iconBg: "oklch(from var(--category-security) l c h / 0.15)",
+    href: (siteId: string) =>
+      `/dashboard/sites/${siteId}/cockpit?category=security`,
   },
   {
     id: "seo",
     labelKey: "seo",
     icon: Search,
-    color: "text-purple-300",
-    iconBg: "bg-purple-500/15",
+    color: "var(--category-seo)",
+    iconBg: "oklch(from var(--category-seo) l c h / 0.15)",
     href: (siteId: string) => `/dashboard/sites/${siteId}/cockpit?category=seo`,
   },
   {
     id: "accessibility",
     labelKey: "accessibility",
     icon: Accessibility,
-    color: "text-orange-300",
-    iconBg: "bg-orange-500/15",
-    href: (siteId: string) => `/dashboard/sites/${siteId}/cockpit?category=accessibility`,
+    color: "var(--category-accessibility)",
+    iconBg: "oklch(from var(--category-accessibility) l c h / 0.15)",
+    href: (siteId: string) =>
+      `/dashboard/sites/${siteId}/cockpit?category=accessibility`,
   },
 ] as const;
 
@@ -133,7 +136,9 @@ export function SiteSelectorDropdown({
         </div>
         <div className="flex-1 text-left min-w-0">
           <div className="text-sm font-medium text-white truncate">
-            {currentSite ? formatHost(currentSite.canonicalHost) : tNav("selectSite")}
+            {currentSite
+              ? formatHost(currentSite.canonicalHost)
+              : tNav("selectSite")}
           </div>
         </div>
         <ChevronDown
@@ -244,8 +249,11 @@ export function SiteSelectorDropdown({
                   isActive ? "cockpit-nav-item--active" : "hover:text-gray-200"
                 }`}
               >
-                <span className={`inline-flex items-center justify-center rounded-md p-1.5 ${category.iconBg}`}>
-                  <Icon className={`h-4 w-4 ${category.color}`} />
+                <span
+                  className="inline-flex items-center justify-center rounded-md p-1.5"
+                  style={{ background: category.iconBg }}
+                >
+                  <Icon className="h-4 w-4" style={{ color: category.color }} />
                 </span>
                 <span className="text-sm flex items-center gap-2">
                   {tNav(category.labelKey)}

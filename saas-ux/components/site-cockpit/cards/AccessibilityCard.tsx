@@ -1,13 +1,25 @@
 // components/site-cockpit/cards/AccessibilityCard.tsx
 import { CockpitCard } from "./CockpitCard";
-import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import type { Accessibility } from "@/types/site-cockpit";
 
 interface AccessibilityCardProps {
   data: Accessibility;
+  stats?: {
+    passed: number;
+    warnings: number;
+    criticalIssues: number;
+  };
+  onOptimize?: () => void;
+  optimizing?: boolean;
 }
 
-export function AccessibilityCard({ data }: AccessibilityCardProps) {
+export function AccessibilityCard({
+  data,
+  stats,
+  onOptimize,
+  optimizing,
+}: AccessibilityCardProps) {
   return (
     <CockpitCard
       id="accessibility"
@@ -15,9 +27,11 @@ export function AccessibilityCard({ data }: AccessibilityCardProps) {
       title="Accessibility"
       score={data.score}
       grade={data.grade}
+      stats={stats}
+      onOptimize={onOptimize}
+      optimizing={optimizing}
     >
       <div className="space-y-4">
-        {/* WCAG Level */}
         {data.wcagLevel && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -27,7 +41,6 @@ export function AccessibilityCard({ data }: AccessibilityCardProps) {
           </div>
         )}
 
-        {/* Issues Summary */}
         {(data as any).issues !== undefined && (
           <div>
             <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -50,7 +63,6 @@ export function AccessibilityCard({ data }: AccessibilityCardProps) {
           </div>
         )}
 
-        {/* Passed Checks */}
         {(data as any).passedChecks !== undefined && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -62,7 +74,6 @@ export function AccessibilityCard({ data }: AccessibilityCardProps) {
           </div>
         )}
 
-        {/* Categories */}
         {(data as any).categories &&
           Object.keys((data as any).categories).length > 0 && (
             <div>
@@ -83,13 +94,12 @@ export function AccessibilityCard({ data }: AccessibilityCardProps) {
                         {String(count)}
                       </span>
                     </div>
-                  )
+                  ),
                 )}
               </div>
             </div>
           )}
 
-        {/* Issues List */}
         {(data as any).issues && (data as any).issues.length > 0 && (
           <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
             <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">

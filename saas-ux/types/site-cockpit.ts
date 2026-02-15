@@ -1,10 +1,28 @@
 // types/site-cockpit.ts
 // Complete TypeScript definitions for Site Cockpit API
 
-export type ScoreGrade = 'A+' | 'A' | 'A-' | 'B+' | 'B' | 'B-' | 'C+' | 'C' | 'C-' | 'D' | 'F';
-export type ImpactLevel = 'critical' | 'high' | 'medium' | 'low';
-export type EffortLevel = 'low' | 'medium' | 'high';
-export type CategoryType = 'performance' | 'security' | 'seo' | 'accessibility' | 'wordpress' | 'tech';
+export type ScoreGrade =
+  | "A+"
+  | "A"
+  | "A-"
+  | "B+"
+  | "B"
+  | "B-"
+  | "C+"
+  | "C"
+  | "C-"
+  | "D"
+  | "F";
+export type ImpactLevel = "critical" | "high" | "medium" | "low";
+export type EffortLevel = "low" | "medium" | "high";
+export type CategoryType =
+  | "performance"
+  | "security"
+  | "seo"
+  | "accessibility"
+  | "wordpress"
+  | "tech"
+  | "geo";
 
 // ===== QUICK WINS =====
 export interface QuickWinFix {
@@ -283,7 +301,7 @@ export interface Requests {
 
 export interface WebVitalMetric {
   value: number;
-  rating: 'good' | 'needs-improvement' | 'poor';
+  rating: "good" | "needs-improvement" | "poor";
   threshold: number;
 }
 
@@ -433,7 +451,7 @@ export interface Technology {
 export interface Accessibility {
   score: number;
   grade: ScoreGrade;
-  wcagLevel: 'A' | 'AA' | 'AAA';
+  wcagLevel: "A" | "AA" | "AAA";
   images: {
     total: number;
     withAlt: number;
@@ -506,7 +524,7 @@ export interface Mobile {
 
 // ===== NETWORK =====
 export interface Network {
-  ipVersion: 'IPv4' | 'IPv6' | 'Dual-Stack';
+  ipVersion: "IPv4" | "IPv6" | "Dual-Stack";
   ipv4: string | null;
   ipv6: string | null;
   dualStack: boolean;
@@ -589,13 +607,13 @@ export interface SiteCockpitResponse {
   siteLang: string;
   faviconUrl: string;
   hostIP: string;
-  
+
   // Summary (hero)
   summary: Summary;
-  
+
   // Quick wins (prominent)
   quickWins: QuickWins;
-  
+
   // CMS detection
   cms: {
     type: string;
@@ -616,10 +634,10 @@ export interface SiteCockpitResponse {
     lastSync?: string;
     pluginVersion?: string;
   };
-  
+
   // WordPress spotlight (when WP detected)
   wordpress?: WordPress;
-  
+
   // Core categories
   seo: SEOData;
   performance: Performance;
@@ -630,7 +648,7 @@ export interface SiteCockpitResponse {
   technology: Technology;
   mobile: Mobile;
   network: Network;
-  
+
   // Legacy/existing fields
   dom: {
     h1Count: number;
@@ -659,71 +677,77 @@ export interface CategoryTheme {
 
 export const CATEGORY_THEMES: Record<CategoryType, CategoryTheme> = {
   performance: {
-    color: '#10B981',
-    bgGradient: 'from-green-500/10 to-green-600/5',
-    border: 'border-green-500/20',
-    glow: 'shadow-green-500/50'
+    color: "#10B981",
+    bgGradient: "from-green-500/10 to-green-600/5",
+    border: "border-green-500/20",
+    glow: "shadow-green-500/50",
   },
   security: {
-    color: '#EF4444',
-    bgGradient: 'from-red-500/10 to-red-600/5',
-    border: 'border-red-500/20',
-    glow: 'shadow-red-500/50'
+    color: "#EF4444",
+    bgGradient: "from-red-500/10 to-red-600/5",
+    border: "border-red-500/20",
+    glow: "shadow-red-500/50",
   },
   seo: {
-    color: '#3B82F6',
-    bgGradient: 'from-blue-500/10 to-blue-600/5',
-    border: 'border-blue-500/20',
-    glow: 'shadow-blue-500/50'
+    color: "#3B82F6",
+    bgGradient: "from-blue-500/10 to-blue-600/5",
+    border: "border-blue-500/20",
+    glow: "shadow-blue-500/50",
   },
   accessibility: {
-    color: '#8B5CF6',
-    bgGradient: 'from-purple-500/10 to-purple-600/5',
-    border: 'border-purple-500/20',
-    glow: 'shadow-purple-500/50'
+    color: "#8B5CF6",
+    bgGradient: "from-purple-500/10 to-purple-600/5",
+    border: "border-purple-500/20",
+    glow: "shadow-purple-500/50",
   },
   wordpress: {
-    color: '#21759B',
-    bgGradient: 'from-blue-600/10 to-blue-700/5',
-    border: 'border-blue-600/20',
-    glow: 'shadow-blue-600/50'
+    color: "#21759B",
+    bgGradient: "from-blue-600/10 to-blue-700/5",
+    border: "border-blue-600/20",
+    glow: "shadow-blue-600/50",
   },
-tech: {
-  color: '#F97316',
-  bgGradient: 'from-orange-500/10 to-orange-600/5',
-  border: 'border-orange-500/20',
-  glow: 'shadow-orange-500/50'
-}
+  geo: {
+    color: "#9333EA",
+    bgGradient: "from-fuchsia-500/12 via-blue-500/10 to-violet-500/12",
+    border: "border-fuchsia-500/25",
+    glow: "shadow-fuchsia-500/50",
+  },
+  tech: {
+    color: "#F97316",
+    bgGradient: "from-orange-500/10 to-orange-600/5",
+    border: "border-orange-500/20",
+    glow: "shadow-orange-500/50",
+  },
 };
 
 // ===== UTILITY FUNCTIONS =====
 export function getScoreGrade(score: number): ScoreGrade {
-  if (score >= 97) return 'A+';
-  if (score >= 93) return 'A';
-  if (score >= 90) return 'A-';
-  if (score >= 87) return 'B+';
-  if (score >= 83) return 'B';
-  if (score >= 80) return 'B-';
-  if (score >= 77) return 'C+';
-  if (score >= 73) return 'C';
-  if (score >= 70) return 'C-';
-  if (score >= 60) return 'D';
-  return 'F';
+  if (score >= 97) return "A+";
+  if (score >= 93) return "A";
+  if (score >= 90) return "A-";
+  if (score >= 87) return "B+";
+  if (score >= 83) return "B";
+  if (score >= 80) return "B-";
+  if (score >= 77) return "C+";
+  if (score >= 73) return "C";
+  if (score >= 70) return "C-";
+  if (score >= 60) return "D";
+  return "F";
 }
 
 export function getScoreColor(score: number): string {
-  if (score >= 90) return 'text-green-500';
-  if (score >= 70) return 'text-yellow-500';
-  if (score >= 50) return 'text-orange-500';
-  return 'text-red-500';
+  if (score >= 90) return "text-green-500";
+  if (score >= 70) return "text-yellow-500";
+  if (score >= 50) return "text-orange-500";
+  return "text-red-500";
 }
 
 export function getImpactColor(impact: ImpactLevel): string {
   const colors = {
-    critical: 'text-red-600',
-    high: 'text-orange-500',
-    medium: 'text-yellow-500',
-    low: 'text-blue-500'
+    critical: "text-red-600",
+    high: "text-orange-500",
+    medium: "text-yellow-500",
+    low: "text-blue-500",
   };
   return colors[impact];
 }
