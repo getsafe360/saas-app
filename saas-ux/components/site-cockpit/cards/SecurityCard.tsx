@@ -5,9 +5,21 @@ import type { SecurityData } from "@/types/site-cockpit";
 
 interface SecurityCardProps {
   data: SecurityData;
+  stats?: {
+    passed: number;
+    warnings: number;
+    criticalIssues: number;
+  };
+  onOptimize?: () => void;
+  optimizing?: boolean;
 }
 
-export function SecurityCard({ data }: SecurityCardProps) {
+export function SecurityCard({
+  data,
+  stats,
+  onOptimize,
+  optimizing,
+}: SecurityCardProps) {
   const httpsEnabled = data.https?.enabled;
   const headerEntries = [
     ["CSP", data.headers?.contentSecurityPolicy?.present],
@@ -23,10 +35,15 @@ export function SecurityCard({ data }: SecurityCardProps) {
       title="Security"
       score={data.score}
       grade={data.grade}
+      stats={stats}
+      onOptimize={onOptimize}
+      optimizing={optimizing}
     >
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-slate-600 dark:text-slate-400">HTTPS Enabled</span>
+          <span className="text-sm text-slate-600 dark:text-slate-400">
+            HTTPS Enabled
+          </span>
           {httpsEnabled ? (
             <CheckCircle className="h-4 w-4 text-green-500" />
           ) : (
@@ -35,11 +52,15 @@ export function SecurityCard({ data }: SecurityCardProps) {
         </div>
 
         <div>
-          <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Security Headers</h4>
+          <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Security Headers
+          </h4>
           <div className="space-y-2">
             {headerEntries.map(([label, present]) => (
               <div key={label} className="flex items-center justify-between">
-                <span className="text-sm text-slate-600 dark:text-slate-400">{label}</span>
+                <span className="text-sm text-slate-600 dark:text-slate-400">
+                  {label}
+                </span>
                 {present ? (
                   <CheckCircle className="h-4 w-4 text-green-500" />
                 ) : (
@@ -52,8 +73,12 @@ export function SecurityCard({ data }: SecurityCardProps) {
 
         <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-600 dark:text-slate-400">Vulnerabilities</span>
-            <span className="text-sm font-medium">{data.vulnerabilities?.total ?? 0}</span>
+            <span className="text-sm text-slate-600 dark:text-slate-400">
+              Vulnerabilities
+            </span>
+            <span className="text-sm font-medium">
+              {data.vulnerabilities?.total ?? 0}
+            </span>
           </div>
         </div>
       </div>

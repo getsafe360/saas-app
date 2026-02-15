@@ -32,7 +32,7 @@ export function WordPressCard({
     initialStatus,
     lastConnected,
     siteId,
-    id
+    id,
   );
   const pairing = useWordPressPairing(data.finalUrl);
 
@@ -65,8 +65,13 @@ export function WordPressCard({
         id={id}
         title={
           <div className="flex items-center gap-3">
-            <WordPressIcon size={24} className="text-[#21759B]" />
-            <span className="text-blue-400">{t("wordpress.detected")}</span>
+            <WordPressIcon
+              size={24}
+              className="text-[var(--category-wordpress)]"
+            />
+            <span className="text-[var(--category-wordpress)]">
+              {t("wordpress.detected")}
+            </span>
           </div>
         }
         category="wordpress"
@@ -86,8 +91,13 @@ export function WordPressCard({
       id={id}
       title={
         <div className="flex items-center gap-3">
-          <WordPressIcon size={24} className="text-[#21759B]" />
-          <span className="text-blue-400">{t("wordpress.title")}</span>
+          <WordPressIcon
+            size={24}
+            className="text-[var(--category-wordpress)]"
+          />
+          <span className="text-[var(--category-wordpress)]">
+            {t("wordpress.title")}
+          </span>
         </div>
       }
       category="wordpress"
@@ -123,7 +133,10 @@ export function WordPressCard({
 
       {/* WordPress Analysis Panels */}
       <div className="space-y-4">
-        <VersionStatus version={wordpress.version} recommendations={wordpress.recommendations} />
+        <VersionStatus
+          version={wordpress.version}
+          recommendations={wordpress.recommendations}
+        />
         <SecurityOverview security={wordpress.security} />
         <PluginsPanel plugins={wordpress.plugins} />
       </div>
