@@ -39,6 +39,8 @@
   --category-seo: #3b82f6;
   --category-accessibility: #8b5cf6;
   --category-wordpress: #21759b;
+  --category-tech: #f97316;
+  --category-geo: #9333ea;
 
   /* Semantic Backgrounds */
   --background-default: var(--color-neutral-100);
@@ -123,6 +125,8 @@
   --category-seo: #60a5fa;
   --category-accessibility: #a78bfa;
   --category-wordpress: #48a9d0;
+  --category-tech: #fb923c;
+  --category-geo: #c084fc;
 
   --background-default: var(--color-neutral-100);
   --border-default: var(--color-neutral-300);

@@ -1,7 +1,12 @@
 // components/site-cockpit/SiteCockpit.tsx
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import {
+  useState,
+  useCallback,
+  useTransition,
+  type ComponentType,
+} from "react";
 import { useTranslations } from "next-intl";
 import {
   DndContext,
@@ -23,6 +28,7 @@ import { SecurityCard } from "./cards/SecurityCard";
 import { SEOCard } from "./cards/SEOCard";
 import { AccessibilityCard } from "./cards/AccessibilityCard";
 import { OverallScoreHero } from "./OverallScoreHero";
+import { GeoCard } from "./cards/GeoCard";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type {
   CockpitLayoutData,
@@ -38,17 +44,18 @@ interface SiteCockpitProps {
 
 interface CardConfig {
   id: string;
-  component: React.ComponentType<any>;
+  component: ComponentType<any>;
   visible: boolean;
   minimized: boolean;
   order: number;
 }
 
-const CARD_COMPONENTS: Record<string, React.ComponentType<any>> = {
+const CARD_COMPONENTS: Record<string, ComponentType<any>> = {
   performance: PerformanceCard,
   security: SecurityCard,
   seo: SEOCard,
   accessibility: AccessibilityCard,
+  geo: GeoCard,
   wordpress: WordPressCard,
   optimization: OptimizationCard,
 };
@@ -58,8 +65,9 @@ const DEFAULT_CARDS: CockpitCardLayout[] = [
   { id: "security", visible: true, minimized: false, order: 2 },
   { id: "seo", visible: true, minimized: false, order: 3 },
   { id: "accessibility", visible: true, minimized: false, order: 4 },
-  { id: "wordpress", visible: true, minimized: false, order: 5 },
-  { id: "optimization", visible: true, minimized: false, order: 6 },
+  { id: "geo", visible: true, minimized: false, order: 5 },
+  { id: "wordpress", visible: true, minimized: false, order: 6 },
+  { id: "optimization", visible: true, minimized: false, order: 7 },
 ];
 
 const DEFAULT_LAYOUT: CockpitLayoutData = {
@@ -216,8 +224,6 @@ export function SiteCockpit({
         finalUrl={data.finalUrl}
         metaTitle={data.meta?.title}
         cms={data.cms}
-        onOptimizeCategory={handleOptimizeCategory}
-        optimizingCategory={optimizingCategory}
       />
 
       {editable && (
@@ -250,23 +256,53 @@ export function SiteCockpit({
               {visibleCards.map((card) => {
                 if (card.id === "performance") {
                   return (
-                    <PerformanceCard key={card.id} data={data.performance} />
+                    <PerformanceCard
+                      key={card.id}
+                      data={data.performance}
+                      stats={data.summary.categoryInsights?.performance}
+                      onOptimize={() => handleOptimizeCategory("performance")}
+                      optimizing={optimizingCategory === "performance"}
+                    />
                   );
                 }
                 if (card.id === "security") {
-                  return <SecurityCard key={card.id} data={data.security} />;
+                  return (
+                    <SecurityCard
+                      key={card.id}
+                      data={data.security}
+                      stats={data.summary.categoryInsights?.security}
+                      onOptimize={() => handleOptimizeCategory("security")}
+                      optimizing={optimizingCategory === "security"}
+                    />
+                  );
                 }
                 if (card.id === "seo") {
-                  return <SEOCard key={card.id} data={data.seo} />;
+                  return (
+                    <SEOCard
+                      key={card.id}
+                      data={data.seo}
+                      stats={data.summary.categoryInsights?.seo}
+                      onOptimize={() => handleOptimizeCategory("seo")}
+                      optimizing={optimizingCategory === "seo"}
+                    />
+                  );
                 }
                 if (card.id === "accessibility") {
                   return (
                     <AccessibilityCard
                       key={card.id}
                       data={data.accessibility}
+                      stats={data.summary.categoryInsights?.accessibility}
+                      onOptimize={() => handleOptimizeCategory("accessibility")}
+                      optimizing={optimizingCategory === "accessibility"}
                     />
                   );
                 }
+
+                if (card.id === "geo") {
+                  return <GeoCard key={card.id} />;
+                }
+
                 if (card.id === "wordpress") {
                   return (
                     <WordPressCard
