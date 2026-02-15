@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ComponentType } from "react";
 import { useTranslations } from "next-intl";
 import { AlertCircle, CheckCircle, Globe, ShieldAlert } from "lucide-react";
 import { getCMSInfo } from "@/components/analyzer/cms/cms-signatures";
@@ -54,7 +54,7 @@ export function OverallScoreHero({
         borderColor: "var(--border-default)",
       }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div
             className="lg:col-span-2 rounded-2xl border p-4"
