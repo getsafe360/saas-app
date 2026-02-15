@@ -104,9 +104,12 @@ function CategorySnapshotCard({
         <div className="flex items-center gap-2.5 min-w-0">
           <span
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg"
-            style={{ background: `oklch(from ${config.color} l c h / 0.12)` }}
+            style={{
+              background: `oklch(from ${config.color} l c h / 0.12)`,
+              color: config.color,
+            }}
           >
-            <CategoryIcon className="h-4 w-4" style={{ color: config.color }} />
+            <CategoryIcon className="h-4 w-4" />
           </span>
           <div className="truncate font-medium" style={{ color: config.color }}>
             {label}
