@@ -98,34 +98,65 @@ function generateStrengths(
   return strengths.slice(0, 4);
 }
 
-function calculateCriticalIssues(data: any): number {
-  let count = 0;
-  if (!data.isHttps) count++;
-  if (!data.headers?.["content-security-policy"]) count++;
-  return count;
-}
+type CheckSeverity = "critical" | "warning" | "passed";
 
-function calculateWarnings(data: any): number {
-  let count = 0;
-  if (!data.meta?.hasCanonical) count++;
-  if (data.dom?.h1Count !== 1) count++;
-  if (data.accessibility?.imgMissingAlt > 0) count++;
-  if (!data.headers?.["x-frame-options"]) count++;
-  if (data.perfHints?.heavyScriptHint) count++;
-  return count;
-}
+type CategoryInsights = {
+  criticalIssues: number;
+  warnings: number;
+  passed: number;
+  topIssues: string[];
+};
 
-function calculatePassed(data: any): number {
-  let count = 0;
-  if (data.isHttps) count++;
-  if (data.meta?.title && data.meta.titleLen > 0) count++;
-  if (data.meta?.description && data.meta.descriptionLen > 0) count++;
-  if (data.meta?.hasCanonical) count++;
-  if (data.dom?.h1Count === 1) count++;
-  if (data.accessibility?.imgMissingAlt === 0) count++;
-  if (data.headers?.["strict-transport-security"]) count++;
-  if (data.headers?.["x-frame-options"]) count++;
-  return count;
+function evaluateCategoryChecks(data: any): Record<"performance" | "security" | "seo" | "accessibility", CategoryInsights> {
+  const checks = {
+    performance: [
+      { ok: !data.perfHints?.heavyScriptHint, severity: "warning" as CheckSeverity, message: "Heavy scripts detected" },
+      { ok: !data.perfHints?.heavyImageHint, severity: "warning" as CheckSeverity, message: "Heavy images detected" },
+      { ok: (data.perfHints?.approxHtmlBytes || 0) <= 500000, severity: "critical" as CheckSeverity, message: "HTML payload is too large" },
+    ],
+    security: [
+      { ok: !!data.isHttps, severity: "critical" as CheckSeverity, message: "HTTPS is not enabled" },
+      { ok: !!data.headers?.["content-security-policy"], severity: "critical" as CheckSeverity, message: "Missing Content-Security-Policy" },
+      { ok: !!data.headers?.["strict-transport-security"], severity: "warning" as CheckSeverity, message: "Missing HSTS header" },
+      { ok: !!data.headers?.["x-frame-options"], severity: "warning" as CheckSeverity, message: "Missing X-Frame-Options" },
+    ],
+    seo: [
+      { ok: !!data.meta?.title && data.meta.titleLen > 0, severity: "critical" as CheckSeverity, message: "Missing page title" },
+      { ok: !!data.meta?.description && data.meta.descriptionLen > 0, severity: "warning" as CheckSeverity, message: "Missing meta description" },
+      { ok: !!data.meta?.hasCanonical, severity: "warning" as CheckSeverity, message: "Missing canonical URL" },
+      { ok: data.dom?.h1Count === 1, severity: "warning" as CheckSeverity, message: "Heading structure should have exactly one H1" },
+    ],
+    accessibility: [
+      { ok: (data.accessibility?.imgMissingAlt || 0) === 0, severity: "critical" as CheckSeverity, message: "Images missing ALT text" },
+      { ok: (data.accessibility?.imgWithoutAltRatio || 0) < 0.2, severity: "warning" as CheckSeverity, message: "High ratio of images without ALT" },
+      { ok: !!data.siteLang, severity: "warning" as CheckSeverity, message: "Missing lang attribute" },
+    ],
+  };
+
+  const result = {} as Record<"performance" | "security" | "seo" | "accessibility", CategoryInsights>;
+
+  for (const [category, categoryChecks] of Object.entries(checks) as Array<[keyof typeof checks, Array<{ ok: boolean; severity: CheckSeverity; message: string }>]>) {
+    let criticalIssues = 0;
+    let warnings = 0;
+    let passed = 0;
+    const topIssues: string[] = [];
+
+    for (const check of categoryChecks) {
+      if (check.ok) {
+        passed += 1;
+      } else if (check.severity === "critical") {
+        criticalIssues += 1;
+        topIssues.push(check.message);
+      } else {
+        warnings += 1;
+        topIssues.push(check.message);
+      }
+    }
+
+    result[category] = { criticalIssues, warnings, passed, topIssues: topIssues.slice(0, 3) };
+  }
+
+  return result;
 }
 
 // ============================================
@@ -610,6 +641,10 @@ export function transformToSiteCockpitResponse(apiData: any): SiteCockpitRespons
   const overallScore = Math.round(
     (performanceScore + securityScore + seoScore + accessibilityScore) / 4
   );
+  const categoryInsights = evaluateCategoryChecks(apiData);
+  const criticalIssues = Object.values(categoryInsights).reduce((sum, item) => sum + item.criticalIssues, 0);
+  const warnings = Object.values(categoryInsights).reduce((sum, item) => sum + item.warnings, 0);
+  const passed = Object.values(categoryInsights).reduce((sum, item) => sum + item.passed, 0);
 
   return {
     // === BASIC INFO ===
@@ -634,9 +669,10 @@ export function transformToSiteCockpitResponse(apiData: any): SiteCockpitRespons
         ...(apiData.cms?.type === "wordpress" ? { wordpress: 68 } : {}),
       },
       strengths: generateStrengths(apiData, performanceScore, securityScore, seoScore, accessibilityScore),
-      criticalIssues: calculateCriticalIssues(apiData),
-      warnings: calculateWarnings(apiData),
-      passed: calculatePassed(apiData),
+      categoryInsights,
+      criticalIssues,
+      warnings,
+      passed,
     },
 
     // === QUICK WINS (Actionable Improvements) ===

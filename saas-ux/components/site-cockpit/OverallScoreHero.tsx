@@ -19,12 +19,59 @@ interface OverallScoreHeroProps {
   optimizingCategory?: string | null;
 }
 
-const categoryConfig: Array<{ key: Extract<CategoryType, "performance" | "security" | "seo" | "accessibility">; color: string }> = [
-  { key: "performance", color: "#10B981" },
-  { key: "security", color: "#EF4444" },
-  { key: "seo", color: "#3B82F6" },
-  { key: "accessibility", color: "#8B5CF6" },
-];
+const PERFORMANCE = "performance" as const;
+const SECURITY = "security" as const;
+const SEO = "seo" as const;
+const ACCESSIBILITY = "accessibility" as const;
+
+function CategorySnapshotCard({
+  category,
+  color,
+  summary,
+  label,
+  onOptimizeCategory,
+  optimizingCategory,
+  t,
+}: {
+  category: typeof PERFORMANCE | typeof SECURITY | typeof SEO | typeof ACCESSIBILITY;
+  color: string;
+  summary: Summary;
+  label: string;
+  onOptimizeCategory?: (category: Extract<CategoryType, "performance" | "security" | "seo" | "accessibility">) => Promise<void>;
+  optimizingCategory?: string | null;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const score = summary.categoryScores[category] ?? 0;
+  const insights = summary.categoryInsights?.[category];
+
+  return (
+    <div className="rounded-xl border p-4" style={{ borderColor: `${color}55`, background: "var(--header-bg)" }}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="font-medium" style={{ color }}>{label}</div>
+        <div className="text-lg font-bold" style={{ color }}>{score}</div>
+      </div>
+      <div className="h-1.5 rounded-full mb-3" style={{ background: "var(--color-neutral-300)" }}>
+        <div className="h-full rounded-full" style={{ width: `${score}%`, background: color }} />
+      </div>
+      <div className="text-xs mb-3" style={{ color: "var(--text-subtle)" }}>
+        {t("summary.passed")}: {insights?.passed ?? summary.passed} · {t("summary.warnings")}: {insights?.warnings ?? summary.warnings} · {t("summary.criticalIssues")}: {insights?.criticalIssues ?? summary.criticalIssues}
+      </div>
+      {insights?.topIssues?.length ? (
+        <div className="mb-3 rounded-lg border px-2.5 py-2 text-xs" style={{ borderColor: `${color}44`, color: "var(--text-subtle)" }}>
+          <span className="font-medium" style={{ color }}>{t("summary.criticalIssues")}:</span> {insights.topIssues[0]}
+        </div>
+      ) : null}
+      <button
+        className="w-full rounded-lg px-3 py-2 text-sm font-medium border"
+        style={{ borderColor: `${color}80`, color }}
+        onClick={() => onOptimizeCategory?.(category)}
+        disabled={optimizingCategory === category}
+      >
+        {optimizingCategory === category ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{t("common.loading")}</span> : t("actions.optimize")}
+      </button>
+    </div>
+  );
+}
 
 export function OverallScoreHero({
   summary,
@@ -52,7 +99,7 @@ export function OverallScoreHero({
           <div className="lg:col-span-2 rounded-2xl border p-4" style={{ background: "var(--header-bg)", borderColor: "var(--border-default)" }}>
             <div className="grid grid-cols-3 gap-4 items-center">
               <div className="col-span-1">
-                <div className="aspect-[4/3] overflow-hidden rounded-xl border" style={{ borderColor: "var(--border-default)", background: "var(--color-neutral-200)" }}>
+                <div className="aspect-[4/3] overflow-hidden rounded-sm border" style={{ borderColor: "var(--border-default)", background: "var(--color-neutral-200)" }}>
                   {!imageError ? (
                     <img
                       src={screenshotUrl}
@@ -104,31 +151,10 @@ export function OverallScoreHero({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {categoryConfig.map(({ key, color }) => {
-            const score = summary.categoryScores[key] ?? 0;
-            return (
-              <div key={key} className="rounded-xl border p-4" style={{ borderColor: `${color}55`, background: "var(--header-bg)" }}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="font-medium capitalize" style={{ color }}>{t(`${key}.title`)}</div>
-                  <div className="text-lg font-bold" style={{ color }}>{score}</div>
-                </div>
-                <div className="h-1.5 rounded-full mb-3" style={{ background: "var(--color-neutral-300)" }}>
-                  <div className="h-full rounded-full" style={{ width: `${score}%`, background: color }} />
-                </div>
-                <div className="text-xs mb-3" style={{ color: "var(--text-subtle)" }}>
-                  {t("summary.passed")}: {Math.max(summary.passed - Math.floor((100 - score) / 8), 0)} · {t("summary.warnings")}: {summary.warnings} · {t("summary.criticalIssues")}: {summary.criticalIssues}
-                </div>
-                <button
-                  className="w-full rounded-lg px-3 py-2 text-sm font-medium border"
-                  style={{ borderColor: `${color}80`, color }}
-                  onClick={() => onOptimizeCategory?.(key)}
-                  disabled={optimizingCategory === key}
-                >
-                  {optimizingCategory === key ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{t("common.loading")}</span> : t("actions.optimize")}
-                </button>
-              </div>
-            );
-          })}
+          <CategorySnapshotCard category={PERFORMANCE} color="#10B981" summary={summary} label={t("performance.title")} onOptimizeCategory={onOptimizeCategory} optimizingCategory={optimizingCategory} t={t} />
+          <CategorySnapshotCard category={SECURITY} color="#EF4444" summary={summary} label={t("security.title")} onOptimizeCategory={onOptimizeCategory} optimizingCategory={optimizingCategory} t={t} />
+          <CategorySnapshotCard category={SEO} color="#3B82F6" summary={summary} label={t("seo.title")} onOptimizeCategory={onOptimizeCategory} optimizingCategory={optimizingCategory} t={t} />
+          <CategorySnapshotCard category={ACCESSIBILITY} color="#8B5CF6" summary={summary} label={t("accessibility.title")} onOptimizeCategory={onOptimizeCategory} optimizingCategory={optimizingCategory} t={t} />
         </div>
       </div>
     </div>

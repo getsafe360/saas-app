@@ -14,6 +14,7 @@ export function AccessibilityCard({ data }: AccessibilityCardProps) {
       category="accessibility"
       title="Accessibility"
       score={data.score}
+      grade={data.grade}
     >
       <div className="space-y-4">
         {/* WCAG Level */}
