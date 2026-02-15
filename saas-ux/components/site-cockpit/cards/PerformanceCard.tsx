@@ -23,6 +23,7 @@ export function PerformanceCard({ data }: PerformanceCardProps) {
       category="performance"
       title="Performance"
       score={data.score}
+      grade={data.grade}
     >
       <div className="space-y-4">
         {/* Metrics */}

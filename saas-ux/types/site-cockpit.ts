@@ -547,6 +547,32 @@ export interface Summary {
     wordpress?: number;
   };
   strengths: string[];
+  categoryInsights?: {
+    performance: {
+      criticalIssues: number;
+      warnings: number;
+      passed: number;
+      topIssues: string[];
+    };
+    security: {
+      criticalIssues: number;
+      warnings: number;
+      passed: number;
+      topIssues: string[];
+    };
+    seo: {
+      criticalIssues: number;
+      warnings: number;
+      passed: number;
+      topIssues: string[];
+    };
+    accessibility: {
+      criticalIssues: number;
+      warnings: number;
+      passed: number;
+      topIssues: string[];
+    };
+  };
   criticalIssues: number;
   warnings: number;
   passed: number;

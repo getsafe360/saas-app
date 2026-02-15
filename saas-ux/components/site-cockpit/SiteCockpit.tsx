@@ -18,6 +18,10 @@ import {
 } from "@dnd-kit/sortable";
 import { WordPressCard } from "./cards/wordpress/WordPressCard";
 import { OptimizationCard } from "./cards/optimization";
+import { PerformanceCard } from "./cards/PerformanceCard";
+import { SecurityCard } from "./cards/SecurityCard";
+import { SEOCard } from "./cards/SEOCard";
+import { AccessibilityCard } from "./cards/AccessibilityCard";
 import { OverallScoreHero } from "./OverallScoreHero";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type {
@@ -41,13 +45,21 @@ interface CardConfig {
 }
 
 const CARD_COMPONENTS: Record<string, React.ComponentType<any>> = {
+  performance: PerformanceCard,
+  security: SecurityCard,
+  seo: SEOCard,
+  accessibility: AccessibilityCard,
   wordpress: WordPressCard,
   optimization: OptimizationCard,
 };
 
 const DEFAULT_CARDS: CockpitCardLayout[] = [
-  { id: "wordpress", visible: true, minimized: false, order: 0 },
-  { id: "optimization", visible: true, minimized: false, order: 1 },
+  { id: "performance", visible: true, minimized: false, order: 1 },
+  { id: "security", visible: true, minimized: false, order: 2 },
+  { id: "seo", visible: true, minimized: false, order: 3 },
+  { id: "accessibility", visible: true, minimized: false, order: 4 },
+  { id: "wordpress", visible: true, minimized: false, order: 5 },
+  { id: "optimization", visible: true, minimized: false, order: 6 },
 ];
 
 const DEFAULT_LAYOUT: CockpitLayoutData = {
@@ -171,36 +183,21 @@ export function SiteCockpit({
   }, [siteId]);
 
   const handleOptimizeCategory = useCallback(async (category: "performance" | "security" | "seo" | "accessibility") => {
-    if (!siteId) return;
     setOptimizingCategory(category);
-    try {
-      const response = await fetch(`/api/reports/${siteId}/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ format: "pdf", scope: category }),
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload.error || "Failed report generation");
-      }
-      if (payload.report?.downloadUrl) {
-        const link = document.createElement("a");
-        link.href = payload.report.downloadUrl;
-        link.download = payload.report.filename || `${category}-report.pdf`;
-        link.click();
-      }
-    } catch (error) {
-      console.error(`Failed to optimize ${category}:`, error);
-    } finally {
-      setOptimizingCategory(null);
-    }
-  }, [siteId]);
+  }, []);
 
   const visibleCards = cards.filter((card) => {
+    if (!card.visible) return false;
+
     if (card.id === "wordpress" && data.cms.type !== "wordpress") {
       return false;
     }
-    return card.visible;
+
+    if (card.id === "optimization" && !optimizingCategory) {
+      return false;
+    }
+
+    return true;
   });
 
   return (
@@ -237,27 +234,56 @@ export function SiteCockpit({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {visibleCards.map((card) => {
-                const CardComponent = card.component;
-                return (
-                  <CardComponent
-                    key={card.id}
-                    id={card.id}
-                    data={data}
-                    siteId={siteId}
-                    minimized={card.minimized}
-                    editable={editable}
-                    connection={{
-                      method: data.wordpress ? "wordpress" : "none",
-                      status: data.wordpress ? "connected" : "disconnected",
-                      wordpress: data.wordpress
-                        ? {
-                            siteId: siteId || "",
-                            pluginVersion: "1.0.0",
-                          }
-                        : undefined,
-                    }}
-                  />
-                );
+                if (card.id === "performance") {
+                  return <PerformanceCard key={card.id} data={data.performance} />;
+                }
+                if (card.id === "security") {
+                  return <SecurityCard key={card.id} data={data.security} />;
+                }
+                if (card.id === "seo") {
+                  return <SEOCard key={card.id} data={data.seo} />;
+                }
+                if (card.id === "accessibility") {
+                  return <AccessibilityCard key={card.id} data={data.accessibility} />;
+                }
+                if (card.id === "wordpress") {
+                  return (
+                    <WordPressCard
+                      key={card.id}
+                      id={card.id}
+                      data={data}
+                      siteId={siteId}
+                      minimized={card.minimized}
+                      editable={editable}
+                    />
+                  );
+                }
+
+                if (card.id === "optimization") {
+                  return (
+                    <OptimizationCard
+                      key={card.id}
+                      id={card.id}
+                      data={data}
+                      siteId={siteId}
+                      minimized={card.minimized}
+                      editable={editable}
+                      siteName={data.domain}
+                      connection={{
+                        method: data.wordpress ? "wordpress" : "none",
+                        status: data.wordpress ? "connected" : "disconnected",
+                        wordpress: data.wordpress
+                          ? {
+                              siteId: siteId || "",
+                              pluginVersion: "1.0.0",
+                            }
+                          : undefined,
+                      }}
+                    />
+                  );
+                }
+
+                return null;
               })}
             </div>
           </div>
