@@ -100,9 +100,11 @@ export function SiteCockpit({
 }: SiteCockpitProps) {
   const t = useTranslations("SiteCockpit");
   const [cards, setCards] = useState<CardConfig[]>(() =>
-    layoutToCards(initialLayout || DEFAULT_LAYOUT)
+    layoutToCards(initialLayout || DEFAULT_LAYOUT),
   );
-  const [optimizingCategory, setOptimizingCategory] = useState<string | null>(null);
+  const [optimizingCategory, setOptimizingCategory] = useState<string | null>(
+    null,
+  );
 
   const [, startTransition] = useTransition();
   const [saveStatus, setSaveStatus] = useState<
@@ -137,7 +139,7 @@ export function SiteCockpit({
         setTimeout(() => setSaveStatus("idle"), 3000);
       }
     },
-    [siteId, editable]
+    [siteId, editable],
   );
 
   const sensors = useSensors(
@@ -145,7 +147,7 @@ export function SiteCockpit({
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -182,9 +184,12 @@ export function SiteCockpit({
     }
   }, [siteId]);
 
-  const handleOptimizeCategory = useCallback(async (category: "performance" | "security" | "seo" | "accessibility") => {
-    setOptimizingCategory(category);
-  }, []);
+  const handleOptimizeCategory = useCallback(
+    async (category: "performance" | "security" | "seo" | "accessibility") => {
+      setOptimizingCategory(category);
+    },
+    [],
+  );
 
   const visibleCards = cards.filter((card) => {
     if (!card.visible) return false;
@@ -201,11 +206,15 @@ export function SiteCockpit({
   });
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--background-default)" }}>
+    <div
+      className="min-h-screen"
+      style={{ background: "var(--background-default)" }}
+    >
       <OverallScoreHero
         summary={data.summary}
         domain={data.domain}
         finalUrl={data.finalUrl}
+        metaTitle={data.meta?.title}
         cms={data.cms}
         onOptimizeCategory={handleOptimizeCategory}
         optimizingCategory={optimizingCategory}
@@ -213,11 +222,16 @@ export function SiteCockpit({
 
       {editable && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-          <div className="flex items-center justify-end gap-3 text-sm" style={{ color: "var(--text-subtle)" }}>
+          <div
+            className="flex items-center justify-end gap-3 text-sm"
+            style={{ color: "var(--text-subtle)" }}
+          >
             {saveStatus === "saving" && <span>{t("common.loading")}</span>}
             {saveStatus === "saved" && <span>✓ {t("common.save")}</span>}
             {saveStatus === "error" && <span>✗ {t("common.error")}</span>}
-            <button onClick={resetLayout} className="hover:underline">{t("common.refresh")}</button>
+            <button onClick={resetLayout} className="hover:underline">
+              {t("common.refresh")}
+            </button>
           </div>
         </div>
       )}
@@ -235,7 +249,9 @@ export function SiteCockpit({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {visibleCards.map((card) => {
                 if (card.id === "performance") {
-                  return <PerformanceCard key={card.id} data={data.performance} />;
+                  return (
+                    <PerformanceCard key={card.id} data={data.performance} />
+                  );
                 }
                 if (card.id === "security") {
                   return <SecurityCard key={card.id} data={data.security} />;
@@ -244,7 +260,12 @@ export function SiteCockpit({
                   return <SEOCard key={card.id} data={data.seo} />;
                 }
                 if (card.id === "accessibility") {
-                  return <AccessibilityCard key={card.id} data={data.accessibility} />;
+                  return (
+                    <AccessibilityCard
+                      key={card.id}
+                      data={data.accessibility}
+                    />
+                  );
                 }
                 if (card.id === "wordpress") {
                   return (
