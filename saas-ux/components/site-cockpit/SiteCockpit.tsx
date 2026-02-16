@@ -206,9 +206,6 @@ export function SiteCockpit({
       return false;
     }
 
-    if (card.id === "performance" && optimizingCategory !== "performance") {
-      return false;
-    }
 
     if (card.id === "optimization" && !optimizingCategory) {
       return false;

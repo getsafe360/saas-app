@@ -67,7 +67,7 @@ const CATEGORY_STYLES: Record<
   },
   accessibility: {
     color: "var(--category-accessibility)",
-    glow: "0 0 30px rgba(139,92,246,0.15)",
+    glow: "0 0 30px rgba(245,158,11,0.18)",
     icon: Accessibility,
     scorePillBg: "oklch(from var(--category-accessibility) l c h / 0.12)",
   },
