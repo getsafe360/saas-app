@@ -12,7 +12,6 @@ export function GeoCard({ score = 62 }: GeoCardProps) {
       title="GEO"
       score={score}
       grade="B-"
-      className="lg:col-span-2"
       stats={{ passed: 1, warnings: 2, criticalIssues: 1 }}
     >
       <div className="space-y-4">

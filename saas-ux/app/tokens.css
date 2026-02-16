@@ -39,6 +39,8 @@
   --category-seo: #3b82f6;
   --category-accessibility: #8b5cf6;
   --category-wordpress: #21759b;
+  --category-wordpress-gradient-start: #4f46e5;
+  --category-wordpress-gradient-end: #ec4899;
   --category-tech: #f97316;
   --category-geo: #9333ea;
 
@@ -125,6 +127,8 @@
   --category-seo: #60a5fa;
   --category-accessibility: #a78bfa;
   --category-wordpress: #48a9d0;
+  --category-wordpress-gradient-start: #818cf8;
+  --category-wordpress-gradient-end: #f472b6;
   --category-tech: #fb923c;
   --category-geo: #c084fc;
 

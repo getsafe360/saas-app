@@ -28,52 +28,48 @@ interface PluginsPanelProps {
 
 export function PluginsPanel({ plugins }: PluginsPanelProps) {
   const vulnerablePlugins = plugins.list.filter((p) => p.vulnerable);
-  const hasOutdatedNonVulnerable = plugins.outdated > plugins.vulnerable;
+  const outdatedPlugins = plugins.list.filter(
+    (p) => !p.vulnerable && p.version !== p.latest,
+  );
 
   return (
-    <div className="mb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-base font-semibold text-white flex items-center gap-2">
-          <Package className="h-5 w-5 text-blue-400" />
-          Plugins ({plugins.total})
-        </h4>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-gray-400">{plugins.active} active</span>
-          {plugins.outdated > 0 && (
-            <span className="text-orange-400">{plugins.outdated} outdated</span>
-          )}
-          {plugins.vulnerable > 0 && (
-            <span className="text-red-400 font-semibold">
-              {plugins.vulnerable} vulnerable
-            </span>
-          )}
+    <section
+      className="rounded-xl border p-4"
+      style={{ borderColor: "var(--border-default)", background: "var(--header-bg)" }}
+    >
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <h5 className="text-sm font-semibold text-white flex items-center gap-2">
+          <Package className="h-4 w-4" style={{ color: "var(--category-wordpress)" }} />
+          Plugins
+        </h5>
+        <div className="text-xs" style={{ color: "var(--text-subtle)" }}>
+          {plugins.active}/{plugins.total} active
         </div>
       </div>
 
-      {/* Vulnerable Plugins */}
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        <StatBadge label="Outdated" value={plugins.outdated} />
+        <StatBadge label="Vulnerable" value={plugins.vulnerable} />
+        <StatBadge label="Healthy" value={Math.max(plugins.total - plugins.outdated, 0)} />
+      </div>
+
       {vulnerablePlugins.length > 0 && (
-        <div className="space-y-2 mb-4">
+        <div className="mb-3 space-y-2">
           {vulnerablePlugins.map((plugin) => (
             <div
               key={plugin.slug}
-              className="p-3 rounded-lg bg-red-500/10 border border-red-500/20"
+              className="rounded-lg border p-3"
+              style={{
+                borderColor: "oklch(from var(--color-danger) l c h / 0.35)",
+                background: "oklch(from var(--color-danger) l c h / 0.1)",
+              }}
             >
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <div className="text-sm font-semibold text-white">
-                    {plugin.name}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    Current: {plugin.version} → Update to: {plugin.latest}
-                  </div>
-                </div>
-                <button className="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition-colors">
-                  Fix Now
-                </button>
+              <div className="text-sm font-semibold text-white">{plugin.name}</div>
+              <div className="text-xs mt-1" style={{ color: "#fecaca" }}>
+                {plugin.version} → {plugin.latest}
               </div>
-              {plugin.vulnerabilities && plugin.vulnerabilities.length > 0 && (
-                <div className="text-xs text-red-400">
+              {plugin.vulnerabilities?.[0] && (
+                <div className="text-xs mt-1" style={{ color: "#fda4af" }}>
                   {plugin.vulnerabilities[0].description}
                 </div>
               )}
@@ -82,19 +78,28 @@ export function PluginsPanel({ plugins }: PluginsPanelProps) {
         </div>
       )}
 
-      {/* Outdated Plugins (non-vulnerable) */}
-      {hasOutdatedNonVulnerable && (
-        <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-orange-400">
-              {plugins.outdated - plugins.vulnerable} plugins need updates
-            </div>
-            <button className="text-xs text-orange-400 hover:text-orange-300 font-semibold transition-colors">
-              View All →
-            </button>
+      {outdatedPlugins.length > 0 && (
+        <div
+          className="rounded-lg border p-3"
+          style={{
+            borderColor: "oklch(from var(--color-warning) l c h / 0.35)",
+            background: "oklch(from var(--color-warning) l c h / 0.1)",
+          }}
+        >
+          <div className="text-xs" style={{ color: "#fde68a" }}>
+            {outdatedPlugins.length} non-critical plugin(s) can be updated.
           </div>
         </div>
       )}
+    </section>
+  );
+}
+
+function StatBadge({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border px-2 py-1.5" style={{ borderColor: "var(--border-default)" }}>
+      <div className="text-[10px]" style={{ color: "var(--text-subtle)" }}>{label}</div>
+      <div className="text-sm font-semibold text-white">{value}</div>
     </div>
   );
 }

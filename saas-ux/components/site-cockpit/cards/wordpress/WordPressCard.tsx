@@ -2,7 +2,7 @@
 "use client";
 
 import { CockpitCard } from "../CockpitCard";
-import { WordPressIcon } from "@/components/icons/WordPress";
+import { WordPressAIIcon } from "@/components/icons/WordPressAI";
 import { useTranslations } from "next-intl";
 import { useWordPressConnection } from "./hooks/useWordPressConnection";
 import { useWordPressPairing } from "./hooks/useWordPressPairing";
@@ -43,7 +43,7 @@ export function WordPressCard({
         id={id}
         title={
           <div className="flex items-center gap-3">
-            <WordPressIcon size={24} className="text-gray-500" />
+            <WordPressAIIcon size={24} className="h-6 w-6" />
             <span className="text-gray-400">{t("wordpress.notDetected")}</span>
           </div>
         }
@@ -51,7 +51,6 @@ export function WordPressCard({
         minimized={minimized}
         onToggleMinimize={onToggleMinimize}
         editable={editable}
-        className="lg:col-span-2"
       >
         <NoWordPress siteUrl={data.finalUrl} detectedCMS={cms.type} />
       </CockpitCard>
@@ -65,10 +64,7 @@ export function WordPressCard({
         id={id}
         title={
           <div className="flex items-center gap-3">
-            <WordPressIcon
-              size={24}
-              className="text-[var(--category-wordpress)]"
-            />
+            <WordPressAIIcon size={24} className="h-6 w-6" />
             <span className="text-[var(--category-wordpress)]">
               {t("wordpress.detected")}
             </span>
@@ -78,7 +74,6 @@ export function WordPressCard({
         minimized={minimized}
         onToggleMinimize={onToggleMinimize}
         editable={editable}
-        className="lg:col-span-2"
       >
         <NotConnected pairing={pairing} version={cms.wp?.version} />
       </CockpitCard>
@@ -91,10 +86,7 @@ export function WordPressCard({
       id={id}
       title={
         <div className="flex items-center gap-3">
-          <WordPressIcon
-            size={24}
-            className="text-[var(--category-wordpress)]"
-          />
+          <WordPressAIIcon size={24} className="h-6 w-6" />
           <span className="text-[var(--category-wordpress)]">
             {t("wordpress.title")}
           </span>
@@ -106,7 +98,6 @@ export function WordPressCard({
       minimized={minimized}
       onToggleMinimize={onToggleMinimize}
       editable={editable}
-      className="lg:col-span-2"
     >
       {/* Connection Status Banner */}
       <ConnectionBanner
@@ -132,7 +123,8 @@ export function WordPressCard({
       )}
 
       {/* WordPress Analysis Panels */}
-      <div className="space-y-4">
+      <div className="space-y-3">
+        <h4 className="text-sm font-semibold" style={{ color: "var(--text-subtle)" }}>WordPress Insights</h4>
         <VersionStatus
           version={wordpress.version}
           recommendations={wordpress.recommendations}
