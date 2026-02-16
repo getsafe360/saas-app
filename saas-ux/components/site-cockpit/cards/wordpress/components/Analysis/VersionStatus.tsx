@@ -19,35 +19,55 @@ export function VersionStatus({
   recommendations,
 }: VersionStatusProps) {
   return (
-    <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
-      <div className="flex items-center justify-between mb-3">
+    <section
+      className="rounded-xl border p-4"
+      style={{
+        borderColor: "var(--border-default)",
+        background: "oklch(from var(--category-wordpress) l c h / 0.08)",
+      }}
+    >
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-sm text-gray-400 mb-1">WordPress Version</div>
-          <div className="text-2xl font-bold text-white">{version.current}</div>
-        </div>
-        {version.outdated && (
-          <div className="px-3 py-1.5 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-400 text-sm font-semibold">
-            Update Available
+          <div className="text-xs" style={{ color: "var(--text-subtle)" }}>
+            WordPress Version
           </div>
-        )}
+          <div className="text-xl font-bold text-white mt-1">{version.current}</div>
+          <div className="text-xs mt-1" style={{ color: "var(--text-subtle)" }}>
+            Latest: {version.latest}
+          </div>
+        </div>
+
+        <span
+          className="rounded-full px-2.5 py-1 text-xs font-semibold border"
+          style={{
+            color: version.outdated ? "#f59e0b" : "#10b981",
+            borderColor: version.outdated
+              ? "oklch(from var(--color-warning) l c h / 0.4)"
+              : "oklch(from var(--color-success) l c h / 0.4)",
+            background: version.outdated
+              ? "oklch(from var(--color-warning) l c h / 0.15)"
+              : "oklch(from var(--color-success) l c h / 0.15)",
+          }}
+        >
+          {version.outdated ? "Update Available" : "Up to Date"}
+        </span>
       </div>
 
       {version.outdated && (
-        <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-900/40 border border-gray-700/50">
-          <AlertTriangle className="h-5 w-5 text-orange-400 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <div className="text-sm text-gray-300 mb-1">
-              {version.daysOld} days old • Latest: {version.latest}
-            </div>
-            <div className="text-xs text-gray-500">
-              {recommendations.length} security recommendations
-            </div>
+        <div
+          className="mt-3 rounded-lg border p-3 text-xs flex items-start gap-2"
+          style={{
+            borderColor: "oklch(from var(--color-warning) l c h / 0.35)",
+            background: "oklch(from var(--color-warning) l c h / 0.1)",
+            color: "#fde68a",
+          }}
+        >
+          <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div>
+            {version.daysOld} days behind latest release · {recommendations.length} recommendation(s)
           </div>
-          <button className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors whitespace-nowrap">
-            Update Now
-          </button>
         </div>
       )}
-    </div>
+    </section>
   );
 }
