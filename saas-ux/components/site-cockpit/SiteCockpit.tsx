@@ -206,6 +206,7 @@ export function SiteCockpit({
       return false;
     }
 
+
     if (card.id === "optimization" && !optimizingCategory) {
       return false;
     }

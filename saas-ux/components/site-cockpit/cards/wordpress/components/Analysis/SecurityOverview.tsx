@@ -2,7 +2,6 @@
 "use client";
 
 import { Shield } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 
 interface SecurityData {
   defaultLoginExposed: boolean;
@@ -15,72 +14,68 @@ interface SecurityOverviewProps {
   security: SecurityData;
 }
 
+const items = (security: SecurityData) => [
+  {
+    label: "Login Page",
+    healthy: !security.defaultLoginExposed,
+    value: security.defaultLoginExposed ? "Exposed" : "Protected",
+  },
+  {
+    label: "User Enumeration",
+    healthy: security.userEnumerationBlocked,
+    value: security.userEnumerationBlocked ? "Blocked" : "Vulnerable",
+  },
+  {
+    label: "XML-RPC",
+    healthy: !security.xmlrpcEnabled,
+    value: security.xmlrpcEnabled ? "Enabled" : "Disabled",
+  },
+  {
+    label: "Debug Mode",
+    healthy: !security.wpDebugMode,
+    value: security.wpDebugMode ? "On" : "Off",
+  },
+];
+
 export function SecurityOverview({ security }: SecurityOverviewProps) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-      <SecurityMetric
-        label="Login Page"
-        icon={Shield}
-        status={!security.defaultLoginExposed}
-        value={security.defaultLoginExposed ? "Exposed" : "Protected"}
-      />
-      <SecurityMetric
-        label="User Enum"
-        icon={Shield}
-        status={security.userEnumerationBlocked}
-        value={security.userEnumerationBlocked ? "Blocked" : "Vulnerable"}
-      />
-      <SecurityMetric
-        label="XML-RPC"
-        icon={Shield}
-        status={!security.xmlrpcEnabled}
-        value={security.xmlrpcEnabled ? "Enabled" : "Disabled"}
-      />
-      <SecurityMetric
-        label="Debug Mode"
-        icon={Shield}
-        status={!security.wpDebugMode}
-        value={security.wpDebugMode ? "On" : "Off"}
-      />
-    </div>
-  );
-}
-
-// Security Metric Component
-interface SecurityMetricProps {
-  label: string;
-  icon: LucideIcon;
-  status: boolean;
-  value: string;
-}
-
-function SecurityMetric({
-  label,
-  icon: Icon,
-  status,
-  value,
-}: SecurityMetricProps) {
-  return (
-    <div
-      className={`p-3 rounded-lg border ${
-        status
-          ? "bg-green-500/5 border-green-500/20"
-          : "bg-red-500/5 border-red-500/20"
-      }`}
+    <section
+      className="rounded-xl border p-4"
+      style={{ borderColor: "var(--border-default)", background: "var(--header-bg)" }}
     >
-      <div className="flex items-center gap-2 mb-1">
-        <Icon
-          className={`h-4 w-4 ${status ? "text-green-400" : "text-red-400"}`}
-        />
-        <span className="text-xs text-gray-400">{label}</span>
+      <h5 className="text-sm font-semibold text-white mb-3">Security Checks</h5>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {items(security).map((item) => (
+          <div
+            key={item.label}
+            className="rounded-lg border p-3 flex items-center justify-between"
+            style={{
+              borderColor: item.healthy
+                ? "oklch(from var(--color-success) l c h / 0.35)"
+                : "oklch(from var(--color-danger) l c h / 0.35)",
+              background: item.healthy
+                ? "oklch(from var(--color-success) l c h / 0.08)"
+                : "oklch(from var(--color-danger) l c h / 0.08)",
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <Shield
+                className="h-4 w-4"
+                style={{ color: item.healthy ? "#34d399" : "#f87171" }}
+              />
+              <span className="text-xs" style={{ color: "var(--text-subtle)" }}>
+                {item.label}
+              </span>
+            </div>
+            <span
+              className="text-xs font-semibold"
+              style={{ color: item.healthy ? "#6ee7b7" : "#fda4af" }}
+            >
+              {item.value}
+            </span>
+          </div>
+        ))}
       </div>
-      <div
-        className={`text-sm font-semibold ${
-          status ? "text-green-400" : "text-red-400"
-        }`}
-      >
-        {value}
-      </div>
-    </div>
+    </section>
   );
 }
