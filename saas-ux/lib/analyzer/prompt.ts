@@ -19,7 +19,8 @@ export function buildPrompt({ locale, facts }: BuildPromptArgs) {
     `Use severity icons: ✅ minor, ⚠️ medium, 🔴 critical.`,
     `Each bullet ≤ 48 words.`,
     `Begin with 1–2 positives if present.`,
-    `If CMS is WordPress, mention critical misconfigs briefly in Security or SEO.`,
+    `If CMS is WordPress, include at least one red-flag compromise indicator when signals suggest risk.`,
+    `For WordPress, prioritize Security, Performance, Stability and SEO/UX findings with clear fix intent.`,
   ].join("\n");
 
   const user = [

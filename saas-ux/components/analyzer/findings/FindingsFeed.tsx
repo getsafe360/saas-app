@@ -17,6 +17,9 @@ const ALL: Severity[] = ["minor", "medium", "critical"];
 
 export default function FindingsFeed({ items, initialShow, title, className }: Props) {
   const [show, setShow] = useState<Severity[]>(initialShow ?? ["medium", "critical"]);
+  const [selected, setSelected] = useState<Set<string>>(() =>
+    new Set(items.filter((i) => i.selectedByDefault ?? i.severity === "critical").map((i, idx) => `${i.pillar}-${i.title}-${idx}`)),
+  );
 
   const filtered = useMemo(
     () => items.filter(i => show.includes(i.severity)),
@@ -25,6 +28,16 @@ export default function FindingsFeed({ items, initialShow, title, className }: P
 
   function toggle(s: Severity) {
     setShow(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  }
+
+
+  function toggleSelection(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }
 
   const chip = (s: Severity, label: string, cls: string) => (
@@ -44,18 +57,22 @@ export default function FindingsFeed({ items, initialShow, title, className }: P
   return (
     <div className={cn("rounded-2xl border border-white/10 bg-white/[0.03] p-3", className)}>
       {title && <div className="mb-2 text-sm font-semibold">{title}</div>}
+      <div className="mb-2 text-xs text-neutral-400">{selected.size} finding(s) preselected for fix</div>
       <div className="mb-2 flex items-center gap-1">
         {chip("minor", "✅ Positive", "border-emerald-500/40 text-emerald-300")}
         {chip("medium", "⚠️ Warning", "border-amber-500/40 text-amber-300")}
         {chip("critical", "🔴 Critical", "border-red-500/40 text-red-300")}
       </div>
       <ul className="space-y-2">
-        {filtered.map((finding, index) => (
+        {filtered.map((finding, index) => {
+          const id = `${finding.pillar}-${finding.title}-${index}`;
+          return (
           <li 
-            key={`${finding.pillar}-${finding.severity}-${index}`} 
+            key={id} 
             className="rounded-xl border border-white/10 bg-white/[0.02] p-3"
           >
             <div className="flex items-start gap-2">
+              <input type="checkbox" className="mt-1" checked={selected.has(id)} onChange={() => toggleSelection(id)} aria-label={`select-${id}`} />
               <span className="text-lg">
                 {finding.severity === 'critical' ? '🔴' : finding.severity === 'medium' ? '⚠️' : '✅'}
               </span>
@@ -101,7 +118,8 @@ export default function FindingsFeed({ items, initialShow, title, className }: P
               </Tooltip>
             </div>
           </li>
-        ))}
+          );
+        })}
         {filtered.length === 0 && (
           <li className="text-xs text-neutral-400">No items for current filters.</li>
         )}

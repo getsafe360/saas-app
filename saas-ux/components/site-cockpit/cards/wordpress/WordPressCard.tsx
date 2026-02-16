@@ -13,6 +13,8 @@ import { NoWordPress } from "./components/EmptyStates/NoWordPress";
 import { VersionStatus } from "./components/Analysis/VersionStatus";
 import { SecurityOverview } from "./components/Analysis/SecurityOverview";
 import { PluginsPanel } from "./components/Analysis/PluginsPanel";
+import { HealthFindingsPanel } from "./components/Analysis/HealthFindingsPanel";
+import { ImplementationPlanPanel } from "./components/Analysis/ImplementationPlanPanel";
 import type { WordPressCardProps } from "./types";
 export function WordPressCard({
   id,
@@ -131,6 +133,8 @@ export function WordPressCard({
         />
         <SecurityOverview security={wordpress.security} />
         <PluginsPanel plugins={wordpress.plugins} />
+        <HealthFindingsPanel findings={wordpress.healthFindings ?? []} />
+        <ImplementationPlanPanel />
       </div>
     </CockpitCard>
   );

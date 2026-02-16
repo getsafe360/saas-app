@@ -12,6 +12,7 @@
  */
 
 import type { SiteCockpitResponse, ScoreGrade } from "@/types/site-cockpit";
+import { buildWordPressHealthFindings } from "@/components/site-cockpit/cards/wordpress/utils/healthEngine";
 
 // ============================================
 // SCORING SYSTEM
@@ -165,7 +166,7 @@ function evaluateCategoryChecks(data: any): Record<"performance" | "security" | 
 // ============================================
 
 function transformWordPressData(apiData: any) {
-  return {
+  const wordpressData = {
     score: 68,
     grade: "C+" as ScoreGrade,
     version: {
@@ -215,6 +216,11 @@ function transformWordPressData(apiData: any) {
       cdn: null,
     },
     recommendations: [],
+  };
+
+  return {
+    ...wordpressData,
+    healthFindings: buildWordPressHealthFindings(wordpressData),
   };
 }
 

@@ -98,6 +98,24 @@ export interface WordPressRecommendation {
   action: string;
 }
 
+export type WordPressHealthCategory =
+  | "security"
+  | "performance"
+  | "stability"
+  | "seo-ux"
+  | "red-flags";
+
+export interface WordPressHealthFinding {
+  id: string;
+  category: WordPressHealthCategory;
+  title: string;
+  description: string;
+  severity: ImpactLevel;
+  checkedByDefault: boolean;
+  status: "pass" | "warning" | "fail" | "unknown";
+  action: string;
+}
+
 export interface WordPress {
   score: number;
   grade: ScoreGrade;
@@ -132,6 +150,7 @@ export interface WordPress {
     lazyLoadEnabled: boolean;
     cdn: string | null;
   };
+  healthFindings?: WordPressHealthFinding[];
   recommendations: WordPressRecommendation[];
 }
 
