@@ -28,6 +28,8 @@ export { SecurityOverview } from "./components/Analysis/SecurityOverview";
 export { PluginsPanel } from "./components/Analysis/PluginsPanel";
 export { ThemePanel } from "./components/Analysis/ThemePanel";
 export { PerformancePanel } from "./components/Analysis/PerformancePanel";
+export { HealthFindingsPanel } from "./components/Analysis/HealthFindingsPanel";
+export { ImplementationPlanPanel } from "./components/Analysis/ImplementationPlanPanel";
 
 // Components - Actions
 export { QuickFixButton } from "./components/Actions/QuickFixButton";

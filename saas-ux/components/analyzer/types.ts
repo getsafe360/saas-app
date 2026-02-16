@@ -16,6 +16,7 @@ export type Finding = {
   recommendation?: string;
   code?: string;
   line?: number;
+  selectedByDefault?: boolean;
 };
 
 export type PillarScore = {

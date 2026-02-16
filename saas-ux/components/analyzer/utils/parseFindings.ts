@@ -39,6 +39,7 @@ export function parseFindings(markdown: string): Finding[] {
           severity,
           title: title.trim(),
           description: '',
+          selectedByDefault: severity === 'critical',
         };
       }
     }
