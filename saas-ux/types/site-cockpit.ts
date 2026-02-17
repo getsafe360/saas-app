@@ -114,6 +114,32 @@ export interface WordPressHealthFinding {
   checkedByDefault: boolean;
   status: "pass" | "warning" | "fail" | "unknown";
   action: string;
+  remediationActionId?: string;
+  automationLevel?: "auto" | "guided" | "manual";
+}
+
+export interface WordPressCategoryScores {
+  security: number;
+  performance: number;
+  stability: number;
+  "seo-ux": number;
+  "red-flags": number;
+}
+
+export interface WordPressScoreTrend {
+  previous: number;
+  current: number;
+  delta: number;
+  direction: "up" | "down" | "flat";
+  scannedAt: string;
+}
+
+export interface WordPressConnectionMetadata {
+  siteId?: string;
+  status: "connected" | "disconnected" | "degraded";
+  authMethod: "plugin-rest" | "xml-rpc" | "unknown";
+  lastAuditAt?: string;
+  lastSyncAt?: string;
 }
 
 export interface WordPress {
@@ -150,6 +176,9 @@ export interface WordPress {
     lazyLoadEnabled: boolean;
     cdn: string | null;
   };
+  categoryScores?: WordPressCategoryScores;
+  trend?: WordPressScoreTrend;
+  connection?: WordPressConnectionMetadata;
   healthFindings?: WordPressHealthFinding[];
   recommendations: WordPressRecommendation[];
 }
