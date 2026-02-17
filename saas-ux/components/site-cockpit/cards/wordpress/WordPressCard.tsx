@@ -37,7 +37,6 @@ export function WordPressCard({
     initialStatus,
     lastConnected,
     siteId,
-    id,
   );
   const pairing = useWordPressPairing(data.finalUrl);
 
@@ -95,7 +94,12 @@ export function WordPressCard({
   );
 
   const handleOptimize = async (selectedFindings: WordPressHealthFinding[]) => {
-    if (!siteId || selectedFindings.length === 0) return;
+    if (selectedFindings.length === 0) return;
+
+    if (!siteId || connection.connectionState.status !== "connected") {
+      connection.setShowReconnectFlow(true);
+      return;
+    }
 
     try {
       setIsOptimizing(true);

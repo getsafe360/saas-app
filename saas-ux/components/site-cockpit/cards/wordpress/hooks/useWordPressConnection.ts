@@ -7,7 +7,6 @@ export function useWordPressConnection(
   initialStatus: ConnectionStatus,
   lastConnected: string | undefined,
   siteId: string | undefined,
-  id: string
 ): UseWordPressConnectionReturn {
   const router = useRouter();
   
@@ -38,6 +37,15 @@ export function useWordPressConnection(
 
   // Reconnection handler
   const handleReconnect = async () => {
+    if (!siteId) {
+      setConnectionState((prev) => ({
+        ...prev,
+        status: "error",
+        errorMessage: "Missing site ID for reconnection",
+      }));
+      return;
+    }
+
     setIsReconnecting(true);
     setConnectionState((prev) => ({
       ...prev,
@@ -46,7 +54,7 @@ export function useWordPressConnection(
     }));
 
     try {
-      const response = await fetch(`/api/sites/${id}/reconnect`, {
+      const response = await fetch(`/api/sites/${siteId}/reconnect`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
