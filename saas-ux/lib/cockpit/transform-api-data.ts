@@ -11,8 +11,12 @@
  * - Future-proof: Prepared for comprehensive SEO expansion
  */
 
-import type { SiteCockpitResponse, ScoreGrade } from "@/types/site-cockpit";
-import { buildWordPressHealthFindings } from "@/components/site-cockpit/cards/wordpress/utils/healthEngine";
+import type { SiteCockpitResponse, ScoreGrade, WordPress } from "@/types/site-cockpit";
+import {
+  buildWordPressHealthFindings,
+  calculateWordPressCategoryScores,
+  calculateWordPressWeightedScore,
+} from "@/components/site-cockpit/cards/wordpress/utils/healthEngine";
 
 // ============================================
 // SCORING SYSTEM
@@ -166,9 +170,14 @@ function evaluateCategoryChecks(data: any): Record<"performance" | "security" | 
 // ============================================
 
 function transformWordPressData(apiData: any) {
-  const wordpressData = {
-    score: 68,
-    grade: "C+" as ScoreGrade,
+  const wpTelemetry = apiData.wordpressTelemetry ?? {};
+  const baselineWordPressScore = typeof apiData.summary?.categoryScores?.wordpress === "number"
+    ? apiData.summary.categoryScores.wordpress
+    : 68;
+
+  const wordpressData: WordPress = {
+    score: baselineWordPressScore,
+    grade: getScoreGrade(baselineWordPressScore),
     version: {
       current: apiData.cms.wp.version || "6.0",
       latest: "6.7.0",
@@ -182,7 +191,7 @@ function transformWordPressData(apiData: any) {
       userEnumerationBlocked: true,
       xmlrpcEnabled: apiData.cms.wp.xmlrpc ?? false,
       xmlrpcVulnerable: false,
-      wpDebugMode: false,
+      wpDebugMode: !!wpTelemetry.security?.wpDebugMode,
       directoryListingDisabled: true,
       securityPlugins: [],
     },
@@ -191,7 +200,7 @@ function transformWordPressData(apiData: any) {
       active: 0,
       outdated: 0,
       vulnerable: 0,
-      list: [],
+      list: wpTelemetry.plugins?.list ?? [],
     },
     themes: {
       active: "Unknown Theme",
@@ -210,17 +219,40 @@ function transformWordPressData(apiData: any) {
     },
     performanceData: {
       objectCache: false,
-      opcacheEnabled: true,
+      opcacheEnabled: wpTelemetry.performance?.opcacheEnabled ?? true,
       gzipEnabled: apiData.headers?.["content-encoding"]?.includes("gzip") || false,
       lazyLoadEnabled: false,
       cdn: null,
     },
+    connection: {
+      siteId: apiData.wordpressSiteId,
+      status: apiData.connectionStatus?.isConnected ? "connected" : "disconnected",
+      authMethod: (wpTelemetry.connection?.authMethod ?? "plugin-rest") as "plugin-rest" | "xml-rpc" | "unknown",
+      lastAuditAt: apiData.connectionStatus?.lastSync,
+      lastSyncAt: apiData.connectionStatus?.lastSync,
+    },
     recommendations: [],
   };
 
+  const healthFindings = buildWordPressHealthFindings(wordpressData);
+  const categoryScores = calculateWordPressCategoryScores(healthFindings);
+  const weightedScore = calculateWordPressWeightedScore(categoryScores);
+  const previousScore = wpTelemetry.trend?.previousScore ?? Math.max(0, weightedScore - 4);
+  const scoreDelta = weightedScore - previousScore;
+
   return {
     ...wordpressData,
-    healthFindings: buildWordPressHealthFindings(wordpressData),
+    score: weightedScore,
+    grade: getScoreGrade(weightedScore),
+    categoryScores,
+    trend: {
+      previous: previousScore,
+      current: weightedScore,
+      delta: scoreDelta,
+      direction: (scoreDelta > 0 ? "up" : scoreDelta < 0 ? "down" : "flat") as "up" | "down" | "flat",
+      scannedAt: new Date().toISOString(),
+    },
+    healthFindings,
   };
 }
 
