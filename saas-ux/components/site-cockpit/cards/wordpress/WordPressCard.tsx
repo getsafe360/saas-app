@@ -169,6 +169,7 @@ export function WordPressCard({
           onClose={() => connection.setShowReconnectFlow(false)}
           isReconnecting={connection.isReconnecting}
           siteUrl={data.finalUrl}
+          pairing={pairing}
         />
       )}
 
