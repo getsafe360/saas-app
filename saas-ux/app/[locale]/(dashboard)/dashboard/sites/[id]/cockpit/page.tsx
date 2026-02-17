@@ -9,11 +9,27 @@ import { headers } from "next/headers";
 import { SiteCockpit } from "@/components/site-cockpit/SiteCockpit";
 import { transformToSiteCockpitResponse } from "@/lib/cockpit/transform-api-data";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
+import type { ConnectionStatus } from "@/components/site-cockpit/cards/wordpress/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const DEFAULT_LOCALE = "en";
+
+function toConnectionStatus(value: unknown): ConnectionStatus {
+  if (
+    value === "connected" ||
+    value === "disconnected" ||
+    value === "reconnecting" ||
+    value === "error" ||
+    value === "pending"
+  ) {
+    return value;
+  }
+
+  return "disconnected";
+}
+
 
 // ============================================
 // Metadata Generation
@@ -175,5 +191,13 @@ export default async function SiteCockpitPage({
     Object.keys(analysisData)
   );
 
-  return <SiteCockpit data={analysisData} siteId={id} editable={true} />;
+  return (
+    <SiteCockpit
+      data={analysisData}
+      siteId={id}
+      editable={true}
+      wordpressConnectionStatus={toConnectionStatus(site.connectionStatus)}
+      wordpressLastConnected={site.lastConnectedAt?.toISOString()}
+    />
+  );
 }

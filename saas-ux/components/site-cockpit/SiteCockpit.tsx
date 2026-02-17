@@ -30,6 +30,7 @@ import { AccessibilityCard } from "./cards/AccessibilityCard";
 import { OverallScoreHero } from "./OverallScoreHero";
 import { GeoCard } from "./cards/GeoCard";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
+import type { ConnectionStatus } from "./cards/wordpress/types";
 import type {
   CockpitLayoutData,
   CockpitCardLayout,
@@ -40,6 +41,8 @@ interface SiteCockpitProps {
   siteId?: string;
   editable?: boolean;
   initialLayout?: CockpitLayoutData;
+  wordpressConnectionStatus?: ConnectionStatus;
+  wordpressLastConnected?: string;
 }
 
 interface CardConfig {
@@ -105,6 +108,8 @@ export function SiteCockpit({
   siteId,
   editable = true,
   initialLayout,
+  wordpressConnectionStatus = "disconnected",
+  wordpressLastConnected,
 }: SiteCockpitProps) {
   const t = useTranslations("SiteCockpit");
   const [cards, setCards] = useState<CardConfig[]>(() =>
@@ -306,14 +311,17 @@ export function SiteCockpit({
 
                 if (card.id === "wordpress") {
                   return (
-                    <WordPressCard
-                      key={card.id}
-                      id={card.id}
-                      data={data}
-                      siteId={siteId}
-                      minimized={card.minimized}
-                      editable={editable}
-                    />
+                    <div key={card.id} className="lg:col-span-2">
+                      <WordPressCard
+                        id={card.id}
+                        data={data}
+                        siteId={siteId}
+                        minimized={card.minimized}
+                        editable={editable}
+                        connectionStatus={wordpressConnectionStatus}
+                        lastConnected={wordpressLastConnected}
+                      />
+                    </div>
                   );
                 }
 

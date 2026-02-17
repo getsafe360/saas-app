@@ -12,6 +12,7 @@ export function useWordPressPairing(siteUrl: string): UseWordPressPairingReturn 
   const [pairingMessage, setPairingMessage] = useState("");
   const [copied, setCopied] = useState(false);
   const pollRef = useRef<number | null>(null);
+  const pollAttemptsRef = useRef(0);
 
   function stopPolling() {
     if (pollRef.current) {
@@ -58,7 +59,7 @@ export function useWordPressPairing(siteUrl: string): UseWordPressPairingReturn 
     }
   }
 
-  async function checkPairingOnce(code: string): Promise<{ used: boolean; siteId?: string }> {
+  async function checkPairingOnce(code: string): Promise<{ used: boolean; siteId?: string; expired?: boolean }> {
     const res = await fetch(`/api/connect/check?pairCode=${encodeURIComponent(code)}`, {
       method: "GET",
       cache: "no-store",
@@ -89,13 +90,33 @@ export function useWordPressPairing(siteUrl: string): UseWordPressPairingReturn 
     if (pairingStatus !== "ready" || !pairCode) return;
 
     setPairingStatus("waiting");
+    setPairingMessage("Waiting for plugin confirmation...");
+    pollAttemptsRef.current = 0;
+
     pollRef.current = window.setInterval(async () => {
+      pollAttemptsRef.current += 1;
+
       try {
         const data = await checkPairingOnce(pairCode);
-        if (data.used && data.siteId) {
+        if (data.used) {
           stopPolling();
           setPairingStatus("connected");
+          setPairingMessage("Connection established. Syncing dashboard...");
           router.refresh();
+          return;
+        }
+
+        if (data.expired) {
+          stopPolling();
+          setPairingStatus("error");
+          setPairingMessage("Pairing code expired. Generate a new code and try again.");
+          return;
+        }
+
+        if (pollAttemptsRef.current >= 48) {
+          stopPolling();
+          setPairingStatus("error");
+          setPairingMessage("No confirmation received yet. Please retry or generate a new pairing code.");
         }
       } catch {
         // ignore transient errors
