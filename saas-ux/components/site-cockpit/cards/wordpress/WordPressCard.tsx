@@ -1,7 +1,7 @@
 // components/site-cockpit/cards/wordpress/WordPressCard.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CockpitCard } from "../CockpitCard";
 import { WordPressAIIcon } from "@/components/icons/WordPressAI";
 import { useTranslations } from "next-intl";
@@ -39,6 +39,21 @@ export function WordPressCard({
     siteId,
   );
   const pairing = useWordPressPairing(data.finalUrl);
+
+  const hasTriggeredPostPairReconnect = useRef(false);
+
+  useEffect(() => {
+    if (pairing.pairingStatus !== "connected") {
+      hasTriggeredPostPairReconnect.current = false;
+      return;
+    }
+
+    if (hasTriggeredPostPairReconnect.current) return;
+    hasTriggeredPostPairReconnect.current = true;
+
+    connection.setShowReconnectFlow(false);
+    void connection.handleReconnect();
+  }, [pairing.pairingStatus, connection.handleReconnect, connection.setShowReconnectFlow]);
 
   // Not WordPress at all
   if (!wordpress && cms.type !== "wordpress") {

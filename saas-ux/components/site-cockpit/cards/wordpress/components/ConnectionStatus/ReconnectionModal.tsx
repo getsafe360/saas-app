@@ -1,7 +1,7 @@
 // components/site-cockpit/cards/wordpress/components/ConnectionStatus/ReconnectionModal.tsx
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   X,
   Package,
@@ -78,6 +78,16 @@ export function ReconnectionModal({
 
     setTimeout(() => setStep(stepId + 1), 1200);
   };
+
+  useEffect(() => {
+    if (pairing.pairingStatus !== "connected") return;
+
+    const timer = window.setTimeout(() => {
+      onClose();
+    }, 1200);
+
+    return () => window.clearTimeout(timer);
+  }, [pairing.pairingStatus, onClose]);
 
   const handleGeneratePairCode = async () => {
     if (pairing.pairingStatus === "generating" || pairing.pairingStatus === "waiting") {
@@ -253,7 +263,7 @@ export function ReconnectionModal({
                 )}
                 {pairing.pairingStatus === "connected" && (
                   <div className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-950/30 p-3 text-sm text-emerald-300">
-                    Pairing completed. Refreshing cockpit data...
+                    Your site is now connected and can scan and optimize your WordPress.
                   </div>
                 )}
                 {pairing.pairingStatus === "error" && (
