@@ -81,9 +81,10 @@ export async function POST(
     changeSetId = changeSet?.id;
 
     if (changeSetId) {
+      const persistedChangeSetId = changeSetId;
       await db.insert(changeItems).values(
         executionResults.map((result) => ({
-          changeSetId,
+          changeSetId: persistedChangeSetId,
           op: 'remediate',
           path: `wordpress/${result.actionId}`,
           oldValue: { status: 'pending' },
