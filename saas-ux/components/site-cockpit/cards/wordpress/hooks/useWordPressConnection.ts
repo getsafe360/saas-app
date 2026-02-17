@@ -3,6 +3,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ConnectionStatus, ConnectionState, UseWordPressConnectionReturn } from '../types';
 
+
+interface ReconnectResponseError {
+  error?: {
+    message?: string;
+    action?: string;
+    details?: string;
+  };
+}
+
+
 export function useWordPressConnection(
   initialStatus: ConnectionStatus,
   lastConnected: string | undefined,
@@ -68,7 +78,14 @@ export function useWordPressConnection(
         setShowReconnectFlow(false);
         router.refresh();
       } else {
-        throw new Error("Reconnection failed");
+        const body = (await response
+          .json()
+          .catch(() => ({}))) as ReconnectResponseError;
+
+        const message = body.error?.message ?? "Reconnection failed";
+        const action = body.error?.action;
+
+        throw new Error(action ? `${message} ${action}` : message);
       }
     } catch (error) {
       setConnectionState((prev) => ({
