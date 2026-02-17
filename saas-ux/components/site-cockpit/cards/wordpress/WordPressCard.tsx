@@ -1,6 +1,7 @@
 // components/site-cockpit/cards/wordpress/WordPressCard.tsx
 "use client";
 
+import { useMemo, useState } from "react";
 import { CockpitCard } from "../CockpitCard";
 import { WordPressAIIcon } from "@/components/icons/WordPressAI";
 import { useTranslations } from "next-intl";
@@ -16,6 +17,7 @@ import { PluginsPanel } from "./components/Analysis/PluginsPanel";
 import { HealthFindingsPanel } from "./components/Analysis/HealthFindingsPanel";
 import { ImplementationPlanPanel } from "./components/Analysis/ImplementationPlanPanel";
 import type { WordPressCardProps } from "./types";
+import type { WordPressHealthFinding } from "@/types/site-cockpit";
 export function WordPressCard({
   id,
   data,
@@ -28,6 +30,7 @@ export function WordPressCard({
 }: WordPressCardProps) {
   const t = useTranslations("SiteCockpit");
   const { wordpress, cms } = data;
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
   // Custom hooks handle all logic
   const connection = useWordPressConnection(
@@ -83,6 +86,47 @@ export function WordPressCard({
   }
 
   // Connected WordPress site - Full insights
+  const topRedFlags = useMemo(
+    () =>
+      (wordpress.healthFindings ?? [])
+        .filter((finding) => finding.category === "red-flags" && finding.status !== "pass")
+        .slice(0, 5),
+    [wordpress.healthFindings],
+  );
+
+  const handleOptimize = async (selectedFindings: WordPressHealthFinding[]) => {
+    if (!siteId || selectedFindings.length === 0) return;
+
+    try {
+      setIsOptimizing(true);
+      const response = await fetch(`/api/sites/${siteId}/wordpress/remediate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          findings: selectedFindings.map((finding) => ({
+            id: finding.id,
+            actionId: finding.remediationActionId,
+            title: finding.title,
+            severity: finding.severity,
+            category: finding.category,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.text().catch(() => "");
+        console.warn("[WordPressCard] remediation non-OK response", response.status, body);
+        return;
+      }
+    } catch (error) {
+      console.error("[WordPressCard] optimize failed", error);
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
   return (
     <CockpitCard
       id={id}
@@ -127,13 +171,61 @@ export function WordPressCard({
       {/* WordPress Analysis Panels */}
       <div className="space-y-3">
         <h4 className="text-sm font-semibold" style={{ color: "var(--text-subtle)" }}>WordPress Insights</h4>
+        <div className="rounded-lg border p-3 text-xs" style={{ borderColor: "var(--border-default)" }}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div>
+              <div style={{ color: "var(--text-subtle)" }}>Connection</div>
+              <div className="text-white">{wordpress.connection?.status ?? "connected"}</div>
+            </div>
+            <div>
+              <div style={{ color: "var(--text-subtle)" }}>Last Audit</div>
+              <div className="text-white">{wordpress.connection?.lastAuditAt ?? "Just now"}</div>
+            </div>
+            <div>
+              <div style={{ color: "var(--text-subtle)" }}>Trend</div>
+              <div className={wordpress.trend?.delta && wordpress.trend.delta >= 0 ? "text-emerald-300" : "text-red-300"}>
+                {wordpress.trend ? `${wordpress.trend.delta >= 0 ? "+" : ""}${wordpress.trend.delta}` : "0"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {wordpress.categoryScores && (
+          <div className="rounded-lg border p-3" style={{ borderColor: "var(--border-default)" }}>
+            <div className="text-xs mb-2" style={{ color: "var(--text-subtle)" }}>Category Scores</div>
+            <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+              {Object.entries(wordpress.categoryScores).map(([category, value]) => (
+                <div key={category} className="rounded-md px-2 py-1" style={{ background: "var(--header-bg)" }}>
+                  <div style={{ color: "var(--text-subtle)" }}>{category}</div>
+                  <div className={value >= 80 ? "text-emerald-300" : value >= 60 ? "text-yellow-300" : "text-red-300"}>{value}/100</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {topRedFlags.length > 0 && (
+          <div className="rounded-lg border p-3" style={{ borderColor: "rgba(248,113,113,0.45)" }}>
+            <div className="text-xs mb-2 text-red-300">Top Red Flags</div>
+            <ul className="space-y-1 text-xs">
+              {topRedFlags.map((flag) => (
+                <li key={flag.id} className="text-red-200">• {flag.title}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <VersionStatus
           version={wordpress.version}
           recommendations={wordpress.recommendations}
         />
         <SecurityOverview security={wordpress.security} />
         <PluginsPanel plugins={wordpress.plugins} />
-        <HealthFindingsPanel findings={wordpress.healthFindings ?? []} />
+        <HealthFindingsPanel
+          findings={wordpress.healthFindings ?? []}
+          onOptimize={handleOptimize}
+          optimizing={isOptimizing}
+        />
         <ImplementationPlanPanel />
       </div>
     </CockpitCard>

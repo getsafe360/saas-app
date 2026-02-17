@@ -1,12 +1,14 @@
 // components/site-cockpit/cards/wordpress/components/Analysis/HealthFindingsPanel.tsx
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ShieldCheck } from "lucide-react";
 import type { WordPressHealthFinding } from "@/types/site-cockpit";
 
 interface HealthFindingsPanelProps {
   findings: WordPressHealthFinding[];
+  onOptimize?: (selected: WordPressHealthFinding[]) => Promise<void> | void;
+  optimizing?: boolean;
 }
 
 const CATEGORY_LABEL: Record<WordPressHealthFinding["category"], string> = {
@@ -17,7 +19,7 @@ const CATEGORY_LABEL: Record<WordPressHealthFinding["category"], string> = {
   "red-flags": "Red Flags",
 };
 
-export function HealthFindingsPanel({ findings }: HealthFindingsPanelProps) {
+export function HealthFindingsPanel({ findings, onOptimize, optimizing }: HealthFindingsPanelProps) {
   const actionable = useMemo(
     () => findings.filter((f) => f.status === "fail" || f.status === "warning"),
     [findings],
@@ -27,6 +29,14 @@ export function HealthFindingsPanel({ findings }: HealthFindingsPanelProps) {
     () => actionable.filter((f) => f.checkedByDefault),
     [actionable],
   );
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(prechecked.map((f) => f.id)));
+
+  useEffect(() => {
+    setSelectedIds(new Set(prechecked.map((f) => f.id)));
+  }, [prechecked]);
+
+  const selectedFindings = actionable.filter((finding) => selectedIds.has(finding.id));
 
   return (
     <section
@@ -39,7 +49,7 @@ export function HealthFindingsPanel({ findings }: HealthFindingsPanelProps) {
           WP Health & Security AI Engine
         </h5>
         <div className="text-xs" style={{ color: "var(--text-subtle)" }}>
-          {prechecked.length} critical fix(es) preselected
+          {selectedFindings.length} selected · {prechecked.length} critical fix(es) preselected
         </div>
       </div>
 
@@ -53,7 +63,16 @@ export function HealthFindingsPanel({ findings }: HealthFindingsPanelProps) {
             <input
               type="checkbox"
               className="mt-0.5"
-              defaultChecked={finding.checkedByDefault}
+              checked={selectedIds.has(finding.id)}
+              onChange={(event) => {
+                const isChecked = event.currentTarget.checked;
+                setSelectedIds((prev) => {
+                  const next = new Set(prev);
+                  if (isChecked) next.add(finding.id);
+                  else next.delete(finding.id);
+                  return next;
+                });
+              }}
               aria-label={`select-${finding.id}`}
             />
             <div className="flex-1">
@@ -69,6 +88,9 @@ export function HealthFindingsPanel({ findings }: HealthFindingsPanelProps) {
               <div className="text-xs mt-1" style={{ color: "var(--text-subtle)" }}>
                 {finding.action}
               </div>
+              <div className="text-[11px] mt-1" style={{ color: "var(--text-subtle)" }}>
+                Remediation: {finding.automationLevel ?? "manual"}
+              </div>
             </div>
           </label>
         ))}
@@ -78,6 +100,20 @@ export function HealthFindingsPanel({ findings }: HealthFindingsPanelProps) {
           </div>
         )}
       </div>
+
+      {onOptimize && actionable.length > 0 && (
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            className="rounded-md px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+            style={{ background: "var(--category-wordpress)" }}
+            onClick={() => onOptimize(selectedFindings)}
+            disabled={optimizing || selectedFindings.length === 0}
+          >
+            {optimizing ? "Optimizing..." : `Optimize (${selectedFindings.length})`}
+          </button>
+        </div>
+      )}
     </section>
   );
 }
