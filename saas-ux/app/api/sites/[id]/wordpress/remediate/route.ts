@@ -54,17 +54,6 @@ export async function POST(
     return NextResponse.json({ success: false, error: 'FORBIDDEN' }, { status: 403 });
   }
 
-  const [changeSet] = await db
-    .insert(changeSets)
-    .values({
-      siteId,
-      title: 'WordPress Batch Remediation',
-      description: `Applied ${findings.length} selected remediation action(s)`,
-      status: 'applied',
-      createdByUserId: dbUser?.id,
-    })
-    .returning({ id: changeSets.id });
-
   const executionResults = findings.map((finding) => ({
     findingId: finding.id,
     actionId: finding.actionId ?? finding.id,
@@ -72,22 +61,49 @@ export async function POST(
     message: `Queued remediation for ${finding.title ?? finding.id}`,
   }));
 
-  if (changeSet?.id) {
-    await db.insert(changeItems).values(
-      executionResults.map((result) => ({
-        changeSetId: changeSet.id,
-        op: 'remediate',
-        path: `wordpress/${result.actionId}`,
-        oldValue: { status: 'pending' },
-        newValue: { status: result.status, findingId: result.findingId },
-      })),
-    );
+  let changeSetId: string | undefined;
+  let auditLogged = false;
+  let auditError: string | undefined;
+
+  // Audit logging must never block remediation UX (deployed envs may lag migrations).
+  try {
+    const [changeSet] = await db
+      .insert(changeSets)
+      .values({
+        siteId,
+        title: 'WordPress Batch Remediation',
+        description: `Applied ${findings.length} selected remediation action(s)`,
+        status: 'applied',
+        createdByUserId: dbUser?.id,
+      })
+      .returning({ id: changeSets.id });
+
+    changeSetId = changeSet?.id;
+
+    if (changeSetId) {
+      const persistedChangeSetId = changeSetId;
+      await db.insert(changeItems).values(
+        executionResults.map((result) => ({
+          changeSetId: persistedChangeSetId,
+          op: 'remediate',
+          path: `wordpress/${result.actionId}`,
+          oldValue: { status: 'pending' },
+          newValue: { status: result.status, findingId: result.findingId },
+        })),
+      );
+      auditLogged = true;
+    }
+  } catch (error: any) {
+    auditError = String(error?.message ?? error ?? 'Unknown audit logging error');
+    console.warn('[wordpress/remediate] audit log persistence skipped:', auditError);
   }
 
   return NextResponse.json({
     success: true,
     siteId,
-    changeSetId: changeSet?.id,
+    changeSetId,
+    auditLogged,
+    ...(auditError ? { auditError } : {}),
     executed: executionResults,
     rerunSuggestedChecks: executionResults.map((result) => result.findingId),
   });
