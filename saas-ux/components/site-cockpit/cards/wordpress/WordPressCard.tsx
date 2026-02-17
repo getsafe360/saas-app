@@ -116,7 +116,9 @@ export function WordPressCard({
       });
 
       if (!response.ok) {
-        throw new Error(`Remediation request failed (${response.status})`);
+        const body = await response.text().catch(() => "");
+        console.warn("[WordPressCard] remediation non-OK response", response.status, body);
+        return;
       }
     } catch (error) {
       console.error("[WordPressCard] optimize failed", error);

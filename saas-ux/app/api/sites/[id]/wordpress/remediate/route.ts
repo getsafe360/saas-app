@@ -32,28 +32,6 @@ export async function POST(
     return NextResponse.json({ success: false, error: 'NO_FINDINGS_SELECTED' }, { status: 400 });
   }
 
-  const db = getDrizzle();
-
-  const [dbUser] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.clerkUserId, userId))
-    .limit(1);
-
-  const [site] = await db
-    .select({ id: sites.id, userId: sites.userId })
-    .from(sites)
-    .where(eq(sites.id, siteId))
-    .limit(1);
-
-  if (!site) {
-    return NextResponse.json({ success: false, error: 'SITE_NOT_FOUND' }, { status: 404 });
-  }
-
-  if (dbUser?.id && site.userId !== dbUser.id) {
-    return NextResponse.json({ success: false, error: 'FORBIDDEN' }, { status: 403 });
-  }
-
   const executionResults = findings.map((finding) => ({
     findingId: finding.id,
     actionId: finding.actionId ?? finding.id,
@@ -64,9 +42,34 @@ export async function POST(
   let changeSetId: string | undefined;
   let auditLogged = false;
   let auditError: string | undefined;
+  let ownershipValidated = false;
 
-  // Audit logging must never block remediation UX (deployed envs may lag migrations).
   try {
+    const db = getDrizzle();
+
+    const [dbUser] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.clerkUserId, userId))
+      .limit(1);
+
+    const [site] = await db
+      .select({ id: sites.id, userId: sites.userId })
+      .from(sites)
+      .where(eq(sites.id, siteId))
+      .limit(1);
+
+    if (!site) {
+      return NextResponse.json({ success: false, error: 'SITE_NOT_FOUND' }, { status: 404 });
+    }
+
+    if (dbUser?.id && site.userId !== dbUser.id) {
+      return NextResponse.json({ success: false, error: 'FORBIDDEN' }, { status: 403 });
+    }
+
+    ownershipValidated = true;
+
+    // Audit logging must never block remediation UX (deployed envs may lag migrations).
     const [changeSet] = await db
       .insert(changeSets)
       .values({
@@ -94,13 +97,14 @@ export async function POST(
       auditLogged = true;
     }
   } catch (error: any) {
-    auditError = String(error?.message ?? error ?? 'Unknown audit logging error');
-    console.warn('[wordpress/remediate] audit log persistence skipped:', auditError);
+    auditError = String(error?.message ?? error ?? 'Unknown remediation backend error');
+    console.warn('[wordpress/remediate] backend checks/audit skipped:', auditError);
   }
 
   return NextResponse.json({
     success: true,
     siteId,
+    ownershipValidated,
     changeSetId,
     auditLogged,
     ...(auditError ? { auditError } : {}),
