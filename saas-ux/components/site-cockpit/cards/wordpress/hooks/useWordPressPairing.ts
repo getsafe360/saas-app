@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { PairingStatus, UseWordPressPairingReturn } from '../types';
 
-export function useWordPressPairing(siteUrl: string): UseWordPressPairingReturn {
+export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPressPairingReturn {
   const router = useRouter();
   
   const [showPairingFlow, setShowPairingFlow] = useState(false);
@@ -69,6 +69,19 @@ export function useWordPressPairing(siteUrl: string): UseWordPressPairingReturn 
     return data;
   }
 
+
+  async function checkConnectionStatusOnce(id: string): Promise<boolean> {
+    const res = await fetch(`/api/sites/${id}/reconnect`, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return false;
+
+    return data?.data?.status === "connected";
+  }
+
   const copyToClipboard = async () => {
     if (!pairCode) return;
     await navigator.clipboard.writeText(pairCode);
@@ -114,6 +127,17 @@ export function useWordPressPairing(siteUrl: string): UseWordPressPairingReturn 
         }
 
         if (pollAttemptsRef.current >= 48) {
+          if (siteId) {
+            const isConnected = await checkConnectionStatusOnce(siteId).catch(() => false);
+            if (isConnected) {
+              stopPolling();
+              setPairingStatus("connected");
+              setPairingMessage("Connection established. Syncing dashboard...");
+              router.refresh();
+              return;
+            }
+          }
+
           stopPolling();
           setPairingStatus("error");
           setPairingMessage("No confirmation received yet. Please retry or generate a new pairing code.");
@@ -125,7 +149,7 @@ export function useWordPressPairing(siteUrl: string): UseWordPressPairingReturn 
 
     return stopPolling;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pairingStatus, pairCode]);
+  }, [pairingStatus, pairCode, router, siteId]);
 
   return {
     showPairingFlow,

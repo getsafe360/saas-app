@@ -1,7 +1,7 @@
 // app/api/connect/start/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { list, put } from "@vercel/blob";
 import crypto from "crypto";
 
@@ -144,15 +144,19 @@ export async function POST(req: NextRequest) {
   }
 
   // 5.5) ✅ GUARD: check if this user already has a site for this host
-  // We don't have a "host" column, so compare lower(site_url) LIKE '%//host/%'
-  const likePattern = `%//${host}/%`.toLowerCase();
+  // Prefer canonical_host matching (aligned with unique key), then fallback to URL variants.
   const existing = await db
     .select({ id: sites.id })
     .from(sites)
     .where(
       and(
         eq(sites.userId, dbUser.id),
-        sql`lower(${sites.siteUrl}) LIKE ${likePattern}`
+        or(
+          eq(sites.canonicalHost, host),
+          eq(sites.siteUrl, normalizedUrl),
+          eq(sites.siteUrl, normalizedUrl.replace(/\/$/, "")),
+          eq(sites.siteUrl, `${normalizedUrl.replace(/\/$/, "")}/`),
+        )
       )
     )
     .limit(1);

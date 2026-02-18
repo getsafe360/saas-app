@@ -38,7 +38,7 @@ export function WordPressCard({
     lastConnected,
     siteId,
   );
-  const pairing = useWordPressPairing(data.finalUrl);
+  const pairing = useWordPressPairing(data.finalUrl, siteId);
 
   const hasTriggeredPostPairReconnect = useRef(false);
 
@@ -53,7 +53,11 @@ export function WordPressCard({
 
     connection.setShowReconnectFlow(false);
     void connection.handleReconnect();
-  }, [pairing.pairingStatus, connection.handleReconnect, connection.setShowReconnectFlow]);
+  }, [
+    pairing.pairingStatus,
+    connection.handleReconnect,
+    connection.setShowReconnectFlow,
+  ]);
 
   // Not WordPress at all
   if (!wordpress && cms.type !== "wordpress") {
@@ -103,7 +107,10 @@ export function WordPressCard({
   const topRedFlags = useMemo(
     () =>
       (wordpress.healthFindings ?? [])
-        .filter((finding) => finding.category === "red-flags" && finding.status !== "pass")
+        .filter(
+          (finding) =>
+            finding.category === "red-flags" && finding.status !== "pass",
+        )
         .slice(0, 5),
     [wordpress.healthFindings],
   );
@@ -136,7 +143,11 @@ export function WordPressCard({
 
       if (!response.ok) {
         const body = await response.text().catch(() => "");
-        console.warn("[WordPressCard] remediation non-OK response", response.status, body);
+        console.warn(
+          "[WordPressCard] remediation non-OK response",
+          response.status,
+          body,
+        );
         return;
       }
     } catch (error) {
@@ -190,46 +201,97 @@ export function WordPressCard({
 
       {/* WordPress Analysis Panels */}
       <div className="space-y-3">
-        <h4 className="text-sm font-semibold" style={{ color: "var(--text-subtle)" }}>WordPress Insights</h4>
-        <div className="rounded-lg border p-3 text-xs" style={{ borderColor: "var(--border-default)" }}>
+        <h4
+          className="text-sm font-semibold"
+          style={{ color: "var(--text-subtle)" }}
+        >
+          WordPress Insights
+        </h4>
+        <div
+          className="rounded-lg border p-3 text-xs"
+          style={{ borderColor: "var(--border-default)" }}
+        >
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             <div>
               <div style={{ color: "var(--text-subtle)" }}>Connection</div>
-              <div className="text-white">{wordpress.connection?.status ?? "connected"}</div>
+              <div className="text-white">
+                {wordpress.connection?.status ?? "connected"}
+              </div>
             </div>
             <div>
               <div style={{ color: "var(--text-subtle)" }}>Last Audit</div>
-              <div className="text-white">{wordpress.connection?.lastAuditAt ?? "Just now"}</div>
+              <div className="text-white">
+                {wordpress.connection?.lastAuditAt ?? "Just now"}
+              </div>
             </div>
             <div>
               <div style={{ color: "var(--text-subtle)" }}>Trend</div>
-              <div className={wordpress.trend?.delta && wordpress.trend.delta >= 0 ? "text-emerald-300" : "text-red-300"}>
-                {wordpress.trend ? `${wordpress.trend.delta >= 0 ? "+" : ""}${wordpress.trend.delta}` : "0"}
+              <div
+                className={
+                  wordpress.trend?.delta && wordpress.trend.delta >= 0
+                    ? "text-emerald-300"
+                    : "text-red-300"
+                }
+              >
+                {wordpress.trend
+                  ? `${wordpress.trend.delta >= 0 ? "+" : ""}${wordpress.trend.delta}`
+                  : "0"}
               </div>
             </div>
           </div>
         </div>
 
         {wordpress.categoryScores && (
-          <div className="rounded-lg border p-3" style={{ borderColor: "var(--border-default)" }}>
-            <div className="text-xs mb-2" style={{ color: "var(--text-subtle)" }}>Category Scores</div>
+          <div
+            className="rounded-lg border p-3"
+            style={{ borderColor: "var(--border-default)" }}
+          >
+            <div
+              className="text-xs mb-2"
+              style={{ color: "var(--text-subtle)" }}
+            >
+              Category Scores
+            </div>
             <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
-              {Object.entries(wordpress.categoryScores).map(([category, value]) => (
-                <div key={category} className="rounded-md px-2 py-1" style={{ background: "var(--header-bg)" }}>
-                  <div style={{ color: "var(--text-subtle)" }}>{category}</div>
-                  <div className={value >= 80 ? "text-emerald-300" : value >= 60 ? "text-yellow-300" : "text-red-300"}>{value}/100</div>
-                </div>
-              ))}
+              {Object.entries(wordpress.categoryScores).map(
+                ([category, value]) => (
+                  <div
+                    key={category}
+                    className="rounded-md px-2 py-1"
+                    style={{ background: "var(--header-bg)" }}
+                  >
+                    <div style={{ color: "var(--text-subtle)" }}>
+                      {category}
+                    </div>
+                    <div
+                      className={
+                        value >= 80
+                          ? "text-emerald-300"
+                          : value >= 60
+                            ? "text-yellow-300"
+                            : "text-red-300"
+                      }
+                    >
+                      {value}/100
+                    </div>
+                  </div>
+                ),
+              )}
             </div>
           </div>
         )}
 
         {topRedFlags.length > 0 && (
-          <div className="rounded-lg border p-3" style={{ borderColor: "rgba(248,113,113,0.45)" }}>
+          <div
+            className="rounded-lg border p-3"
+            style={{ borderColor: "rgba(248,113,113,0.45)" }}
+          >
             <div className="text-xs mb-2 text-red-300">Top Red Flags</div>
             <ul className="space-y-1 text-xs">
               {topRedFlags.map((flag) => (
-                <li key={flag.id} className="text-red-200">• {flag.title}</li>
+                <li key={flag.id} className="text-red-200">
+                  • {flag.title}
+                </li>
               ))}
             </ul>
           </div>

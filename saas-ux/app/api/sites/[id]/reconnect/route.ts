@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
+import { users } from '@/lib/db/schema/auth/users';
 import { eq, sql } from 'drizzle-orm';
 import {
   createWordPressClient,
@@ -27,6 +28,18 @@ function createConfigError(details: string): ReconnectErrorPayload {
     action: 'Add DATABASE_URL in Vercel project environment variables and redeploy.',
     details,
   } as ReconnectErrorPayload;
+}
+
+
+async function getDbUserId(clerkUserId: string): Promise<number | null> {
+  const db = getDrizzle();
+  const [user] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.clerkUserId, clerkUserId))
+    .limit(1);
+
+  return user?.id ?? null;
 }
 
 function toReconnectError(error: unknown): ReconnectErrorPayload {
@@ -80,8 +93,8 @@ export async function POST(
   const { id } = params;
 
   // 1. Authenticate user
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) {
     return NextResponse.json(
       {
         success: false,
@@ -95,6 +108,21 @@ export async function POST(
   }
 
   try {
+    // Resolve internal DB user id from Clerk user id
+    const dbUserId = await getDbUserId(clerkUserId);
+    if (!dbUserId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'USER_NOT_FOUND',
+            message: 'Authenticated user not found in database'
+          }
+        },
+        { status: 401 }
+      );
+    }
+
     // Get database instance (lazy initialization)
     const db = getDrizzle();
 
@@ -128,7 +156,7 @@ export async function POST(
     }
 
     // Verify site ownership
-    if (site.userId.toString() !== userId) {
+    if (site.userId !== dbUserId) {
       return NextResponse.json(
         {
           success: false,
@@ -242,8 +270,8 @@ export async function GET(
   const { id } = params;
 
   // Authenticate user
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) {
     return NextResponse.json(
       {
         success: false,
@@ -257,6 +285,20 @@ export async function GET(
   }
 
   try {
+    const dbUserId = await getDbUserId(clerkUserId);
+    if (!dbUserId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'USER_NOT_FOUND',
+            message: 'Authenticated user not found in database'
+          }
+        },
+        { status: 401 }
+      );
+    }
+
     const db = getDrizzle();
     const [site] = await db
       .select({
@@ -282,7 +324,7 @@ export async function GET(
     }
 
     // Verify site ownership
-    if (site.userId.toString() !== userId) {
+    if (site.userId !== dbUserId) {
       return NextResponse.json(
         {
           success: false,
