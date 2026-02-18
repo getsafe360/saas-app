@@ -35,7 +35,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
       const res = await fetch("/api/connect/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siteUrl }),
+        body: JSON.stringify({ siteUrl, siteId }),
       });
 
       const responseData = await res.json();
