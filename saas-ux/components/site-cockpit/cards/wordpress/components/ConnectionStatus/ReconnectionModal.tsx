@@ -1,17 +1,20 @@
 // components/site-cockpit/cards/wordpress/components/ConnectionStatus/ReconnectionModal.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  XCircle,
+  X,
   Package,
   Wifi,
   RefreshCw,
-  CheckCircle,
+  CheckCircle2,
   PlayCircle,
   AlertCircle,
+  Link2,
+  Copy,
+  Check,
 } from "lucide-react";
-import type { ConnectionState } from "../../types";
+import type { ConnectionState, UseWordPressPairingReturn } from "../../types";
 
 interface ReconnectionModalProps {
   connectionState: ConnectionState;
@@ -19,7 +22,10 @@ interface ReconnectionModalProps {
   onClose: () => void;
   isReconnecting: boolean;
   siteUrl: string;
+  pairing: UseWordPressPairingReturn;
 }
+
+type ModalView = "reconnect" | "pair";
 
 export function ReconnectionModal({
   connectionState,
@@ -27,242 +33,268 @@ export function ReconnectionModal({
   onClose,
   isReconnecting,
   siteUrl,
+  pairing,
 }: ReconnectionModalProps) {
   const [step, setStep] = useState(1);
+  const [view, setView] = useState<ModalView>("reconnect");
 
   const steps = [
     {
       id: 1,
-      title: "Check Plugin Status",
-      description: "Ensure GetSafe 360 Connector is active",
+      title: "Check Plugin",
+      description: "Confirm GetSafe 360 Connector is active",
       action: "Verify Plugin",
       icon: Package,
     },
     {
       id: 2,
       title: "Test Connection",
-      description: "Attempting to reach your WordPress site",
+      description: "Ping your WordPress connector endpoint",
       action: "Test Now",
       icon: Wifi,
     },
     {
       id: 3,
       title: "Sync Data",
-      description: "Retrieving latest site information",
+      description: "Pull latest status from your site",
       action: "Sync",
       icon: RefreshCw,
     },
   ];
 
+  const pairCodeGroups = useMemo(() => {
+    if (!pairing.pairCode) return ["---", "---"];
+    const sanitized = pairing.pairCode.replace(/\D/g, "").slice(0, 6);
+    return [sanitized.slice(0, 3), sanitized.slice(3, 6)];
+  }, [pairing.pairCode]);
+
   const handleStepAction = async (stepId: number) => {
     setStep(stepId);
 
     if (stepId === 3) {
-      // Final step - trigger reconnection
       await onReconnect();
-      setTimeout(() => onClose(), 2000);
-    } else {
-      // Auto-advance to next step
-      setTimeout(() => setStep(stepId + 1), 1500);
+      return;
     }
+
+    setTimeout(() => setStep(stepId + 1), 1200);
+  };
+
+  useEffect(() => {
+    if (pairing.pairingStatus !== "connected") return;
+
+    const timer = window.setTimeout(() => {
+      onClose();
+    }, 1200);
+
+    return () => window.clearTimeout(timer);
+  }, [pairing.pairingStatus, onClose]);
+
+  const handleGeneratePairCode = async () => {
+    if (pairing.pairingStatus === "generating" || pairing.pairingStatus === "waiting") {
+      return;
+    }
+
+    await pairing.startPairing();
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-3xl rounded-2xl border border-slate-700/80 bg-slate-950 shadow-2xl">
+        <div className="flex items-start justify-between border-b border-slate-800 px-6 py-5">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-1">
-              Reconnect WordPress Site
-            </h2>
-            <p className="text-sm text-gray-400">{siteUrl}</p>
+            <h2 className="text-2xl font-semibold text-slate-100">WordPress Connection</h2>
+            <p className="mt-1 text-sm text-slate-400">{siteUrl}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+            className="rounded-md p-2 text-slate-400 transition hover:bg-slate-800 hover:text-slate-100"
+            aria-label="Close"
           >
-            <XCircle className="h-6 w-6 text-gray-400" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            {steps.map((s, index) => (
-              <div key={s.id} className="flex items-center flex-1">
-                <div
-                  className={`flex flex-col items-center ${
-                    index < steps.length - 1 ? "w-full" : ""
-                  }`}
-                >
-                  <div
-                    className={`h-12 w-12 rounded-full border-2 flex items-center justify-center transition-all ${
-                      step >= s.id
-                        ? "bg-blue-500 border-blue-500"
-                        : "bg-gray-800 border-gray-700"
-                    }`}
-                  >
-                    <s.icon
-                      className={`h-6 w-6 ${
-                        step >= s.id ? "text-white" : "text-gray-500"
-                      } ${step === s.id ? "animate-pulse" : ""}`}
-                    />
-                  </div>
-                  <div className="mt-2 text-xs text-center">
-                    <div
-                      className={`font-semibold ${
-                        step >= s.id ? "text-white" : "text-gray-500"
-                      }`}
-                    >
-                      {s.title}
-                    </div>
-                  </div>
-                </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`flex-1 h-0.5 mx-2 transition-colors ${
-                      step > s.id ? "bg-blue-500" : "bg-gray-700"
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
+        <div className="px-6 pt-5">
+          <div className="inline-flex rounded-lg border border-slate-700 bg-slate-900 p-1">
+            <button
+              onClick={() => setView("reconnect")}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                view === "reconnect"
+                  ? "bg-slate-100 text-slate-900"
+                  : "text-slate-300 hover:text-slate-100"
+              }`}
+            >
+              Reconnect
+            </button>
+            <button
+              onClick={() => setView("pair")}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                view === "pair"
+                  ? "bg-slate-100 text-slate-900"
+                  : "text-slate-300 hover:text-slate-100"
+              }`}
+            >
+              Pair with Code
+            </button>
           </div>
         </div>
 
-        {/* Current Step Details */}
-        <div className="bg-gray-800/50 rounded-xl p-6 mb-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-lg bg-blue-500/10">
-              {React.createElement(steps[step - 1].icon, {
-                className: "h-6 w-6 text-blue-400",
-              })}
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                {steps[step - 1].title}
-              </h3>
-              <p className="text-sm text-gray-400 mb-4">
-                {steps[step - 1].description}
-              </p>
-
-              {/* Step-specific content */}
-              {step === 1 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle className="h-4 w-4 text-green-400" />
-                    <span className="text-gray-300">
-                      Plugin installed and active
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle className="h-4 w-4 text-green-400" />
-                    <span className="text-gray-300">API key configured</span>
-                  </div>
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
-                    <span className="text-gray-300">
-                      Pinging WordPress REST API...
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 font-mono bg-gray-900 p-2 rounded">
-                    GET {siteUrl}/wp-json/getsafe360/v1/status
-                  </div>
-                </div>
-              )}
-
-              {step === 3 && (
-                <div className="space-y-2">
-                  {isReconnecting ? (
-                    <div className="flex items-center gap-2 text-sm">
-                      <RefreshCw className="h-4 w-4 text-blue-400 animate-spin" />
-                      <span className="text-gray-300">
-                        Syncing site data...
-                      </span>
+        <div className="grid gap-6 px-6 py-6 lg:grid-cols-2">
+          {view === "reconnect" ? (
+            <>
+              <section className="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+                <div className="mb-5 flex items-center justify-between">
+                  {steps.map((s, index) => (
+                    <div key={s.id} className="flex flex-1 items-center">
+                      <div className="flex flex-col items-center">
+                        <div
+                          className={`flex h-10 w-10 items-center justify-center rounded-full border ${
+                            step >= s.id
+                              ? "border-blue-500 bg-blue-500 text-white"
+                              : "border-slate-700 bg-slate-900 text-slate-500"
+                          }`}
+                        >
+                          <s.icon className={`h-4 w-4 ${step === s.id ? "animate-pulse" : ""}`} />
+                        </div>
+                        <span className="mt-2 text-center text-xs text-slate-300">{s.title}</span>
+                      </div>
+                      {index < steps.length - 1 && (
+                        <div className={`mx-2 h-px flex-1 ${step > s.id ? "bg-blue-500" : "bg-slate-700"}`} />
+                      )}
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="h-4 w-4 text-green-400" />
-                      <span className="text-gray-300">
-                        Connection restored!
-                      </span>
+                  ))}
+                </div>
+
+                <div className="rounded-lg border border-slate-800 bg-slate-950/80 p-4">
+                  <h3 className="text-base font-semibold text-slate-100">{steps[step - 1].title}</h3>
+                  <p className="mt-1 text-sm text-slate-400">{steps[step - 1].description}</p>
+
+                  {step === 2 && (
+                    <div className="mt-3 rounded-md border border-slate-800 bg-slate-900 p-3 font-mono text-xs text-slate-400">
+                      GET {siteUrl}/wp-json/getsafe360/v1/status
+                    </div>
+                  )}
+
+                  {step === 3 && !isReconnecting && !connectionState.errorMessage && (
+                    <div className="mt-3 flex items-center gap-2 text-sm text-emerald-400">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Connection restored.
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          </div>
+
+                {connectionState.errorMessage && (
+                  <div className="mt-4 rounded-lg border border-red-500/30 bg-red-950/40 p-3 text-sm text-red-300">
+                    <div className="mb-1 flex items-center gap-2 font-medium">
+                      <AlertCircle className="h-4 w-4" /> Connection Error
+                    </div>
+                    {connectionState.errorMessage}
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-xl border border-slate-800 bg-slate-900/70 p-5">
+                <h3 className="text-base font-semibold text-slate-100">Prefer a fresh pairing?</h3>
+                <p className="mt-2 text-sm text-slate-400">
+                  Generate a new 6-digit code and pair the plugin again to recover from auth mismatch or stale keys.
+                </p>
+                <button
+                  onClick={() => {
+                    setView("pair");
+                    void handleGeneratePairCode();
+                  }}
+                  className="mt-4 inline-flex items-center gap-2 rounded-md border border-blue-500/40 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-300 hover:bg-blue-500/20"
+                >
+                  <Link2 className="h-4 w-4" /> Generate Pairing Code
+                </button>
+              </section>
+            </>
+          ) : (
+            <>
+              <section className="rounded-xl border border-slate-800 bg-slate-900/70 p-5 lg:col-span-2">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-100">Generate Pairing Code</h3>
+                    <p className="mt-1 text-sm text-slate-400">
+                      GetSafe 360 Connector: copy the 6-digit code, paste it in the plugin, then click Connect.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => void handleGeneratePairCode()}
+                    disabled={pairing.pairingStatus === "generating" || pairing.pairingStatus === "waiting"}
+                    className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${pairing.pairingStatus === "generating" ? "animate-spin" : ""}`} />
+                    {pairing.pairingStatus === "generating" ? "Generating..." : "Generate Pairing Code"}
+                  </button>
+                </div>
+
+                <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950 p-5">
+                  <div className="text-xs uppercase tracking-wider text-slate-500">Pairing code</div>
+                  <div className="mt-3 flex items-center gap-3 text-3xl font-semibold text-slate-100">
+                    <span className="rounded-md border border-slate-700 bg-slate-900 px-4 py-2 tracking-[0.25em]">{pairCodeGroups[0]}</span>
+                    <span className="text-slate-500">-</span>
+                    <span className="rounded-md border border-slate-700 bg-slate-900 px-4 py-2 tracking-[0.25em]">{pairCodeGroups[1]}</span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-3">
+                    <button
+                      onClick={() => void pairing.copyToClipboard()}
+                      disabled={!pairing.pairCode}
+                      className="inline-flex items-center gap-2 rounded-md border border-slate-700 px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {pairing.copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      {pairing.copied ? "Copied" : "Copy code"}
+                    </button>
+                    <span className="text-xs text-slate-500">Single-use, expires in ~10 minutes.</span>
+                  </div>
+                </div>
+
+                <ol className="mt-5 space-y-2 text-sm text-slate-300">
+                  <li>1. Open WordPress Admin → <span className="font-medium text-slate-100">GetSafe 360 Connector</span>.</li>
+                  <li>2. Paste the code shown above into the plugin pairing field.</li>
+                  <li>3. Click <span className="font-medium text-slate-100">Connect</span> in the plugin.</li>
+                  <li>4. Keep this modal open while we confirm the connection.</li>
+                </ol>
+
+                {pairing.pairingStatus === "waiting" && (
+                  <div className="mt-4 rounded-lg border border-blue-500/30 bg-blue-950/30 p-3 text-sm text-blue-300">
+                    Waiting for plugin confirmation...
+                  </div>
+                )}
+                {pairing.pairingStatus === "connected" && (
+                  <div className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-950/30 p-3 text-sm text-emerald-300">
+                    Your site is now connected and can scan and optimize your WordPress.
+                  </div>
+                )}
+                {pairing.pairingStatus === "error" && (
+                  <div className="mt-4 rounded-lg border border-red-500/30 bg-red-950/30 p-3 text-sm text-red-300">
+                    {pairing.pairingMessage}
+                  </div>
+                )}
+              </section>
+            </>
+          )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between border-t border-slate-800 px-6 py-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 transition-colors"
+            className="rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-900"
           >
             Cancel
           </button>
 
-          <div className="flex gap-3">
-            {step < 3 && (
-              <button
-                onClick={() => handleStepAction(step)}
-                disabled={isReconnecting}
-                className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors flex items-center gap-2"
-              >
-                {steps[step - 1].action}
-                <PlayCircle className="h-4 w-4" />
-              </button>
-            )}
-
-            {step === 3 && (
-              <button
-                onClick={() => handleStepAction(3)}
-                disabled={isReconnecting}
-                className={`px-6 py-2 rounded-lg ${
-                  isReconnecting
-                    ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-500 text-white"
-                } font-semibold transition-colors flex items-center gap-2`}
-              >
-                {isReconnecting ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    Reconnecting...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    Complete
-                  </>
-                )}
-              </button>
-            )}
-          </div>
+          {view === "reconnect" && (
+            <button
+              onClick={() => void handleStepAction(step)}
+              disabled={isReconnecting}
+              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isReconnecting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <PlayCircle className="h-4 w-4" />}
+              {step === 3 ? (isReconnecting ? "Reconnecting..." : "Complete") : steps[step - 1].action}
+            </button>
+          )}
         </div>
-
-        {/* Error Display */}
-        {connectionState.errorMessage && (
-          <div className="mt-4 p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="text-sm font-semibold text-red-400 mb-1">
-                  Connection Error
-                </div>
-                <div className="text-xs text-gray-400">
-                  {connectionState.errorMessage}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

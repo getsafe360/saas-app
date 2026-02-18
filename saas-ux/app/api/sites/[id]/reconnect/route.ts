@@ -3,10 +3,72 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
+import { users } from '@/lib/db/schema/auth/users';
 import { eq, sql } from 'drizzle-orm';
-import { createWordPressClient, WordPressErrorCode } from '@/lib/wordpress/client';
+import {
+  createWordPressClient,
+  WordPressErrorCode,
+} from '@/lib/wordpress/client';
 import { logConnectionSuccess, logConnectionError } from '@/lib/wordpress/logger';
 import { createWordPressConnection } from '@/lib/wordpress/auth';
+
+interface ReconnectErrorPayload {
+  code: string;
+  title: string;
+  message: string;
+  action: string;
+  details?: string;
+}
+
+function createConfigError(details: string): ReconnectErrorPayload {
+  return {
+    code: 'CONFIGURATION_ERROR',
+    title: 'Server Configuration Error',
+    message: 'Database connection is not configured.',
+    action: 'Add DATABASE_URL in Vercel project environment variables and redeploy.',
+    details,
+  } as ReconnectErrorPayload;
+}
+
+
+async function getDbUserId(clerkUserId: string): Promise<number | null> {
+  const db = getDrizzle();
+  const [user] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.clerkUserId, clerkUserId))
+    .limit(1);
+
+  return user?.id ?? null;
+}
+
+function toReconnectError(error: unknown): ReconnectErrorPayload {
+  const maybeError = error as { code?: string; message?: string; toJSON?: () => ReconnectErrorPayload };
+
+  if (
+    maybeError.code &&
+    WordPressErrorCode[maybeError.code as keyof typeof WordPressErrorCode] &&
+    typeof maybeError.toJSON === 'function'
+  ) {
+    return maybeError.toJSON();
+  }
+
+  if (
+    maybeError.message?.includes('DATABASE_URL is not set') ||
+    maybeError.message?.includes('POSTGRES_URL is not set')
+  ) {
+    return createConfigError(maybeError.message);
+  }
+
+  return {
+    code: 'CONNECTION_FAILED',
+    title: 'Connection Failed',
+    message: 'Could not reach WordPress site',
+    action: 'Check your site URL and try again',
+    details: maybeError.message,
+  } as ReconnectErrorPayload;
+}
+
 
 /**
  * POST /api/sites/[id]/reconnect
@@ -31,8 +93,8 @@ export async function POST(
   const { id } = params;
 
   // 1. Authenticate user
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) {
     return NextResponse.json(
       {
         success: false,
@@ -46,6 +108,21 @@ export async function POST(
   }
 
   try {
+    // Resolve internal DB user id from Clerk user id
+    const dbUserId = await getDbUserId(clerkUserId);
+    if (!dbUserId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'USER_NOT_FOUND',
+            message: 'Authenticated user not found in database'
+          }
+        },
+        { status: 401 }
+      );
+    }
+
     // Get database instance (lazy initialization)
     const db = getDrizzle();
 
@@ -79,7 +156,7 @@ export async function POST(
     }
 
     // Verify site ownership
-    if (site.userId.toString() !== userId) {
+    if (site.userId !== dbUserId) {
       return NextResponse.json(
         {
           success: false,
@@ -144,33 +221,28 @@ export async function POST(
   } catch (error: any) {
     console.error(`[Reconnect] Error for site ${id}:`, error);
 
-    // Get user-friendly error details
-    const wpError = error.code && WordPressErrorCode[error.code as keyof typeof WordPressErrorCode]
-      ? error.toJSON()
-      : {
-          code: 'CONNECTION_FAILED',
-          title: 'Connection Failed',
-          message: 'Could not reach WordPress site',
-          action: 'Check your site URL and try again',
-          details: error.message,
-        };
+    const wpError = toReconnectError(error);
 
-    // Update database with error status
-    try {
-      const db = getDrizzle();
-      await db
-        .update(sites)
-        .set({
-          connectionStatus: 'error',
-          connectionError: `${wpError.code}: ${wpError.message}`,
-          retryCount: sql`COALESCE(${sites.retryCount}, 0) + 1`,
-        })
-        .where(eq(sites.id, id));
+    const isConfigError = wpError.code === 'CONFIGURATION_ERROR';
 
-      // Log connection error
-      await logConnectionError(id, wpError.message, 'error');
-    } catch (dbError) {
-      console.error(`[Reconnect] Failed to update error status:`, dbError);
+    if (!isConfigError) {
+      // Update database with error status
+      try {
+        const db = getDrizzle();
+        await db
+          .update(sites)
+          .set({
+            connectionStatus: 'error',
+            connectionError: `${wpError.code}: ${wpError.message}`,
+            retryCount: sql`COALESCE(${sites.retryCount}, 0) + 1`,
+          })
+          .where(eq(sites.id, id));
+
+        // Log connection error
+        await logConnectionError(id, wpError.message, 'error');
+      } catch (dbError) {
+        console.error(`[Reconnect] Failed to update error status:`, dbError);
+      }
     }
 
     return NextResponse.json(
@@ -178,7 +250,7 @@ export async function POST(
         success: false,
         error: wpError,
       },
-      { status: 500 }
+      { status: isConfigError ? 503 : 500 }
     );
   }
 }
@@ -198,8 +270,8 @@ export async function GET(
   const { id } = params;
 
   // Authenticate user
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) {
     return NextResponse.json(
       {
         success: false,
@@ -213,6 +285,20 @@ export async function GET(
   }
 
   try {
+    const dbUserId = await getDbUserId(clerkUserId);
+    if (!dbUserId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'USER_NOT_FOUND',
+            message: 'Authenticated user not found in database'
+          }
+        },
+        { status: 401 }
+      );
+    }
+
     const db = getDrizzle();
     const [site] = await db
       .select({
@@ -238,7 +324,7 @@ export async function GET(
     }
 
     // Verify site ownership
-    if (site.userId.toString() !== userId) {
+    if (site.userId !== dbUserId) {
       return NextResponse.json(
         {
           success: false,

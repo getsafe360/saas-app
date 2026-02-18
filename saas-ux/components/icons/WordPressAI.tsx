@@ -11,6 +11,8 @@ export function WordPressAIIcon({
 }: WordPressAIIconProps) {
   const gradientId = useId().replace(/:/g, "");
   const wpGradientId = `wpai-gradient-${gradientId}`;
+  const startColor = "var(--category-wordpress-gradient-start, #3b82f6)";
+  const endColor = "var(--category-wordpress-gradient-end, #22d3ee)";
 
   return (
     <svg
@@ -33,31 +35,27 @@ export function WordPressAIIcon({
           y2="40"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="var(--category-wordpress-gradient-start)" />
-          <stop
-            offset="1"
-            stopColor="var(--category-wordpress-gradient-end)"
-          />
+          <stop stopColor={startColor} />
+          <stop offset="1" stopColor={endColor} />
         </linearGradient>
       </defs>
 
-      <circle cx="24" cy="24" r="16" stroke={`url(#${wpGradientId})`} strokeWidth="2" />
+      <circle cx="24" cy="24" r="19" stroke={`url(#${wpGradientId})`} strokeWidth="2.2" />
+      <circle cx="24" cy="24" r="13" stroke={`url(#${wpGradientId})`} strokeWidth="1.8" opacity="0.7" />
 
-      <circle cx="24" cy="6" r="2" fill={`url(#${wpGradientId})`} />
-      <circle cx="24" cy="42" r="2" fill={`url(#${wpGradientId})`} />
-      <circle cx="6" cy="24" r="2" fill={`url(#${wpGradientId})`} />
-      <circle cx="42" cy="24" r="2" fill={`url(#${wpGradientId})`} />
-      <circle cx="11" cy="11" r="2" fill={`url(#${wpGradientId})`} />
-      <circle cx="37" cy="11" r="2" fill={`url(#${wpGradientId})`} />
-      <circle cx="11" cy="37" r="2" fill={`url(#${wpGradientId})`} />
-      <circle cx="37" cy="37" r="2" fill={`url(#${wpGradientId})`} />
-
-      <circle cx="24" cy="24" r="10" stroke={`url(#${wpGradientId})`} strokeWidth="2" />
+      <circle cx="24" cy="4.5" r="2" fill={`url(#${wpGradientId})`} />
+      <circle cx="24" cy="43.5" r="2" fill={`url(#${wpGradientId})`} />
+      <circle cx="4.5" cy="24" r="2" fill={`url(#${wpGradientId})`} />
+      <circle cx="43.5" cy="24" r="2" fill={`url(#${wpGradientId})`} />
+      <circle cx="10.2" cy="10.2" r="1.8" fill={`url(#${wpGradientId})`} />
+      <circle cx="37.8" cy="10.2" r="1.8" fill={`url(#${wpGradientId})`} />
+      <circle cx="10.2" cy="37.8" r="1.8" fill={`url(#${wpGradientId})`} />
+      <circle cx="37.8" cy="37.8" r="1.8" fill={`url(#${wpGradientId})`} />
 
       <path
-        d="M18.5 19.5L20.5 29L22.75 22.5L24.75 29L27 19.5"
+        d="M16.8 16.8h3l4.2 13.2 2.2-7.3c.5-1.7 1.5-3.7 1.5-5.1 0-.6-.1-1.2-.3-1.7h3.8"
         stroke={`url(#${wpGradientId})`}
-        strokeWidth="2"
+        strokeWidth="2.4"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

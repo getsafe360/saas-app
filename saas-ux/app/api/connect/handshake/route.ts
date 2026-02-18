@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { list, put } from '@vercel/blob';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { generateSiteToken, hashToken, createWordPressConnection } from '@/lib/wordpress/auth';
 import { logPairingComplete, logConnectionError } from '@/lib/wordpress/logger';
 import crypto from 'crypto';
@@ -23,9 +23,24 @@ function normalizeInput(u: string): string {
     return u;
   }
 }
+
 function hostOf(u: string) {
-  try { return new URL(u).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; }
+  try {
+    return new URL(u).hostname.replace(/^www\./, '').toLowerCase();
+  } catch {
+    return '';
+  }
 }
+
+function canonicalRootOf(u: string) {
+  try {
+    const url = new URL(u);
+    return `${url.origin.toLowerCase()}/`;
+  } catch {
+    return '';
+  }
+}
+
 function jsonNoStore(body: Record<string, unknown>, init?: ResponseInit) {
   const res = NextResponse.json(body, init);
   res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -86,7 +101,7 @@ export async function POST(req: NextRequest) {
           createdAt: number;
           expiresAt: number;
           used: boolean;
-          userId?: number; // set in /api/connect/start
+          userId?: number;
           siteId?: string;
         }
       | null;
@@ -108,44 +123,44 @@ export async function POST(req: NextRequest) {
       return jsonNoStore({ error: 'code_expired', code: 'E_EXPIRED' }, { status: 410 });
     }
     if (!record.userId) {
-      // We require /api/connect/start to stamp userId; otherwise we can’t own the site row.
       return jsonNoStore({ error: 'missing_user_in_pair_record', code: 'E_NOUSER' }, { status: 500 });
     }
 
-    // Normalize URL & resolve host
     const normalizedReq = normalizeInput(siteUrl);
     const normalizedRec = normalizeInput(record.siteUrl);
-    const reqHost = hostOf(normalizedReq);
-    const recHost = hostOf(normalizedRec);
-
-    // Prefer the host we stored in /start (normalizedRec), but don’t block if they differ.
     const finalSiteUrl = normalizedRec || normalizedReq;
-    const finalHost = recHost || reqHost;
 
-    // DB upsert (reuse if this user already has a site with same host)
+    const canonicalHost = hostOf(finalSiteUrl);
+    const canonicalRoot = canonicalRootOf(finalSiteUrl);
+
+    if (!canonicalHost) {
+      return jsonNoStore({ error: 'invalid_site_url', code: 'E_BAD_HOST' }, { status: 400 });
+    }
+
     const db = getDrizzle();
 
-    // Try to find by same user + same host (case-insensitive match over siteUrl)
-    // NOTE: since we don’t have a separate host column, compare lower(site_url) LIKE '%//host/%'.
-    // This is a pragmatic guard; you can tighten this by storing host in its own column.
-    const likePattern = `%//${finalHost}/%`;
-    const existing = await db
+    // Primary lookup by unique key pair (user_id + canonical_host)
+    const existingByHost = await db
       .select({ id: sites.id })
       .from(sites)
-      .where(
-        and(
-          eq(sites.userId, record.userId!),
-          sql`lower(${sites.siteUrl}) LIKE ${likePattern.toLowerCase()}`
-        )
-      )
+      .where(and(eq(sites.userId, record.userId), eq(sites.canonicalHost, canonicalHost)))
       .limit(1);
 
-    const reuseId = existing[0]?.id ?? record.siteId;
-    const siteId = reuseId || crypto.randomUUID(); // Proper UUID format for PostgreSQL
-    const siteToken = generateSiteToken(); // Use new secure token generator
-    const tokenHash = hashToken(siteToken); // Use new hash function
+    // Fallback lookup by explicit siteId in pairing record
+    const existingByRecordId = !existingByHost[0] && record.siteId
+      ? await db
+          .select({ id: sites.id })
+          .from(sites)
+          .where(eq(sites.id, record.siteId))
+          .limit(1)
+      : [];
 
-    // Create WordPress connection metadata
+    const existingId = existingByHost[0]?.id ?? existingByRecordId[0]?.id;
+    const siteId = existingId || crypto.randomUUID();
+
+    const siteToken = generateSiteToken();
+    const tokenHash = hashToken(siteToken);
+
     const wordpressConnection = createWordPressConnection({
       tokenHash,
       pluginVersion: pluginVersion || 'unknown',
@@ -153,48 +168,59 @@ export async function POST(req: NextRequest) {
       siteUrl: finalSiteUrl,
     });
 
-    // Insert or update the site
-    if (!existing[0]) {
+    const updatePayload = {
+      siteUrl: finalSiteUrl,
+      canonicalHost,
+      canonicalRoot,
+      connectionStatus: 'connected' as const,
+      cms: 'wordpress',
+      wpVersion: wpVersion || null,
+      pluginVersion: pluginVersion || null,
+      tokenHash,
+      wordpressConnection: wordpressConnection as any,
+      lastConnectedAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    if (!existingId) {
       try {
         await db.insert(sites).values({
           id: siteId,
-          userId: record.userId!,
-          siteUrl: finalSiteUrl,
-          connectionStatus: 'connected',
-          cms: 'wordpress',
-          wpVersion: wpVersion || null,
-          pluginVersion: pluginVersion || null,
-          tokenHash,
-          wordpressConnection: wordpressConnection as any,
-          lastConnectedAt: new Date(),
-          // createdAt and updatedAt handled by defaultNow()
+          userId: record.userId,
+          ...updatePayload,
         });
-
-        // Log successful pairing
-        await logPairingComplete(siteId);
       } catch (e: any) {
+        const pgCode = e?.cause?.code;
+
+        // Race-safe: if another request inserted same (user,host), switch to update path.
+        if (pgCode === '23505') {
+          const conflict = await db
+            .select({ id: sites.id })
+            .from(sites)
+            .where(and(eq(sites.userId, record.userId), eq(sites.canonicalHost, canonicalHost)))
+            .limit(1);
+
+          const conflictId = conflict[0]?.id;
+          if (conflictId) {
+            await db.update(sites).set(updatePayload).where(eq(sites.id, conflictId));
+            await logPairingComplete(conflictId);
+
+            await put(
+              `pairings/code-${pairCode}.json`,
+              JSON.stringify({ ...record, used: true, usedAt: now, siteId: conflictId }),
+              { access: 'public', contentType: 'application/json' }
+            ).catch((err) => console.error('[handshake] mark used failed', err));
+
+            return jsonNoStore({ siteId: conflictId, siteToken });
+          }
+        }
+
         console.error('[handshake] insert sites failed', e);
-        await logConnectionError(siteId, 'Database insert failed', 'error');
         return jsonNoStore({ error: 'db_insert_failed', code: 'E_DB_INSERT' }, { status: 500 });
       }
     } else {
       try {
-        await db
-          .update(sites)
-          .set({
-            siteUrl: finalSiteUrl,
-            connectionStatus: 'connected',
-            wpVersion: wpVersion || null,
-            pluginVersion: pluginVersion || null,
-            tokenHash,
-            wordpressConnection: wordpressConnection as any,
-            lastConnectedAt: new Date(),
-            updatedAt: new Date() // Explicitly update timestamp on reconnect
-          })
-          .where(eq(sites.id, siteId));
-
-        // Log successful re-pairing
-        await logPairingComplete(siteId);
+        await db.update(sites).set(updatePayload).where(eq(sites.id, siteId));
       } catch (e: any) {
         console.error('[handshake] update sites failed', e);
         await logConnectionError(siteId, 'Database update failed', 'error');
@@ -202,7 +228,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Mark pairing used
+    await logPairingComplete(siteId);
+
     try {
       await put(
         `pairings/code-${pairCode}.json`,
@@ -211,10 +238,8 @@ export async function POST(req: NextRequest) {
       );
     } catch (e) {
       console.error('[handshake] mark used failed', e);
-      // Non-fatal for plugin experience—continue
     }
 
-    // Optional: dashboard fallback blob
     try {
       await put(
         `sites/${siteId}.json`,
@@ -225,7 +250,7 @@ export async function POST(req: NextRequest) {
           wpVersion: wpVersion || null,
           pluginVersion: pluginVersion || null,
           createdAt: now,
-          updatedAt: now
+          updatedAt: now,
         }),
         { access: 'public', contentType: 'application/json' }
       );
