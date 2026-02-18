@@ -55,6 +55,21 @@ export function WordPressCard({
     void connection.handleReconnect();
   }, [pairing.pairingStatus, connection.handleReconnect, connection.setShowReconnectFlow]);
 
+  const hasTriggeredPostPairReconnect = useRef(false);
+
+  useEffect(() => {
+    if (pairing.pairingStatus !== "connected") {
+      hasTriggeredPostPairReconnect.current = false;
+      return;
+    }
+
+    if (hasTriggeredPostPairReconnect.current) return;
+    hasTriggeredPostPairReconnect.current = true;
+
+    connection.setShowReconnectFlow(false);
+    void connection.handleReconnect();
+  }, [pairing.pairingStatus, connection.handleReconnect, connection.setShowReconnectFlow]);
+
   // Not WordPress at all
   if (!wordpress && cms.type !== "wordpress") {
     return (
