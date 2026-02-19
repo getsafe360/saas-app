@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
+import { users } from '@/lib/db/schema/auth/users';
 import { eq } from 'drizzle-orm';
 import { logDisconnection } from '@/lib/wordpress/logger';
 
@@ -10,16 +11,6 @@ import { logDisconnection } from '@/lib/wordpress/logger';
  * POST /api/sites/[id]/wordpress/disconnect
  *
  * Safely disconnect WordPress site
- *
- * This will:
- * - Clear connection credentials
- * - Update connection status to 'disconnected'
- * - Log disconnection event
- *
- * The site record remains in the database for reconnection.
- * To completely delete the site, use DELETE /api/sites/[id]
- *
- * Requires user authentication and site ownership verification
  */
 export async function POST(
   _request: NextRequest,
@@ -29,8 +20,8 @@ export async function POST(
   const { id } = params;
 
   // 1. Authenticate user
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) {
     return NextResponse.json(
       {
         success: false,
@@ -44,8 +35,26 @@ export async function POST(
   }
 
   try {
-    // Get database instance (lazy initialization)
+    // Resolve internal DB user id from Clerk user id
     const db = getDrizzle();
+    const [user] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.clerkUserId, clerkUserId))
+      .limit(1);
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'USER_NOT_FOUND',
+            message: 'Authenticated user not found in database'
+          }
+        },
+        { status: 401 }
+      );
+    }
 
     // 2. Get site and verify ownership
     const [site] = await db
@@ -53,7 +62,6 @@ export async function POST(
         id: sites.id,
         userId: sites.userId,
         siteUrl: sites.siteUrl,
-        connectionStatus: sites.connectionStatus,
       })
       .from(sites)
       .where(eq(sites.id, id))
@@ -72,8 +80,7 @@ export async function POST(
       );
     }
 
-    // Verify site ownership
-    if (site.userId.toString() !== userId) {
+    if (site.userId !== user.id) {
       return NextResponse.json(
         {
           success: false,
@@ -100,10 +107,7 @@ export async function POST(
       })
       .where(eq(sites.id, id));
 
-    // 4. Log disconnection
     await logDisconnection(id);
-
-    console.log(`[Disconnect] Successfully disconnected site ${id}`);
 
     return NextResponse.json({
       success: true,
@@ -132,14 +136,9 @@ export async function POST(
   }
 }
 
-/**
- * GET /api/sites/[id]/wordpress/disconnect
- *
- * Get disconnection status (not typically used, but provided for consistency)
- */
 export async function GET(
   _request: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  _props: { params: Promise<{ id: string }> }
 ) {
   return NextResponse.json(
     {

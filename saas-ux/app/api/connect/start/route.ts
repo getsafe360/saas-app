@@ -110,6 +110,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
   const siteUrl = (body as any)?.siteUrl as string | undefined;
+  const requestedSiteId = (body as any)?.siteId as string | undefined;
   if (!siteUrl) {
     return NextResponse.json({ error: "siteUrl required" }, { status: 400 });
   }
@@ -143,24 +144,40 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 5.5) ✅ GUARD: check if this user already has a site for this host
-  // Prefer canonical_host matching (aligned with unique key), then fallback to URL variants.
-  const existing = await db
-    .select({ id: sites.id })
-    .from(sites)
-    .where(
-      and(
-        eq(sites.userId, dbUser.id),
-        or(
-          eq(sites.canonicalHost, host),
-          eq(sites.siteUrl, normalizedUrl),
-          eq(sites.siteUrl, normalizedUrl.replace(/\/$/, "")),
-          eq(sites.siteUrl, `${normalizedUrl.replace(/\/$/, "")}/`),
+  // 5.5) ✅ GUARD: determine the existing site this pairing should reuse.
+  // If caller passed a siteId from cockpit route and it belongs to this user, prefer that.
+  let existingSiteId: string | null = null;
+
+  if (requestedSiteId) {
+    const requested = await db
+      .select({ id: sites.id })
+      .from(sites)
+      .where(and(eq(sites.id, requestedSiteId), eq(sites.userId, dbUser.id)))
+      .limit(1);
+
+    existingSiteId = requested[0]?.id ?? null;
+  }
+
+  // Otherwise, fallback to canonical_host + URL variants.
+  if (!existingSiteId) {
+    const existing = await db
+      .select({ id: sites.id })
+      .from(sites)
+      .where(
+        and(
+          eq(sites.userId, dbUser.id),
+          or(
+            eq(sites.canonicalHost, host),
+            eq(sites.siteUrl, normalizedUrl),
+            eq(sites.siteUrl, normalizedUrl.replace(/\/$/, "")),
+            eq(sites.siteUrl, `${normalizedUrl.replace(/\/$/, "")}/`),
+          )
         )
       )
-    )
-    .limit(1);
-  const existingSiteId = existing[0]?.id ?? null;
+      .limit(1);
+
+    existingSiteId = existing[0]?.id ?? null;
+  }
 
   // 6) Generate unique code + write records
   const pairCode = await ensureUniquePairCode();

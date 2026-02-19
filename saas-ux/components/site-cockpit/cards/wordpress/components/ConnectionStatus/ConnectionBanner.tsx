@@ -1,13 +1,14 @@
 // components/site-cockpit/cards/wordpress/components/ConnectionStatus/ConnectionBanner.tsx
 "use client";
 
-import { Wifi, WifiOff, RefreshCw, AlertCircle, Clock } from "lucide-react";
+import { Wifi, WifiOff, RefreshCw, AlertCircle, Clock, Unplug } from "lucide-react";
 import type { ConnectionState } from "../../types";
 
 interface ConnectionBannerProps {
   connectionState: ConnectionState;
   onReconnect: () => void;
   onPairingSite: () => void;
+  onDisconnect: () => void;
   isReconnecting: boolean;
   hasWordPressData: boolean;
   hasSiteId: boolean;
@@ -17,6 +18,7 @@ export function ConnectionBanner({
   connectionState,
   onReconnect,
   onPairingSite,
+  onDisconnect,
   isReconnecting,
   hasWordPressData,
   hasSiteId,
@@ -130,6 +132,16 @@ export function ConnectionBanner({
             )}
           </div>
         </div>
+
+        {connectionState.status === "connected" && hasSiteId && (
+          <button
+            onClick={onDisconnect}
+            className="px-4 py-2 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-800 text-sm font-semibold transition-colors flex items-center gap-2"
+          >
+            <Unplug className="h-4 w-4" />
+            Disconnect
+          </button>
+        )}
 
         {(connectionState.status === "error" ||
           connectionState.status === "disconnected") && (
