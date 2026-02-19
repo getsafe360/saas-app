@@ -6,7 +6,6 @@
     "notFoundDescription": "The requested site could not be found",
     "analysisUnavailable": "Analysis Unavailable",
     "analysisUnavailableDescription": "We couldn't analyze this site at the moment. Please try again later.",
-    
     "summary": {
       "title": "Overall Score",
       "grade": "Grade",
@@ -15,7 +14,6 @@
       "warnings": "Warnings",
       "passed": "Checks Passed"
     },
-    
     "quickWins": {
       "title": "Quick Wins",
       "subtitle": "Easy improvements with high impact",
@@ -37,7 +35,6 @@
       "fixNow": "Fix Now",
       "learnMore": "Learn More"
     },
-    
     "performance": {
       "title": "Performance",
       "score": "Performance Score",
@@ -60,7 +57,6 @@
       "needsImprovement": "Needs Improvement",
       "poor": "Poor"
     },
-    
     "security": {
       "title": "Security",
       "score": "Security Score",
@@ -100,7 +96,6 @@
         "none": "No vulnerabilities found"
       }
     },
-    
     "seo": {
       "title": "SEO",
       "score": "SEO Score",
@@ -180,7 +175,6 @@
         "recommendations": "Recommendations"
       }
     },
-    
     "accessibility": {
       "title": "Accessibility",
       "score": "Accessibility Score",
@@ -224,7 +218,6 @@
         "roles": "Roles"
       }
     },
-    
     "technology": {
       "title": "Technology",
       "cms": {
@@ -291,7 +284,6 @@
         "objectCache": "Object Cache"
       }
     },
-    
     "wordpress": {
       "title": "WordPress Insights",
       "detected": "WordPress Detected",
@@ -316,7 +308,21 @@
         "liveData": "Live data from your site",
         "reconnect": "Reconnect",
         "connectionLost": "Connection Lost",
-        "pluginDeactivated": "Plugin may be deactivated"
+        "pluginDeactivated": "Plugin may be deactivated",
+        "modalTitle": "WordPress Connection",
+        "guideTitle": "How to connect your WP site to us",
+        "guideSteps": {
+          "step1": "Download, install & activate our Plugin",
+          "step2": "Generate Pairing Code and copy",
+          "step3": "Paste auth code into the plugin & connect",
+          "step4": "Come back to GetSafe 360 and you see your site connected"
+        },
+        "status": {
+          "title": "Connection status",
+          "plugin": "Plugin (installed & active)",
+          "pairing": "Pairing Code accepted",
+          "site": "Site conx"
+        }
       },
       "version": {
         "title": "WordPress Version",
@@ -379,7 +385,6 @@
         "low": "Low"
       }
     },
-    
     "mobile": {
       "title": "Mobile",
       "score": "Mobile Score",
@@ -389,7 +394,6 @@
       "textReadability": "Text Readability",
       "performance": "Mobile Performance"
     },
-    
     "network": {
       "title": "Network",
       "ipVersion": "IP Version",
@@ -397,7 +401,6 @@
       "isp": "ISP",
       "latency": "Latency"
     },
-    
     "common": {
       "loading": "Loading...",
       "error": "Error",
@@ -427,7 +430,6 @@
       "export": "Export",
       "share": "Share"
     },
-    
     "grades": {
       "A+": "Excellent",
       "A": "Very Good",
@@ -441,7 +443,6 @@
       "D": "Bad",
       "F": "Failing"
     },
-    
     "actions": {
       "analyze": "Analyze",
       "reanalyze": "Re-analyze",

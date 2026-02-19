@@ -132,7 +132,7 @@ export function useWordPressConnection(
         lastSeen: undefined,
         retryCount: 0,
       });
-      setShowReconnectFlow(true);
+      setShowReconnectFlow(false);
       router.refresh();
     } catch (error) {
       setConnectionState((prev) => ({
