@@ -125,6 +125,16 @@ export function WordPressCard({
 
     try {
       setIsOptimizing(true);
+
+      const healthResponse = await fetch(`/api/sites/${siteId}/health`, {
+        cache: "no-store",
+      });
+      const health = await healthResponse.json().catch(() => ({}));
+      if (!healthResponse.ok || health.healthy === false) {
+        connection.setShowReconnectFlow(true);
+        return;
+      }
+
       const response = await fetch(`/api/sites/${siteId}/wordpress/remediate`, {
         method: "POST",
         headers: {
@@ -181,6 +191,9 @@ export function WordPressCard({
         onReconnect={() => connection.setShowReconnectFlow(true)}
         onPairingSite={() => {
           pairing.setShowPairingFlow(true);
+        }}
+        onDisconnect={() => {
+          void connection.handleDisconnect();
         }}
         isReconnecting={connection.isReconnecting}
         hasWordPressData={!!wordpress}

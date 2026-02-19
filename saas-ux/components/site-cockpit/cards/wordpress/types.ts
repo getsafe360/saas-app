@@ -46,7 +46,9 @@ export interface UseWordPressConnectionReturn {
   showReconnectFlow: boolean;
   setShowReconnectFlow: (show: boolean) => void;
   handleReconnect: () => Promise<void>;
+  handleDisconnect: () => Promise<void>;
 }
+
 
 export interface UseWordPressPairingReturn {
   showPairingFlow: boolean;
