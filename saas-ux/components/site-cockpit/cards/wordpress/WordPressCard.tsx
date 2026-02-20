@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { CockpitCard } from "../CockpitCard";
 import { WordPressAIIcon } from "@/components/icons/WordPressAI";
 import { useTranslations } from "next-intl";
@@ -28,6 +29,8 @@ export function WordPressCard({
   connectionStatus: initialStatus = "disconnected",
   lastConnected,
 }: WordPressCardProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const t = useTranslations("SiteCockpit");
   const { wordpress, cms } = data;
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -115,6 +118,18 @@ export function WordPressCard({
     [wordpress.healthFindings],
   );
 
+  const analyzePath = useMemo(() => {
+    if (!siteId) return null;
+
+    const fallback = `/dashboard/sites/${siteId}/analyze`;
+    if (!pathname) return fallback;
+
+    const cockpitSegment = `/dashboard/sites/${siteId}/cockpit`;
+    if (!pathname.includes(cockpitSegment)) return fallback;
+
+    return pathname.replace(cockpitSegment, `/dashboard/sites/${siteId}/analyze`);
+  }, [pathname, siteId]);
+
   const handleOptimize = async (selectedFindings: WordPressHealthFinding[]) => {
     if (selectedFindings.length === 0) return;
 
@@ -159,6 +174,14 @@ export function WordPressCard({
           body,
         );
         return;
+      }
+
+      await response.json().catch(() => null);
+
+      if (analyzePath) {
+        router.push(
+          `${analyzePath}?source=wordpress-remediate&selected=${selectedFindings.length}`,
+        );
       }
     } catch (error) {
       console.error("[WordPressCard] optimize failed", error);
