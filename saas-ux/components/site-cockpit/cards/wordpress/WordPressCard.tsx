@@ -17,6 +17,7 @@ import { SecurityOverview } from "./components/Analysis/SecurityOverview";
 import { PluginsPanel } from "./components/Analysis/PluginsPanel";
 import { HealthFindingsPanel } from "./components/Analysis/HealthFindingsPanel";
 import { ImplementationPlanPanel } from "./components/Analysis/ImplementationPlanPanel";
+import { GenerateReportButton } from "@/components/reports/GenerateReportButton";
 import type { WordPressCardProps } from "./types";
 import type { WordPressHealthFinding } from "@/types/site-cockpit";
 export function WordPressCard({
@@ -130,7 +131,10 @@ export function WordPressCard({
     return pathname.replace(cockpitSegment, `/dashboard/sites/${siteId}/analyze`);
   }, [pathname, siteId]);
 
-  const handleOptimize = async (selectedFindings: WordPressHealthFinding[]) => {
+  const handleOptimize = async (
+    selectedFindings: WordPressHealthFinding[],
+    options?: { safeMode: boolean },
+  ) => {
     if (selectedFindings.length === 0) return;
 
     if (!siteId || connection.connectionState.status !== "connected") {
@@ -156,12 +160,16 @@ export function WordPressCard({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          locale: "en",
+          safeMode: options?.safeMode ?? true,
           findings: selectedFindings.map((finding) => ({
             id: finding.id,
             actionId: finding.remediationActionId,
             title: finding.title,
             severity: finding.severity,
             category: finding.category,
+            automationLevel: finding.automationLevel,
+            safetyLevel: finding.safetyLevel,
           })),
         }),
       });
@@ -237,31 +245,40 @@ export function WordPressCard({
 
       {/* WordPress Analysis Panels */}
       <div className="space-y-3">
-        <h4
-          className="text-sm font-semibold"
-          style={{ color: "var(--text-subtle)" }}
-        >
-          WordPress Insights
-        </h4>
+        <div className="flex items-center justify-between gap-2">
+          <h4
+            className="text-sm font-semibold"
+            style={{ color: "var(--text-subtle)" }}
+          >
+            {t("wordpress.title")}
+          </h4>
+          {siteId ? (
+            <GenerateReportButton
+              siteId={siteId}
+              siteName={data.domain}
+              planName="agency"
+            />
+          ) : null}
+        </div>
         <div
           className="rounded-lg border p-3 text-xs"
           style={{ borderColor: "var(--border-default)" }}
         >
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             <div>
-              <div style={{ color: "var(--text-subtle)" }}>Connection</div>
+              <div style={{ color: "var(--text-subtle)" }}>{t("wordpress.connection.status.title")}</div>
               <div className="text-white">
                 {wordpress.connection?.status ?? "connected"}
               </div>
             </div>
             <div>
-              <div style={{ color: "var(--text-subtle)" }}>Last Audit</div>
+              <div style={{ color: "var(--text-subtle)" }}>{t("wordpress.lastAudit")}</div>
               <div className="text-white">
                 {wordpress.connection?.lastAuditAt ?? "Just now"}
               </div>
             </div>
             <div>
-              <div style={{ color: "var(--text-subtle)" }}>Trend</div>
+              <div style={{ color: "var(--text-subtle)" }}>{t("wordpress.trend")}</div>
               <div
                 className={
                   wordpress.trend?.delta && wordpress.trend.delta >= 0
@@ -286,7 +303,7 @@ export function WordPressCard({
               className="text-xs mb-2"
               style={{ color: "var(--text-subtle)" }}
             >
-              Category Scores
+              {t("wordpress.categoryScores")}
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
               {Object.entries(wordpress.categoryScores).map(
@@ -322,7 +339,7 @@ export function WordPressCard({
             className="rounded-lg border p-3"
             style={{ borderColor: "rgba(248,113,113,0.45)" }}
           >
-            <div className="text-xs mb-2 text-red-300">Top Red Flags</div>
+            <div className="text-xs mb-2 text-red-300">{t("wordpress.topRedFlags")}</div>
             <ul className="space-y-1 text-xs">
               {topRedFlags.map((flag) => (
                 <li key={flag.id} className="text-red-200">
@@ -343,6 +360,7 @@ export function WordPressCard({
           findings={wordpress.healthFindings ?? []}
           onOptimize={handleOptimize}
           optimizing={isOptimizing}
+          currentScore={wordpress.score}
         />
         <ImplementationPlanPanel />
       </div>

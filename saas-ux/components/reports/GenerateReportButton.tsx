@@ -35,6 +35,7 @@ export function GenerateReportButton({
     format: ReportFormat;
     scope: ReportScope;
     title?: string;
+    whiteLabel?: boolean;
   }) => {
     setIsGenerating(true);
     setError(null);
@@ -43,7 +44,7 @@ export function GenerateReportButton({
       const response = await fetch(`/api/reports/${siteId}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(options),
+        body: JSON.stringify({ ...options, locale: "en" }),
       });
 
       const data = await response.json();
