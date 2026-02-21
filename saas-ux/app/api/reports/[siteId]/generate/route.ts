@@ -6,8 +6,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db/drizzle';
-import { sites, teams, teamMembers, users, generatedReports, reportBranding } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { sites, teams, teamMembers, users, generatedReports, reportBranding, aiAnalysisJobs, aiRepairActions } from '@/lib/db/schema';
+import { desc, eq } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
 import { currentUser } from '@clerk/nextjs/server';
 import { canGenerateReports, canExportFormat, type PlanName } from '@/lib/plans/config';
@@ -111,6 +111,8 @@ export async function POST(
     const scope = (body.scope || 'performance') as ReportScope;
     const customTitle = body.title as string | undefined;
     const categories = body.categories as string[] | undefined;
+    const whiteLabel = body.whiteLabel !== false;
+    const locale = (body.locale || 'en') as string;
 
     // Check if specific format is available for plan
     if (!canExportFormat(planName, format)) {
@@ -151,6 +153,8 @@ export async function POST(
       .where(eq(reportBranding.teamId, membership.teamId))
       .limit(1);
 
+    const effectiveBranding = whiteLabel ? branding : null;
+
     // Create report record (pending status)
     const reportTitle = customTitle || generateReportTitle(site.canonicalHost || site.siteUrl, scope);
     const filename = generateFilename(site.canonicalHost || site.siteUrl, scope, format);
@@ -166,10 +170,10 @@ export async function POST(
         status: 'generating',
         title: reportTitle,
         filename,
-        brandingApplied: branding ? {
-          companyName: branding.companyName,
-          logoUrl: branding.logoUrl,
-          config: branding.config,
+        brandingApplied: effectiveBranding ? {
+          companyName: effectiveBranding.companyName,
+          logoUrl: effectiveBranding.logoUrl,
+          config: effectiveBranding.config,
         } : null,
       })
       .returning();
@@ -183,11 +187,11 @@ export async function POST(
       const startTime = Date.now();
 
       // Get cockpit data for the site
-      const cockpitData = await fetchCockpitData(siteId);
+      const cockpitData = await fetchCockpitData(siteId, locale);
 
       switch (format) {
         case 'pdf':
-          const pdfResult = await generatePdfReport(site, cockpitData, scope, branding);
+          const pdfResult = await generatePdfReport(site, cockpitData, scope, effectiveBranding, { whiteLabel, locale });
           blobUrl = pdfResult.url;
           blobKey = pdfResult.key;
           metadata = pdfResult.metadata;
@@ -201,7 +205,7 @@ export async function POST(
           break;
 
         case 'html':
-          const htmlResult = await generateHtmlReport(site, cockpitData, scope, branding);
+          const htmlResult = await generateHtmlReport(site, cockpitData, scope, effectiveBranding, { whiteLabel, locale });
           blobUrl = htmlResult.url;
           blobKey = htmlResult.key;
           metadata = htmlResult.metadata;
@@ -341,7 +345,7 @@ function generateFilename(siteHost: string, scope: ReportScope, format: ReportFo
   return `${safeHost}-${scope}-report-${date}.${format}`;
 }
 
-async function fetchCockpitData(siteId: string): Promise<any> {
+async function fetchCockpitData(siteId: string, locale: string): Promise<any> {
   // Fetch the latest scan/cockpit data for the site
   const db = getDb();
 
@@ -355,6 +359,29 @@ async function fetchCockpitData(siteId: string): Promise<any> {
     throw new Error('Site not found');
   }
 
+  let analysisJob: any = null;
+  let repairs: any[] = [];
+
+  try {
+    const [latestAnalysisJob] = await db
+      .select()
+      .from(aiAnalysisJobs)
+      .where(eq(aiAnalysisJobs.siteId, siteId))
+      .orderBy(desc(aiAnalysisJobs.createdAt))
+      .limit(1);
+
+    analysisJob = latestAnalysisJob ?? null;
+
+    repairs = analysisJob
+      ? await db
+        .select()
+        .from(aiRepairActions)
+        .where(eq(aiRepairActions.analysisJobId, analysisJob.id))
+      : [];
+  } catch (error) {
+    console.warn('[Reports] AI analysis/repair tables not ready yet, continuing without repair metadata.', error);
+  }
+
   // Return the last scores and any additional cockpit data
   return {
     scores: site.lastScores,
@@ -362,6 +389,9 @@ async function fetchCockpitData(siteId: string): Promise<any> {
     faviconUrl: site.lastFaviconUrl,
     findingCount: site.lastFindingCount,
     cms: site.lastCms,
+    locale,
+    analysisJob,
+    repairs,
   };
 }
 
@@ -369,14 +399,15 @@ async function generatePdfReport(
   site: any,
   cockpitData: any,
   scope: ReportScope,
-  branding: any
+  branding: any,
+  options: { whiteLabel: boolean; locale: string },
 ): Promise<{ url: string; key: string; metadata: ReportMetadata }> {
   const scores = cockpitData.scores || {};
   const overallScore = scores.performance || scores.overall || 75;
   const grade = getGrade(overallScore);
 
   // Build report HTML content
-  const htmlContent = buildReportHtml(site, cockpitData, scope, branding, overallScore, grade);
+  const htmlContent = buildReportHtml(site, cockpitData, scope, branding, overallScore, grade, options);
 
   // Store as HTML for now (PDF conversion would happen via Puppeteer)
   const blob = await put(
@@ -443,13 +474,14 @@ async function generateHtmlReport(
   site: any,
   cockpitData: any,
   scope: ReportScope,
-  branding: any
+  branding: any,
+  options: { whiteLabel: boolean; locale: string },
 ): Promise<{ url: string; key: string; metadata: ReportMetadata }> {
   const scores = cockpitData.scores || {};
   const overallScore = scores.performance || scores.overall || 75;
   const grade = getGrade(overallScore);
 
-  const htmlContent = buildReportHtml(site, cockpitData, scope, branding, overallScore, grade);
+  const htmlContent = buildReportHtml(site, cockpitData, scope, branding, overallScore, grade, options);
 
   const blob = await put(
     `reports/${site.id}/${Date.now()}-${scope}.html`,
@@ -478,12 +510,13 @@ function buildReportHtml(
   scope: ReportScope,
   branding: any,
   overallScore: number,
-  grade: string
+  grade: string,
+  options: { whiteLabel: boolean; locale: string },
 ): string {
   const primaryColor = branding?.config?.colors?.primary || '#2563eb';
   const companyName = branding?.companyName || 'GetSafe 360 AI';
   const logoUrl = branding?.logoUrl || '';
-  const showPoweredBy = branding?.config?.showPoweredBy ?? true;
+  const showPoweredBy = options.whiteLabel ? false : (branding?.config?.showPoweredBy ?? true);
 
   const scopeTitle: Record<ReportScope, string> = {
     full: 'Complete Site Analysis Report',
@@ -493,6 +526,8 @@ function buildReportHtml(
     accessibility: 'Accessibility Report',
     custom: 'Custom Analysis Report',
   };
+
+  const repairedItems = (cockpitData.repairs || []).filter((item: any) => item.status === 'completed').length;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -550,6 +585,10 @@ function buildReportHtml(
       <div class="score-card">
         <div class="score-value">${cockpitData.findingCount || 0}</div>
         <div class="score-label">Issues Identified</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value">${repairedItems}</div>
+        <div class="score-label">Repairs Executed</div>
       </div>
     </div>
   </div>

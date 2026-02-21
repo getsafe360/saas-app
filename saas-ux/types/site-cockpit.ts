@@ -116,6 +116,11 @@ export interface WordPressHealthFinding {
   action: string;
   remediationActionId?: string;
   automationLevel?: "auto" | "guided" | "manual";
+  estimatedScoreGain?: number;
+  estimatedTimeSavedMs?: number;
+  estimatedRiskReduction?: number;
+  depthTier?: "quick" | "balanced" | "deep";
+  safetyLevel?: "safe" | "review" | "sensitive";
 }
 
 export interface WordPressCategoryScores {

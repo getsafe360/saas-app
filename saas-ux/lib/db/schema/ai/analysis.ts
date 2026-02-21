@@ -2,7 +2,7 @@
 // AI analysis jobs and repair actions
 
 import {
-  pgTable, uuid, integer, text, timestamp, jsonb, index
+  pgTable, uuid, integer, text, timestamp, jsonb, index, boolean
 } from 'drizzle-orm/pg-core';
 import { aiJobStatusEnum, aiRepairStatusEnum } from '../_shared/enums';
 import { sites } from '../sites/sites';
@@ -15,6 +15,9 @@ export const aiAnalysisJobs = pgTable('ai_analysis_jobs', {
   jobId: text('job_id').unique(),
   status: aiJobStatusEnum('status').notNull().default('pending'),
   selectedModules: jsonb('selected_modules'),
+  locale: text('locale').default('en'),
+  analysisDepth: text('analysis_depth').default('balanced'),
+  safeMode: boolean('safe_mode').notNull().default(true),
   results: jsonb('results'),
   issuesFound: integer('issues_found'),
   repairableIssues: integer('repairable_issues'),
@@ -33,11 +36,16 @@ export const aiRepairActions = pgTable('ai_repair_actions', {
   siteId: uuid('site_id').references(() => sites.id, { onDelete: 'cascade' }),
   issueId: text('issue_id'),
   category: text('category'),
+  actionId: text('action_id'),
+  title: text('title'),
+  severity: text('severity'),
   status: aiRepairStatusEnum('status').notNull().default('pending'),
   repairMethod: text('repair_method'),
   changes: jsonb('changes'),
   errorMessage: text('error_message'),
   executedAt: timestamp('executed_at'),
+  safeModeSkipped: boolean('safe_mode_skipped').notNull().default(false),
+  reportIncluded: boolean('report_included').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (t) => ({
   byAnalysisJob: index('ai_repair_actions_analysis_job_idx').on(t.analysisJobId),
