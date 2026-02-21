@@ -5,6 +5,7 @@ import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
 import { changeItems, changeSets } from '@/lib/db/schema/copilot/changes';
 import { users } from '@/lib/db/schema/auth/users';
+import { aiAnalysisJobs, aiRepairActions } from '@/lib/db/schema/ai/analysis';
 
 type RemediationFinding = {
   id: string;
@@ -12,6 +13,8 @@ type RemediationFinding = {
   title?: string;
   severity?: string;
   category?: string;
+  automationLevel?: string;
+  safetyLevel?: 'safe' | 'review' | 'sensitive';
 };
 
 export async function POST(
@@ -27,21 +30,39 @@ export async function POST(
 
   const body = await request.json().catch(() => ({}));
   const findings: RemediationFinding[] = Array.isArray(body?.findings) ? body.findings : [];
+  const safeMode = body?.safeMode !== false;
+  const locale = typeof body?.locale === 'string' ? body.locale : 'en';
 
   if (findings.length === 0) {
     return NextResponse.json({ success: false, error: 'NO_FINDINGS_SELECTED' }, { status: 400 });
   }
 
-  const executionResults = findings.map((finding) => ({
-    findingId: finding.id,
-    actionId: finding.actionId ?? finding.id,
-    status: 'applied' as const,
-    message: `Queued remediation for ${finding.title ?? finding.id}`,
-  }));
+  const executionResults: Array<{
+    findingId: string;
+    actionId: string;
+    status: 'skipped' | 'applied';
+    message: string;
+    skippedBySafeMode: boolean;
+    finding: RemediationFinding;
+  }> = findings.map((finding) => {
+    const skippedBySafeMode = safeMode && finding.safetyLevel === 'sensitive';
+    return {
+      findingId: finding.id,
+      actionId: finding.actionId ?? finding.id,
+      status: skippedBySafeMode ? 'skipped' : 'applied',
+      message: skippedBySafeMode
+        ? `Skipped ${finding.title ?? finding.id} due to safe mode`
+        : `Queued remediation for ${finding.title ?? finding.id}`,
+      skippedBySafeMode,
+      finding,
+    };
+  });
 
   let changeSetId: string | undefined;
+  let analysisJobId: string | undefined;
   let auditLogged = false;
   let auditError: string | undefined;
+  let aiTrackingError: string | undefined;
   let ownershipValidated = false;
 
   try {
@@ -68,6 +89,58 @@ export async function POST(
     }
 
     ownershipValidated = true;
+
+    // Persist AI analysis/remediation tracking records (best effort, non-blocking)
+    try {
+      const [analysisJob] = await db
+        .insert(aiAnalysisJobs)
+        .values({
+          siteId,
+          userId: dbUser?.id,
+          status: 'completed',
+          selectedModules: { wordpress: true, remediation: true },
+          locale,
+          analysisDepth: 'balanced',
+          safeMode,
+          issuesFound: findings.length,
+          repairableIssues: executionResults.filter((result) => !result.skippedBySafeMode).length,
+          startedAt: new Date(),
+          completedAt: new Date(),
+        })
+        .returning({ id: aiAnalysisJobs.id });
+
+      analysisJobId = analysisJob?.id;
+
+      if (analysisJobId) {
+        const persistedAnalysisJobId = analysisJobId;
+        await db.insert(aiRepairActions).values(
+          executionResults.map((result) => {
+            const actionStatus: 'skipped' | 'completed' = result.skippedBySafeMode
+              ? 'skipped'
+              : 'completed';
+
+            return {
+              analysisJobId: persistedAnalysisJobId,
+              siteId,
+              issueId: result.findingId,
+              actionId: result.actionId,
+              title: result.finding.title ?? result.findingId,
+              category: result.finding.category,
+              severity: result.finding.severity,
+              status: actionStatus,
+              repairMethod: result.finding.automationLevel ?? 'manual',
+              changes: { safeMode, locale },
+              executedAt: new Date(),
+              safeModeSkipped: result.skippedBySafeMode,
+              reportIncluded: true,
+            };
+          }),
+        );
+      }
+    } catch (error: any) {
+      aiTrackingError = String(error?.message ?? error ?? 'Unknown AI tracking error');
+      console.warn('[wordpress/remediate] ai tracking skipped:', aiTrackingError);
+    }
 
     // Audit logging must never block remediation UX (deployed envs may lag migrations).
     const [changeSet] = await db
@@ -108,7 +181,11 @@ export async function POST(
     changeSetId,
     auditLogged,
     ...(auditError ? { auditError } : {}),
-    executed: executionResults,
+    ...(aiTrackingError ? { aiTrackingError } : {}),
+    analysisJobId,
+    safeMode,
+    locale,
+    executed: executionResults.map(({ finding, skippedBySafeMode, ...rest }) => rest),
     rerunSuggestedChecks: executionResults.map((result) => result.findingId),
   });
 }

@@ -1,10 +1,22 @@
 // components/reports/GenerateReportButton.tsx
 "use client";
 
-import { useState } from "react";
-import { FileText, Download, Loader2, Crown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { FileText, Loader2, Crown } from "lucide-react";
 import { ReportOptionsModal } from "./ReportOptionsModal";
-import type { ReportFormat, ReportScope } from "@/lib/db/schema/reports/generated";
+import type { ReportFormat, ReportScope, ReportStatus } from "@/lib/db/schema/reports/generated";
+
+
+interface GeneratedReportListItem {
+  id: string;
+  format: ReportFormat;
+  scope: ReportScope;
+  status: ReportStatus;
+  title: string;
+  filename: string;
+  downloadUrl?: string | null;
+  createdAt: string;
+}
 
 interface GenerateReportButtonProps {
   siteId: string;
@@ -28,13 +40,42 @@ export function GenerateReportButton({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<GeneratedReportListItem[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
   const isAgencyPlan = planName === "agency";
+
+  const fetchReportHistory = async () => {
+    setIsHistoryLoading(true);
+
+    try {
+      const response = await fetch(`/api/reports/${siteId}/generate`, { cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !Array.isArray(data?.reports)) {
+        setHistory([]);
+        return;
+      }
+
+      setHistory(data.reports as GeneratedReportListItem[]);
+    } catch {
+      setHistory([]);
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isModalOpen || !isAgencyPlan) return;
+    void fetchReportHistory();
+  }, [isModalOpen, isAgencyPlan, siteId]);
+
 
   const handleGenerateReport = async (options: {
     format: ReportFormat;
     scope: ReportScope;
     title?: string;
+    whiteLabel?: boolean;
   }) => {
     setIsGenerating(true);
     setError(null);
@@ -43,7 +84,7 @@ export function GenerateReportButton({
       const response = await fetch(`/api/reports/${siteId}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(options),
+        body: JSON.stringify({ ...options, locale: "en" }),
       });
 
       const data = await response.json();
@@ -65,6 +106,8 @@ export function GenerateReportButton({
           format: data.report.format,
         });
       }
+
+      await fetchReportHistory();
 
       // Auto-download the report
       if (data.report?.downloadUrl) {
@@ -127,6 +170,8 @@ export function GenerateReportButton({
         error={error}
         onGenerate={handleGenerateReport}
         isAgencyPlan={isAgencyPlan}
+        reportHistory={history}
+        isHistoryLoading={isHistoryLoading}
       />
     </>
   );
