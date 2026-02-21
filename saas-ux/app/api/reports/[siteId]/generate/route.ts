@@ -359,19 +359,28 @@ async function fetchCockpitData(siteId: string, locale: string): Promise<any> {
     throw new Error('Site not found');
   }
 
-  const [analysisJob] = await db
-    .select()
-    .from(aiAnalysisJobs)
-    .where(eq(aiAnalysisJobs.siteId, siteId))
-    .orderBy(desc(aiAnalysisJobs.createdAt))
-    .limit(1);
+  let analysisJob: any = null;
+  let repairs: any[] = [];
 
-  const repairs = analysisJob
-    ? await db
+  try {
+    const [latestAnalysisJob] = await db
       .select()
-      .from(aiRepairActions)
-      .where(eq(aiRepairActions.analysisJobId, analysisJob.id))
-    : [];
+      .from(aiAnalysisJobs)
+      .where(eq(aiAnalysisJobs.siteId, siteId))
+      .orderBy(desc(aiAnalysisJobs.createdAt))
+      .limit(1);
+
+    analysisJob = latestAnalysisJob ?? null;
+
+    repairs = analysisJob
+      ? await db
+        .select()
+        .from(aiRepairActions)
+        .where(eq(aiRepairActions.analysisJobId, analysisJob.id))
+      : [];
+  } catch (error) {
+    console.warn('[Reports] AI analysis/repair tables not ready yet, continuing without repair metadata.', error);
+  }
 
   // Return the last scores and any additional cockpit data
   return {

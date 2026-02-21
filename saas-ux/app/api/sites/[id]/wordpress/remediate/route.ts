@@ -62,6 +62,7 @@ export async function POST(
   let analysisJobId: string | undefined;
   let auditLogged = false;
   let auditError: string | undefined;
+  let aiTrackingError: string | undefined;
   let ownershipValidated = false;
 
   try {
@@ -89,51 +90,56 @@ export async function POST(
 
     ownershipValidated = true;
 
-    // Persist AI analysis/remediation tracking records
-    const [analysisJob] = await db
-      .insert(aiAnalysisJobs)
-      .values({
-        siteId,
-        userId: dbUser?.id,
-        status: 'completed',
-        selectedModules: { wordpress: true, remediation: true },
-        locale,
-        analysisDepth: 'balanced',
-        safeMode,
-        issuesFound: findings.length,
-        repairableIssues: executionResults.filter((result) => !result.skippedBySafeMode).length,
-        startedAt: new Date(),
-        completedAt: new Date(),
-      })
-      .returning({ id: aiAnalysisJobs.id });
+    // Persist AI analysis/remediation tracking records (best effort, non-blocking)
+    try {
+      const [analysisJob] = await db
+        .insert(aiAnalysisJobs)
+        .values({
+          siteId,
+          userId: dbUser?.id,
+          status: 'completed',
+          selectedModules: { wordpress: true, remediation: true },
+          locale,
+          analysisDepth: 'balanced',
+          safeMode,
+          issuesFound: findings.length,
+          repairableIssues: executionResults.filter((result) => !result.skippedBySafeMode).length,
+          startedAt: new Date(),
+          completedAt: new Date(),
+        })
+        .returning({ id: aiAnalysisJobs.id });
 
-    analysisJobId = analysisJob?.id;
+      analysisJobId = analysisJob?.id;
 
-    if (analysisJobId) {
-      const persistedAnalysisJobId = analysisJobId;
-      await db.insert(aiRepairActions).values(
-        executionResults.map((result) => {
-          const actionStatus: 'skipped' | 'completed' = result.skippedBySafeMode
-            ? 'skipped'
-            : 'completed';
+      if (analysisJobId) {
+        const persistedAnalysisJobId = analysisJobId;
+        await db.insert(aiRepairActions).values(
+          executionResults.map((result) => {
+            const actionStatus: 'skipped' | 'completed' = result.skippedBySafeMode
+              ? 'skipped'
+              : 'completed';
 
-          return {
-            analysisJobId: persistedAnalysisJobId,
-            siteId,
-            issueId: result.findingId,
-            actionId: result.actionId,
-            title: result.finding.title ?? result.findingId,
-            category: result.finding.category,
-            severity: result.finding.severity,
-            status: actionStatus,
-            repairMethod: result.finding.automationLevel ?? 'manual',
-            changes: { safeMode, locale },
-            executedAt: new Date(),
-            safeModeSkipped: result.skippedBySafeMode,
-            reportIncluded: true,
-          };
-        }),
-      );
+            return {
+              analysisJobId: persistedAnalysisJobId,
+              siteId,
+              issueId: result.findingId,
+              actionId: result.actionId,
+              title: result.finding.title ?? result.findingId,
+              category: result.finding.category,
+              severity: result.finding.severity,
+              status: actionStatus,
+              repairMethod: result.finding.automationLevel ?? 'manual',
+              changes: { safeMode, locale },
+              executedAt: new Date(),
+              safeModeSkipped: result.skippedBySafeMode,
+              reportIncluded: true,
+            };
+          }),
+        );
+      }
+    } catch (error: any) {
+      aiTrackingError = String(error?.message ?? error ?? 'Unknown AI tracking error');
+      console.warn('[wordpress/remediate] ai tracking skipped:', aiTrackingError);
     }
 
     // Audit logging must never block remediation UX (deployed envs may lag migrations).
@@ -175,6 +181,7 @@ export async function POST(
     changeSetId,
     auditLogged,
     ...(auditError ? { auditError } : {}),
+    ...(aiTrackingError ? { aiTrackingError } : {}),
     analysisJobId,
     safeMode,
     locale,
