@@ -6,7 +6,6 @@
     "notFoundDescription": "El sitio solicitado no se pudo encontrar",
     "analysisUnavailable": "Análisis no disponible",
     "analysisUnavailableDescription": "No pudimos analizar este sitio en este momento. Por favor, inténtelo más tarde.",
-    
     "summary": {
       "title": "Puntuación General",
       "grade": "Calificación",
@@ -15,7 +14,6 @@
       "warnings": "Advertencias",
       "passed": "Comprobaciones Aprobadas"
     },
-    
     "quickWins": {
       "title": "Victorias Rápidas",
       "subtitle": "Mejoras fáciles con alto impacto",
@@ -37,7 +35,6 @@
       "fixNow": "Arreglar Ahora",
       "learnMore": "Saber Más"
     },
-    
     "performance": {
       "title": "Rendimiento",
       "score": "Puntuación de Rendimiento",
@@ -60,7 +57,6 @@
       "needsImprovement": "Necesita Mejorar",
       "poor": "Pobre"
     },
-    
     "security": {
       "title": "Seguridad",
       "score": "Puntuación de Seguridad",
@@ -100,7 +96,6 @@
         "none": "No se encontraron vulnerabilidades"
       }
     },
-    
     "seo": {
       "title": "SEO",
       "score": "Puntuación SEO",
@@ -180,7 +175,6 @@
         "recommendations": "Recomendaciones"
       }
     },
-    
     "accessibility": {
       "title": "Accesibilidad",
       "score": "Puntuación de Accesibilidad",
@@ -224,7 +218,6 @@
         "roles": "Roles"
       }
     },
-    
     "technology": {
       "title": "Tecnología",
       "cms": {
@@ -291,7 +284,6 @@
         "objectCache": "Caché de Objetos"
       }
     },
-    
     "wordpress": {
       "title": "Información de WordPress",
       "detected": "WordPress Detectado",
@@ -377,9 +369,39 @@
         "high": "Alto",
         "medium": "Medio",
         "low": "Bajo"
+      },
+      "lastAudit": "Last Audit",
+      "trend": "Trend",
+      "categoryScores": "Category Scores",
+      "topRedFlags": "Top Red Flags",
+      "findings": {
+        "title": "WP Health & Security Checklist",
+        "selectedSummary": "{selected} selected · {preselected} preselected",
+        "before": "Before",
+        "after": "After",
+        "savings": "Estimated Savings",
+        "safeMode": "Safe Mode",
+        "safeModeDescriptionOn": "Only low-risk actions are applied automatically. Sensitive actions are skipped for review.",
+        "safeModeDescriptionOff": "All selected actions are sent for remediation, including sensitive actions.",
+        "remediation": "Remediation",
+        "impactGain": "+{gain} score impact",
+        "optimizing": "Optimizing...",
+        "fixSelected": "Fix selected ({count})",
+        "noActionable": "No actionable findings from current WordPress telemetry.",
+        "categories": {
+          "security": "Security",
+          "performance": "Performance",
+          "stability": "Stability",
+          "seoUx": "SEO / UX",
+          "redFlags": "Red Flags"
+        },
+        "depth": {
+          "quick": "Recommended depth: Quick (focuses on the highest-impact checks first).",
+          "balanced": "Recommended depth: Balanced (covers the Pareto 80/20 impact profile).",
+          "deep": "Recommended depth: Deep (includes scripts/assets and advanced forensic indicators)."
+        }
       }
     },
-    
     "mobile": {
       "title": "Móvil",
       "score": "Puntuación Móvil",
@@ -389,7 +411,6 @@
       "textReadability": "Legibilidad del Texto",
       "performance": "Rendimiento Móvil"
     },
-    
     "network": {
       "title": "Red",
       "ipVersion": "Versión IP",
@@ -397,7 +418,6 @@
       "isp": "ISP",
       "latency": "Latencia"
     },
-    
     "common": {
       "loading": "Cargando...",
       "error": "Error",
@@ -427,7 +447,6 @@
       "export": "Exportar",
       "share": "Compartir"
     },
-    
     "grades": {
       "A+": "Excelente",
       "A": "Muy Bueno",
@@ -441,7 +460,6 @@
       "D": "Malo",
       "F": "Reprobado"
     },
-    
     "actions": {
       "analyze": "Analizar",
       "reanalyze": "Re-analizar",

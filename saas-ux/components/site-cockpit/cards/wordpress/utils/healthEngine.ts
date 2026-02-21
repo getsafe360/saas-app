@@ -19,6 +19,11 @@ type FindingInput = {
   action: string;
   remediationActionId: string;
   automationLevel?: "auto" | "guided" | "manual";
+  estimatedScoreGain?: number;
+  estimatedTimeSavedMs?: number;
+  estimatedRiskReduction?: number;
+  depthTier?: "quick" | "balanced" | "deep";
+  safetyLevel?: "safe" | "review" | "sensitive";
 };
 
 const SCORE_WEIGHTS: Record<WordPressHealthCategory, number> = {
@@ -90,6 +95,28 @@ export function calculateWordPressWeightedScore(scores: WordPressCategoryScores)
   return Math.max(0, Math.min(100, Math.round(weighted)));
 }
 
+
+
+export type AnalysisDepthRecommendation = "quick" | "balanced" | "deep";
+
+export function recommendWordPressAnalysisDepth(findings: WordPressHealthFinding[]): AnalysisDepthRecommendation {
+  const actionable = findings.filter((finding) => finding.status !== "pass");
+  const unresolvedRisk = actionable.reduce((sum, finding) => sum + (finding.estimatedRiskReduction ?? 0), 0);
+  const deepSignals = actionable.filter((finding) => finding.depthTier === "deep").length;
+
+  if (unresolvedRisk > 220 || deepSignals >= 3) return "deep";
+  if (unresolvedRisk > 120) return "balanced";
+  return "quick";
+}
+
+export function estimateSelectedScoreGain(findings: WordPressHealthFinding[]): number {
+  return findings.reduce((sum, finding) => sum + (finding.estimatedScoreGain ?? 0), 0);
+}
+
+export function estimateSelectedSavingsMs(findings: WordPressHealthFinding[]): number {
+  return findings.reduce((sum, finding) => sum + (finding.estimatedTimeSavedMs ?? 0), 0);
+}
+
 export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHealthFinding[] {
   const checks: FindingInput[] = [
     {
@@ -104,6 +131,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Update WordPress core to the latest stable version.",
       remediationActionId: "wordpress-update-core",
       automationLevel: "guided",
+      estimatedScoreGain: wordpress.version.outdated ? 8 : 0,
+      estimatedRiskReduction: wordpress.version.outdated ? 28 : 0,
+      depthTier: "quick",
+      safetyLevel: "review",
     },
     {
       id: "wp-login-exposed",
@@ -117,6 +148,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Restrict /wp-login.php and add rate limiting + CAPTCHA.",
       remediationActionId: "wordpress-harden-login",
       automationLevel: "guided",
+      estimatedScoreGain: wordpress.security.defaultLoginExposed ? 6 : 0,
+      estimatedRiskReduction: wordpress.security.defaultLoginExposed ? 20 : 0,
+      depthTier: "balanced",
+      safetyLevel: "review",
     },
     {
       id: "wp-user-enumeration",
@@ -130,6 +165,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Block user archives/REST username leakage with WAF or plugin rules.",
       remediationActionId: "wordpress-block-user-enumeration",
       automationLevel: "auto",
+      estimatedScoreGain: !wordpress.security.userEnumerationBlocked ? 7 : 0,
+      estimatedRiskReduction: !wordpress.security.userEnumerationBlocked ? 18 : 0,
+      depthTier: "quick",
+      safetyLevel: "safe",
     },
     {
       id: "wp-xmlrpc",
@@ -143,6 +182,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Disable or tightly restrict XML-RPC unless explicitly required.",
       remediationActionId: "wordpress-disable-xmlrpc",
       automationLevel: "auto",
+      estimatedScoreGain: wordpress.security.xmlrpcEnabled ? 6 : 0,
+      estimatedRiskReduction: wordpress.security.xmlrpcEnabled ? 16 : 0,
+      depthTier: "quick",
+      safetyLevel: "safe",
     },
     {
       id: "wp-debug-mode",
@@ -156,6 +199,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Set WP_DEBUG and WP_DEBUG_LOG to false on production.",
       remediationActionId: "wordpress-disable-debug",
       automationLevel: "guided",
+      estimatedScoreGain: wordpress.security.wpDebugMode ? 4 : 0,
+      estimatedRiskReduction: wordpress.security.wpDebugMode ? 10 : 0,
+      depthTier: "quick",
+      safetyLevel: "review",
     },
     {
       id: "wp-vulnerable-plugins",
@@ -170,6 +217,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Patch, replace, or remove vulnerable plugins immediately.",
       remediationActionId: "wordpress-remediate-vulnerable-plugins",
       automationLevel: "guided",
+      estimatedScoreGain: wordpress.plugins.vulnerable > 0 ? 12 : 0,
+      estimatedRiskReduction: wordpress.plugins.vulnerable > 0 ? 35 : 0,
+      depthTier: "quick",
+      safetyLevel: "sensitive",
     },
     {
       id: "wp-outdated-plugins",
@@ -184,6 +235,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Update plugins in batches and verify compatibility.",
       remediationActionId: "wordpress-update-plugins",
       automationLevel: "guided",
+      estimatedScoreGain: wordpress.plugins.outdated > 0 ? 7 : 0,
+      estimatedRiskReduction: wordpress.plugins.outdated > 0 ? 15 : 0,
+      depthTier: "balanced",
+      safetyLevel: "review",
     },
     {
       id: "wp-object-cache",
@@ -197,6 +252,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Enable Redis or Memcached object cache.",
       remediationActionId: "wordpress-enable-object-cache",
       automationLevel: "guided",
+      estimatedScoreGain: !wordpress.performanceData.objectCache ? 9 : 0,
+      estimatedTimeSavedMs: !wordpress.performanceData.objectCache ? 700 : 0,
+      depthTier: "quick",
+      safetyLevel: "review",
     },
     {
       id: "wp-gzip",
@@ -210,6 +269,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Enable gzip or Brotli compression at server/CDN layer.",
       remediationActionId: "wordpress-enable-compression",
       automationLevel: "guided",
+      estimatedScoreGain: !wordpress.performanceData.gzipEnabled ? 6 : 0,
+      estimatedTimeSavedMs: !wordpress.performanceData.gzipEnabled ? 450 : 0,
+      depthTier: "quick",
+      safetyLevel: "safe",
     },
     {
       id: "seo-sitemap",
@@ -222,6 +285,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Ensure /sitemap.xml is reachable and listed in robots.txt.",
       remediationActionId: "wordpress-fix-sitemap",
       automationLevel: "manual",
+      estimatedScoreGain: 3,
+      estimatedRiskReduction: 4,
+      depthTier: "balanced",
+      safetyLevel: "review",
     },
     {
       id: "red-flag-hidden-plugins",
@@ -236,6 +303,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Cross-check DB plugin rows and admin plugin list for integrity.",
       remediationActionId: "wordpress-audit-plugins-integrity",
       automationLevel: "manual",
+      estimatedScoreGain: wordpress.plugins.total === 0 && wordpress.plugins.active > 0 ? 5 : 0,
+      estimatedRiskReduction: wordpress.plugins.total === 0 && wordpress.plugins.active > 0 ? 14 : 0,
+      depthTier: "deep",
+      safetyLevel: "sensitive",
     },
     {
       id: "red-flag-core-modifications",
@@ -249,6 +320,10 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
       action: "Run file integrity scan for wp-admin/wp-includes and compare checksums.",
       remediationActionId: "wordpress-run-integrity-scan",
       automationLevel: "guided",
+      estimatedScoreGain: wordpress.version.outdated ? 8 : 0,
+      estimatedRiskReduction: wordpress.version.outdated ? 22 : 0,
+      depthTier: "deep",
+      safetyLevel: "sensitive",
     },
   ];
 
@@ -258,10 +333,15 @@ export function buildWordPressHealthFindings(wordpress: WordPress): WordPressHea
     title: check.title,
     description: check.description,
     severity: check.severity,
-    checkedByDefault: check.severity === "critical" || check.severity === "high",
+    checkedByDefault: check.failed || check.warning || check.severity === "critical" || check.severity === "high",
     status: check.failed ? "fail" : check.warning ? "warning" : "pass",
     action: check.action,
     remediationActionId: check.remediationActionId,
     automationLevel: check.automationLevel,
+    estimatedScoreGain: check.estimatedScoreGain,
+    estimatedTimeSavedMs: check.estimatedTimeSavedMs,
+    estimatedRiskReduction: check.estimatedRiskReduction,
+    depthTier: check.depthTier,
+    safetyLevel: check.safetyLevel,
   }));
 }

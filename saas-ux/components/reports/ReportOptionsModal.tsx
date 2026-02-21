@@ -28,6 +28,7 @@ interface ReportOptionsModalProps {
     format: ReportFormat;
     scope: ReportScope;
     title?: string;
+    whiteLabel?: boolean;
   }) => void;
   isAgencyPlan: boolean;
 }
@@ -108,6 +109,7 @@ export function ReportOptionsModal({
   const [selectedFormat, setSelectedFormat] = useState<ReportFormat>("pdf");
   const [selectedScope, setSelectedScope] = useState<ReportScope>("performance");
   const [customTitle, setCustomTitle] = useState("");
+  const [whiteLabel, setWhiteLabel] = useState(true);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -115,6 +117,7 @@ export function ReportOptionsModal({
       setSelectedFormat("pdf");
       setSelectedScope("performance");
       setCustomTitle("");
+      setWhiteLabel(true);
     }
   }, [isOpen]);
 
@@ -125,6 +128,7 @@ export function ReportOptionsModal({
       format: selectedFormat,
       scope: selectedScope,
       title: customTitle || undefined,
+      whiteLabel,
     });
   };
 
@@ -316,6 +320,25 @@ export function ReportOptionsModal({
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+
+          <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <div className="text-sm text-white font-medium">Agency White-label</div>
+                <div className="text-xs text-gray-500">Generate a neutral report without GetSafe branding.</div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={whiteLabel}
+                onClick={() => setWhiteLabel((prev) => !prev)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${whiteLabel ? "bg-emerald-500" : "bg-gray-600"}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${whiteLabel ? "translate-x-6" : "translate-x-1"}`} />
+              </button>
             </div>
           </div>
 
