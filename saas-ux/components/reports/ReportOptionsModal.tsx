@@ -16,7 +16,19 @@ import {
   Crown,
   ArrowRight,
 } from "lucide-react";
-import type { ReportFormat, ReportScope } from "@/lib/db/schema/reports/generated";
+import type { ReportFormat, ReportScope, ReportStatus } from "@/lib/db/schema/reports/generated";
+
+
+interface GeneratedReportListItem {
+  id: string;
+  format: ReportFormat;
+  scope: ReportScope;
+  status: ReportStatus;
+  title: string;
+  filename: string;
+  downloadUrl?: string | null;
+  createdAt: string;
+}
 
 interface ReportOptionsModalProps {
   isOpen: boolean;
@@ -31,6 +43,8 @@ interface ReportOptionsModalProps {
     whiteLabel?: boolean;
   }) => void;
   isAgencyPlan: boolean;
+  reportHistory?: GeneratedReportListItem[];
+  isHistoryLoading?: boolean;
 }
 
 const FORMAT_OPTIONS: {
@@ -105,6 +119,8 @@ export function ReportOptionsModal({
   error,
   onGenerate,
   isAgencyPlan,
+  reportHistory = [],
+  isHistoryLoading = false,
 }: ReportOptionsModalProps) {
   const [selectedFormat, setSelectedFormat] = useState<ReportFormat>("pdf");
   const [selectedScope, setSelectedScope] = useState<ReportScope>("performance");
@@ -339,6 +355,42 @@ export function ReportOptionsModal({
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${whiteLabel ? "translate-x-6" : "translate-x-1"}`} />
               </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Previous Reports
+            </label>
+            <div className="max-h-40 overflow-auto rounded-lg border border-gray-700 bg-gray-800/40">
+              {isHistoryLoading ? (
+                <div className="p-3 text-xs text-gray-400">Loading report history...</div>
+              ) : reportHistory.length === 0 ? (
+                <div className="p-3 text-xs text-gray-400">No previous reports yet.</div>
+              ) : (
+                <ul className="divide-y divide-gray-700/60">
+                  {reportHistory.slice(0, 8).map((report) => (
+                    <li key={report.id} className="p-3 text-xs text-gray-200 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="truncate">{report.title}</div>
+                        <div className="text-gray-500">{report.format.toUpperCase()} · {new Date(report.createdAt).toLocaleDateString()}</div>
+                      </div>
+                      {report.downloadUrl ? (
+                        <a
+                          href={report.downloadUrl}
+                          className="text-blue-400 hover:text-blue-300"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open
+                        </a>
+                      ) : (
+                        <span className="text-gray-500">{report.status}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
 
