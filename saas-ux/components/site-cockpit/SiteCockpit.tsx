@@ -43,6 +43,7 @@ interface SiteCockpitProps {
   initialLayout?: CockpitLayoutData;
   wordpressConnectionStatus?: ConnectionStatus;
   wordpressLastConnected?: string;
+  wordpressOnly?: boolean;
 }
 
 interface CardConfig {
@@ -110,6 +111,7 @@ export function SiteCockpit({
   initialLayout,
   wordpressConnectionStatus = "disconnected",
   wordpressLastConnected,
+  wordpressOnly = false,
 }: SiteCockpitProps) {
   const t = useTranslations("SiteCockpit");
   const [cards, setCards] = useState<CardConfig[]>(() =>
@@ -204,13 +206,15 @@ export function SiteCockpit({
     [],
   );
 
-  const visibleCards = cards.filter((card) => {
+  const visibleCards = (wordpressOnly
+    ? cards.filter((card) => card.id === "wordpress")
+    : cards
+  ).filter((card) => {
     if (!card.visible) return false;
 
-    if (card.id === "wordpress" && data.cms.type !== "wordpress") {
+    if (!wordpressOnly && card.id === "wordpress" && data.cms.type !== "wordpress") {
       return false;
     }
-
 
     if (card.id === "optimization" && !optimizingCategory) {
       return false;
@@ -232,7 +236,7 @@ export function SiteCockpit({
         cms={data.cms}
       />
 
-      {editable && (
+      {editable && !wordpressOnly && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
           <div
             className="flex items-center justify-end gap-3 text-sm"
@@ -258,6 +262,22 @@ export function SiteCockpit({
           strategy={rectSortingStrategy}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+            {wordpressOnly && (
+              <div
+                className="mb-6 rounded-2xl border p-5 backdrop-blur-sm"
+                style={{ borderColor: "var(--border-default)", background: "var(--header-bg)" }}
+              >
+                <div className="text-xs uppercase tracking-[0.18em]" style={{ color: "var(--text-subtle)" }}>
+                  WordPress AI
+                </div>
+                <h2 className="mt-2 text-2xl font-semibold" style={{ color: "var(--text-primary)" }}>
+                  Ultimate AI WP Optimizer
+                </h2>
+                <p className="mt-2 text-sm" style={{ color: "var(--text-subtle)" }}>
+                  Focused WordPress diagnostics and remediation workflow built for reliable checks today and plugin packaging next.
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {visibleCards.map((card) => {
                 if (card.id === "performance") {

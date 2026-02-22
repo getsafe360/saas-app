@@ -267,13 +267,13 @@ export function WordPressCard({
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             <div>
               <div style={{ color: "var(--text-subtle)" }}>{t("wordpress.connection.status.title")}</div>
-              <div className="text-white">
+              <div style={{ color: "var(--text-primary)" }}>
                 {wordpress.connection?.status ?? "connected"}
               </div>
             </div>
             <div>
               <div style={{ color: "var(--text-subtle)" }}>{t("wordpress.lastAudit")}</div>
-              <div className="text-white">
+              <div style={{ color: "var(--text-primary)" }}>
                 {wordpress.connection?.lastAuditAt ?? "Just now"}
               </div>
             </div>
@@ -339,10 +339,10 @@ export function WordPressCard({
             className="rounded-lg border p-3"
             style={{ borderColor: "rgba(248,113,113,0.45)" }}
           >
-            <div className="text-xs mb-2 text-red-300">{t("wordpress.topRedFlags")}</div>
+            <div className="text-xs mb-2" style={{ color: "var(--status-critical)" }}>{t("wordpress.topRedFlags")}</div>
             <ul className="space-y-1 text-xs">
               {topRedFlags.map((flag) => (
-                <li key={flag.id} className="text-red-200">
+                <li key={flag.id} style={{ color: "var(--status-critical)" }}>
                   • {flag.title}
                 </li>
               ))}
