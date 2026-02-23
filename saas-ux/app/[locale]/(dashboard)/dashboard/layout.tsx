@@ -153,7 +153,7 @@ export default function DashboardLayout({
 
         {/* Main content */}
         <SignedIn>
-          <main className="flex-1 overflow-y-auto p-0 lg:p-6 bg-gray-50 dark:bg-[#10131a] min-h-screen transition-colors">
+          <main className="flex-1 overflow-y-auto p-0 lg:p-6 bg-[var(--background-default)] min-h-screen transition-colors">
             {children}
           </main>
         </SignedIn>

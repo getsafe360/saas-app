@@ -39,6 +39,14 @@ class WebsiteAnalyzerCrew:
                 "goal": "Analyze site content quality, grammar, keywords.",
                 "backstory": "Copywriter and semantic web expert.",
             },
+            'wordpress': {
+                "role": "WordPress Platform Engineer",
+                "goal": "Deliver a high-accuracy WordPress health, security, and reliability diagnostic.",
+                "backstory": (
+                    "Senior WordPress engineer specializing in security hardening, plugin/theme governance, "
+                    "performance debugging, and production incident prevention."
+                ),
+            },
         }
         self.task_blueprints = {
             'seo': {
@@ -60,6 +68,48 @@ class WebsiteAnalyzerCrew:
             'content': {
                 "description": "Assess {url} for content quality and SEO relevance.",
                 "expected_output": "Summary of content strengths/weaknesses.",
+            },
+            'wordpress': {
+                "description": (
+                    "Perform an engineering-grade WordPress diagnostic for {url} using the WP-Health-Security-Engine policy.\n\n"
+                    "Model optimization strategy for gpt-5-mini (must follow exactly):\n"
+                    "1) Rewrite each domain policy into explicit checks before scoring (security, performance, stability, SEO/UX, hosting, red flags).\n"
+                    "2) For every finding, include machine-readable evidence fields and confidence.\n"
+                    "3) Run a self-validation pass to detect contradictions, duplicate issue IDs, and unsupported claims.\n"
+                    "4) If evidence is weak, downgrade confidence and move the item to manual verification queue.\n"
+                    "5) Return strict JSON only (no markdown) and ensure valid syntax.\n\n"
+                    "Output JSON schema:\n"
+                    "{\n"
+                    "  \"module\": \"wordpress\",\n"
+                    "  \"overall_score\": 0-100,\n"
+                    "  \"policy_rewrite\": [\n"
+                    "    {\"category\": \"security|performance|stability|seo_ux|hosting|red_flags\", \"checks\": [\"explicit_check_1\", \"explicit_check_2\"]}\n"
+                    "  ],\n"
+                    "  \"findings\": [\n"
+                    "    {\n"
+                    "      \"id\": \"wp_xxx\",\n"
+                    "      \"category\": \"security|performance|stability|seo_ux|hosting|red_flags\",\n"
+                    "      \"severity\": \"critical|high|medium|low|info\",\n"
+                    "      \"title\": \"short issue name\",\n"
+                    "      \"evidence\": {\"source\": \"scan|http|headers|html|wp_api|report_context\", \"details\": \"what was observed\"},\n"
+                    "      \"impact\": \"why it matters\",\n"
+                    "      \"recommended_fix\": \"actionable remediation\",\n"
+                    "      \"confidence\": 0-1\n"
+                    "    }\n"
+                    "  ],\n"
+                    "  \"repair_backlog\": [\n"
+                    "    {\"priority\": 1, \"task\": \"what to fix\", \"owner\": \"wp_engineer|devops|content|security\", \"eta\": \"time estimate\"}\n"
+                    "  ],\n"
+                    "  \"validation\": {\n"
+                    "    \"json_valid\": true,\n"
+                    "    \"duplicate_ids\": [],\n"
+                    "    \"unsupported_claims\": [],\n"
+                    "    \"contradictions\": [],\n"
+                    "    \"final_status\": \"pass|needs_review\"\n"
+                    "  }\n"
+                    "}"
+                ),
+                "expected_output": "Strict JSON WordPress diagnostic with policy rewrite and self-validation block.",
             },
         }
 
