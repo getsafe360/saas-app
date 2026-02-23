@@ -350,6 +350,7 @@ function minimalFacts(target: string, hostIP?: string, faviconUrl?: string) {
 
 export async function GET(req: NextRequest) {
   const urlParam = req.nextUrl.searchParams.get("url") || "";
+  const forceWordPress = req.nextUrl.searchParams.get("forceWordPress") === "1";
   const target = normalizeInput(urlParam);
 
   if (!isPublicUrl(target)) {
@@ -373,7 +374,7 @@ export async function GET(req: NextRequest) {
       faviconPromise
     ]);
 
-    const wordpressModule = facts.cms?.type === "wordpress"
+    const wordpressModule = (facts.cms?.type === "wordpress" || forceWordPress)
       ? await fetchWordPressModule(target)
       : null;
 

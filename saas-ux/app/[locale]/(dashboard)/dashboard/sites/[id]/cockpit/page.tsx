@@ -98,7 +98,8 @@ async function getSiteFromDB(id: string) {
 }
 
 async function getSiteAnalysis(
-  siteUrl: string
+  siteUrl: string,
+  siteId: string
 ): Promise<SiteCockpitResponse | null> {
   try {
     // Dynamically construct the base URL from request headers
@@ -109,7 +110,7 @@ async function getSiteAnalysis(
     const baseUrl = `${protocol}://${host}`;
 
     const response = await fetch(
-      `${baseUrl}/api/analyze-facts?url=${encodeURIComponent(siteUrl)}`,
+      `${baseUrl}/api/analyze-facts?url=${encodeURIComponent(siteUrl)}&forceWordPress=1&siteId=${encodeURIComponent(siteId)}`,
       {
         cache: "no-store",
         headers: {
@@ -171,7 +172,7 @@ export default async function SiteCockpitPage({
   }
 
   // Fetch analysis data
-  const analysisData = await getSiteAnalysis(site.siteUrl);
+  const analysisData = await getSiteAnalysis(site.siteUrl, id);
   if (!analysisData) {
     return (
       <div className="p-6">

@@ -81,6 +81,57 @@ function mapCrewSeverity(severity?: string): "critical" | "high" | "medium" | "l
   }
 }
 
+
+
+function tryParseJsonObject(value: unknown): any | null {
+  if (!value) return null;
+  if (typeof value === "object") return value;
+  if (typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+  const candidates = [
+    trimmed,
+    trimmed.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim(),
+  ];
+
+  const firstBrace = trimmed.indexOf("{");
+  const lastBrace = trimmed.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    candidates.push(trimmed.slice(firstBrace, lastBrace + 1));
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === "object") return parsed;
+    } catch {
+      // continue
+    }
+  }
+
+  return null;
+}
+
+function extractWordPressPayload(raw: unknown): any | null {
+  const direct = tryParseJsonObject(raw);
+  if (direct?.findings || direct?.repair_backlog || typeof direct?.overall_score === "number") {
+    return direct;
+  }
+
+  const objectRaw = direct && typeof direct === "object" ? direct : null;
+  if (!objectRaw) return null;
+
+  const candidateKeys = ["raw", "text", "output", "result", "description", "summary", "final_output"];
+  for (const key of candidateKeys) {
+    const nested = tryParseJsonObject((objectRaw as Record<string, unknown>)[key]);
+    if (nested?.findings || nested?.repair_backlog || typeof nested?.overall_score === "number") {
+      return nested;
+    }
+  }
+
+  return null;
+}
+
 function parseCrewWordPressPayload(apiData: any): {
   findings: import("@/types/site-cockpit").WordPressHealthFinding[];
   backlog: CrewWpBacklog[];
@@ -89,14 +140,8 @@ function parseCrewWordPressPayload(apiData: any): {
   const raw = apiData?.wordpressModule?.results?.wordpress;
   if (!raw) return { findings: [], backlog: [] };
 
-  let parsed: any = raw;
-  if (typeof raw === "string") {
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      return { findings: [], backlog: [] };
-    }
-  }
+  const parsed: any = extractWordPressPayload(raw);
+  if (!parsed) return { findings: [], backlog: [] };
 
   const findings = (parsed?.findings ?? [])
     .filter((f: CrewWpFinding) => f && (f.title || f.id))
@@ -120,7 +165,14 @@ function parseCrewWordPressPayload(apiData: any): {
       };
     });
 
-  const backlog = Array.isArray(parsed?.repair_backlog) ? parsed.repair_backlog : [];
+  const backlog = Array.isArray(parsed?.repair_backlog) && parsed.repair_backlog.length > 0
+    ? parsed.repair_backlog
+    : findings.slice(0, 8).map((finding, index) => ({
+        priority: index + 1,
+        task: finding.action,
+        owner: "wp_engineer",
+        eta: finding.severity === "critical" ? "24h" : finding.severity === "high" ? "2d" : "1w",
+      }));
 
   return {
     findings,
