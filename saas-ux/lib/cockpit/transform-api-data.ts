@@ -143,7 +143,7 @@ function parseCrewWordPressPayload(apiData: any): {
   const parsed: any = extractWordPressPayload(raw);
   if (!parsed) return { findings: [], backlog: [] };
 
-  const findings = (parsed?.findings ?? [])
+  const findings: import("@/types/site-cockpit").WordPressHealthFinding[] = (parsed?.findings ?? [])
     .filter((f: CrewWpFinding) => f && (f.title || f.id))
     .map((f: CrewWpFinding, idx: number) => {
       const severity = mapCrewSeverity(f.severity);
@@ -167,7 +167,7 @@ function parseCrewWordPressPayload(apiData: any): {
 
   const backlog = Array.isArray(parsed?.repair_backlog) && parsed.repair_backlog.length > 0
     ? parsed.repair_backlog
-    : findings.slice(0, 8).map((finding, index) => ({
+    : findings.slice(0, 8).map((finding: import("@/types/site-cockpit").WordPressHealthFinding, index: number) => ({
         priority: index + 1,
         task: finding.action,
         owner: "wp_engineer",
