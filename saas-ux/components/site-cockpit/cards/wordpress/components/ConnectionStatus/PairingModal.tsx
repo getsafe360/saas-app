@@ -27,22 +27,23 @@ export function PairingModal({
   onClose,
 }: PairingModalProps) {
   return (
-    <div className="mb-6 p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl rounded-2xl border p-6" style={{ borderColor: "var(--border-default)", background: "var(--header-bg)" }}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-lg bg-blue-500/10">
             <LinkIcon className="h-6 w-6 text-blue-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
               Pairing Code Generated
             </h3>
-            <p className="text-sm text-gray-400">{pairingMessage}</p>
+            <p className="text-sm" style={{ color: "var(--text-subtle)" }}>{pairingMessage}</p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+          className="p-2 rounded-lg transition-colors" style={{ color: "var(--text-subtle)" }}
         >
           <XCircle className="h-5 w-5 text-gray-400" />
         </button>
@@ -51,7 +52,7 @@ export function PairingModal({
       {pairCode && (
         <div className="bg-gray-900/60 rounded-lg p-6 mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">Your Pairing Code</span>
+            <span className="text-sm" style={{ color: "var(--text-subtle)" }}>Your Pairing Code</span>
             <button
               onClick={onCopy}
               className="flex items-center gap-2 px-3 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs transition-colors"
@@ -115,6 +116,7 @@ export function PairingModal({
           </a>
         </div>
       </div>
+          </div>
     </div>
   );
 }
