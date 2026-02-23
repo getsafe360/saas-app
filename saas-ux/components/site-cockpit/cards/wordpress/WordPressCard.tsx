@@ -362,7 +362,7 @@ export function WordPressCard({
           optimizing={isOptimizing}
           currentScore={wordpress.score}
         />
-        <ImplementationPlanPanel />
+        <ImplementationPlanPanel recommendations={wordpress.recommendations} />
       </div>
     </CockpitCard>
   );
