@@ -31,6 +31,156 @@ function formatBytesInternal(bytes: number): string {
   return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
 }
 
+
+
+type CrewWpFinding = {
+  id?: string;
+  category?: string;
+  severity?: string;
+  title?: string;
+  impact?: string;
+  recommended_fix?: string;
+  confidence?: number;
+};
+
+type CrewWpBacklog = {
+  priority?: number;
+  task?: string;
+  owner?: string;
+  eta?: string;
+};
+
+function mapCrewCategory(category?: string): "security" | "performance" | "stability" | "seo-ux" | "red-flags" {
+  switch (category) {
+    case "security":
+    case "performance":
+    case "stability":
+      return category;
+    case "seo_ux":
+    case "seo-ux":
+      return "seo-ux";
+    case "red_flags":
+    case "red-flags":
+      return "red-flags";
+    default:
+      return "stability";
+  }
+}
+
+function mapCrewSeverity(severity?: string): "critical" | "high" | "medium" | "low" {
+  switch (severity) {
+    case "critical":
+    case "high":
+    case "medium":
+    case "low":
+      return severity;
+    case "info":
+      return "low";
+    default:
+      return "medium";
+  }
+}
+
+
+
+function tryParseJsonObject(value: unknown): any | null {
+  if (!value) return null;
+  if (typeof value === "object") return value;
+  if (typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+  const candidates = [
+    trimmed,
+    trimmed.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim(),
+  ];
+
+  const firstBrace = trimmed.indexOf("{");
+  const lastBrace = trimmed.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    candidates.push(trimmed.slice(firstBrace, lastBrace + 1));
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === "object") return parsed;
+    } catch {
+      // continue
+    }
+  }
+
+  return null;
+}
+
+function extractWordPressPayload(raw: unknown): any | null {
+  const direct = tryParseJsonObject(raw);
+  if (direct?.findings || direct?.repair_backlog || typeof direct?.overall_score === "number") {
+    return direct;
+  }
+
+  const objectRaw = direct && typeof direct === "object" ? direct : null;
+  if (!objectRaw) return null;
+
+  const candidateKeys = ["raw", "text", "output", "result", "description", "summary", "final_output"];
+  for (const key of candidateKeys) {
+    const nested = tryParseJsonObject((objectRaw as Record<string, unknown>)[key]);
+    if (nested?.findings || nested?.repair_backlog || typeof nested?.overall_score === "number") {
+      return nested;
+    }
+  }
+
+  return null;
+}
+
+function parseCrewWordPressPayload(apiData: any): {
+  findings: import("@/types/site-cockpit").WordPressHealthFinding[];
+  backlog: CrewWpBacklog[];
+  overallScore?: number;
+} {
+  const raw = apiData?.wordpressModule?.results?.wordpress;
+  if (!raw) return { findings: [], backlog: [] };
+
+  const parsed: any = extractWordPressPayload(raw);
+  if (!parsed) return { findings: [], backlog: [] };
+
+  const findings = (parsed?.findings ?? [])
+    .filter((f: CrewWpFinding) => f && (f.title || f.id))
+    .map((f: CrewWpFinding, idx: number) => {
+      const severity = mapCrewSeverity(f.severity);
+      return {
+        id: f.id || `wp-crew-${idx + 1}`,
+        category: mapCrewCategory(f.category),
+        title: f.title || "WordPress finding",
+        description: f.impact || "Impact not specified.",
+        severity,
+        checkedByDefault: severity === "critical" || severity === "high",
+        status: severity === "low" ? "warning" : "fail",
+        action: f.recommended_fix || "Review and remediate manually.",
+        remediationActionId: f.id || `wp-crew-${idx + 1}`,
+        automationLevel: "guided" as const,
+        estimatedScoreGain: severity === "critical" ? 8 : severity === "high" ? 5 : 3,
+        estimatedRiskReduction: Math.round((typeof f.confidence === "number" ? f.confidence : 0.6) * 20),
+        depthTier: "balanced" as const,
+        safetyLevel: severity === "critical" ? "sensitive" as const : "review" as const,
+      };
+    });
+
+  const backlog = Array.isArray(parsed?.repair_backlog) && parsed.repair_backlog.length > 0
+    ? parsed.repair_backlog
+    : findings.slice(0, 8).map((finding, index) => ({
+        priority: index + 1,
+        task: finding.action,
+        owner: "wp_engineer",
+        eta: finding.severity === "critical" ? "24h" : finding.severity === "high" ? "2d" : "1w",
+      }));
+
+  return {
+    findings,
+    backlog,
+    overallScore: typeof parsed?.overall_score === "number" ? parsed.overall_score : undefined,
+  };
+}
+
 export function getScoreGrade(score: number): ScoreGrade {
   if (score >= 97) return "A+";
   if (score >= 93) return "A";
@@ -171,6 +321,7 @@ function evaluateCategoryChecks(data: any): Record<"performance" | "security" | 
 
 function transformWordPressData(apiData: any) {
   const wpTelemetry = apiData.wordpressTelemetry ?? {};
+  const crewWordPress = parseCrewWordPressPayload(apiData);
   const baselineWordPressScore = typeof apiData.summary?.categoryScores?.wordpress === "number"
     ? apiData.summary.categoryScores.wordpress
     : 68;
@@ -231,12 +382,21 @@ function transformWordPressData(apiData: any) {
       lastAuditAt: apiData.connectionStatus?.lastSync,
       lastSyncAt: apiData.connectionStatus?.lastSync,
     },
-    recommendations: [],
+    recommendations: crewWordPress.backlog.map((item: CrewWpBacklog) => ({
+      priority: item.priority === 1 ? "critical" : item.priority === 2 ? "high" : item.priority === 3 ? "medium" : "low",
+      title: item.task ?? "WordPress remediation task",
+      description: `Owner: ${item.owner ?? "wp_engineer"} · ETA: ${item.eta ?? "TBD"}`,
+      action: item.task ?? "Review remediation task",
+    })),
   };
 
-  const healthFindings = buildWordPressHealthFindings(wordpressData);
+  const healthFindings = crewWordPress.findings.length > 0
+    ? crewWordPress.findings
+    : buildWordPressHealthFindings(wordpressData);
   const categoryScores = calculateWordPressCategoryScores(healthFindings);
-  const weightedScore = calculateWordPressWeightedScore(categoryScores);
+  const weightedScore = typeof crewWordPress.overallScore === "number"
+    ? Math.max(0, Math.min(100, Math.round(crewWordPress.overallScore)))
+    : calculateWordPressWeightedScore(categoryScores);
   const previousScore = wpTelemetry.trend?.previousScore ?? Math.max(0, weightedScore - 4);
   const scoreDelta = weightedScore - previousScore;
 

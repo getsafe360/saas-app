@@ -239,6 +239,37 @@ async function getFavicon(url: string): Promise<string> {
   }
 }
 
+
+
+type WordPressModuleResponse = {
+  url?: string;
+  selected_modules?: string[];
+  results?: {
+    wordpress?: unknown;
+    report?: unknown;
+  };
+  usage_metrics?: unknown;
+};
+
+async function fetchWordPressModule(url: string): Promise<WordPressModuleResponse | null> {
+  const endpoint = process.env.WP_ANALYZER_ENDPOINT || "http://localhost:5555/analyze";
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, agents: ["wordpress"] }),
+      signal: AbortSignal.timeout(15000),
+      cache: "no-store",
+    });
+
+    if (!response.ok) return null;
+    const data = (await response.json()) as WordPressModuleResponse;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 function minimalFacts(target: string, hostIP?: string, faviconUrl?: string) {
   try {
     const u = new URL(target);
@@ -319,6 +350,7 @@ function minimalFacts(target: string, hostIP?: string, faviconUrl?: string) {
 
 export async function GET(req: NextRequest) {
   const urlParam = req.nextUrl.searchParams.get("url") || "";
+  const forceWordPress = req.nextUrl.searchParams.get("forceWordPress") === "1";
   const target = normalizeInput(urlParam);
 
   if (!isPublicUrl(target)) {
@@ -341,13 +373,18 @@ export async function GET(req: NextRequest) {
       hostIPPromise,
       faviconPromise
     ]);
-    
+
+    const wordpressModule = (facts.cms?.type === "wordpress" || forceWordPress)
+      ? await fetchWordPressModule(target)
+      : null;
+
     // Merge all data together
     const enrichedFacts = {
       ...facts,
       hostIP,
       // Always use our reliable favicon fetching
-      faviconUrl: faviconUrl
+      faviconUrl: faviconUrl,
+      wordpressModule,
     };
     
     return Response.json(enrichedFacts, {
