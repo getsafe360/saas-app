@@ -1,198 +1,182 @@
-# latest_ai_development/crew.py
-from crewai import Agent, Task, Crew, Process
+from __future__ import annotations
+
 from datetime import datetime
-from typing import List, Dict, Any
+from pathlib import Path
+from typing import Any, Dict, List
+from urllib.parse import urlparse
+
+import yaml
+from crewai import Agent, Crew, Process, Task
+
+
+class ConfigurationError(Exception):
+    """Raised when static crew configuration is invalid."""
+
 
 class WebsiteAnalyzerCrew:
-    """
-    Dynamically builds a Crew with only the agents/tasks selected by user.
-    - Card-friendly JSON output
-    - Timestamped report files
-    - Tracks token usage (crew.usage_metrics)
-    """
+    """Production-oriented orchestration for website analysis modules."""
 
-    def __init__(self):
-        # --- Define your agent/task blueprints here ---
-        self.agent_blueprints = {
-            'seo': {
-                "role": "SEO Specialist",
-                "goal": "Audit and optimize website SEO.",
-                "backstory": "Expert in SEO, on-page, off-page, technical SEO.",
-            },
-            'performance': {
-                "role": "Performance Analyst",
-                "goal": "Analyze website speed and Core Web Vitals.",
-                "backstory": "Specialist in web performance and optimization.",
-            },
-            'security': {
-                "role": "Security Analyst",
-                "goal": "Scan for vulnerabilities and missing security headers.",
-                "backstory": "Security pro who finds misconfigurations fast.",
-            },
-            'accessibility': {
-                "role": "Accessibility Auditor",
-                "goal": "Check site for WCAG & a11y compliance.",
-                "backstory": "Experienced accessibility consultant.",
-            },
-            'content': {
-                "role": "Content Specialist",
-                "goal": "Analyze site content quality, grammar, keywords.",
-                "backstory": "Copywriter and semantic web expert.",
-            },
-            'wordpress': {
-                "role": "WordPress Platform Engineer",
-                "goal": "Deliver a high-accuracy WordPress health, security, and reliability diagnostic.",
-                "backstory": (
-                    "Senior WordPress engineer specializing in security hardening, plugin/theme governance, "
-                    "performance debugging, and production incident prevention."
-                ),
-            },
-        }
-        self.task_blueprints = {
-            'seo': {
-                "description": "Perform full SEO audit for {url}",
-                "expected_output": "Card summary and actionable SEO issues.",
-            },
-            'performance': {
-                "description": "Analyze performance and speed of {url}",
-                "expected_output": "Performance metrics and recommendations.",
-            },
-            'security': {
-                "description": "Check security for {url}",
-                "expected_output": "List any vulnerabilities or weak points.",
-            },
-            'accessibility': {
-                "description": "Audit {url} for accessibility (WCAG) issues.",
-                "expected_output": "Accessibility compliance summary.",
-            },
-            'content': {
-                "description": "Assess {url} for content quality and SEO relevance.",
-                "expected_output": "Summary of content strengths/weaknesses.",
-            },
-            'wordpress': {
-                "description": (
-                    "Perform an engineering-grade WordPress diagnostic for {url} using the WP-Health-Security-Engine policy.\n\n"
-                    "Model optimization strategy for gpt-5-mini (must follow exactly):\n"
-                    "1) Rewrite each domain policy into explicit checks before scoring (security, performance, stability, SEO/UX, hosting, red flags).\n"
-                    "2) For every finding, include machine-readable evidence fields and confidence.\n"
-                    "3) Run a self-validation pass to detect contradictions, duplicate issue IDs, and unsupported claims.\n"
-                    "4) If evidence is weak, downgrade confidence and move the item to manual verification queue.\n"
-                    "5) Return strict JSON only (no markdown) and ensure valid syntax.\n\n"
-                    "Output JSON schema:\n"
-                    "{\n"
-                    "  \"module\": \"wordpress\",\n"
-                    "  \"overall_score\": 0-100,\n"
-                    "  \"policy_rewrite\": [\n"
-                    "    {\"category\": \"security|performance|stability|seo_ux|hosting|red_flags\", \"checks\": [\"explicit_check_1\", \"explicit_check_2\"]}\n"
-                    "  ],\n"
-                    "  \"findings\": [\n"
-                    "    {\n"
-                    "      \"id\": \"wp_xxx\",\n"
-                    "      \"category\": \"security|performance|stability|seo_ux|hosting|red_flags\",\n"
-                    "      \"severity\": \"critical|high|medium|low|info\",\n"
-                    "      \"title\": \"short issue name\",\n"
-                    "      \"evidence\": {\"source\": \"scan|http|headers|html|wp_api|report_context\", \"details\": \"what was observed\"},\n"
-                    "      \"impact\": \"why it matters\",\n"
-                    "      \"recommended_fix\": \"actionable remediation\",\n"
-                    "      \"confidence\": 0-1\n"
-                    "    }\n"
-                    "  ],\n"
-                    "  \"repair_backlog\": [\n"
-                    "    {\"priority\": 1, \"task\": \"what to fix\", \"owner\": \"wp_engineer|devops|content|security\", \"eta\": \"time estimate\"}\n"
-                    "  ],\n"
-                    "  \"validation\": {\n"
-                    "    \"json_valid\": true,\n"
-                    "    \"duplicate_ids\": [],\n"
-                    "    \"unsupported_claims\": [],\n"
-                    "    \"contradictions\": [],\n"
-                    "    \"final_status\": \"pass|needs_review\"\n"
-                    "  }\n"
-                    "}"
-                ),
-                "expected_output": "Strict JSON WordPress diagnostic with policy rewrite and self-validation block.",
-            },
-        }
+    CONFIG_DIR = Path(__file__).resolve().parent / "config"
+    SUPPORTED_MODULES = ("seo", "performance", "accessibility", "security", "content", "wordpress")
+    MODULE_TASK_MAP = {
+        "seo": "seo_audit_task",
+        "performance": "performance_audit_task",
+        "accessibility": "accessibility_audit_task",
+        "security": "security_audit_task",
+        "content": "content_audit_task",
+        "wordpress": "wordpress_audit_task",
+    }
 
-    def build_agents(self, selected: List[str]) -> Dict[str, Agent]:
-        agents = {}
-        for key in selected:
-            ab = self.agent_blueprints[key]
-            agents[key] = Agent(
-                role=ab["role"],
-                goal=ab["goal"],
-                backstory=ab["backstory"],
-                verbose=True
+    def __init__(self) -> None:
+        self.agents_config = self._read_yaml("agents.yaml")
+        self.tasks_config = self._read_yaml("tasks.yaml")
+        self.models_config = self._read_yaml("models.yaml")
+        self.default_model_name = self.models_config.get("default_model", "gpt_5_mini")
+        self.model_settings = self.models_config["models"][self.default_model_name]
+        self._validate_configuration()
+
+    def _read_yaml(self, filename: str) -> Dict[str, Any]:
+        path = self.CONFIG_DIR / filename
+        if not path.exists():
+            raise ConfigurationError(f"Missing required config file: {path}")
+        with path.open("r", encoding="utf-8") as handle:
+            data = yaml.safe_load(handle) or {}
+        if not isinstance(data, dict):
+            raise ConfigurationError(f"Invalid YAML shape for {filename}; expected mapping")
+        return data
+
+    def _validate_configuration(self) -> None:
+        missing_tasks = [task_id for task_id in self.MODULE_TASK_MAP.values() if task_id not in self.tasks_config]
+        if missing_tasks:
+            raise ConfigurationError(f"Missing module tasks: {missing_tasks}")
+
+        for task_id in self.MODULE_TASK_MAP.values():
+            task_cfg = self.tasks_config[task_id]
+            agent_id = task_cfg.get("agent")
+            if not agent_id or agent_id not in self.agents_config:
+                raise ConfigurationError(f"Task '{task_id}' references unknown agent '{agent_id}'")
+
+        provider_model = self.model_settings.get("provider_model")
+        if provider_model != "openai/gpt-5-mini":
+            raise ConfigurationError(
+                "Production model drift detected: default model must resolve to openai/gpt-5-mini"
+            )
+
+    def _normalize_modules(self, selected: List[str]) -> List[str]:
+        if not selected:
+            raise ValueError("At least one module is required")
+
+        unknown = [module for module in selected if module not in self.SUPPORTED_MODULES]
+        if unknown:
+            raise ValueError(f"Unsupported modules requested: {unknown}")
+
+        deduped = []
+        for module in selected:
+            if module not in deduped:
+                deduped.append(module)
+
+        return [module for module in self.SUPPORTED_MODULES if module in deduped]
+
+    def _sanitize_url(self, url: str) -> str:
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise ValueError(f"Invalid URL: '{url}'")
+        return url
+
+    def build_agents(self, selected_modules: List[str]) -> Dict[str, Agent]:
+        agents: Dict[str, Agent] = {}
+        for module in selected_modules:
+            task_id = self.MODULE_TASK_MAP[module]
+            agent_id = self.tasks_config[task_id]["agent"]
+            cfg = self.agents_config[agent_id]
+            agents[module] = Agent(
+                role=cfg["role"],
+                goal=cfg["goal"],
+                backstory=cfg["backstory"],
+                llm=self.model_settings["provider_model"],
+                verbose=False,
+                allow_delegation=False,
+                max_iter=self.model_settings.get("max_iter", 1),
             )
         return agents
 
-    def build_tasks(self, selected: List[str], url: str, agents: Dict[str, Agent]) -> Dict[str, Task]:
-        tasks = {}
-        for key in selected:
-            tb = self.task_blueprints[key]
-            tasks[key] = Task(
-                description=tb["description"].format(url=url),
-                expected_output=tb["expected_output"],
-                agent=agents[key]
+    def build_tasks(self, selected_modules: List[str], url: str, agents: Dict[str, Agent]) -> List[Task]:
+        tasks: List[Task] = []
+        for module in selected_modules:
+            task_cfg = self.tasks_config[self.MODULE_TASK_MAP[module]]
+            tasks.append(
+                Task(
+                    description=task_cfg["description"].format(url=url),
+                    expected_output=task_cfg["expected_output"],
+                    agent=agents[module],
+                )
             )
         return tasks
 
-    def build_reporting_task(self, url: str, selected: List[str], agents: Dict[str, Agent], output_file: str) -> Task:
-        # Reporting agent can be a dummy or dedicated
+    def build_reporting_task(self, url: str, selected_modules: List[str], context_tasks: List[Task], output_file: str) -> Task:
+        report_agent_cfg = self.agents_config["reporting_analyst"]
         reporting_agent = Agent(
-            role="Reporting Analyst",
-            goal="Aggregate results and produce a full markdown report.",
-            backstory="Expert in compiling actionable web audit reports.",
-            verbose=True
+            role=report_agent_cfg["role"],
+            goal=report_agent_cfg["goal"],
+            backstory=report_agent_cfg["backstory"],
+            llm=self.model_settings["provider_model"],
+            verbose=False,
+            allow_delegation=False,
+            max_iter=1,
         )
         return Task(
             description=(
-                "Compile the outputs from all completed analysis modules into a clear report. "
-                f"Include module-wise summaries for: {', '.join(selected)}. "
-                f"Add URL: {url} and timestamp in the header."
+                f"Synthesize module outputs for {url}. "
+                f"Modules executed in deterministic order: {', '.join(selected_modules)}. "
+                "Report must include prioritized repairs, blockers, and production deployment readiness verdict."
             ),
-            expected_output="A markdown report with sectioned summaries for each module.",
+            expected_output="Structured markdown report for deployment decision-making.",
             agent=reporting_agent,
+            context=context_tasks,
             output_file=output_file,
         )
 
     def analyze_website(self, selected: List[str], url: str) -> Dict[str, Any]:
-        # --- Prepare agents & tasks dynamically ---
-        agents = self.build_agents(selected)
-        tasks = self.build_tasks(selected, url, agents)
-        # Timestamped output file
+        normalized_url = self._sanitize_url(url)
+        selected_modules = self._normalize_modules(selected)
+
+        agents = self.build_agents(selected_modules)
+        module_tasks = self.build_tasks(selected_modules, normalized_url, agents)
+
         timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M")
-        url_sanitized = url.replace("https://", "").replace("http://", "").replace("/", "_")
-        report_file = f"report_{url_sanitized}_{timestamp}.md"
-        # Add reporting as the final task (optional, can be unchecked)
-        reporting_task = self.build_reporting_task(url, selected, agents, report_file)
-        # Sequence: selected tasks + reporting
-        task_list = [tasks[k] for k in selected] + [reporting_task]
-        # --- Create and run crew ---
-        crew = Crew(
-            agents=[agents[k] for k in selected] + [reporting_task.agent],
-            tasks=task_list,
-            process=Process.sequential,
-            verbose=True,
+        url_slug = normalized_url.replace("https://", "").replace("http://", "").replace("/", "_")
+        report_file = f"report_{url_slug}_{timestamp}.md"
+
+        reporting_task = self.build_reporting_task(
+            normalized_url,
+            selected_modules,
+            module_tasks,
+            report_file,
         )
-        result = crew.kickoff(inputs={'url': url, 'selected_modules': selected})
-        # --- Card-friendly output ---
-        card_data = {
-            "url": url,
-            "selected_modules": selected,
-            "results": {},
-            "markdown_report_file": report_file,
-            "usage_metrics": getattr(crew, 'usage_metrics', None)  # track token usage
-        }
-        # Populate each module result for UI cards
+
+        crew = Crew(
+            agents=list(agents.values()) + [reporting_task.agent],
+            tasks=module_tasks + [reporting_task],
+            process=Process.sequential,
+            verbose=False,
+        )
+
+        result = crew.kickoff(inputs={"url": normalized_url})
+
+        module_results: Dict[str, Any] = {}
         if hasattr(result, "tasks_output"):
-            for idx, key in enumerate(selected):
-                try:
-                    card_data["results"][key] = result.tasks_output[idx]
-                except Exception:
-                    card_data["results"][key] = f"No result from {key}."
-            # Add reporting task result if any
-            if len(result.tasks_output) > len(selected):
-                card_data["results"]["report"] = result.tasks_output[-1]
+            for idx, module in enumerate(selected_modules):
+                module_results[module] = str(result.tasks_output[idx]) if idx < len(result.tasks_output) else "No output"
+            report_output = str(result.tasks_output[-1]) if result.tasks_output else str(result)
         else:
-            card_data["results"]["raw"] = str(result)
-        return card_data
+            report_output = str(result)
+
+        return {
+            "url": normalized_url,
+            "selected_modules": selected_modules,
+            "results": module_results,
+            "report": report_output,
+            "markdown_report_file": report_file,
+            "usage_metrics": getattr(crew, "usage_metrics", None),
+            "model": self.model_settings["provider_model"],
+        }

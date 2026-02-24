@@ -1,76 +1,48 @@
 #!/usr/bin/env python
-from dotenv import load_dotenv
-load_dotenv()
-
+import json
 import sys
-import warnings
 from datetime import datetime
 
-from latest_ai_development.src.latest_ai_development.crew import WebsiteAnalyzerCrew
+from dotenv import load_dotenv
 
-warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
+from latest_ai_development.crew import WebsiteAnalyzerCrew
 
-# Use this main file to run your full website analyzer crew
-def run():
-    """
-    Run the Website Analyzer crew.
-    """
-    # Get URL from command-line argument, or use a default for testing
+load_dotenv()
+
+
+def run() -> None:
+    """Run deterministic website analysis across requested modules."""
     url = sys.argv[1] if len(sys.argv) > 1 else "https://malkodent.com/"
-    inputs = {
-        'url': url,
-        'current_year': str(datetime.now().year)
-    }
-    try:
-        WebsiteAnalyzerCrew().crew().kickoff(inputs=inputs)
-    except Exception as e:
-        raise Exception(f"An error occurred while running the crew: {e}")
+    modules_arg = sys.argv[2] if len(sys.argv) > 2 else "seo,performance,accessibility,security,content,wordpress"
+    selected_modules = [module.strip() for module in modules_arg.split(",") if module.strip()]
 
-def train():
-    """
-    Train the crew for a given number of iterations.
-    """
-    url = sys.argv[2] if len(sys.argv) > 2 else "https://malkodent.com/"
-    inputs = {
+    payload = {
         "url": url,
-        "current_year": str(datetime.now().year)
+        "selected_modules": selected_modules,
+        "current_year": str(datetime.now().year),
     }
-    try:
-        WebsiteAnalyzerCrew().crew().train(
-            n_iterations=int(sys.argv[1]),
-            filename=sys.argv[3] if len(sys.argv) > 3 else "train_output.md",
-            inputs=inputs
-        )
-    except Exception as e:
-        raise Exception(f"An error occurred while training the crew: {e}")
 
-def replay():
-    """
-    Replay the crew execution from a specific task.
-    """
     try:
-        WebsiteAnalyzerCrew().crew().replay(task_id=sys.argv[1])
-    except Exception as e:
-        raise Exception(f"An error occurred while replaying the crew: {e}")
-
-def test():
-    """
-    Test the crew execution and returns the results.
-    """
-    url = sys.argv[2] if len(sys.argv) > 2 else "https://malkodent.com/"
-    inputs = {
-        "url": url,
-        "current_year": str(datetime.now().year)
-    }
-    try:
-        WebsiteAnalyzerCrew().crew().test(
-            n_iterations=int(sys.argv[1]),
-            eval_llm=sys.argv[3] if len(sys.argv) > 3 else "gpt-4",
-            inputs=inputs
+        result = WebsiteAnalyzerCrew().analyze_website(
+            selected=payload["selected_modules"],
+            url=payload["url"],
         )
-    except Exception as e:
-        raise Exception(f"An error occurred while testing the crew: {e}")
+        print(json.dumps(result, indent=2, default=str))
+    except Exception as exc:
+        raise RuntimeError(f"An error occurred while running the crew: {exc}") from exc
+
+
+def train() -> None:
+    raise NotImplementedError("Training workflow is disabled in production runtime.")
+
+
+def replay() -> None:
+    raise NotImplementedError("Replay workflow is disabled in production runtime.")
+
+
+def test() -> None:
+    raise NotImplementedError("Interactive crew testing is disabled in production runtime.")
+
 
 if __name__ == "__main__":
-    # For CLI usage, default to run()
     run()
