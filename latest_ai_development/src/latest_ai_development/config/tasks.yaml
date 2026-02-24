@@ -34,6 +34,16 @@ content_audit_task:
     Summary of content quality, including specific suggestions to improve SEO and user trust.
   agent: content_agent
 
+wordpress_audit_task:
+  description: >
+    Perform an engineering-grade WordPress diagnostic for {url}.
+    The output MUST be strict JSON for deterministic downstream parsing and include:
+    module, overall_score, findings[], repair_backlog[], and validation checks.
+    Include confidence for each finding and place weak-evidence findings in a manual-verification queue.
+  expected_output: >
+    Strict JSON WordPress diagnostic with policy checks, prioritized findings, remediation backlog, and validation status.
+  agent: wordpress_agent
+
 affiliate_expansion_task:
   description: >
     Research affiliate and SaaS expansion opportunities for the business at {url}. Suggest partnership types, integration strategies, and white-label opportunities.
@@ -50,7 +60,7 @@ scheduling_task:
 
 reporting_task:
   description: >
-    Collect and synthesize all audit findings for {url}. Create a clear, well-organized markdown report with sections for SEO, performance, accessibility, security, content, and business growth.
+    Collect and synthesize all audit findings for {url}. Create a clear, well-organized markdown report with sections for SEO, performance, accessibility, security, content, WordPress platform health, and business growth.
   expected_output: >
     A comprehensive markdown report ready for clients and stakeholders, with summaries, key findings, and next steps for each category.
   agent: reporting_analyst
