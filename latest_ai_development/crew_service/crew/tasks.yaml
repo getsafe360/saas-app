@@ -1,0 +1,23 @@
+wordpress_audit:
+  description: |
+    Perform a WordPress platform audit for {url}.
+    Return strict JSON with fields: module, overall_score, findings, repair_backlog, validation_checks.
+    Include severity and confidence values for each finding.
+  expected_output: Strict JSON payload with prioritized findings and repair actions.
+  agent: wordpress_auditor
+
+seo_analysis:
+  description: |
+    Analyze the SEO health of {url}.
+    Cover technical SEO, metadata quality, content structure, and quick wins.
+    Return strict JSON with fields: module, summary, critical_issues, recommended_actions.
+  expected_output: Structured JSON SEO report with prioritized recommendations.
+  agent: seo_analyst
+
+accessibility_repair:
+  description: |
+    Review accessibility concerns for {url}.
+    Provide strict JSON with fields: module, blockers, repair_plan, validation_steps.
+    Focus on practical remediations aligned with WCAG.
+  expected_output: Structured JSON accessibility remediation plan.
+  agent: accessibility_repair_specialist
