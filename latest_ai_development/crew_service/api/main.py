@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from typing import Dict
 
 from fastapi import FastAPI, HTTPException
@@ -15,12 +16,13 @@ class TaskRequest(BaseModel):
     url: HttpUrl
 
 
-app = FastAPI(title="CrewAI Microservice", version="1.0.0")
-
-
-@app.on_event("startup")
-def validate_runtime() -> None:
+@asynccontextmanager
+async def lifespan(_: FastAPI):
     Settings.from_env()
+    yield
+
+
+app = FastAPI(title="CrewAI Microservice", version="1.0.0", lifespan=lifespan)
 
 
 @app.get("/health")
