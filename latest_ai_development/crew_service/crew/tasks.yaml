@@ -1,23 +1,60 @@
 wordpress_audit:
   description: |
-    Perform a WordPress platform audit for {url}.
-    Return strict JSON with fields: module, overall_score, findings, repair_backlog, validation_checks.
-    Include severity and confidence values for each finding.
-  expected_output: Strict JSON payload with prioritized findings and repair actions.
+    Perform a production-grade WordPress platform audit for {url}.
+    Inspect update posture (core/themes/plugins), backup reliability, plugin/theme risk, cron health,
+    database and media hygiene, caching/CDN behavior, uptime resilience, and observability readiness.
+    Return strict JSON only with fields: module, overall_score, findings, repair_backlog, validation_checks.
+    For each finding include: id, title, severity (critical|high|medium|low), confidence (high|medium|low),
+    evidence, business_impact, and fix_summary.
+  expected_output: Strict JSON with prioritized WordPress findings, scored risk overview, and verifiable remediation steps.
   agent: wordpress_auditor
 
 seo_analysis:
   description: |
-    Analyze the SEO health of {url}.
-    Cover technical SEO, metadata quality, content structure, and quick wins.
-    Return strict JSON with fields: module, summary, critical_issues, recommended_actions.
-  expected_output: Structured JSON SEO report with prioritized recommendations.
+    Analyze the SEO health of {url} with emphasis on technical SEO and practical growth opportunities.
+    Evaluate crawlability, indexability, canonicals, redirects, metadata quality, content structure, internal linking,
+    schema usage, duplicate/thin content signals, and mobile SEO readiness.
+    Return strict JSON only with fields: module, summary, critical_issues, recommended_actions.
+    Each issue/action should include severity, evidence, expected impact, and implementation_priority.
+  expected_output: Strict JSON SEO report with critical blockers, prioritized fixes, and measurable impact rationale.
   agent: seo_analyst
 
 accessibility_repair:
   description: |
-    Review accessibility concerns for {url}.
-    Provide strict JSON with fields: module, blockers, repair_plan, validation_steps.
-    Focus on practical remediations aligned with WCAG.
-  expected_output: Structured JSON accessibility remediation plan.
+    Review accessibility risks for {url} and define practical WCAG 2.2-oriented remediations.
+    Assess semantic structure, keyboard navigation, focus management, color contrast, form labeling/errors,
+    media alternatives, ARIA misuse, and dynamic-content accessibility.
+    Return strict JSON only with fields: module, blockers, repair_plan, validation_steps.
+    Include WCAG criteria references, severity, affected users, and implementation notes for each blocker.
+  expected_output: Strict JSON accessibility remediation plan with prioritized fixes and explicit validation steps.
   agent: accessibility_repair_specialist
+
+performance_task:
+  description: |
+    Analyze the web performance profile for {url} with a Core Web Vitals focus.
+    Evaluate LCP, INP, CLS, TTFB, render-blocking resources, image/font optimization, caching strategy,
+    bundle size, third-party script cost, and server/network bottlenecks.
+    Return strict JSON only with fields: module, score, vitals, bottlenecks, recommendations, validation_steps.
+    Every recommendation must include priority, estimated impact, implementation_effort, and quick_win flag.
+  expected_output: Strict JSON performance audit with Core Web Vitals assessment and prioritized, high-impact optimizations.
+  agent: performance_agent
+
+security_task:
+  description: |
+    Perform a high-level website security assessment for {url}.
+    Review transport security (TLS/SSL), HTTP security headers, cookie flags, authentication/session risks,
+    exposed admin or debug surfaces, dependency/configuration weaknesses, and common OWASP-style misconfigurations.
+    Return strict JSON only with fields: module, security_score, risks, mitigations, verification_steps.
+    Each risk must include severity, confidence, evidence, exploitation_likelihood, and business_impact.
+  expected_output: Strict JSON security report with prioritized vulnerabilities and practical mitigation guidance.
+  agent: security_agent
+
+reporting_task:
+  description: |
+    Collect and synthesize all audit findings for {url} from WordPress, SEO, accessibility, performance, and security agents.
+    Produce a concise, decision-ready markdown report with: executive summary, per-category scorecards,
+    top risks/opportunities, repair roadmap by priority, and validation checklist.
+    Explicitly include assumptions, data gaps, and next-step ownership recommendations.
+  expected_output: Markdown report ready for clients and internal teams, with clear summaries, priority-ranked actions,
+    and optimization/repair steps for SEO, performance, accessibility, security, and WordPress platform health.
+  agent: reporting_agent
