@@ -8,8 +8,8 @@ from typing import Dict
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, HttpUrl
 
-from crew_service.config import ConfigError, Settings
-from crew_service.crew.crew import CrewConfigurationError, CrewService
+from latest_ai_development.config.settings import ConfigError, Settings
+from latest_ai_development.crew import CrewConfigurationError, CrewService
 
 
 class TaskRequest(BaseModel):
