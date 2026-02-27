@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 import yaml
@@ -11,6 +11,10 @@ from crewai import Agent, Crew, Process, Task
 
 class ConfigurationError(Exception):
     """Raised when static crew configuration is invalid."""
+
+
+class CrewConfigurationError(ConfigurationError):
+    """Backward-compatible alias for service-specific configuration errors."""
 
 
 class WebsiteAnalyzerCrew:
@@ -113,7 +117,13 @@ class WebsiteAnalyzerCrew:
             )
         return tasks
 
-    def build_reporting_task(self, url: str, selected_modules: List[str], context_tasks: List[Task], output_file: str) -> Task:
+    def build_reporting_task(
+        self,
+        url: str,
+        selected_modules: List[str],
+        context_tasks: List[Task],
+        output_file: str,
+    ) -> Task:
         report_agent_cfg = self.agents_config["reporting_analyst"]
         reporting_agent = Agent(
             role=report_agent_cfg["role"],
@@ -180,3 +190,96 @@ class WebsiteAnalyzerCrew:
             "usage_metrics": getattr(crew, "usage_metrics", None),
             "model": self.model_settings["provider_model"],
         }
+
+
+class CrewService:
+    """Builds and executes endpoint-focused CrewAI workflows for microservice routes."""
+
+    TASK_MAP = {
+        "audit_wordpress": "wordpress_audit",
+        "analyze_seo": "seo_analysis",
+        "repair_accessibility": "accessibility_repair",
+    }
+
+    CONFIG_DIR = WebsiteAnalyzerCrew.CONFIG_DIR
+
+    def __init__(self, model: str = "openai/gpt-4o-mini", config_dir: Optional[Path] = None) -> None:
+        self.config_dir = config_dir or self.CONFIG_DIR
+        self.model = model
+        self.agents_config = self._read_yaml("agents.yaml")
+        self.tasks_config = self._read_yaml("tasks.yaml")
+        self._validate()
+
+    def _read_yaml(self, name: str) -> Dict[str, Any]:
+        path = self.config_dir / name
+        if not path.exists():
+            raise CrewConfigurationError(f"Missing required YAML: {path}")
+        with path.open("r", encoding="utf-8") as file:
+            data = yaml.safe_load(file) or {}
+        if not isinstance(data, dict):
+            raise CrewConfigurationError(f"Invalid YAML format in {path}")
+        return data
+
+    def _validate(self) -> None:
+        for _, task_id in self.TASK_MAP.items():
+            if task_id not in self.tasks_config:
+                raise CrewConfigurationError(f"Task '{task_id}' is missing from tasks.yaml")
+            agent_id = self.tasks_config[task_id].get("agent")
+            if not agent_id or agent_id not in self.agents_config:
+                raise CrewConfigurationError(f"Task '{task_id}' references unknown agent '{agent_id}'")
+
+    @staticmethod
+    def _validate_url(url: str) -> str:
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise ValueError(f"Invalid URL: {url}")
+        return url
+
+    def _build_task(self, task_key: str, url: str) -> Task:
+        task_id = self.TASK_MAP[task_key]
+        task_cfg = self.tasks_config[task_id]
+        agent_cfg = self.agents_config[task_cfg["agent"]]
+
+        agent = Agent(
+            role=agent_cfg["role"],
+            goal=agent_cfg["goal"],
+            backstory=agent_cfg["backstory"],
+            llm=self.model,
+            allow_delegation=False,
+            verbose=False,
+            max_iter=1,
+        )
+
+        return Task(
+            description=task_cfg["description"].format(url=url),
+            expected_output=task_cfg["expected_output"],
+            agent=agent,
+        )
+
+    def run_task(self, task_key: str, url: str) -> Dict[str, Any]:
+        if task_key not in self.TASK_MAP:
+            raise ValueError(f"Unsupported task key: {task_key}")
+
+        normalized_url = self._validate_url(url)
+        task = self._build_task(task_key, normalized_url)
+
+        crew = Crew(agents=[task.agent], tasks=[task], process=Process.sequential, verbose=False)
+        result = crew.kickoff(inputs={"url": normalized_url})
+
+        if hasattr(result, "tasks_output") and result.tasks_output:
+            output = str(result.tasks_output[0])
+        else:
+            output = str(result)
+
+        return {
+            "task": task_key,
+            "url": normalized_url,
+            "model": self.model,
+            "result": output,
+            "usage_metrics": getattr(crew, "usage_metrics", None),
+        }
+
+
+def create_wordpress_crew(model: str = "openai/gpt-4o-mini") -> CrewService:
+    """Factory for microservice-compatible WordPress task execution."""
+    return CrewService(model=model)
