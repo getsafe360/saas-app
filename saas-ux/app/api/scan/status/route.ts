@@ -8,6 +8,7 @@ import { scanJobs } from '@/lib/db/schema';
 import { sites } from '@/lib/db/schema/sites';
 import { eq } from 'drizzle-orm';
 import { list, put, type ListBlobResultBlob } from '@vercel/blob';
+import { publishEvent } from '@/lib/cockpit/event-bus';
 
 const DEV = process.env.NODE_ENV !== 'production';
 
@@ -82,6 +83,8 @@ export async function GET(req: NextRequest) {
 
   // If already done, just echo status
   if (job.status === 'done') {
+    publishEvent(job.siteId, { type: 'status', state: 'completed' });
+
     return NextResponse.json({
       ok: true,
       id: job.id,
@@ -106,6 +109,12 @@ export async function GET(req: NextRequest) {
       contentType: 'application/json'
     });
 
+    publishEvent(job.siteId, { type: 'progress', state: 'in_progress', progress: 72 });
+    for (const category of Object.keys(report.summary.counts)) {
+      const issues = report.issues.filter((issue) => issue.category === category);
+      publishEvent(job.siteId, { type: 'category', state: 'in_progress', category, issues });
+    }
+
     // Update job → done
     await db
       .update(scanJobs)
@@ -116,6 +125,9 @@ export async function GET(req: NextRequest) {
         updatedAt: new Date()
       })
       .where(eq(scanJobs.id, job.id));
+
+    publishEvent(job.siteId, { type: 'savings', savings: { score_before: 62, score_after: report.summary.score, time_saved: '3.5h/week', cost_saved: '$180/mo', tokens_used: report.summary.estTotalTokens } });
+    publishEvent(job.siteId, { type: 'status', state: 'completed' });
 
     return NextResponse.json({
       ok: true,

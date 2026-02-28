@@ -20,6 +20,10 @@ import { ImplementationPlanPanel } from "./components/Analysis/ImplementationPla
 import { GenerateReportButton } from "@/components/reports/GenerateReportButton";
 import type { WordPressCardProps } from "./types";
 import type { WordPressHealthFinding } from "@/types/site-cockpit";
+import { useCockpitState } from "@/lib/cockpit/useCockpitState";
+import FindingsFeed from "@/components/analyzer/findings/FindingsFeed";
+import { SavingsCard } from "@/components/site-cockpit/cockpit/SavingsCard";
+import { WordPressConnectionModal } from "@/components/site-cockpit/cockpit/WordPressConnectionModal";
 export function WordPressCard({
   id,
   data,
@@ -35,6 +39,7 @@ export function WordPressCard({
   const t = useTranslations("SiteCockpit");
   const { wordpress, cms } = data;
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const cockpit = useCockpitState(siteId ?? "");
 
   // Custom hooks handle all logic
   const connection = useWordPressConnection(
@@ -243,6 +248,21 @@ export function WordPressCard({
         />
       )}
 
+      <WordPressConnectionModal
+        open={cockpit.connectionModalOpen}
+        onClose={cockpit.actions.closeConnectionModal}
+        onConnected={() => {
+          cockpit.actions.closeConnectionModal();
+          void cockpit.actions.startAnalysis();
+        }}
+      />
+
+      {cockpit.state === "disconnected" && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200">
+          Live stream disconnected. Reconnect to continue updates.
+        </div>
+      )}
+
       {/* WordPress Analysis Panels */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2">
@@ -347,6 +367,34 @@ export function WordPressCard({
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        <div className="rounded-lg border border-white/10 p-3">
+          <div className="mb-2 text-xs text-neutral-400">Analysis progress: {cockpit.progress}%</div>
+          <FindingsFeed
+            title="Live Category Findings"
+            categories={cockpit.categories}
+            onFixNow={(categoryId) => {
+              void cockpit.actions.startRepair(categoryId);
+              if (siteId) {
+                void fetch(`/api/sites/${siteId}/wordpress/remediate`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ locale: "en", safeMode: true, findings: [] }),
+                });
+              }
+            }}
+          />
+        </div>
+
+        <SavingsCard savings={cockpit.savings} />
+
+        {cockpit.repair.logs.length > 0 && (
+          <div className="rounded-lg border border-sky-500/40 bg-sky-500/10 p-3 text-xs text-sky-100">
+            {cockpit.repair.logs.map((log, idx) => (
+              <div key={`${log}-${idx}`}>{log}</div>
+            ))}
           </div>
         )}
 

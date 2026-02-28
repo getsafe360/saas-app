@@ -2,6 +2,7 @@
 import "server-only";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { withSecureSslMode } from "@/lib/db/connection-string";
 
 export const hasDb = !!process.env.POSTGRES_URL;
 
@@ -13,7 +14,7 @@ export function getDb() {
       throw new Error("POSTGRES_URL is not set");
     }
     const pool = new Pool({
-      connectionString: process.env.POSTGRES_URL!,
+      connectionString: withSecureSslMode(process.env.POSTGRES_URL!),
       max: 5,
       // Helpful in serverless
       idleTimeoutMillis: 10_000,
