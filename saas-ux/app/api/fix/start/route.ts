@@ -11,6 +11,7 @@ import { eq, and, desc } from 'drizzle-orm';
 import { list } from '@vercel/blob';
 import crypto from 'crypto';
 import { findCurrentUserTeam } from '@/lib/auth/current';
+import { publishEvent } from '@/lib/cockpit/event-bus';
 
 type StartBody = { siteId: string; issueIds: string[] };
 
@@ -105,6 +106,8 @@ export async function POST(req: NextRequest) {
     .update(teams)
     .set({ tokensRemaining: (have - estTokens) as any })
     .where(eq(teams.id, teamId));
+
+  publishEvent(siteId, { type: 'repair', state: 'repairing', message: `Applying ${issueIds.length} fixes` });
 
   return NextResponse.json({ ok: true, fixJobId, estTokens });
 }

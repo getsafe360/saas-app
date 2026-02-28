@@ -6,6 +6,7 @@ import { sites } from '@/lib/db/schema/sites/sites';
 import { changeItems, changeSets } from '@/lib/db/schema/copilot/changes';
 import { users } from '@/lib/db/schema/auth/users';
 import { aiAnalysisJobs, aiRepairActions } from '@/lib/db/schema/ai/analysis';
+import { publishEvent } from '@/lib/cockpit/event-bus';
 
 type RemediationFinding = {
   id: string;
@@ -36,6 +37,8 @@ export async function POST(
   if (findings.length === 0) {
     return NextResponse.json({ success: false, error: 'NO_FINDINGS_SELECTED' }, { status: 400 });
   }
+
+  publishEvent(siteId, { type: 'repair', state: 'repairing', message: 'Starting WordPress remediation', platform: 'wordpress' });
 
   const executionResults: Array<{
     findingId: string;
@@ -173,6 +176,16 @@ export async function POST(
     auditError = String(error?.message ?? error ?? 'Unknown remediation backend error');
     console.warn('[wordpress/remediate] backend checks/audit skipped:', auditError);
   }
+
+  for (const result of executionResults) {
+    publishEvent(siteId, {
+      type: 'repair',
+      state: 'repairing',
+      message: result.message,
+      platform: 'wordpress',
+    });
+  }
+  publishEvent(siteId, { type: 'repair', state: 'repaired', platform: 'wordpress' });
 
   return NextResponse.json({
     success: true,

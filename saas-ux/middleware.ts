@@ -15,6 +15,10 @@ export default clerkMiddleware((auth, req) => {
   const {pathname} = req.nextUrl;
 
   // 1) Skip i18n for API/static
+  if (/^\/(?:[a-z]{2}\/)?dashboard\/sites\/[^/]+\/cockpit(?:\/|$)/.test(pathname)) {
+    return NextResponse.next();
+  }
+
   if (
     pathname.startsWith('/api') ||
     pathname.startsWith('/trpc') ||

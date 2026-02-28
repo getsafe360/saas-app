@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import sys
 from contextlib import asynccontextmanager
@@ -15,8 +16,12 @@ SRC_ROOT = SERVICE_ROOT.parent / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field, HttpUrl
+from sse_starlette.sse import EventSourceResponse
+
+from .event_bus import event_bus
+from .events import SiteEvent
 
 from latest_ai_development.config.settings import ConfigError
 from latest_ai_development.crew import CrewConfigurationError, CrewService
@@ -29,6 +34,7 @@ if not logger.handlers:
 
 
 class AnalyzeRequest(BaseModel):
+    site_id: str = Field(description="Site identifier used for SSE channeling.")
     url: HttpUrl
     platform: Literal["wordpress", "generic"] | None = Field(
         default=None,
@@ -69,6 +75,38 @@ def _select_task(payload: AnalyzeRequest, settings: GatewaySettings) -> tuple[st
     )
 
 
+
+def _serialize_event(event: SiteEvent) -> dict[str, str]:
+    import json
+
+    return {"data": json.dumps(event)}
+
+
+@app.get("/api/events/{site_id}")
+async def stream_events(site_id: str, request: Request) -> EventSourceResponse:
+    queue = await event_bus.subscribe_to_site_events(site_id)
+
+    async def generator():
+        try:
+            await event_bus.publish_event(
+                site_id,
+                SiteEvent(type="status", state="connecting"),
+            )
+            while True:
+                if await request.is_disconnected():
+                    await event_bus.publish_event(site_id, SiteEvent(type="status", state="disconnected"))
+                    break
+                event = await queue.get()
+                yield _serialize_event(event)
+        except (asyncio.CancelledError, GeneratorExit):
+            await event_bus.publish_event(site_id, SiteEvent(type="status", state="disconnected"))
+            raise
+        finally:
+            await event_bus.unsubscribe(queue)
+
+    return EventSourceResponse(generator())
+
+
 @app.get("/api/health")
 def health() -> Dict[str, Any]:
     settings = GatewaySettings.from_env()
@@ -80,7 +118,7 @@ def health() -> Dict[str, Any]:
 
 
 @app.post("/api/analyze", response_model=AnalyzeResponse)
-def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
+async def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
     try:
         settings = GatewaySettings.from_env()
         platform, task_key = _select_task(payload, settings)
@@ -95,7 +133,23 @@ def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
             )
 
         service = CrewService(model=settings.default_model)
+        await event_bus.publish_event(payload.site_id, SiteEvent(type="status", state="in_progress"))
+
+        category = "wordpress" if platform == "wordpress" else "seo"
+        await event_bus.publish_event(
+            payload.site_id,
+            SiteEvent(type="category", state="in_progress", category=category, issues=[]),
+        )
+        await event_bus.publish_event(payload.site_id, SiteEvent(type="progress", state="in_progress", progress=42))
+
         result = service.run_task(task_key=task_key, url=str(payload.url))
+
+        usage = result.get("usage_metrics")
+        await event_bus.publish_event(
+            payload.site_id,
+            SiteEvent(type="savings", savings={"tokens_used": usage}),
+        )
+        await event_bus.publish_event(payload.site_id, SiteEvent(type="status", state="completed"))
 
         logger.info(
             "analysis_completed",

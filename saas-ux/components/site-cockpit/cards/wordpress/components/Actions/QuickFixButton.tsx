@@ -47,12 +47,12 @@ export function QuickFixButton({
     setErrorMessage("");
 
     try {
-      const response = await fetch(`/api/sites/${siteId}/fix/${issue.type}`, {
+      const response = await fetch(`/api/fix/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          issueId: issue.id,
-          severity: issue.severity,
+          siteId,
+          issueIds: [issue.id],
         }),
       });
 

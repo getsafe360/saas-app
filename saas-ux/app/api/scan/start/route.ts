@@ -11,6 +11,7 @@ import { getDb } from '@/lib/db/drizzle';
 import { sites } from '@/lib/db/schema/sites'; 
 import { scanJobs } from '@/lib/db/schema'; 
 import { getDbUserFromClerk } from '@/lib/auth/current';
+import { publishEvent } from '@/lib/cockpit/event-bus';
 
 // Narrow body type
 type Category = 'seo' | 'performance' | 'accessibility' | 'security';
@@ -116,6 +117,9 @@ export async function POST(req: NextRequest) {
     console.error('[scan/start] enqueue error', e);
     return NextResponse.json({ error: 'failed to enqueue', detail: dbErr(e) }, { status: 500 });
   }
+
+  publishEvent(siteId, { type: 'status', state: 'in_progress' });
+  publishEvent(siteId, { type: 'progress', state: 'in_progress', progress: 10 });
 
   return NextResponse.json({ jobId, queued: true });
 }
