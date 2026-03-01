@@ -1,4 +1,4 @@
-export type CockpitEventType = 'status' | 'progress' | 'category' | 'repair' | 'savings';
+export type CockpitEventType = 'status' | 'progress' | 'category' | 'repair' | 'savings' | 'error';
 
 export type CockpitStateValue =
   | 'idle'
@@ -34,5 +34,8 @@ export interface CockpitEvent {
   issues?: Array<Record<string, unknown>>;
   savings?: Partial<CockpitSavings>;
   message?: string;
-  platform?: 'wordpress';
+  platform?: 'wordpress' | 'generic';
+  revision?: number;
+  timestamp?: string;
+  hash?: string;
 }

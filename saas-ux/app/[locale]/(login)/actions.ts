@@ -11,6 +11,7 @@ const db = getDb();
 
 // Auth
 import { users, type NewUser } from '@/lib/db/schema/auth/users';
+import { sites } from '@/lib/db/schema/sites';
 import { teams, teamMembers, invitations, type NewTeam, type NewTeamMember } from '@/lib/db/schema/auth';
 // Activity
 import { activityLogs, type NewActivityLog } from '@/lib/db/schema';
@@ -58,6 +59,15 @@ async function logActivity(
   };
 
   await db.insert(activityLogs).values(entry);
+}
+
+
+function normalizeSiteUrl(input: string): string {
+  let value = input.trim();
+  if (!/^https?:\/\//i.test(value)) value = `https://${value}`;
+  const url = new URL(value);
+  url.hash = '';
+  return url.toString().replace(/\/$/, '');
 }
 
 /** ------------------------ Sign In ------------------------ */
@@ -190,6 +200,33 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   if (redirectTo === 'checkout') {
     const priceId = formData.get('priceId') as string;
     return createCheckoutSession({ team: createdTeam, priceId });
+  }
+
+  const testedUrlRaw = (formData.get('testedUrl') as string | null)?.trim();
+  if (testedUrlRaw) {
+    try {
+      const siteUrl = normalizeSiteUrl(testedUrlRaw);
+      const parsed = new URL(siteUrl);
+      const canonicalHost = parsed.hostname;
+      const canonicalRoot = `${parsed.protocol}//${parsed.hostname}`;
+      const [newSite] = await db
+        .insert(sites)
+        .values({
+          siteUrl,
+          userId: createdUser.id,
+          status: 'connected',
+          canonicalHost,
+          canonicalRoot,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as any)
+        .returning({ id: sites.id });
+      if (newSite?.id) {
+        redirect(`/dashboard/sites/${newSite.id}/cockpit`);
+      }
+    } catch {
+      // Fall back to dashboard when URL handoff fails.
+    }
   }
 
   redirect('/dashboard');

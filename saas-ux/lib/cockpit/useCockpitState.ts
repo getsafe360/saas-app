@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import type { CockpitCategory, CockpitEvent, CockpitSavings, CockpitStateValue } from './sse-events';
+import { parseSseEvent } from './parse-sse-event';
 
 interface CockpitStore {
   state: CockpitStateValue;
@@ -70,13 +71,25 @@ export function useCockpitState(siteId: string) {
   useEffect(() => {
     if (!siteId) return;
     const source = new EventSource(`/api/events/${siteId}`);
+    let lastRevision = -1;
+    let lastHash = '';
 
     source.onmessage = (message) => {
-      try {
-        dispatch(JSON.parse(message.data) as CockpitEvent);
-      } catch (error) {
-        console.error('[cockpit] invalid SSE payload', error);
+      const event = parseSseEvent(message as MessageEvent<string>);
+      if (!event) {
+        console.error('[cockpit] invalid SSE payload');
+        return;
       }
+
+      const revision = Number(event.revision ?? -1);
+      const hash = String(event.hash ?? '');
+      if (revision <= lastRevision && hash && hash === lastHash) return;
+      if (revision >= 0) {
+        lastRevision = revision;
+        lastHash = hash;
+      }
+
+      dispatch(event as CockpitEvent);
     };
 
     source.onerror = () => {

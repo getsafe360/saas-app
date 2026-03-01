@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Literal, TypedDict
 
 
-EventType = Literal["status", "progress", "category", "repair", "savings"]
+EventType = Literal["status", "progress", "category", "repair", "savings", "error"]
 EventState = Literal[
     "idle",
     "connecting",
@@ -26,4 +26,7 @@ class SiteEvent(TypedDict, total=False):
     issues: list[dict[str, Any]]
     savings: dict[str, Any]
     message: str
-    platform: Literal["wordpress"]
+    platform: Literal["wordpress", "generic"]
+    revision: int
+    timestamp: str
+    hash: str
