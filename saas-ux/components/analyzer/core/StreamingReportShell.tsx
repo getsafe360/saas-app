@@ -4,9 +4,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
-import { Globe } from "lucide-react";
-
-import UrlAnalyzeForm from "../forms/UrlAnalyzeForm";
 import WPSpotlight from "../cms/WPSpotlight";
 import ReportHeroView from "@/components/analyzer/display/ReportHero";
 import { FindingsGrid } from "@/components/analyzer/display/FindingsGrid";
@@ -41,7 +38,6 @@ export default function StreamingReportShell({
   startOnUrl,
 }: Props) {
   const ta = useTranslations("analysis");
-  const taction = useTranslations("actions");
   const testResultContext = useTestResultSafe();
 
   const [url, setUrl] = useState(autofillUrl);
@@ -209,23 +205,6 @@ export default function StreamingReportShell({
 
   return (
     <div className={cn("space-y-6", className)}>
-      {!hideForm && (
-        <UrlAnalyzeForm
-          placeholder={ta("placeholder_url")}
-          icon={<Globe className="w-5 h-5 text-sky-400" />}
-          onSubmit={startAnalysis}
-          isBusy={busy}
-          onCancel={busy ? cancel : undefined}
-          defaultValue={autofillUrl}
-          labels={{
-            analyze: ta("analyze_btn"),
-            analyzing: ta("analyzing"),
-            cancel: taction("cancel"),
-            invalidUrl: ta.has("invalid_url") ? ta("invalid_url") : undefined,
-          }}
-        />
-      )}
-
       {/* Report hero */}
       {status !== "idle" && finalUrl && screenshotUrls && facts && (
         <ReportHeroView

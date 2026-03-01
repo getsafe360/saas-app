@@ -7,7 +7,7 @@ import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
 import { users } from "@/lib/db/schema/auth/users";
 import { teams, teamMembers } from "@/lib/db/schema/auth";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { DashboardClient } from "./DashboardClient";
 
 export async function generateMetadata({
@@ -24,7 +24,21 @@ export async function generateMetadata({
   };
 }
 
-export default async function DashboardPage() {
+function normalizeSiteUrl(raw: string) {
+  const trimmed = raw.trim();
+  if (!trimmed) throw new Error("missing URL");
+  const value = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return new URL(value).toString();
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ testedUrl?: string; testId?: string }>;
+}) {
+  const params = await searchParams;
+  const testedUrl = params.testedUrl?.trim();
+
   // Get Clerk user
   const clerkUser = await currentUser();
   if (!clerkUser) {
@@ -43,6 +57,44 @@ export default async function DashboardPage() {
   if (!appUser) {
     console.error("[Dashboard] User not found in database");
     redirect("/sign-in");
+  }
+
+  if (testedUrl) {
+    try {
+      const siteUrl = normalizeSiteUrl(testedUrl);
+      const parsed = new URL(siteUrl);
+      const canonicalHost = parsed.hostname;
+      const canonicalRoot = `${parsed.protocol}//${parsed.hostname}`;
+
+      const [existingSite] = await db
+        .select({ id: sites.id })
+        .from(sites)
+        .where(and(eq(sites.siteUrl, siteUrl), eq(sites.userId, appUser.id)))
+        .limit(1);
+
+      const siteId =
+        existingSite?.id ??
+        (
+          await db
+            .insert(sites)
+            .values({
+              siteUrl,
+              userId: appUser.id,
+              status: "connected",
+              canonicalHost,
+              canonicalRoot,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            } as any)
+            .returning({ id: sites.id })
+        )[0]?.id;
+
+      if (siteId) {
+        redirect(`/dashboard/sites/${siteId}/cockpit`);
+      }
+    } catch {
+      // Ignore handoff failure and continue to dashboard.
+    }
   }
 
   // Get user's team (for plan and token info)
@@ -88,9 +140,7 @@ export default async function DashboardPage() {
       domain: site.canonicalHost || new URL(site.siteUrl).hostname,
       status: site.status,
       cms: site.cms,
-      overallScore: site.lastScores
-        ? (site.lastScores as any).overall || 0
-        : 0,
+      overallScore: site.lastScores ? (site.lastScores as any).overall || 0 : 0,
       scores: site.lastScores as any,
       findingCount: site.lastFindingCount || 0,
       lastUpdated: site.updatedAt?.toISOString() || site.createdAt.toISOString(),

@@ -20,8 +20,8 @@ function simulateTest(testId: string) {
     revision += 1;
   };
 
-  emit({ type: 'status', state: 'in_progress' });
-  emit({ type: 'progress', state: 'in_progress', progress: 8 });
+  emit({ type: 'status', state: 'in_progress', message: "Hi, I'm Sparky. I'm checking your homepage foundations now." });
+  emit({ type: 'progress', state: 'in_progress', progress: 8, message: 'Connection is stable. Running first-pass crawl and baseline scoring.' });
 
   const timeline: Array<{ delay: number; event: CockpitEvent }> = [
     {
@@ -36,7 +36,7 @@ function simulateTest(testId: string) {
         ],
       },
     },
-    { delay: 700, event: { type: 'progress', state: 'in_progress', progress: 52 } },
+    { delay: 700, event: { type: 'progress', state: 'in_progress', progress: 52, message: 'Accessibility scan complete. Moving to performance bottlenecks.' } },
     {
       delay: 1050,
       event: {
@@ -50,7 +50,7 @@ function simulateTest(testId: string) {
         ],
       },
     },
-    { delay: 1400, event: { type: 'progress', state: 'in_progress', progress: 88 } },
+    { delay: 1400, event: { type: 'progress', state: 'in_progress', progress: 88, message: 'Almost done. Prioritizing fixes by impact and effort.' } },
     {
       delay: 1750,
       event: {
@@ -59,7 +59,7 @@ function simulateTest(testId: string) {
         savings: { tokens_used: 850, time_saved: '~2h/week', cost_saved: '$120/mo' },
       },
     },
-    { delay: 2100, event: { type: 'status', state: 'completed' } },
+    { delay: 2100, event: { type: 'status', state: 'completed', message: 'Audit complete. I found your top quick wins and next best fixes.' } },
   ];
 
   for (const item of timeline) {

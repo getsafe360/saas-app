@@ -10,6 +10,7 @@ interface HomepageTestState {
   phase: HomepageTestPhase;
   progress: number;
   categories: CockpitCategory[];
+  greeting: string;
   summary?: string;
   savings?: Partial<CockpitSavings>;
   testId: string | null;
@@ -20,6 +21,7 @@ const initialState: HomepageTestState = {
   phase: 'idle',
   progress: 0,
   categories: [],
+  greeting: "Hi, I'm Sparky. I'll walk you through what we find in real time.",
   testId: null,
   testedUrl: null,
 };
@@ -39,26 +41,30 @@ export function useHomepageTest() {
     }
 
     setState((prev) => {
+      const withMessage = event.message
+        ? { ...prev, summary: event.message, phase: prev.phase === 'idle' ? 'running' : prev.phase }
+        : prev;
+
       if (event.type === 'error' || event.state === 'errors_found') {
-        return { ...prev, phase: 'error' };
+        return { ...withMessage, phase: 'error' };
       }
       if (event.type === 'status') {
         if (event.state === 'completed') {
-          const a11y = prev.categories.find((c) => c.id === 'accessibility')?.issues?.length ?? 0;
-          const perf = prev.categories.find((c) => c.id === 'performance')?.issues?.length ?? 0;
+          const a11y = withMessage.categories.find((c) => c.id === 'accessibility')?.issues?.length ?? 0;
+          const perf = withMessage.categories.find((c) => c.id === 'performance')?.issues?.length ?? 0;
           return {
-            ...prev,
+            ...withMessage,
             phase: 'completed',
             progress: 100,
-            summary: `We found ${a11y} accessibility issues and ${perf} performance opportunities.`,
+            summary: withMessage.summary ?? `We found ${a11y} accessibility issues and ${perf} performance opportunities.`,
           };
         }
         if (event.state === 'in_progress') {
-          return { ...prev, phase: 'running' };
+          return { ...withMessage, phase: 'running' };
         }
       }
       if (event.type === 'progress') {
-        return { ...prev, phase: 'running', progress: Number(event.progress ?? prev.progress) };
+        return { ...withMessage, phase: 'running', progress: Number(event.progress ?? withMessage.progress) };
       }
       if (event.type === 'category' && event.category) {
         const category: CockpitCategory = {
@@ -69,15 +75,15 @@ export function useHomepageTest() {
           fixAvailable: true,
         };
         return {
-          ...prev,
+          ...withMessage,
           phase: 'running',
-          categories: [...prev.categories.filter((c) => c.id !== category.id), category],
+          categories: [...withMessage.categories.filter((c) => c.id !== category.id), category],
         };
       }
       if (event.type === 'savings') {
-        return { ...prev, savings: event.savings };
+        return { ...withMessage, savings: event.savings };
       }
-      return prev;
+      return withMessage;
     });
   }, []);
 
