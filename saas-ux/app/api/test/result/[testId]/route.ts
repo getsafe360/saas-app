@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getTestResult } from '@/app/api/test/start/route';
+import { getTestResult } from '@/lib/homepage/test-result-store';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

@@ -5,8 +5,7 @@ import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { publishEvent } from '@/lib/cockpit/event-bus';
 import type { CockpitEvent } from '@/lib/cockpit/sse-events';
-
-const resultStore = new Map<string, { summary: string }>();
+import { setTestResult } from '@/lib/homepage/test-result-store';
 
 function withMeta(event: CockpitEvent, revision: number): CockpitEvent {
   const payload = { ...event, revision, timestamp: new Date().toISOString() };
@@ -67,9 +66,7 @@ function simulateTest(testId: string) {
     setTimeout(() => emit(item.event), item.delay);
   }
 
-  resultStore.set(testId, {
-    summary: 'We found 2 accessibility issues and 3 performance opportunities.',
-  });
+  setTestResult(testId, 'We found 2 accessibility issues and 3 performance opportunities.');
 }
 
 export async function POST(req: NextRequest) {
@@ -83,6 +80,3 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ test_id: testId });
 }
 
-export function getTestResult(testId: string) {
-  return resultStore.get(testId);
-}
