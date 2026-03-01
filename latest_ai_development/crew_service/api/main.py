@@ -7,9 +7,10 @@ import hashlib
 import json
 import logging
 import sys
+import time
 from contextlib import asynccontextmanager
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, Literal
 from urllib.parse import urlparse
 
@@ -35,6 +36,9 @@ logger = logging.getLogger("crew_service.gateway")
 if not logger.handlers:
     logging.basicConfig(level=logging.INFO)
 
+_PROGRESS_THROTTLE_SECONDS = 0.3
+_MAX_CONCURRENT_TESTS_PER_KEY = 2
+
 
 class AnalyzeRequest(BaseModel):
     site_id: str = Field(description="Site identifier used for SSE channeling.")
@@ -55,10 +59,39 @@ class AnalyzeResponse(BaseModel):
 class TestStartRequest(BaseModel):
     url: HttpUrl
     platform: Literal["wordpress", "generic"] | None = Field(default=None)
+    language: str = Field(default="en")
+    name: str | None = Field(default=None)
+    session_id: str | None = Field(default=None)
 
 
 class TestStartResponse(BaseModel):
     test_id: str
+
+
+class _HomepageLimiter:
+    def __init__(self, max_per_key: int) -> None:
+        self._max_per_key = max_per_key
+        self._active: dict[str, int] = {}
+        self._lock = asyncio.Lock()
+
+    async def acquire(self, key: str) -> bool:
+        async with self._lock:
+            count = self._active.get(key, 0)
+            if count >= self._max_per_key:
+                return False
+            self._active[key] = count + 1
+            return True
+
+    async def release(self, key: str) -> None:
+        async with self._lock:
+            count = self._active.get(key, 0)
+            if count <= 1:
+                self._active.pop(key, None)
+            else:
+                self._active[key] = count - 1
+
+
+homepage_limiter = _HomepageLimiter(max_per_key=_MAX_CONCURRENT_TESTS_PER_KEY)
 
 
 def _with_meta(event: SiteEvent, revision: int) -> SiteEvent:
@@ -76,40 +109,116 @@ async def _publish_with_meta(channel_id: str, event: SiteEvent, revision: int) -
     return revision + 1
 
 
+def _looks_like_wordpress(url: str) -> bool:
+    lowered = url.lower()
+    return any(hint in lowered for hint in ("wp-", "wordpress", "/blog"))
+
+
+def _extract_json_or_fallback(raw: str, fallback: dict[str, Any]) -> dict[str, Any]:
+    try:
+        parsed = json.loads(raw)
+        if isinstance(parsed, dict):
+            return parsed
+    except json.JSONDecodeError:
+        pass
+    return fallback
+
+
+def _build_default_categories() -> dict[str, list[dict[str, str]]]:
+    return {
+        "accessibility": [{"title": "Add visible focus states", "severity": "medium", "priority": "high"}],
+        "performance": [{"title": "Reduce render-blocking resources", "severity": "medium", "priority": "high"}],
+        "seo_360": [{"title": "Improve structured data coverage for AI answers", "severity": "medium", "priority": "high"}],
+        "security": [{"title": "Harden security headers", "severity": "medium", "priority": "high"}],
+        "content": [{"title": "Make headlines clearer and intent-driven", "severity": "low", "priority": "medium"}],
+    }
+
+
+def _compose_sparky_fallback_summary(name: str | None, language: str, platform: str) -> str:
+    first = "Hi" if language.lower().startswith("en") else "Hola"
+    target = f" {name}" if name else ""
+    wp_sentence = (
+        " WordPress-wise, prioritize admin security, outdated plugins/themes, and backend speed."
+        if platform == "wordpress"
+        else ""
+    )
+    return (
+        f"{first}{target}! I’m Sparky. Your homepage snapshot is ready. "
+        "Focus first on performance and SEO (360°), then accessibility and security for fast gains."
+        f"{wp_sentence} Create a free account to unlock the full report and automated fixes."
+    ).strip()
+
+
 async def _run_test_analysis(test_id: str, payload: TestStartRequest) -> None:
     revision = 1
+    limiter_key = payload.session_id or "anonymous"
+    acquired = await homepage_limiter.acquire(limiter_key)
+    if not acquired:
+        await event_bus.publish_event(
+            test_id,
+            _with_meta(
+                SiteEvent(
+                    type="error",
+                    state="errors_found",
+                    message="Too many concurrent homepage tests for this session. Please retry in a moment.",
+                ),
+                revision,
+            ),
+        )
+        await event_bus.publish_event(test_id, _with_meta(SiteEvent(type="status", state="errors_found"), revision + 1))
+        return
+
     try:
         settings = GatewaySettings.from_env()
-        platform = payload.platform or (
-            "wordpress" if _is_wordpress_url(str(payload.url), settings) else "generic"
-        )
-        task_sequence = [
-            ("accessibility", "repair_accessibility", 50),
-            ("performance", "analyze_seo", 90),
-        ]
+        auto_platform = "wordpress" if (_is_wordpress_url(str(payload.url), settings) or _looks_like_wordpress(str(payload.url))) else "generic"
+        platform = payload.platform or auto_platform
 
-        service = CrewService(model=settings.default_model)
+        service = CrewService(model="openai/gpt-4o-mini")
+        last_progress_ts = 0.0
+
         revision = await _publish_with_meta(
             test_id,
             SiteEvent(type="status", state="in_progress", platform=platform),
             revision,
         )
-        revision = await _publish_with_meta(
-            test_id,
-            SiteEvent(type="progress", state="in_progress", progress=5, platform=platform),
-            revision,
-        )
 
-        issues_total = 0
-        for category, task_key, progress_value in task_sequence:
-            result = service.run_task(task_key=task_key, url=str(payload.url))
-            output = str(result.get("result", ""))
-            issue_count = max(1, min(12, len(output) // 280))
-            issues_total += issue_count
-            issues = [
-                {"id": f"{category}-{idx+1}", "severity": "medium", "title": f"{category.title()} issue {idx+1}"}
-                for idx in range(min(4, issue_count))
-            ]
+        async def maybe_publish_progress(progress_value: float) -> None:
+            nonlocal revision, last_progress_ts
+            now = time.monotonic()
+            if (now - last_progress_ts) < _PROGRESS_THROTTLE_SECONDS:
+                return
+            revision = await _publish_with_meta(
+                test_id,
+                SiteEvent(type="progress", state="in_progress", progress=progress_value, platform=platform),
+                revision,
+            )
+            last_progress_ts = now
+
+        await maybe_publish_progress(5)
+
+        snapshot_result = service.run_task(task_key="site_snapshot", url=str(payload.url))
+        parsed_snapshot = _extract_json_or_fallback(str(snapshot_result.get("result", "")), {
+            "module": "site_snapshot",
+            "platform": platform,
+            "categories": _build_default_categories(),
+        })
+        categories = parsed_snapshot.get("categories") or _build_default_categories()
+
+        wp_findings = []
+        if platform == "wordpress":
+            wp_result = service.run_task(task_key="wordpress_snapshot", url=str(payload.url))
+            parsed_wp = _extract_json_or_fallback(str(wp_result.get("result", "")), {"wordpress_findings": []})
+            wp_findings = parsed_wp.get("wordpress_findings") or []
+            categories["wordpress"] = wp_findings[:3] if isinstance(wp_findings, list) else []
+
+        ordered_categories = ["accessibility", "performance", "seo_360", "security", "content"]
+        if platform == "wordpress":
+            ordered_categories.append("wordpress")
+
+        cat_progress = 20
+        for category in ordered_categories:
+            raw_issues = categories.get(category, [])
+            issues = raw_issues[:3] if isinstance(raw_issues, list) else []
             revision = await _publish_with_meta(
                 test_id,
                 SiteEvent(
@@ -117,28 +226,38 @@ async def _run_test_analysis(test_id: str, payload: TestStartRequest) -> None:
                     state="in_progress",
                     category=category,
                     issues=issues,
-                    progress=progress_value,
+                    progress=cat_progress,
                     platform=platform,
                 ),
                 revision,
             )
-            revision = await _publish_with_meta(
-                test_id,
-                SiteEvent(type="progress", state="in_progress", progress=progress_value, platform=platform),
-                revision,
-            )
-            await asyncio.sleep(0.35)
+            cat_progress = min(95, cat_progress + 15)
+            await maybe_publish_progress(cat_progress)
+
+        summary_context = {
+            "name": payload.name,
+            "language": payload.language,
+            "platform": platform,
+            "category_snapshots": categories,
+        }
+        summary_result = service.run_task(task_key="generate_sparky_summary", url=str(payload.url))
+        summary_text = str(summary_result.get("result", "")).strip()
+        if not summary_text:
+            summary_text = _compose_sparky_fallback_summary(payload.name, payload.language, platform)
 
         revision = await _publish_with_meta(
             test_id,
             SiteEvent(
-                type="savings",
+                type="summary",
                 state="in_progress",
-                savings={"tokens_used": issues_total * 120, "time_saved": "~2h/week", "cost_saved": "$120/mo"},
+                message=summary_text,
+                progress=99,
                 platform=platform,
+                savings={"context": summary_context},
             ),
             revision,
         )
+
         await _publish_with_meta(
             test_id,
             SiteEvent(type="status", state="completed", progress=100, platform=platform),
@@ -156,7 +275,8 @@ async def _run_test_analysis(test_id: str, payload: TestStartRequest) -> None:
             test_id,
             _with_meta(SiteEvent(type="status", state="errors_found"), revision + 1),
         )
-
+    finally:
+        await homepage_limiter.release(limiter_key)
 
 
 @asynccontextmanager
@@ -185,10 +305,7 @@ def _select_task(payload: AnalyzeRequest, settings: GatewaySettings) -> tuple[st
     )
 
 
-
 def _serialize_event(event: SiteEvent) -> dict[str, str]:
-    import json
-
     return {"data": json.dumps(event)}
 
 
@@ -218,11 +335,13 @@ async def stream_events(site_id: str, request: Request) -> EventSourceResponse:
 
 
 @app.post("/api/test/start", response_model=TestStartResponse)
-async def start_test(payload: TestStartRequest) -> TestStartResponse:
+async def start_test(payload: TestStartRequest, request: Request) -> TestStartResponse:
     import uuid
 
     test_id = str(uuid.uuid4())
-    asyncio.create_task(_run_test_analysis(test_id, payload))
+    session_id = payload.session_id or request.headers.get("x-session-id") or request.client.host if request.client else None
+    enriched_payload = payload.model_copy(update={"session_id": session_id})
+    asyncio.create_task(_run_test_analysis(test_id, enriched_payload))
     return TestStartResponse(test_id=test_id)
 
 
@@ -231,6 +350,7 @@ async def stream_test_events(test_id: str, request: Request) -> EventSourceRespo
     queue = await event_bus.subscribe_to_site_events(test_id)
 
     async def generator():
+        summary_seen = False
         try:
             await event_bus.publish_event(
                 test_id,
@@ -240,8 +360,10 @@ async def stream_test_events(test_id: str, request: Request) -> EventSourceRespo
                 if await request.is_disconnected():
                     break
                 event = await queue.get()
+                if event.get("type") == "summary":
+                    summary_seen = True
                 yield _serialize_event(event)
-                if event.get("state") in {"completed", "errors_found"}:
+                if summary_seen and event.get("state") in {"completed", "errors_found"}:
                     break
         finally:
             await event_bus.unsubscribe(queue)

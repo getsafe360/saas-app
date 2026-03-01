@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Literal, TypedDict
 
 
-EventType = Literal["status", "progress", "category", "repair", "savings", "error"]
+EventType = Literal["status", "progress", "category", "repair", "savings", "summary", "error"]
 EventState = Literal[
     "idle",
     "connecting",
