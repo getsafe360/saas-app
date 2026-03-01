@@ -8,6 +8,7 @@ import UrlAnalyzeForm from "@/components/analyzer/forms/UrlAnalyzeForm";
 import StreamingReportShell from "@/components/analyzer/core/StreamingReportShell";
 type AnalysisPayload = any;
 import CTA from "@/components/marketing/CTA";
+import InstantTestCard from "@/components/marketing/InstantTestCard";
 import AudienceInfoBoxes from "@/components/marketing/AudienceInfoBoxes";
 import { TestResultProvider } from "@/contexts/TestResultContext";
 
@@ -47,7 +48,8 @@ export default function HomePage() {
                 })}
               </h2>
 
-              <div className="mx-auto max-w-3xl">
+              <div className="mx-auto max-w-3xl space-y-6">
+                <InstantTestCard />
                 <UrlAnalyzeForm
                   placeholder={ta("placeholder_url")}
                   icon={<Globe className="w-5 h-5 text-sky-400" />} // blue globe
