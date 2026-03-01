@@ -8,13 +8,15 @@ seo_audit_task:
 
 seo_analysis:
   description: |
-    Analyze the SEO health of {url} with emphasis on technical SEO and practical growth opportunities.
-    Evaluate crawlability, indexability, canonicals, redirects, metadata quality, content structure, internal linking,
-    schema usage, duplicate/thin content signals, and mobile SEO readiness.
+    You are a SEO / GEO / AEO specialist analyzing the client’s website at {url}.
+    Provide SEO (360°) insights including Generative Engine Optimization (GEO), AI Optimization (AIO), and
+    Answer Engine Optimization (AEO) alongside technical and on-page SEO fundamentals.
+    Explain how AI-driven search and answer engines interpret this site, including structured data quality,
+    content retrievability, authority and trust cues, and answer-readiness of key pages.
     Return strict JSON only with fields: module, summary, critical_issues, recommended_actions.
     Each issue/action should include severity, evidence, expected impact, and implementation_priority.
   expected_output: >
-    Strict JSON SEO report with critical blockers, prioritized fixes, and measurable impact rationale.
+    Strict JSON SEO (360°) report with GEO/AIO/AEO insights, blockers, prioritized fixes, and measurable impact rationale.
   agent: seo_analyst
 
 performance_audit_task:
@@ -124,3 +126,78 @@ reporting_task:
     Markdown report ready for clients and internal teams, with clear summaries, priority-ranked actions,
     and optimization/repair steps for SEO, performance, accessibility, security, and WordPress platform health.
   agent: reporting_agent
+
+
+site_snapshot_task:
+  description: |
+    Produce a fast Pareto-style homepage snapshot for {url} with minimal token usage.
+    Cover only the highest-impact findings for categories: accessibility, performance, seo_360, security, and content.
+    Limit each category to 2-3 insights and include short evidence and priority.
+    If WordPress indicators are present, include lightweight WordPress health checks for admin/backend security,
+    outdated plugin/theme risk signals, and backend performance bottlenecks.
+    Return strict JSON only with fields: module, platform, categories.
+  expected_output: >
+    Strict JSON homepage snapshot focused on the highest-impact issues per category.
+  agent: sparky_snapshot_agent
+
+site_snapshot:
+  description: |
+    Create a lightweight homepage snapshot for {url} using the Pareto principle.
+    Keep output concise and return strict JSON with fields: module, platform, categories.
+    Categories must include: accessibility, performance, seo_360, security, content.
+    Provide at most 3 findings per category.
+  expected_output: >
+    Strict JSON snapshot optimized for fast streaming and low token usage.
+  agent: sparky_snapshot_agent
+
+wordpress_snapshot:
+  description: |
+    Run a lightweight WordPress-focused snapshot for {url}.
+    Focus on admin/backend security posture, outdated plugins/themes risk, and backend performance bottlenecks.
+    Return strict JSON only with fields: module, wordpress_findings.
+  expected_output: >
+    Strict JSON WordPress snapshot with concise, high-impact findings.
+  agent: wordpress_auditor
+
+sparky_summary:
+  description: |
+    You are Sparky, a friendly multilingual website assistant. Always reply in the user’s language.
+    If the user’s name is known, greet them personally.
+
+    Your job is to give a short, warm, human-like overview of the website’s condition based on the snapshot analysis.
+    Keep it concise, helpful, and conversational — like a friendly expert who knows how to explain things clearly.
+
+    If the site is WordPress, highlight the most important findings related to:
+    - admin and backend security
+    - outdated or risky plugins/themes
+    - performance bottlenecks
+    - general WordPress health
+
+    If the site is not WordPress, focus on the most impactful issues across:
+    - accessibility
+    - performance
+    - SEO / GEO / AEO
+    - content clarity
+    - security
+
+    Use the Pareto principle: mention only the most important 2–3 insights per category.
+
+    End with a gentle, friendly call-to-action encouraging the user to create a free account to see the full detailed report and access automated fixes (and WordPress automation if applicable).
+    Keep the CTA subtle, positive, and helpful — never pushy.
+
+    Tone guidelines:
+    - Warm, modern, human.
+    - Short sentences.
+    - No jargon unless necessary.
+
+    Input:
+    - name (optional)
+    - language
+    - platform
+    - category snapshots
+
+    Output:
+    - short summary string
+  expected_output: >
+    A short multilingual summary string ready to stream as a single SSE summary event.
+  agent: sparky_snapshot_agent

@@ -21,7 +21,7 @@ class WebsiteAnalyzerCrew:
     """Production-oriented orchestration for website analysis modules."""
 
     CONFIG_DIR = Path(__file__).resolve().parent / "config"
-    SUPPORTED_MODULES = ("seo", "performance", "accessibility", "security", "content", "wordpress")
+    SUPPORTED_MODULES = ("seo", "performance", "accessibility", "security", "content", "wordpress", "sparky")
     MODULE_TASK_MAP = {
         "seo": "seo_audit_task",
         "performance": "performance_audit_task",
@@ -29,6 +29,7 @@ class WebsiteAnalyzerCrew:
         "security": "security_audit_task",
         "content": "content_audit_task",
         "wordpress": "wordpress_audit_task",
+        "sparky": "site_snapshot_task",
     }
 
     def __init__(self) -> None:
@@ -197,7 +198,10 @@ class CrewService:
 
     TASK_MAP = {
         "audit_wordpress": "wordpress_audit",
+        "wordpress_snapshot": "wordpress_snapshot",
         "analyze_seo": "seo_analysis",
+        "site_snapshot": "site_snapshot",
+        "generate_sparky_summary": "sparky_summary",
         "repair_accessibility": "accessibility_repair",
     }
 
