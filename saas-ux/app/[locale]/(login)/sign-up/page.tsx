@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Login } from "../login";
+import SignupHandoffCapture from "../SignupHandoffCapture";
 import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Create your account',
@@ -55,6 +56,7 @@ export default function SignUpPage() {
 
           <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/70 shadow-xl backdrop-blur p-6">
             <Suspense>
+              <SignupHandoffCapture />
               <Login mode="signup" />
             </Suspense>
           </div>
