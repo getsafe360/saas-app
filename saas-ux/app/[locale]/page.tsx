@@ -35,16 +35,13 @@ export default function HomePage() {
 
               <div className="mx-auto max-w-3xl space-y-6">
                 <InstantTestCard />
+                <CTA />
               </div>
             </div>
           </div>
         </section>
 
         <AudienceInfoBoxes />
-
-        <section className="mb-8">
-          <CTA />
-        </section>
       </main>
     </TestResultProvider>
   );

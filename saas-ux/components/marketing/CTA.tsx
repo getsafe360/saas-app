@@ -31,6 +31,9 @@ export default function CTA() {
   const redirectUrl = stashUrl
     ? `/dashboard/welcome?u=${encodeURIComponent(stashUrl)}`
     : "/dashboard";
+  const signedInHref = stashUrl
+    ? `/dashboard/welcome?u=${encodeURIComponent(stashUrl)}`
+    : "/dashboard";
 
   // Dynamic messaging based on test state
   const getCtaContent = () => {
@@ -109,7 +112,7 @@ export default function CTA() {
 
             <SignedIn>
               <Link
-                href="/dashboard"
+                href={signedInHref}
                 className="inline-flex items-center rounded-full px-5 py-2.5 text-medium font-semibold ring-1 ring-sky-600/30 dark:ring-sky-400/30 bg-sky-50 dark:bg-sky-400/10 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-400/20 transition"
               >
                 {t("signedInCta")}

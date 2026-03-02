@@ -1,10 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { SignedIn, SignedOut, SignUpButton } from '@clerk/nextjs';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { ArrowRightIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useHomepageTest } from '@/lib/homepage/useHomepageTest';
@@ -12,8 +10,6 @@ import { useTestResultSafe, type InstantHomepageTestResult } from '@/contexts/Te
 
 export default function InstantTestCard() {
   const t = useTranslations('analysis');
-  const locale = useLocale();
-  const router = useRouter();
   const test = useHomepageTest();
   const testResultContext = useTestResultSafe();
 
@@ -27,6 +23,7 @@ export default function InstantTestCard() {
     const normalized = /^https?:\/\//i.test(url) ? url.trim() : `https://${url.trim()}`;
     setStashUrl(null);
     setStashErrorMessage(null);
+    testResultContext?.clearTestResult();
     void test.startTest(normalized);
   };
 
@@ -67,9 +64,9 @@ export default function InstantTestCard() {
   }
 
   useEffect(() => {
-    if (!testResult || !testResultContext) return;
+    if (test.phase !== 'completed' || !testResult || !testResultContext) return;
     testResultContext.setTestResult(testResult);
-  }, [testResult, testResultContext]);
+  }, [test.phase, testResult, testResultContext]);
 
   useEffect(() => {
     if (test.phase !== 'completed' || !testResult || stashUrl || isStashing) return;
@@ -108,9 +105,6 @@ export default function InstantTestCard() {
       cancelled = true;
     };
   }, [isStashing, stashUrl, test.phase, testResult]);
-
-  const signupRedirect = stashUrl ? `/dashboard/welcome?u=${encodeURIComponent(stashUrl)}` : null;
-
   return (
     <section className="mx-auto max-w-3xl rounded-2xl border border-white/15 bg-slate-900/70 p-5 shadow-2xl">
       <div className="gs-input-submit-combo flex-col sm:flex-row">
@@ -167,28 +161,6 @@ export default function InstantTestCard() {
           {isStashing && !stashUrl && <p className="mt-3 text-sm text-slate-300">Saving your results before signup…</p>}
 
           {stashErrorMessage && <p className="mt-3 text-sm text-amber-200">{stashErrorMessage}</p>}
-          {stashUrl && signupRedirect && (
-            <div className="mt-3">
-              <SignedOut>
-                <SignUpButton mode="modal" forceRedirectUrl={signupRedirect}>
-                  <Button className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium ring ring-sky-600/30 bg-sky-50 text-sky-700 transition hover:bg-sky-100 hover:shadow-none dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/30 dark:hover:bg-sky-400/20">
-                    Create your free account to see full details and repairs
-                    <ArrowRightIcon className="size-4" aria-hidden="true" />
-                  </Button>
-                </SignUpButton>
-              </SignedOut>
-
-              <SignedIn>
-                <Button
-                  onClick={() => router.push(`/${locale}${signupRedirect}`)}
-                  className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium ring ring-sky-600/30 bg-sky-50 text-sky-700 transition hover:bg-sky-100 hover:shadow-none dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/30 dark:hover:bg-sky-400/20"
-                >
-                  Continue to your saved report
-                  <ArrowRightIcon className="size-4" aria-hidden="true" />
-                </Button>
-              </SignedIn>
-            </div>
-          )}
         </div>
       )}
 
