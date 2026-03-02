@@ -92,7 +92,7 @@ export default function InstantTestCard() {
         console.error('Failed to stash instant test result:', error);
         if (!cancelled) {
           setStashErrorMessage(
-            'We couldn't save your results automatically. You can still sign up and we'll re-run the test in your dashboard.',
+            "We couldn't save your results automatically. You can still sign up and we'll re-run the test in your dashboard.",
           );
         }
       } finally {
