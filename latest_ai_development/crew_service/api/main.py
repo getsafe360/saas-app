@@ -68,6 +68,14 @@ class TestStartResponse(BaseModel):
     test_id: str
 
 
+class TestResultResponse(BaseModel):
+    test_id: str
+    status: Literal["in_progress", "completed", "errors_found"]
+    platform: Literal["wordpress", "generic"] | None = None
+    categories: list[dict[str, Any]] = Field(default_factory=list)
+    summary: str | None = None
+
+
 class _HomepageLimiter:
     def __init__(self, max_per_key: int) -> None:
         self._max_per_key = max_per_key
@@ -92,6 +100,7 @@ class _HomepageLimiter:
 
 
 homepage_limiter = _HomepageLimiter(max_per_key=_MAX_CONCURRENT_TESTS_PER_KEY)
+test_results: dict[str, TestResultResponse] = {}
 
 
 def _with_meta(event: SiteEvent, revision: int) -> SiteEvent:
@@ -124,29 +133,45 @@ def _extract_json_or_fallback(raw: str, fallback: dict[str, Any]) -> dict[str, A
     return fallback
 
 
-def _build_default_categories() -> dict[str, list[dict[str, str]]]:
-    return {
-        "accessibility": [{"title": "Add visible focus states", "severity": "medium", "priority": "high"}],
-        "performance": [{"title": "Reduce render-blocking resources", "severity": "medium", "priority": "high"}],
-        "seo_360": [{"title": "Improve structured data coverage for AI answers", "severity": "medium", "priority": "high"}],
-        "security": [{"title": "Harden security headers", "severity": "medium", "priority": "high"}],
-        "content": [{"title": "Make headlines clearer and intent-driven", "severity": "low", "priority": "medium"}],
-    }
+def _normalize_snapshot_categories(raw_categories: Any, platform: str) -> list[dict[str, Any]]:
+    categories: list[dict[str, Any]] = []
 
+    if isinstance(raw_categories, list):
+        for item in raw_categories:
+            if not isinstance(item, dict):
+                continue
+            category_id = str(item.get("id", "")).strip()
+            if not category_id:
+                continue
+            issues = item.get("issues", [])
+            categories.append(
+                {
+                    "id": category_id,
+                    "issues": issues if isinstance(issues, list) else [],
+                    "severity": item.get("severity"),
+                }
+            )
+        return categories
 
-def _compose_sparky_fallback_summary(name: str | None, language: str, platform: str) -> str:
-    first = "Hi" if language.lower().startswith("en") else "Hola"
-    target = f" {name}" if name else ""
-    wp_sentence = (
-        " WordPress-wise, prioritize admin security, outdated plugins/themes, and backend speed."
-        if platform == "wordpress"
-        else ""
-    )
-    return (
-        f"{first}{target}! I’m Sparky. Your homepage snapshot is ready. "
-        "Focus first on performance and SEO (360°), then accessibility and security for fast gains."
-        f"{wp_sentence} Create a free account to unlock the full report and automated fixes."
-    ).strip()
+    if isinstance(raw_categories, dict):
+        for category_id, issues in raw_categories.items():
+            categories.append(
+                {
+                    "id": str(category_id),
+                    "issues": issues if isinstance(issues, list) else [],
+                    "severity": None,
+                }
+            )
+
+    required = ["accessibility", "performance", "seo_360", "security", "content"]
+    if platform == "wordpress":
+        required.append("wordpress")
+    seen = {item["id"] for item in categories}
+    for category_id in required:
+        if category_id not in seen:
+            categories.append({"id": category_id, "issues": [], "severity": None})
+
+    return categories
 
 
 async def _run_test_analysis(test_id: str, payload: TestStartRequest) -> None:
@@ -172,6 +197,7 @@ async def _run_test_analysis(test_id: str, payload: TestStartRequest) -> None:
         settings = GatewaySettings.from_env()
         auto_platform = "wordpress" if (_is_wordpress_url(str(payload.url), settings) or _looks_like_wordpress(str(payload.url))) else "generic"
         platform = payload.platform or auto_platform
+        test_results[test_id] = TestResultResponse(test_id=test_id, status="in_progress", platform=platform)
 
         service = CrewService(model="openai/gpt-4o-mini")
         last_progress_ts = 0.0
@@ -196,54 +222,35 @@ async def _run_test_analysis(test_id: str, payload: TestStartRequest) -> None:
 
         await maybe_publish_progress(5)
 
-        snapshot_result = service.run_task(task_key="site_snapshot", url=str(payload.url))
-        parsed_snapshot = _extract_json_or_fallback(str(snapshot_result.get("result", "")), {
-            "module": "site_snapshot",
-            "platform": platform,
-            "categories": _build_default_categories(),
-        })
-        categories = parsed_snapshot.get("categories") or _build_default_categories()
-
-        wp_findings = []
-        if platform == "wordpress":
-            wp_result = service.run_task(task_key="wordpress_snapshot", url=str(payload.url))
-            parsed_wp = _extract_json_or_fallback(str(wp_result.get("result", "")), {"wordpress_findings": []})
-            wp_findings = parsed_wp.get("wordpress_findings") or []
-            categories["wordpress"] = wp_findings[:3] if isinstance(wp_findings, list) else []
-
-        ordered_categories = ["accessibility", "performance", "seo_360", "security", "content"]
-        if platform == "wordpress":
-            ordered_categories.append("wordpress")
+        snapshot_result = service.run_task(task_key="site_snapshot_task", url=str(payload.url))
+        parsed_snapshot = _extract_json_or_fallback(str(snapshot_result.get("result", "")), {})
+        sparky_platform = parsed_snapshot.get("platform") if parsed_snapshot.get("platform") in {"wordpress", "generic"} else platform
+        categories = _normalize_snapshot_categories(parsed_snapshot.get("categories"), sparky_platform)
 
         cat_progress = 20
-        for category in ordered_categories:
-            raw_issues = categories.get(category, [])
-            issues = raw_issues[:3] if isinstance(raw_issues, list) else []
+        for category in categories:
+            issues = category.get("issues", [])
             revision = await _publish_with_meta(
                 test_id,
                 SiteEvent(
                     type="category",
                     state="in_progress",
-                    category=category,
-                    issues=issues,
+                    category=str(category.get("id", "")),
+                    issues=issues[:3] if isinstance(issues, list) else [],
                     progress=cat_progress,
-                    platform=platform,
+                    platform=sparky_platform,
                 ),
                 revision,
             )
             cat_progress = min(95, cat_progress + 15)
             await maybe_publish_progress(cat_progress)
 
-        summary_context = {
-            "name": payload.name,
-            "language": payload.language,
-            "platform": platform,
-            "category_snapshots": categories,
-        }
-        summary_result = service.run_task(task_key="generate_sparky_summary", url=str(payload.url))
-        summary_text = str(summary_result.get("result", "")).strip()
+        greeting = str(parsed_snapshot.get("greeting", "")).strip()
+        summary_text = str(parsed_snapshot.get("summary", "")).strip()
         if not summary_text:
-            summary_text = _compose_sparky_fallback_summary(payload.name, payload.language, platform)
+            summary_text = greeting
+        if not summary_text:
+            raise ValueError("Sparky snapshot did not return summary text")
 
         revision = await _publish_with_meta(
             test_id,
@@ -252,18 +259,33 @@ async def _run_test_analysis(test_id: str, payload: TestStartRequest) -> None:
                 state="in_progress",
                 message=summary_text,
                 progress=99,
-                platform=platform,
-                savings={"context": summary_context},
+                platform=sparky_platform,
             ),
             revision,
         )
 
+        test_results[test_id] = TestResultResponse(
+            test_id=test_id,
+            status="completed",
+            platform=sparky_platform,
+            categories=categories,
+            summary=summary_text,
+        )
+
         await _publish_with_meta(
             test_id,
-            SiteEvent(type="status", state="completed", progress=100, platform=platform),
+            SiteEvent(type="status", state="completed", progress=100, platform=sparky_platform),
             revision,
         )
     except Exception as exc:  # pragma: no cover
+        prior = test_results.get(test_id)
+        test_results[test_id] = TestResultResponse(
+            test_id=test_id,
+            status="errors_found",
+            platform=prior.platform if prior else None,
+            categories=prior.categories if prior else [],
+            summary=prior.summary if prior else None,
+        )
         await event_bus.publish_event(
             test_id,
             _with_meta(
@@ -369,6 +391,14 @@ async def stream_test_events(test_id: str, request: Request) -> EventSourceRespo
             await event_bus.unsubscribe(queue)
 
     return EventSourceResponse(generator())
+
+
+@app.get("/api/test/result/{test_id}", response_model=TestResultResponse)
+async def get_test_result(test_id: str) -> TestResultResponse:
+    result = test_results.get(test_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Test result not found")
+    return result
 
 
 @app.get("/api/health")

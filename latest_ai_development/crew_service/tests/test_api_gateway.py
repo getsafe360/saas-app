@@ -12,35 +12,19 @@ class StubCrewService:
         self.model = model
 
     def run_task(self, task_key: str, url: str):
-        if task_key == "site_snapshot":
+        if task_key == "site_snapshot_task":
             return {
                 "task": task_key,
                 "url": url,
                 "model": self.model,
                 "result": (
-                    '{"module":"site_snapshot","platform":"generic","categories":{'
-                    '"accessibility":[{"id":"a1","title":"a"}],'
-                    '"performance":[{"id":"p1","title":"p"}],'
-                    '"seo_360":[{"id":"s1","title":"s"}],'
-                    '"security":[{"id":"x1","title":"x"}],'
-                    '"content":[{"id":"c1","title":"c"}]}}'
+                    '{"module":"site_snapshot","platform":"generic","greeting":"Hi Alex!","summary":"Hi Alex! Friendly summary.","categories":['
+                    '{"id":"accessibility","issues":[{"id":"a1","title":"a"}]},'
+                    '{"id":"performance","issues":[{"id":"p1","title":"p"}]},'
+                    '{"id":"seo_360","issues":[{"id":"s1","title":"s"}]},'
+                    '{"id":"security","issues":[{"id":"x1","title":"x"}]},'
+                    '{"id":"content","issues":[{"id":"c1","title":"c"}]}]}'
                 ),
-                "usage_metrics": {},
-            }
-        if task_key == "wordpress_snapshot":
-            return {
-                "task": task_key,
-                "url": url,
-                "model": self.model,
-                "result": '{"module":"wordpress_snapshot","wordpress_findings":[{"id":"w1","title":"plugin outdated"}]}',
-                "usage_metrics": {},
-            }
-        if task_key == "generate_sparky_summary":
-            return {
-                "task": task_key,
-                "url": url,
-                "model": self.model,
-                "result": "Hi Alex! Friendly summary.",
                 "usage_metrics": {},
             }
         return {"task": task_key, "url": url, "model": self.model, "result": "ok", "usage_metrics": {}}
@@ -125,3 +109,50 @@ def test_homepage_analysis_emits_summary_and_completed(monkeypatch):
     assert categories.count("seo_360") == 1
     assert categories.count("security") == 1
     assert categories.count("content") == 1
+
+    stored = main.test_results["t-1"]
+    assert stored.status == "completed"
+    assert stored.summary == "Hi Alex! Friendly summary."
+
+
+def test_homepage_analysis_wordpress_uses_snapshot_platform(monkeypatch):
+    _set_env(monkeypatch)
+
+    class WordpressSnapshotStub(StubCrewService):
+        def run_task(self, task_key: str, url: str):
+            if task_key == "site_snapshot_task":
+                return {
+                    "task": task_key,
+                    "url": url,
+                    "model": self.model,
+                    "result": (
+                        "{\"module\":\"site_snapshot\",\"platform\":\"wordpress\",\"summary\":\"WP summary\",\"categories\":["
+                        "{\"id\":\"accessibility\",\"issues\":[]},"
+                        "{\"id\":\"performance\",\"issues\":[]},"
+                        "{\"id\":\"seo_360\",\"issues\":[]},"
+                        "{\"id\":\"security\",\"issues\":[]},"
+                        "{\"id\":\"content\",\"issues\":[]},"
+                        "{\"id\":\"wordpress\",\"issues\":[{\"id\":\"w1\",\"title\":\"plugin outdated\"}]}]}"
+                    ),
+                    "usage_metrics": {},
+                }
+            return super().run_task(task_key, url)
+
+    monkeypatch.setattr(main, "CrewService", WordpressSnapshotStub)
+
+    async def _run() -> list[dict]:
+        queue = await main.event_bus.subscribe_to_site_events("t-wp")
+        payload = main.TestStartRequest(url="https://wp.example.com", session_id="s-1")
+        await main._run_test_analysis("t-wp", payload)
+
+        events = []
+        while not queue.empty():
+            events.append(await queue.get())
+        await main.event_bus.unsubscribe(queue)
+        return events
+
+    events = asyncio.run(_run())
+    wordpress_events = [e for e in events if e.get("type") == "category" and e.get("category") == "wordpress"]
+    assert len(wordpress_events) == 1
+    assert wordpress_events[0]["platform"] == "wordpress"
+
