@@ -9,6 +9,7 @@ import { users } from "@/lib/db/schema/auth/users";
 import { teams, teamMembers } from "@/lib/db/schema/auth";
 import { and, eq, desc } from "drizzle-orm";
 import { DashboardClient } from "./DashboardClient";
+import { ensureAppUserId } from "@/lib/auth/ensure-app-user";
 
 export async function generateMetadata({
   params,
@@ -47,12 +48,12 @@ export default async function DashboardPage({
 
   const db = getDb();
 
+  const appUserId = await ensureAppUserId();
+
   // Get app user from database
-  const [appUser] = await db
-    .select()
-    .from(users)
-    .where(eq(users.clerkUserId, clerkUser.id))
-    .limit(1);
+  const [appUser] = appUserId
+    ? await db.select().from(users).where(eq(users.id, appUserId)).limit(1)
+    : [null];
 
   if (!appUser) {
     console.error("[Dashboard] User not found in database");

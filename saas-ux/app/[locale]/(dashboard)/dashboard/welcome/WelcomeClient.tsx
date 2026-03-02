@@ -1,185 +1,139 @@
-// app/(dashboard)/dashboard/welcome/WelcomeClient.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { WelcomeHero } from "@/components/onboarding/WelcomeHero";
 
-interface WelcomeData {
-  url: string;
-  domain: string;
-  faviconUrl?: string;
-  overallScore: number;
-  categoryScores: {
-    performance?: number;
-    security?: number;
-    seo?: number;
-    accessibility?: number;
-    wordpress?: number;
-  };
-  quickWinsCount: number;
-  potentialScoreIncrease: number;
-  quickWins: Array<{
-    title: string;
-    impact: "critical" | "high" | "medium" | "low";
-    effort: "low" | "medium" | "high";
-    scoreIncrease?: number;
-  }>;
-  siteId: string;
-}
+type StashPayload = {
+  url?: string;
+  platform?: string;
+  summary?: string;
+  categories?: unknown[];
+  findings?: unknown[];
+  facts?: { cms?: { type?: string }; faviconUrl?: string } | null;
+  scores?: { overall?: number; seo?: number; a11y?: number; perf?: number; sec?: number };
+};
 
-export function WelcomeClient({ data }: { data: WelcomeData }) {
+export function WelcomeClient({ stashUrl }: { stashUrl: string }) {
   const router = useRouter();
-  const [isReady, setIsReady] = useState(false);
+  const [statusText, setStatusText] = useState("Loading your test results...");
   const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+
+  const loadingSteps = useMemo(
+    () => [
+      "Loading your test results...",
+      "Creating your secure cockpit...",
+      "Storing your initial analysis...",
+      "Launching your dashboard...",
+    ],
+    []
+  );
 
   useEffect(() => {
-    // Mark component as mounted
-    setMounted(true);
+    let cancelled = false;
+    let stepIndex = 0;
 
-    console.log("[WelcomeClient] Component mounted");
-    console.log("[WelcomeClient] Data received:", {
-      hasDomain: !!data?.domain,
-      hasUrl: !!data?.url,
-      hasSiteId: !!data?.siteId,
-      overallScore: data?.overallScore,
-      quickWinsCount: data?.quickWinsCount,
-      fullData: data
-    });
+    const stepTimer = window.setInterval(() => {
+      stepIndex = (stepIndex + 1) % loadingSteps.length;
+      setStatusText(loadingSteps[stepIndex]);
+    }, 1200);
 
-    // Validate data
-    if (!data) {
-      console.error("[WelcomeClient] No data provided!");
-      setError("No welcome data received");
-      return;
+    async function bootstrapSiteFromStash() {
+      try {
+        const stashRes = await fetch(stashUrl, { cache: "no-store" });
+        if (!stashRes.ok) {
+          throw new Error(`Failed to load stash (${stashRes.status})`);
+        }
+
+        const stash = (await stashRes.json()) as StashPayload;
+        if (!stash?.url) {
+          throw new Error("Stash payload is missing URL");
+        }
+
+        setStatusText("Creating your site...");
+
+        const createRes = await fetch("/api/sites", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: stash.url,
+            platform: stash.platform || stash.facts?.cms?.type || "unknown",
+            initialAnalysis: {
+              summary: stash.summary || "Initial analysis imported from signup handoff.",
+              categories: stash.categories || [],
+              scores: stash.scores,
+              findings: stash.findings || [],
+              faviconUrl: stash.facts?.faviconUrl,
+            },
+          }),
+        });
+
+        const created = await createRes.json().catch(() => null);
+        if (!createRes.ok || !created?.siteId) {
+          throw new Error(created?.error || "Failed to create site");
+        }
+
+        if (!cancelled) {
+          router.replace(`/dashboard/sites/${created.siteId}/cockpit`);
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setError(e?.message || "Failed to initialize site from stash");
+        }
+      } finally {
+        window.clearInterval(stepTimer);
+      }
     }
 
-    if (!data.siteId) {
-      console.error("[WelcomeClient] Missing siteId in data!");
-      setError("Missing site ID");
-      return;
-    }
+    void bootstrapSiteFromStash();
 
-    if (!data.url || !data.domain) {
-      console.error("[WelcomeClient] Missing required URL/domain!");
-      setError("Missing site information");
-      return;
-    }
+    return () => {
+      cancelled = true;
+      window.clearInterval(stepTimer);
+    };
+  }, [loadingSteps, router, stashUrl]);
 
-    try {
-      console.log("[WelcomeClient] Data validation passed, setting ready state");
-      setIsReady(true);
-    } catch (err) {
-      console.error("[WelcomeClient] Error during mount:", err);
-      setError(err instanceof Error ? err.message : "Failed to load welcome page");
-    }
-  }, [data]);
-
-  // Prevent hydration issues - don't render until client-side mounted
-  if (!mounted) {
-    return null;
-  }
-
-  // Loading state
-  if (!isReady && !error) {
-    console.log("[WelcomeClient] Rendering loading state");
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-              Preparing your celebration...
-            </CardTitle>
-            <CardDescription>
-              Loading your site analysis results
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
-  // Error state
   if (error) {
-    console.error("[WelcomeClient] Rendering error state:", error);
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-600">
               <AlertCircle className="w-5 h-5" />
-              Error Loading Welcome Page
+              We couldn't finish setup
             </CardTitle>
-            <CardDescription>
-              {error}
-            </CardDescription>
+            <CardDescription>{error}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-sm text-slate-600 space-y-2">
-              <p>We encountered an issue loading your results.</p>
-              <p className="font-mono text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded">
-                {error}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => router.push("/dashboard/sites")}
-                variant="default"
-              >
-                Go to Dashboard
-              </Button>
-              <Button
-                onClick={() => window.location.reload()}
-                variant="outline"
-              >
-                Retry
-              </Button>
-            </div>
+          <CardContent className="flex gap-2">
+            <Button onClick={() => window.location.reload()}>Try again</Button>
+            <Button variant="outline" onClick={() => router.push("/dashboard/sites")}>Go to sites</Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  console.log("[WelcomeClient] Rendering success state with confetti");
-
-  const handleViewCockpit = () => {
-    console.log("[WelcomeClient] Navigating to cockpit for site:", data?.siteId);
-    if (data?.siteId) {
-      router.push(`/dashboard/sites/${data.siteId}/cockpit`);
-    }
-  };
-
-  const handleConnectWordPress = () => {
-    console.log("[WelcomeClient] Initiating WordPress connection for site:", data?.siteId);
-    if (data?.siteId) {
-      router.push(`/dashboard/sites/connect?siteId=${data.siteId}`);
-    }
-  };
-
-  // Render the full WelcomeHero component with confetti and animations
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
-      <WelcomeHero
-        url={data?.url || ""}
-        domain={data?.domain || "Unknown"}
-        faviconUrl={data?.faviconUrl}
-        overallScore={data?.overallScore ?? 0}
-        categoryScores={data?.categoryScores}
-        quickWinsCount={data?.quickWinsCount ?? 0}
-        potentialScoreIncrease={data?.potentialScoreIncrease ?? 0}
-        quickWins={data?.quickWins || []}
-        siteId={data?.siteId || ""}
-        onViewCockpit={handleViewCockpit}
-        onConnectWordPress={handleConnectWordPress}
-        showConfetti={true}
-        animated={true}
-      />
+      <Card className="w-full max-w-xl border-blue-200 bg-gradient-to-br from-blue-50 via-white to-emerald-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+            <Sparkles className="w-5 h-5" />
+            🎉 Awesome! Your site is being prepared
+          </CardTitle>
+          <CardDescription>
+            We're importing your scan and opening your cockpit in a moment.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3 rounded-xl border bg-white/80 dark:bg-slate-900/70 p-4">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+            <span className="text-sm font-medium">{statusText}</span>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
