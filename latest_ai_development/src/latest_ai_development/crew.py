@@ -201,6 +201,7 @@ class CrewService:
         "wordpress_snapshot": "wordpress_snapshot",
         "analyze_seo": "seo_analysis",
         "site_snapshot": "site_snapshot",
+        "site_snapshot_task": "site_snapshot_task",
         "generate_sparky_summary": "sparky_summary",
         "repair_accessibility": "accessibility_repair",
     }
