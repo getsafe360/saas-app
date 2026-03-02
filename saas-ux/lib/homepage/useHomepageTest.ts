@@ -61,7 +61,12 @@ export function useHomepageTest() {
       }
 
       if (event.type === 'summary' && event.message) {
-        return { ...withMessage, summary: event.message, phase: withMessage.phase === 'idle' ? 'running' : withMessage.phase };
+        return {
+          ...withMessage,
+          summary: event.message,
+          greeting: event.greeting ?? withMessage.greeting,
+          phase: withMessage.phase === 'idle' ? 'running' : withMessage.phase,
+        };
       }
 
       if (event.type === 'error' || event.state === 'errors_found') {
@@ -69,13 +74,11 @@ export function useHomepageTest() {
       }
       if (event.type === 'status') {
         if (event.state === 'completed') {
-          const a11y = withMessage.categories.find((c) => c.id === 'accessibility')?.issues?.length ?? 0;
-          const perf = withMessage.categories.find((c) => c.id === 'performance')?.issues?.length ?? 0;
           return {
             ...withMessage,
             phase: 'completed',
             progress: 100,
-            summary: withMessage.summary ?? `We found ${a11y} accessibility issues and ${perf} performance opportunities.`,
+            summary: withMessage.summary,
           };
         }
         if (event.state === 'in_progress') {

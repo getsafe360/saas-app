@@ -123,7 +123,7 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
 
   const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (existingUser.length > 0) {
-    return { error: 'Failed to create user. Please try again.', email, password };
+    return { error: 'Looks like you already have an account. Please sign in instead.', email, password };
   }
 
   const passwordHash = await hashPassword(password);

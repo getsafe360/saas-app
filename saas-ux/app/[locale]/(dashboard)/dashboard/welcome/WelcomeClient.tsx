@@ -75,6 +75,8 @@ export function WelcomeClient({ stashUrl }: { stashUrl: string }) {
           throw new Error(created?.error || "Failed to create site");
         }
 
+        await new Promise((resolve) => setTimeout(resolve, 800));
+
         if (!cancelled) {
           router.replace(`/dashboard/sites/${created.siteId}/cockpit`);
         }
