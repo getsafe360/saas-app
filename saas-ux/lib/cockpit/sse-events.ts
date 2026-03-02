@@ -34,6 +34,7 @@ export interface CockpitEvent {
   issues?: Array<Record<string, unknown>>;
   savings?: Partial<CockpitSavings>;
   message?: string;
+  greeting?: string;
   platform?: 'wordpress' | 'generic';
   revision?: number;
   timestamp?: string;

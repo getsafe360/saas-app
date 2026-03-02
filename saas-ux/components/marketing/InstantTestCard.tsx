@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SignedIn, SignedOut, SignUpButton } from '@clerk/nextjs';
 import { useLocale, useTranslations } from 'next-intl';
 import { ArrowRightIcon } from 'lucide-react';
@@ -21,23 +21,25 @@ export default function InstantTestCard() {
   const [stashUrl, setStashUrl] = useState<string | null>(null);
   const [isStashing, setIsStashing] = useState(false);
   const [stashErrorMessage, setStashErrorMessage] = useState<string | null>(null);
+  const hasStashedAfterCompletionRef = useRef(false);
 
   const start = () => {
     if (!url.trim()) return;
     const normalized = /^https?:\/\//i.test(url) ? url.trim() : `https://${url.trim()}`;
     setStashUrl(null);
     setStashErrorMessage(null);
+    hasStashedAfterCompletionRef.current = false;
     void test.startTest(normalized);
   };
 
   const testResult: InstantHomepageTestResult | null = useMemo(() => {
-    if (!test.testedUrl || !test.testId) return null;
+    if (!test.testedUrl || !test.testId || !test.summary) return null;
 
     return {
       url: test.testedUrl,
       testId: test.testId,
       categories: test.categories,
-      summary: test.summary ?? 'Audit complete. Summary is being prepared.',
+      summary: test.summary,
       platform: test.platform,
       timestamp: test.timestamp,
     };
@@ -72,7 +74,9 @@ export default function InstantTestCard() {
   }, [testResult, testResultContext]);
 
   useEffect(() => {
-    if (test.phase !== 'completed' || !testResult || stashUrl || isStashing) return;
+    if (test.phase !== 'completed' || !testResult || stashUrl || isStashing || hasStashedAfterCompletionRef.current) return;
+
+    hasStashedAfterCompletionRef.current = true;
 
     let cancelled = false;
 
@@ -91,6 +95,7 @@ export default function InstantTestCard() {
       } catch (error) {
         console.error('Failed to stash instant test result:', error);
         if (!cancelled) {
+          hasStashedAfterCompletionRef.current = false;
           setStashErrorMessage(
             "We couldn't save your results automatically. You can still sign up and we'll re-run the test in your dashboard.",
           );
