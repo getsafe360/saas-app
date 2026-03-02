@@ -15,6 +15,8 @@ interface HomepageTestState {
   savings?: Partial<CockpitSavings>;
   testId: string | null;
   testedUrl: string | null;
+  platform: 'wordpress' | 'generic';
+  timestamp: string;
 }
 
 const initialState: HomepageTestState = {
@@ -24,6 +26,8 @@ const initialState: HomepageTestState = {
   greeting: "Hi, I'm Sparky. I'll walk you through what we find in real time.",
   testId: null,
   testedUrl: null,
+  platform: 'generic',
+  timestamp: new Date(0).toISOString(),
 };
 
 export function useHomepageTest() {
@@ -41,9 +45,15 @@ export function useHomepageTest() {
     }
 
     setState((prev) => {
+      const withMeta = {
+        ...prev,
+        platform: event.platform ?? prev.platform,
+        timestamp: event.timestamp ?? new Date().toISOString(),
+      };
+
       const withMessage = event.message
-        ? { ...prev, summary: event.message, phase: prev.phase === 'idle' ? 'running' : prev.phase }
-        : prev;
+        ? { ...withMeta, summary: event.message, phase: withMeta.phase === 'idle' ? 'running' : withMeta.phase }
+        : withMeta;
 
       if (event.type === 'error' || event.state === 'errors_found') {
         return { ...withMessage, phase: 'error' };
