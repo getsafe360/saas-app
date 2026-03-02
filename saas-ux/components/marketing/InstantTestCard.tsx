@@ -20,11 +20,13 @@ export default function InstantTestCard() {
   const [url, setUrl] = useState('');
   const [stashUrl, setStashUrl] = useState<string | null>(null);
   const [isStashing, setIsStashing] = useState(false);
+  const [stashErrorMessage, setStashErrorMessage] = useState<string | null>(null);
 
   const start = () => {
     if (!url.trim()) return;
     const normalized = /^https?:\/\//i.test(url) ? url.trim() : `https://${url.trim()}`;
     setStashUrl(null);
+    setStashErrorMessage(null);
     void test.startTest(normalized);
   };
 
@@ -42,6 +44,7 @@ export default function InstantTestCard() {
   }, [test.categories, test.platform, test.summary, test.testId, test.testedUrl, test.timestamp]);
 
   async function stashAndUpdateContext(result: InstantHomepageTestResult) {
+    console.debug('[InstantTestCard] Starting stash request', { testId: result.testId, url: result.url });
     const response = await fetch('/api/stash', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -53,6 +56,7 @@ export default function InstantTestCard() {
     }
 
     const data = (await response.json()) as { stashUrl?: string; url?: string };
+    console.debug('[InstantTestCard] Stash response received', data);
     const nextStashUrl = data.stashUrl ?? data.url;
     if (!nextStashUrl) {
       throw new Error('Stash response did not include stashUrl');
@@ -74,6 +78,11 @@ export default function InstantTestCard() {
 
     const run = async () => {
       setIsStashing(true);
+      setStashErrorMessage(null);
+      console.debug('[InstantTestCard] Running stashAndUpdateContext', {
+        testId: testResult.testId,
+        phase: test.phase,
+      });
       try {
         const nextUrl = await stashAndUpdateContext(testResult);
         if (!cancelled) {
@@ -81,6 +90,11 @@ export default function InstantTestCard() {
         }
       } catch (error) {
         console.error('Failed to stash instant test result:', error);
+        if (!cancelled) {
+          setStashErrorMessage(
+            'We couldn't save your results automatically. You can still sign up and we'll re-run the test in your dashboard.',
+          );
+        }
       } finally {
         if (!cancelled) {
           setIsStashing(false);
@@ -152,6 +166,7 @@ export default function InstantTestCard() {
 
           {isStashing && !stashUrl && <p className="mt-3 text-sm text-slate-300">Saving your results before signup…</p>}
 
+          {stashErrorMessage && <p className="mt-3 text-sm text-amber-200">{stashErrorMessage}</p>}
           {stashUrl && signupRedirect && (
             <div className="mt-3">
               <SignedOut>

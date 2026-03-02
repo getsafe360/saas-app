@@ -1,4 +1,4 @@
-export type CockpitEventType = 'status' | 'progress' | 'category' | 'repair' | 'savings' | 'error';
+export type CockpitEventType = 'status' | 'progress' | 'category' | 'repair' | 'savings' | 'summary' | 'greeting' | 'error';
 
 export type CockpitStateValue =
   | 'idle'

@@ -51,9 +51,18 @@ export function useHomepageTest() {
         timestamp: event.timestamp ?? new Date().toISOString(),
       };
 
-      const withMessage = event.message
-        ? { ...withMeta, summary: event.message, phase: withMeta.phase === 'idle' ? 'running' : withMeta.phase }
-        : withMeta;
+      const withMessage =
+        event.message && event.type !== 'summary' && event.type !== 'greeting'
+          ? { ...withMeta, summary: event.message, phase: withMeta.phase === 'idle' ? 'running' : withMeta.phase }
+          : withMeta;
+
+      if (event.type === 'greeting' && event.message) {
+        return { ...withMessage, greeting: event.message, phase: withMessage.phase === 'idle' ? 'running' : withMessage.phase };
+      }
+
+      if (event.type === 'summary' && event.message) {
+        return { ...withMessage, summary: event.message, phase: withMessage.phase === 'idle' ? 'running' : withMessage.phase };
+      }
 
       if (event.type === 'error' || event.state === 'errors_found') {
         return { ...withMessage, phase: 'error' };
