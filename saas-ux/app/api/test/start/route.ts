@@ -32,8 +32,7 @@ function looksLikeWordPress(url: string): boolean {
 }
 
 function detectPlatform(url: string): 'wordpress' | 'generic' {
-  if (looksLikeWordPress(url)) return 'wordpress';
-  return 'generic';
+  return looksLikeWordPress(url) ? 'wordpress' : 'generic';
 }
 
 function normalizeCategories(raw: unknown): SparkyCategory[] {
@@ -44,7 +43,9 @@ function normalizeCategories(raw: unknown): SparkyCategory[] {
       const parsed = item as { id?: unknown; issues?: unknown };
       const id = typeof parsed.id === 'string' ? parsed.id.trim() : '';
       if (!id) return null;
-      const issues = Array.isArray(parsed.issues) ? parsed.issues.filter((issue) => typeof issue === 'object' && issue !== null) : [];
+      const issues = Array.isArray(parsed.issues)
+        ? parsed.issues.filter((issue) => typeof issue === 'object' && issue !== null)
+        : [];
       return { id, issues: issues as Array<Record<string, unknown>> };
     })
     .filter((category): category is SparkyCategory => category !== null);
@@ -52,12 +53,14 @@ function normalizeCategories(raw: unknown): SparkyCategory[] {
 
 function parseSparkyResponse(raw: unknown, fallbackPlatform: 'wordpress' | 'generic'): SparkyResult {
   const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
-  const platform = data.platform === 'wordpress' || data.platform === 'generic' ? data.platform : fallbackPlatform;
-  const greeting = typeof data.greeting === 'string' ? data.greeting.trim() : '';
-  const summary = typeof data.summary === 'string' ? data.summary.trim() : '';
+  const platform =
+    data.platform === 'wordpress' || data.platform === 'generic'
+      ? data.platform
+      : fallbackPlatform;
+
   return {
-    greeting,
-    summary,
+    greeting: typeof data.greeting === 'string' ? data.greeting.trim() : '',
+    summary: typeof data.summary === 'string' ? data.summary.trim() : '',
     categories: normalizeCategories(data.categories),
     platform,
   };
@@ -76,6 +79,13 @@ async function runSparkyHomepageTest(input: {
     throw new Error('CREW_SERVICE_BASE_URL is not configured');
   }
 
+  console.log("SPARKY REQUEST →", {
+    url: input.url,
+    language: input.language,
+    platform: input.platform,
+    name: input.name,
+  });
+
   const response = await fetch(`${baseUrl}/api/test/start`, {
     method: 'POST',
     headers: {
@@ -84,7 +94,6 @@ async function runSparkyHomepageTest(input: {
     },
     body: JSON.stringify({
       run_module: 'sparky',
-      module: 'sparky',
       task_key: 'site_snapshot_task',
       url: input.url,
       language: input.language,
@@ -94,16 +103,27 @@ async function runSparkyHomepageTest(input: {
     cache: 'no-store',
   });
 
-  if (!response.ok) {
-    throw new Error(`Sparky request failed (${response.status})`);
-  }
+  console.log("SPARKY HTTP STATUS:", response.status);
 
-  const data = (await response.json()) as { result?: unknown } | unknown;
-  const payload = data && typeof data === 'object' && 'result' in (data as Record<string, unknown>)
-    ? (data as { result?: unknown }).result
-    : data;
+  const data = await response.json().catch((err) => {
+    console.error("SPARKY JSON PARSE ERROR:", err);
+    return null;
+  });
 
-  return parseSparkyResponse(payload, input.platform);
+  console.log("SPARKY RAW RESPONSE:", JSON.stringify(data, null, 2));
+
+  const payload =
+    data && typeof data === 'object' && 'result' in data
+      ? (data as any).result
+      : data;
+
+  console.log("SPARKY PAYLOAD:", JSON.stringify(payload, null, 2));
+
+  const parsed = parseSparkyResponse(payload, input.platform);
+
+  console.log("SPARKY PARSED:", parsed);
+
+  return parsed;
 }
 
 async function publishSparkyEvents(testId: string, sparky: SparkyResult) {
@@ -158,9 +178,12 @@ export async function POST(req: NextRequest) {
     ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}`.trim()
     : undefined;
 
-  const language = typeof body.language === 'string' && body.language.trim() ? body.language.trim() : 'en';
-  const detectedPlatform = detectPlatform(body.url);
+  const language =
+    typeof body.language === 'string' && body.language.trim()
+      ? body.language.trim()
+      : 'en';
 
+  const detectedPlatform = detectPlatform(body.url);
   const testId = crypto.randomUUID();
 
   try {
@@ -171,7 +194,9 @@ export async function POST(req: NextRequest) {
       name: userName,
     });
 
-    const finalSummary = sparky.summary || sparky.greeting || 'Homepage test completed.';
+    const finalSummary =
+      sparky.summary || sparky.greeting || 'Homepage test completed.';
+
     setTestResult(testId, finalSummary);
 
     await publishSparkyEvents(testId, {
@@ -180,7 +205,8 @@ export async function POST(req: NextRequest) {
       summary: finalSummary,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Homepage test failed';
+    const message =
+      error instanceof Error ? error.message : 'Homepage test failed';
     publishEvent(testId, withMeta({ type: 'error', state: 'errors_found', message }, 1));
     publishEvent(testId, withMeta({ type: 'status', state: 'errors_found', message }, 2));
   }
