@@ -83,7 +83,8 @@ def stream_events(stream_id: str):
                 try:
                     item = q.get(timeout=15)
                     yield f"event: {item['type']}\ndata: {json.dumps(item)}\n\n"
-                    if item["type"] == "completed":
+                    # Terminate SSE on completed OR error
+                    if item["type"] in ("completed", "error"):
                         break
                 except queue.Empty:
                     yield ": keepalive\n\n"
