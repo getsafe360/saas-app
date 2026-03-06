@@ -1,6 +1,8 @@
 from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
+import json
+import re
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
@@ -277,6 +279,88 @@ class CrewService:
             "model": self.model,
             "result": output,
             "usage_metrics": getattr(crew, "usage_metrics", None),
+        }
+
+    @staticmethod
+    def _parse_json_payload(raw_output: str) -> Dict[str, Any]:
+        cleaned = raw_output.strip()
+        fenced_match = re.search(r"```(?:json)?\s*(\{.*\})\s*```", cleaned, re.DOTALL)
+        if fenced_match:
+            cleaned = fenced_match.group(1).strip()
+
+        try:
+            payload = json.loads(cleaned)
+            return payload if isinstance(payload, dict) else {}
+        except json.JSONDecodeError:
+            return {}
+
+    def run_sparky_pipeline(
+        self,
+        url: str,
+        language: str = "en",
+        name: Optional[str] = None,
+        platform: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        normalized_url = self._validate_url(url)
+
+        snapshot_task = self._build_task("site_snapshot_task", normalized_url)
+        summary_cfg = self.tasks_config[self.TASK_MAP["generate_sparky_summary"]]
+        summary_agent_cfg = self.agents_config[summary_cfg["agent"]]
+
+        summary_agent = Agent(
+            role=summary_agent_cfg["role"],
+            goal=summary_agent_cfg["goal"],
+            backstory=summary_agent_cfg["backstory"],
+            llm=self.model,
+            allow_delegation=False,
+            verbose=False,
+            max_iter=1,
+        )
+
+        summary_task = Task(
+            description=(
+                f"{summary_cfg['description']}\n\n"
+                f"Inputs:\n"
+                f"- name: {name or 'unknown'}\n"
+                f"- language: {language}\n"
+                f"- platform: {platform or 'auto'}\n"
+                "- category snapshots: use the structured result from the previous task\n"
+                "Return only the summary string."
+            ),
+            expected_output=summary_cfg["expected_output"],
+            agent=summary_agent,
+            context=[snapshot_task],
+        )
+
+        crew = Crew(
+            agents=[snapshot_task.agent, summary_task.agent],
+            tasks=[snapshot_task, summary_task],
+            process=Process.sequential,
+            verbose=False,
+        )
+
+        result = crew.kickoff(inputs={"url": normalized_url})
+
+        outputs = getattr(result, "tasks_output", None) or []
+        snapshot_raw = str(outputs[0]) if len(outputs) > 0 else "{}"
+        summary_raw = str(outputs[1]) if len(outputs) > 1 else str(result)
+        snapshot_payload = self._parse_json_payload(snapshot_raw)
+
+        parsed_categories = snapshot_payload.get("categories", [])
+        categories = parsed_categories if isinstance(parsed_categories, list) else []
+
+        detected_platform = snapshot_payload.get("platform") if isinstance(snapshot_payload.get("platform"), str) else None
+
+        return {
+            "url": normalized_url,
+            "language": language,
+            "name": name,
+            "platform": detected_platform or platform or "generic",
+            "categories": categories,
+            "summary": summary_raw.strip(),
+            "snapshot": snapshot_payload,
+            "usage_metrics": getattr(crew, "usage_metrics", None),
+            "model": self.model,
         }
 
 def create_wordpress_crew(model: str = "openai/gpt-5-mini") -> CrewService:
