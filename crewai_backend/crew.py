@@ -2,12 +2,15 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 import json
+import logging
 import re
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 import yaml
 from crewai import Agent, Crew, Process, Task
+
+logger = logging.getLogger(__name__)
 
 class ConfigurationError(Exception):
     """Raised when static crew configuration is invalid."""
@@ -280,6 +283,95 @@ class CrewService:
             "result": output,
             "usage_metrics": getattr(crew, "usage_metrics", None),
         }
+    def site_snapshot_task(self, url: str) -> str:
+        return str(self.run_task("site_snapshot_task", url).get("result", ""))
+
+    def sparky_summary(self, snapshot_raw: str) -> str:
+        task_id = self.TASK_MAP["generate_sparky_summary"]
+        task_cfg = self.tasks_config[task_id]
+        agent_cfg = self.agents_config[task_cfg["agent"]]
+
+        agent = Agent(
+            role=agent_cfg["role"],
+            goal=agent_cfg["goal"],
+            backstory=agent_cfg["backstory"],
+            llm=self.model,
+            allow_delegation=False,
+            verbose=False,
+            max_iter=1,
+        )
+
+        task = Task(
+            description=f"{task_cfg['description']}\n\nInput snapshot:\n{snapshot_raw}",
+            expected_output=task_cfg["expected_output"],
+            agent=agent,
+        )
+
+        crew = Crew(agents=[agent], tasks=[task], process=Process.sequential, verbose=False)
+        result = crew.kickoff(inputs={})
+
+        if hasattr(result, "tasks_output") and result.tasks_output:
+            return str(result.tasks_output[0])
+        return str(result)
+
+    def run_full_audit(self, url: str) -> Dict[str, Any]:
+        return WebsiteAnalyzerCrew().analyze_website(["seo", "performance", "accessibility", "security", "content", "wordpress"], url)
+
+    def run_sparky_pipeline(self, url: str) -> Dict[str, Any]:
+        """Fast homepage pipeline: snapshot → summary → normalized output."""
+        logger.info(f"[SPARKY] Running fast pipeline for {url}")
+
+        snapshot_raw = self.site_snapshot_task(url)
+        logger.info(f"[SPARKY] Raw snapshot output:\n{snapshot_raw}")
+
+        summary_raw = self.sparky_summary(snapshot_raw)
+        logger.info(f"[SPARKY] Raw summary output:\n{summary_raw}")
+
+        snapshot = self._extract_best_json(snapshot_raw)
+        summary = self._extract_best_json(summary_raw)
+
+        platform = snapshot.get("platform", "generic")
+        categories = self._normalize_categories(snapshot.get("categories"))
+        greeting = snapshot.get("greeting") or snapshot.get("title") or "Here's what we found"
+
+        final = {
+            "platform": platform,
+            "categories": categories,
+            "greeting": greeting,
+            "summary": summary.get("summary", ""),
+            "short_summary": summary.get("short_summary", summary.get("summary", "")),
+        }
+
+        logger.info(f"[SPARKY] Final normalized result: {final}")
+        return final
+
+    def _extract_best_json(self, text: str) -> Dict[str, Any]:
+        """Extract fenced JSON or fallback to best-effort parse."""
+        if not text:
+            return {}
+
+        fences = re.findall(r"```(?:json|JSON)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+        candidates = fences if fences else [text]
+
+        best: Dict[str, Any] = {}
+        for block in candidates:
+            try:
+                obj = json.loads(block)
+                if isinstance(obj, dict) and len(json.dumps(obj)) > len(json.dumps(best)):
+                    best = obj
+            except Exception:
+                continue
+
+        return best
+
+    def _normalize_categories(self, cats: Any) -> List[str]:
+        if not cats:
+            return []
+        if isinstance(cats, str):
+            return [cats]
+        if isinstance(cats, list):
+            return [c for c in cats if isinstance(c, str)]
+        return []
 
     @staticmethod
     def _parse_json_payload(raw_output: str) -> Dict[str, Any]:
