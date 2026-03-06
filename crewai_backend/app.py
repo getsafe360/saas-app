@@ -1,52 +1,140 @@
+import json
 import os
-import enum
-from flask import Flask, request, jsonify # Import "flask" could not be resolved Pylance reportMissingImports
-from flask_cors import CORS  # Import "flask_cors" could not be resolved Pylance reportMissingImports
+import queue
+import threading
+import time
+import uuid
+from dataclasses import dataclass, field
+from urllib.parse import urlparse
+
 from dotenv import load_dotenv
+from flask import Flask, Response, jsonify, request, stream_with_context
+from flask_cors import CORS
 
-# Load environment variables
+from crew import CrewService
+
 load_dotenv()
-
-# Import CrewAI logic (now inside the same folder)
-from crew import WebsiteAnalyzerCrew
 
 app = Flask(__name__)
 CORS(app)
 
-def to_serializable(obj, _seen=None):
-    if _seen is None:
-        _seen = set()
-    obj_id = id(obj)
-    if obj_id in _seen:
-        return "Circular Reference"
-    _seen.add(obj_id)
 
-    if hasattr(obj, "model_dump"):
-        return {k: to_serializable(v, _seen) for k, v in obj.model_dump().items()}
-    elif hasattr(obj, "dict"):
-        return {k: to_serializable(v, _seen) for k, v in obj.dict().items()}
-    elif isinstance(obj, enum.Enum):
-        return obj.value
-    elif isinstance(obj, dict):
-        return {k: to_serializable(v, _seen) for k, v in obj.items()}
-    elif isinstance(obj, (list, tuple, set)):
-        return [to_serializable(v, _seen) for v in obj]
-    elif isinstance(obj, (str, int, float, bool)) or obj is None:
-        return obj
-    return str(obj)
+@dataclass
+class StreamEntry:
+    queue: "queue.Queue[dict]" = field(default_factory=queue.Queue)
+    done: bool = False
+    created_at: float = field(default_factory=time.time)
 
-def run_agent(url, agents):
-    output = WebsiteAnalyzerCrew().analyze_website(agents, url)
-    return to_serializable(output)
+
+STREAMS = {}
+STREAM_LOCK = threading.Lock()
+CREW = CrewService(model=os.environ.get("CREW_MODEL", "openai/gpt-5-mini"))
+
+
+def validate_url(url: str) -> str:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("url must be a valid http/https URL")
+    return url
+
+
+@app.route("/api/test/start", methods=["POST"])
+def start_homepage_test() -> Response:
+    data = request.get_json(force=True)
+    url = data.get("url") if isinstance(data, dict) else None
+
+    if not isinstance(url, str):
+        return jsonify({"error": "url required"}), 400
+
+    try:
+        validate_url(url)
+    except ValueError as err:
+        return jsonify({"error": str(err)}), 400
+
+    stream_id = uuid.uuid4().hex
+
+    with STREAM_LOCK:
+        STREAMS[stream_id] = StreamEntry()
+
+    worker = threading.Thread(target=_run_sparky_worker, args=(stream_id, url), daemon=True)
+    worker.start()
+
+    return jsonify({
+        "id": stream_id,
+        "test_id": stream_id,
+        "status": "started"
+    })
+
+
+@app.route("/api/test/events/<stream_id>", methods=["GET"])
+def stream_events(stream_id: str):
+    with STREAM_LOCK:
+        stream = STREAMS.get(stream_id)
+
+    if stream is None:
+        return jsonify({"error": "stream not found"}), 404
+
+    q = stream.queue
+
+    def event_stream():
+        try:
+            yield "event: status\ndata: {\"status\": \"connecting\"}\n\n"
+            while True:
+                try:
+                    item = q.get(timeout=15)
+                    yield f"event: {item['type']}\ndata: {json.dumps(item)}\n\n"
+                    if item["type"] == "completed":
+                        break
+                except queue.Empty:
+                    yield ": keepalive\n\n"
+        finally:
+            with STREAM_LOCK:
+                STREAMS.pop(stream_id, None)
+
+    return Response(
+        stream_with_context(event_stream()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+def _run_sparky_worker(stream_id: str, url: str):
+    with STREAM_LOCK:
+        stream = STREAMS.get(stream_id)
+
+    if stream is None:
+        return
+
+    q = stream.queue
+
+    try:
+        result = CREW.run_sparky_pipeline(url)
+
+        q.put({"type": "greeting", "greeting": result["greeting"]})
+        q.put({"type": "categories", "categories": result["categories"]})
+        q.put({"type": "summary", "summary": result["summary"], "short_summary": result["short_summary"]})
+        q.put({"type": "completed"})
+    except Exception as exc:  # noqa: BLE001
+        q.put({"type": "error", "message": str(exc)})
+    finally:
+        stream.done = True
+
 
 @app.route("/analyze", methods=["POST"])
-def analyze():
-    data = request.json
-    url = data.get("url")
-    agents = data.get("agents", [])
-    result = run_agent(url, agents)
+def legacy_analyze():
+    data = request.get_json(force=True)
+    url = data.get("url") if isinstance(data, dict) else None
+    if not url:
+        return jsonify({"error": "Missing URL"}), 400
+
+    result = CREW.run_full_audit(url)
     return jsonify(result)
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, threaded=True)

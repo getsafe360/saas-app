@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { CockpitCategory, CockpitEvent, CockpitSavings } from '@/lib/cockpit/sse-events';
-import { parseSseEvent } from '@/lib/cockpit/parse-sse-event';
 
 type HomepageTestPhase = 'idle' | 'running' | 'completed' | 'error';
 
@@ -69,6 +68,34 @@ export function useHomepageTest() {
         };
       }
 
+      if ((event.type as string) === 'categories') {
+        const categories = Array.isArray((event as any).categories) ? (event as any).categories : [];
+        const mapped = categories
+          .filter((cat: any) => cat && typeof cat.id === 'string')
+          .map((cat: any): CockpitCategory => ({
+            id: cat.id,
+            issues: Array.isArray(cat.issues) ? cat.issues : [],
+            severity: (Array.isArray(cat.issues) && cat.issues.length > 2) ? 'high' : 'medium',
+            tokenCost: (Array.isArray(cat.issues) ? cat.issues.length : 0) * 100,
+            fixAvailable: true,
+          }));
+        return {
+          ...withMessage,
+          phase: 'running',
+          categories: [...withMessage.categories, ...mapped].filter(
+            (cat, index, all) => all.findIndex((x) => x.id === cat.id) === index,
+          ),
+        };
+      }
+
+      if ((event.type as string) === 'completed') {
+        return {
+          ...withMessage,
+          phase: 'completed',
+          progress: 100,
+        };
+      }
+
       if (event.type === 'error' || event.state === 'errors_found') {
         return { ...withMessage, phase: 'error' };
       }
@@ -124,27 +151,74 @@ export function useHomepageTest() {
       return;
     }
 
-    const body = (await response.json()) as { test_id: string };
-    setState((prev) => ({ ...prev, testId: body.test_id }));
+    const body = (await response.json()) as { test_id?: string; id?: string };
+    const testId = body.test_id ?? body.id ?? null;
+    setState((prev) => ({ ...prev, testId }));
+    if (!testId) {
+      setState((prev) => ({ ...prev, phase: 'error' }));
+      return;
+    }
 
     if (typeof EventSource === 'undefined') {
       setTimeout(() => setState((prev) => ({ ...prev, phase: 'completed', progress: 100 })), 1200);
       return;
     }
 
-    const source = new EventSource(`/api/test/events/${body.test_id}`);
-    source.onmessage = (raw) => {
-      const event = parseSseEvent(raw as MessageEvent<string>);
-      if (!event) return;
-      applyEvent(event);
-      if (event.state === 'completed' || event.state === 'errors_found') {
-        source.close();
+    const source = new EventSource(`/api/test/events/${testId}`);
+
+    source.addEventListener('greeting', (ev) => {
+      try {
+        const data = JSON.parse((ev as MessageEvent<string>).data) as { greeting?: string };
+        if (data.greeting) {
+          setState((prev) => ({ ...prev, phase: 'running', greeting: data.greeting }));
+        }
+      } catch {
+        // ignore malformed event payload
       }
-    };
+    });
+
+    source.addEventListener('categories', (ev) => {
+      try {
+        const data = JSON.parse((ev as MessageEvent<string>).data) as { categories?: string[] };
+        const categories = Array.isArray(data.categories) ? data.categories : [];
+        setState((prev) => ({
+          ...prev,
+          phase: 'running',
+          categories: categories.map((id) => ({ id, issues: [], severity: 'medium', tokenCost: 0, fixAvailable: true })),
+        }));
+      } catch {
+        // ignore malformed event payload
+      }
+    });
+
+    source.addEventListener('summary', (ev) => {
+      try {
+        const data = JSON.parse((ev as MessageEvent<string>).data) as { summary?: string; short_summary?: string };
+        setState((prev) => ({ ...prev, phase: 'running', summary: data.summary ?? data.short_summary ?? prev.summary }));
+      } catch {
+        // ignore malformed event payload
+      }
+    });
+
+    source.addEventListener('completed', async () => {
+      source.close();
+      try {
+        const fallback = await fetch(`/api/test/result/${testId}`, { cache: 'no-store' });
+        if (fallback.ok) {
+          const result = (await fallback.json()) as { summary: string };
+          setState((prev) => ({ ...prev, phase: 'completed', progress: 100, summary: result.summary }));
+          return;
+        }
+      } catch {
+        // ignore fallback errors
+      }
+      setState((prev) => ({ ...prev, phase: 'completed', progress: 100 }));
+    });
+
     source.onerror = async () => {
       source.close();
       try {
-        const fallback = await fetch(`/api/test/result/${body.test_id}`, { cache: 'no-store' });
+        const fallback = await fetch(`/api/test/result/${testId}`, { cache: 'no-store' });
         if (fallback.ok) {
           const result = (await fallback.json()) as { summary: string };
           setState((prev) => ({ ...prev, phase: 'completed', progress: 100, summary: result.summary }));
