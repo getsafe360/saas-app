@@ -328,18 +328,27 @@ class CrewService:
         logger.info(f"[SPARKY] Raw summary output:\n{summary_raw}")
 
         snapshot = self._extract_best_json(snapshot_raw)
-        summary = self._extract_best_json(summary_raw)
+        summary_json = self._extract_best_json(summary_raw)
 
         platform = snapshot.get("platform", "generic")
         categories = self._normalize_categories(snapshot.get("categories"))
         greeting = snapshot.get("greeting") or snapshot.get("title") or "Here's what we found"
 
+        # Preserve plain-text summaries when JSON is not detected
+        if summary_json:
+            final_summary = summary_json.get("summary", "")
+            final_short = summary_json.get("short_summary", final_summary)
+        else:
+            text = summary_raw.strip()
+            final_summary = text
+            final_short = text[:200] if text else ""
+
         final = {
             "platform": platform,
             "categories": categories,
             "greeting": greeting,
-            "summary": summary.get("summary", ""),
-            "short_summary": summary.get("short_summary", summary.get("summary", "")),
+            "summary": final_summary,
+            "short_summary": final_short,
         }
 
         logger.info(f"[SPARKY] Final normalized result: {final}")

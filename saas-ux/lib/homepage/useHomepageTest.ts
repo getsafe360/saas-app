@@ -164,7 +164,14 @@ export function useHomepageTest() {
       return;
     }
 
+    // Direct SSE to backend
     const source = new EventSource(`/api/test/events/${testId}`);
+
+    source.addEventListener('error', (ev) => {
+      const data = JSON.parse((ev as MessageEvent<string>).data || '{}');
+      setState((prev) => ({ ...prev, phase: 'error', summary: data.message || prev.summary }));
+      source.close();
+    });
 
     source.addEventListener('greeting', (ev) => {
       try {
@@ -216,20 +223,6 @@ export function useHomepageTest() {
       setState((prev) => ({ ...prev, phase: 'completed', progress: 100 }));
     });
 
-    source.onerror = async () => {
-      source.close();
-      try {
-        const fallback = await fetch(`/api/test/result/${testId}`, { cache: 'no-store' });
-        if (fallback.ok) {
-          const result = (await fallback.json()) as { summary: string };
-          setState((prev) => ({ ...prev, phase: 'completed', progress: 100, summary: result.summary }));
-          return;
-        }
-      } catch {
-        // ignore fallback errors
-      }
-      setState((prev) => ({ ...prev, phase: 'error' }));
-    };
   }, [applyEvent]);
 
   return useMemo(
