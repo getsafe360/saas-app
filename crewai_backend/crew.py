@@ -226,12 +226,21 @@ class CrewService:
         return data
 
     def _validate(self) -> None:
-        for _, task_id in self.TASK_MAP.items():
+        # Only validate tasks that are actually referenced by the Sparky pipeline
+        required_tasks = {
+            "site_snapshot_task": "site_snapshot_task",
+            "generate_sparky_summary": "sparky_summary",
+        }
+
+        for task_key, task_id in required_tasks.items():
             if task_id not in self.tasks_config:
                 raise CrewConfigurationError(f"Task '{task_id}' is missing from tasks.yaml")
+
             agent_id = self.tasks_config[task_id].get("agent")
             if not agent_id or agent_id not in self.agents_config:
-                raise CrewConfigurationError(f"Task '{task_id}' references unknown agent '{agent_id}'")
+                raise CrewConfigurationError(
+                    f"Task '{task_id}' references unknown agent '{agent_id}'"
+                )
 
     @staticmethod
     def _validate_url(url: str) -> str:
