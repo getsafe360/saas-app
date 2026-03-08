@@ -138,13 +138,18 @@ def legacy_analyze():
 
 @app.route("/api/health", methods=["GET"])
 def backend_health():
+    crew_ok = CREW is not None
+    api_key_ok = bool(os.environ.get("OPENAI_API_KEY"))
+    streams_ok = isinstance(STREAMS, dict)
+    healthy = crew_ok and api_key_ok and streams_ok
+
     return jsonify({
-        "status": "ok",
-        "crew_service": CREW is not None,
-        "openai_key_present": bool(os.environ.get("OPENAI_API_KEY")),
-        "streams_registry": isinstance(STREAMS, dict),
-        "message": "Backend is running and healthy",
-    })
+        "status": "ok" if healthy else "error",
+        "crew_service": crew_ok,
+        "openai_key_present": api_key_ok,
+        "streams_registry": streams_ok,
+        "message": "Backend is running and healthy" if healthy else "Backend dependencies are not ready",
+    }), 200 if healthy else 503
 
 
 @app.route("/api/test/self", methods=["GET"])
@@ -163,7 +168,7 @@ def self_test_sparky_pipeline():
         return jsonify({
             "status": "error",
             "message": str(exc),
-        })
+        }), 500
 
 
 if __name__ == "__main__":
