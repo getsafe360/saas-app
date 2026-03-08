@@ -136,6 +136,36 @@ def legacy_analyze():
     return jsonify(result)
 
 
+@app.route("/api/health", methods=["GET"])
+def backend_health():
+    return jsonify({
+        "status": "ok",
+        "crew_service": CREW is not None,
+        "openai_key_present": bool(os.environ.get("OPENAI_API_KEY")),
+        "streams_registry": isinstance(STREAMS, dict),
+        "message": "Backend is running and healthy",
+    })
+
+
+@app.route("/api/test/self", methods=["GET"])
+def self_test_sparky_pipeline():
+    try:
+        result = CREW.run_sparky_pipeline("https://example.com")
+        return jsonify({
+            "status": "ok",
+            "greeting": result.get("greeting"),
+            "categories": result.get("categories"),
+            "summary": result.get("summary"),
+            "short_summary": result.get("short_summary"),
+            "message": "Sparky pipeline executed successfully",
+        })
+    except Exception as exc:  # noqa: BLE001
+        return jsonify({
+            "status": "error",
+            "message": str(exc),
+        })
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port, threaded=True)
