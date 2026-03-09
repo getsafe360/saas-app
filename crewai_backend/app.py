@@ -40,7 +40,11 @@ def validate_url(url: str) -> str:
 
 @app.route("/api/test/start", methods=["POST"])
 def start_homepage_test() -> Response:
-    data = request.get_json(force=True)
+    try:
+        data = request.get_json(force=True)
+    except Exception as e:
+        return jsonify({"error": f"Invalid JSON: {str(e)}"}), 400
+
     url = data.get("url") if isinstance(data, dict) else None
 
     if not isinstance(url, str):
@@ -104,6 +108,10 @@ def stream_events(stream_id: str):
 
 
 def _run_sparky_worker(stream_id: str, url: str):
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     with STREAM_LOCK:
         stream = STREAMS.get(stream_id)
 
@@ -111,15 +119,18 @@ def _run_sparky_worker(stream_id: str, url: str):
         return
 
     q = stream.queue
+    logger.info(f"[WORKER] Starting sparky pipeline for {url}")
 
     try:
         result = CREW.run_sparky_pipeline(url)
+        logger.info("[WORKER] Pipeline completed successfully")
 
         q.put({"type": "greeting", "greeting": result["greeting"]})
         q.put({"type": "categories", "categories": result["categories"]})
         q.put({"type": "summary", "summary": result["summary"], "short_summary": result["short_summary"]})
         q.put({"type": "completed"})
     except Exception as exc:  # noqa: BLE001
+        logger.error(f"[WORKER] Pipeline failed: {str(exc)}", exc_info=True)
         q.put({"type": "error", "message": str(exc)})
     finally:
         stream.done = True
