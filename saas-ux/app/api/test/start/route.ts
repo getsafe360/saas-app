@@ -16,8 +16,19 @@ export async function POST(req: Request) {
   const apiKey = process.env.CREW_SERVICE_API_KEY;
 
   if (!baseUrl) {
+    console.error("CREW_SERVICE_BASE_URL missing or invalid:", process.env.CREW_SERVICE_BASE_URL);
     return NextResponse.json({ error: "CREW_SERVICE_BASE_URL is not configured" }, { status: 500 });
   }
+
+  if (!/^https?:\/\//.test(baseUrl)) {
+    console.error("CREW_SERVICE_BASE_URL missing or invalid:", process.env.CREW_SERVICE_BASE_URL);
+    return NextResponse.json(
+      { error: "CREW_SERVICE_BASE_URL must be a full URL including protocol" },
+      { status: 500 },
+    );
+  }
+
+  console.log("Calling backend:", `${baseUrl}/api/test/start`);
 
   const backendRes = await fetch(`${baseUrl}/api/test/start`, {
     method: "POST",
