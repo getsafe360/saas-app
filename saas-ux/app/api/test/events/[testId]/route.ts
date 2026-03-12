@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { subscribeToSiteEvents, unsubscribe } from '@/lib/cockpit/event-bus';
+import { publishEvent, subscribeToSiteEvents, unsubscribe } from '@/lib/cockpit/event-bus';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,24 +15,25 @@ export async function GET(
   const stream = new ReadableStream<string>({
     start(controller) {
       controllerRef = controller;
+      console.info(`[test-events] subscribe testId=${testId}`);
 
-      // Subscribe this controller to the event bus
       subscribeToSiteEvents(testId, controller);
-
-      // Correct initial event (no global "event"!)
-      controller.enqueue(
-        `data: ${JSON.stringify({ type: 'status', state: 'connecting' })}\n\n`
-      );
+      publishEvent(testId, { type: 'status', state: 'connecting', message: 'SSE connected' });
     },
 
     cancel() {
-      if (controllerRef) unsubscribe(controllerRef);
+      if (controllerRef) {
+        console.info(`[test-events] cancel testId=${testId}`);
+        unsubscribe(controllerRef);
+      }
     },
   });
 
-  // Abort handler for client disconnect
   req.signal.addEventListener('abort', () => {
-    if (controllerRef) unsubscribe(controllerRef);
+    if (controllerRef) {
+      console.info(`[test-events] abort testId=${testId}`);
+      unsubscribe(controllerRef);
+    }
   });
 
   return new Response(stream.pipeThrough(new TextEncoderStream()), {
