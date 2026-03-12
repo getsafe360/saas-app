@@ -38,6 +38,11 @@ def validate_url(url: str) -> str:
     return url
 
 
+def _emit(q: "queue.Queue[dict]", event_type: str, **payload):
+    event = {"type": event_type, **payload}
+    q.put(event)
+
+
 @app.route("/api/test/start", methods=["POST"])
 def start_homepage_test() -> Response:
     try:
@@ -82,13 +87,13 @@ def stream_events(stream_id: str):
 
     def event_stream():
         try:
-            yield "event: status\ndata: {\"status\": \"connecting\"}\n\n"
+            yield "event: status\ndata: {\"type\":\"status\",\"status\":\"connecting\"}\n\n"
             while True:
                 try:
                     item = q.get(timeout=15)
-                    yield f"event: {item['type']}\ndata: {json.dumps(item)}\n\n"
-                    # Terminate SSE on completed OR error
-                    if item["type"] in ("completed", "error"):
+                    event_type = item.get("type", "message")
+                    yield f"event: {event_type}\ndata: {json.dumps(item)}\n\n"
+                    if event_type in ("done", "error"):
                         break
                 except queue.Empty:
                     yield ": keepalive\n\n"
@@ -119,19 +124,36 @@ def _run_sparky_worker(stream_id: str, url: str):
         return
 
     q = stream.queue
-    logger.info(f"[WORKER] Starting sparky pipeline for {url}")
+    logger.info("[WORKER] Starting sparky pipeline test_id=%s url=%s", stream_id, url)
 
     try:
-        result = CREW.run_sparky_pipeline(url)
-        logger.info("[WORKER] Pipeline completed successfully")
+        _emit(q, "status", test_id=stream_id, status="started", message="Pipeline started")
+        _emit(q, "log", test_id=stream_id, message="Scanning URL and bootstrapping agents")
+        _emit(q, "progress", test_id=stream_id, progress=10, message="Initialized")
 
-        q.put({"type": "greeting", "greeting": result["greeting"]})
-        q.put({"type": "categories", "categories": result["categories"]})
-        q.put({"type": "summary", "summary": result["summary"], "short_summary": result["short_summary"]})
-        q.put({"type": "completed"})
+        _emit(q, "log", test_id=stream_id, message="Running content and performance checks")
+        _emit(q, "progress", test_id=stream_id, progress=35, message="Collecting signals")
+
+        result = CREW.run_sparky_pipeline(url)
+        logger.info("[WORKER] Pipeline completed successfully test_id=%s", stream_id)
+
+        _emit(q, "log", test_id=stream_id, message="Synthesizing recommendations")
+        _emit(q, "progress", test_id=stream_id, progress=80, message="Finalizing report")
+        _emit(
+            q,
+            "result",
+            test_id=stream_id,
+            greeting=result.get("greeting"),
+            categories=result.get("categories", []),
+            summary=result.get("summary"),
+            short_summary=result.get("short_summary"),
+        )
+        _emit(q, "progress", test_id=stream_id, progress=100, message="Complete")
+        _emit(q, "status", test_id=stream_id, status="done", message="Pipeline finished")
+        _emit(q, "done", test_id=stream_id)
     except Exception as exc:  # noqa: BLE001
-        logger.error(f"[WORKER] Pipeline failed: {str(exc)}", exc_info=True)
-        q.put({"type": "error", "message": str(exc)})
+        logger.error("[WORKER] Pipeline failed test_id=%s: %s", stream_id, str(exc), exc_info=True)
+        _emit(q, "error", test_id=stream_id, message=str(exc))
     finally:
         stream.done = True
 

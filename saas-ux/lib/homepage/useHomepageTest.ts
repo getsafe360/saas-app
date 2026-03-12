@@ -164,63 +164,28 @@ export function useHomepageTest() {
       return;
     }
 
-    // Direct SSE to backend
     const source = new EventSource(`/api/test/events/${testId}`);
 
+    const applyRawEvent = (ev: MessageEvent<string>) => {
+      try {
+        const parsed = JSON.parse(ev.data) as CockpitEvent;
+        applyEvent(parsed);
+      } catch {
+        // ignore malformed event payload
+      }
+    };
+
+    source.addEventListener('status', applyRawEvent as EventListener);
+    source.addEventListener('progress', applyRawEvent as EventListener);
+    source.addEventListener('summary', applyRawEvent as EventListener);
+    source.addEventListener('greeting', applyRawEvent as EventListener);
+    source.addEventListener('debug', applyRawEvent as EventListener);
     source.addEventListener('error', (ev) => {
-      const data = JSON.parse((ev as MessageEvent<string>).data || '{}');
-      setState((prev) => ({ ...prev, phase: 'error', summary: data.message || prev.summary }));
+      if ('data' in ev && typeof (ev as MessageEvent<string>).data === 'string') {
+        applyRawEvent(ev as MessageEvent<string>);
+      }
+      setState((prev) => ({ ...prev, phase: 'error' }));
       source.close();
-    });
-
-    source.addEventListener('greeting', (ev) => {
-      try {
-        const data = JSON.parse((ev as MessageEvent<string>).data) as { greeting?: string };
-        const greeting = typeof data.greeting === 'string' ? data.greeting : '';
-        if (greeting) {
-          setState((prev) => ({ ...prev, phase: 'running', greeting }));
-        }
-      } catch {
-        // ignore malformed event payload
-      }
-    });
-
-    source.addEventListener('categories', (ev) => {
-      try {
-        const data = JSON.parse((ev as MessageEvent<string>).data) as { categories?: string[] };
-        const categories = Array.isArray(data.categories) ? data.categories : [];
-        setState((prev) => ({
-          ...prev,
-          phase: 'running',
-          categories: categories.map((id) => ({ id, issues: [], severity: 'medium', tokenCost: 0, fixAvailable: true })),
-        }));
-      } catch {
-        // ignore malformed event payload
-      }
-    });
-
-    source.addEventListener('summary', (ev) => {
-      try {
-        const data = JSON.parse((ev as MessageEvent<string>).data) as { summary?: string; short_summary?: string };
-        setState((prev) => ({ ...prev, phase: 'running', summary: data.summary ?? data.short_summary ?? prev.summary }));
-      } catch {
-        // ignore malformed event payload
-      }
-    });
-
-    source.addEventListener('completed', async () => {
-      source.close();
-      try {
-        const fallback = await fetch(`/api/test/result/${testId}`, { cache: 'no-store' });
-        if (fallback.ok) {
-          const result = (await fallback.json()) as { summary: string };
-          setState((prev) => ({ ...prev, phase: 'completed', progress: 100, summary: result.summary }));
-          return;
-        }
-      } catch {
-        // ignore fallback errors
-      }
-      setState((prev) => ({ ...prev, phase: 'completed', progress: 100 }));
     });
 
   }, [applyEvent]);
