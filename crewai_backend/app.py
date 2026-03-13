@@ -5,7 +5,7 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Iterator
 from urllib.parse import urlparse
 
 try:
@@ -94,6 +94,54 @@ def validate_url(url: str) -> str:
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise ValueError("url must be a valid http/https URL")
     return url
+
+
+def to_sse(event: str, payload: dict[str, Any]) -> str:
+    return f"event: {event}\ndata: {json.dumps(payload)}\n\n"
+
+
+def chunk_text(text: str, chunk_size: int = 80) -> list[str]:
+    cleaned = " ".join(text.split())
+    if not cleaned:
+        return []
+    return [cleaned[i:i + chunk_size] for i in range(0, len(cleaned), chunk_size)]
+
+
+def stream_sparky_analysis(url: str) -> Iterator[str]:
+    """
+    Direct-streaming pipeline (single SSE hop):
+    request -> /agent/stream -> browser.
+    No job IDs, replay, heartbeats, or event bus state.
+    """
+    yield to_sse("message", {"text": "Fetching HTML..."})
+    snapshot_raw = CREW.site_snapshot_task(url)
+
+    yield to_sse("message", {"text": "Analyzing accessibility..."})
+    yield to_sse("message", {"text": "Checking SEO..."})
+    yield to_sse("message", {"text": "Running security checks..."})
+
+    summary_raw = CREW.sparky_summary(snapshot_raw)
+    snapshot_json = CREW._extract_best_json(snapshot_raw)
+    summary_json = CREW._extract_best_json(summary_raw)
+
+    greeting = (
+        summary_json.get("greeting")
+        or snapshot_json.get("greeting")
+        or snapshot_json.get("title")
+        or "Hi! Here is your test report."
+    )
+    summary_text = (
+        summary_json.get("summary")
+        or summary_json.get("short_summary")
+        or summary_raw.strip()
+        or "Analysis complete"
+    )
+
+    # Emit incremental summary chunks so the UI can render additional text progressively.
+    for chunk in chunk_text(summary_text):
+        yield to_sse("message", {"text": chunk})
+
+    yield to_sse("summary", {"summary": summary_text, "greeting": greeting})
 
 
 def emit_event(test_id: str, event_type: str, **payload: Any) -> None:
@@ -348,6 +396,45 @@ def self_test_sparky_pipeline():
             "status": "error",
             "message": str(exc),
         }), 500
+
+
+@app.route("/agent/start", methods=["POST"])
+def start_agent():
+    data = request.get_json(silent=True) or {}
+    url = data.get("url") if isinstance(data, dict) else None
+    if not isinstance(url, str) or not url:
+        return jsonify({"error": "url required"}), 400
+
+    try:
+        validated_url = validate_url(url)
+    except ValueError as err:
+        return jsonify({"error": str(err)}), 400
+
+    return jsonify({"status": "ready", "stream": f"/agent/stream?url={validated_url}"})
+
+
+@app.route("/agent/stream", methods=["GET"])
+def stream_agent():
+    url = request.args.get("url", "")
+    if not url:
+        return jsonify({"error": "url query parameter is required"}), 400
+
+    try:
+        validated_url = validate_url(url)
+    except ValueError as err:
+        return jsonify({"error": str(err)}), 400
+
+    def event_stream():
+        try:
+            yield from stream_sparky_analysis(validated_url)
+        except Exception as exc:  # noqa: BLE001
+            yield to_sse("error", {"message": str(exc)})
+
+    response = Response(stream_with_context(event_stream()), mimetype="text/event-stream")
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["Connection"] = "keep-alive"
+    response.headers["X-Accel-Buffering"] = "no"
+    return response
 
 
 if __name__ == "__main__":
