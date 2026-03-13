@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CockpitCategory, CockpitEvent, CockpitSavings } from '@/lib/cockpit/sse-events';
 
 type HomepageTestPhase = 'idle' | 'running' | 'completed' | 'error';
@@ -32,6 +32,12 @@ const initialState: HomepageTestState = {
 export function useHomepageTest() {
   const [state, setState] = useState<HomepageTestState>(initialState);
   const lastMetaRef = useRef<{ revision: number; hash: string }>({ revision: -1, hash: '' });
+  const sourceRef = useRef<EventSource | null>(null);
+
+  const closeSource = useCallback(() => {
+    sourceRef.current?.close();
+    sourceRef.current = null;
+  }, []);
 
   const applyEvent = useCallback((event: CockpitEvent) => {
     const revision = Number(event.revision ?? -1);
@@ -64,7 +70,8 @@ export function useHomepageTest() {
           ...withMessage,
           summary: event.message,
           greeting: event.greeting ?? withMessage.greeting,
-          phase: withMessage.phase === 'idle' ? 'running' : withMessage.phase,
+          phase: 'completed',
+          progress: 100,
         };
       }
 
@@ -113,7 +120,11 @@ export function useHomepageTest() {
         }
       }
       if (event.type === 'progress') {
-        return { ...withMessage, phase: 'running', progress: Number(event.progress ?? withMessage.progress) };
+        return {
+          ...withMessage,
+          phase: 'running',
+          progress: Math.max(0, Math.min(100, Number(event.progress ?? withMessage.progress))),
+        };
       }
       if (event.type === 'category' && event.category) {
         const category: CockpitCategory = {
@@ -137,6 +148,7 @@ export function useHomepageTest() {
   }, []);
 
   const startTest = useCallback(async (url: string) => {
+    closeSource();
     setState({ ...initialState, phase: 'running', testedUrl: url });
     lastMetaRef.current = { revision: -1, hash: '' };
 
@@ -165,11 +177,67 @@ export function useHomepageTest() {
     }
 
     const source = new EventSource(`/api/test/events/${testId}`);
+    sourceRef.current = source;
+    let sawTerminalEvent = false;
+    let fallbackFetched = false;
+
+    const runResultsFallback = async () => {
+      if (fallbackFetched) {
+        return;
+      }
+
+      fallbackFetched = true;
+      try {
+        const fallbackResponse = await fetch(`/api/test/results/${testId}`, { cache: 'no-store' });
+        if (!fallbackResponse.ok) {
+          throw new Error(`Failed to load fallback results (${fallbackResponse.status})`);
+        }
+
+        const fallbackBody = (await fallbackResponse.json()) as {
+          summary?: string;
+          short_summary?: string;
+          greeting?: string;
+          categories?: CockpitCategory[];
+          status?: string;
+        };
+
+        const summary = fallbackBody.summary ?? fallbackBody.short_summary;
+        if (!summary) {
+          throw new Error('Fallback result did not include summary');
+        }
+
+        setState((prev) => ({
+          ...prev,
+          summary,
+          greeting: fallbackBody.greeting ?? prev.greeting,
+          categories: Array.isArray(fallbackBody.categories) ? fallbackBody.categories : prev.categories,
+          phase: 'completed',
+          progress: 100,
+        }));
+      } catch {
+        setState((prev) => ({
+          ...prev,
+          phase: 'error',
+          summary: prev.summary ?? "We're analyzing your site… If live updates fail, we'll show final results soon.",
+        }));
+      }
+    };
+
+    const maybeFinishAndClose = (event: CockpitEvent) => {
+      const isTerminal = event.type === 'summary' || (event.type === 'status' && event.state === 'completed');
+      if (!isTerminal) {
+        return;
+      }
+
+      sawTerminalEvent = true;
+      closeSource();
+    };
 
     const applyRawEvent = (ev: MessageEvent<string>) => {
       try {
         const parsed = JSON.parse(ev.data) as CockpitEvent;
         applyEvent(parsed);
+        maybeFinishAndClose(parsed);
       } catch {
         // ignore malformed event payload
       }
@@ -184,11 +252,23 @@ export function useHomepageTest() {
       if ('data' in ev && typeof (ev as MessageEvent<string>).data === 'string') {
         applyRawEvent(ev as MessageEvent<string>);
       }
-      setState((prev) => ({ ...prev, phase: 'error' }));
-      source.close();
+      if (!sawTerminalEvent) {
+        void runResultsFallback();
+      }
+      closeSource();
     });
 
-  }, [applyEvent]);
+    source.onopen = () => {
+      setState((prev) => ({ ...prev, phase: prev.phase === 'idle' ? 'running' : prev.phase }));
+    };
+
+    source.onmessage = applyRawEvent as (this: EventSource, ev: MessageEvent) => void;
+
+    sourceRef.current = source;
+
+  }, [applyEvent, closeSource]);
+
+  useEffect(() => () => closeSource(), [closeSource]);
 
   return useMemo(
     () => ({

@@ -46,6 +46,17 @@ export function mapBackendEvent(
   eventName: string,
   payload: Record<string, unknown>,
 ): CockpitEvent | null {
+  const normalizeProgress = (value: unknown): number => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return 0;
+    }
+
+    // Backend historically emitted fractional progress (0.1..0.8). Scale to 0..100 for UI width percentages.
+    const scaled = numeric > 0 && numeric <= 1 ? numeric * 100 : numeric;
+    return Math.min(100, Math.max(0, scaled));
+  };
+
   const normalizedType = String(payload.type ?? eventName ?? '').toLowerCase();
 
   if (normalizedType === 'log') {
@@ -72,7 +83,7 @@ export function mapBackendEvent(
     return {
       type: 'progress',
       state: 'in_progress',
-      progress: Number(payload.progress ?? 0),
+      progress: normalizeProgress(payload.progress ?? 0),
       message: typeof payload.message === 'string' ? payload.message : undefined,
     };
   }
