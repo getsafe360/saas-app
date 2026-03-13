@@ -97,22 +97,23 @@ export default function DirectAgentStreamCard() {
 
   useEffect(() => {
     if (!stream.snapshot || stashedRef.current) return;
+    const snapshot = stream.snapshot;
 
     const run = async () => {
       setIsStashing(true);
       setStashError(null);
 
       const payload = {
-        url: stream.snapshot?.url,
+        url: snapshot.url,
         testId: `sparky-${Date.now()}`,
         categories: sections.map((section) => ({
           id: section.id,
           severity: /missing|no signal|risk|issue|slow|weak/i.test(section.text) ? "medium" : "low",
           issues: [{ summary: section.text }],
         })),
-        summary: stream.snapshot.text,
-        platform: /wordpress|wp/i.test(stream.snapshot.sections.content) ? "wordpress" : "generic",
-        timestamp: stream.snapshot.generatedAt,
+        summary: snapshot.text,
+        platform: /wordpress|wp/i.test(snapshot.sections.content) ? "wordpress" : "generic",
+        timestamp: snapshot.generatedAt,
       };
 
       try {
