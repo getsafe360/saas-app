@@ -52,7 +52,7 @@ export function mapBackendEvent(
       return 0;
     }
 
-    // Backend historically emitted fractional progress (0.1..0.8). Scale to 0..100 for UI width percentages.
+    // Progress contract: UI consumes percentages (0..100). If backend sends a ratio (0..1), normalize to percent.
     const scaled = numeric > 0 && numeric <= 1 ? numeric * 100 : numeric;
     return Math.min(100, Math.max(0, scaled));
   };
@@ -93,8 +93,8 @@ export function mapBackendEvent(
   }
 
   if (normalizedType === 'status') {
-    const statusValue = String(payload.status ?? payload.message ?? '').toLowerCase();
-    if (statusValue === 'done' || statusValue === 'completed') {
+    const statusValue = String(payload.state ?? payload.status ?? payload.message ?? '').toLowerCase();
+    if (statusValue === 'done' || statusValue === 'completed' || statusValue === 'errors_found') {
       return { type: 'status', state: 'completed', message: 'done' };
     }
     return { type: 'status', state: 'in_progress', message: statusValue || 'started' };

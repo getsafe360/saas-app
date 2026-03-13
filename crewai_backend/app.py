@@ -43,6 +43,8 @@ JOBS_LOCK = threading.Lock()
 CREW = CrewService(model=os.environ.get("CREW_MODEL", "openai/gpt-5-mini"))
 JOB_TTL_SECONDS = int(os.environ.get("TEST_JOB_TTL_SECONDS", "1800"))
 HEARTBEAT_INTERVAL_SECONDS = int(os.environ.get("TEST_SSE_HEARTBEAT_SECONDS", "10"))
+TERMINAL_JOB_STATUSES = {"completed", "failed", "error"}
+TERMINAL_STATUS_EVENTS = {"completed", "errors_found"}
 
 
 def now_ts() -> float:
@@ -60,12 +62,22 @@ def save_job(job: TestJob) -> None:
 
 
 def is_terminal_event(event: dict[str, Any]) -> bool:
-    return event.get("type") == "error" or (event.get("type") == "status" and event.get("state") == "completed")
+    return event.get("type") == "error" or (
+        event.get("type") == "status" and event.get("state") in TERMINAL_STATUS_EVENTS
+    )
 
 
 def should_purge_job(job: TestJob, current_ts: float) -> bool:
-    terminal_states = {"completed", "failed", "error"}
-    return job.status in terminal_states and (current_ts - job.updated_at) > JOB_TTL_SECONDS
+    return job.status in TERMINAL_JOB_STATUSES and (current_ts - job.updated_at) > JOB_TTL_SECONDS
+
+
+def to_terminal_result_payload(result: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "summary": result.get("summary"),
+        "short_summary": result.get("short_summary"),
+        "greeting": result.get("greeting"),
+        "categories": result.get("categories"),
+    }
 
 
 def purge_expired_jobs() -> int:
@@ -101,13 +113,15 @@ def emit_event(test_id: str, event_type: str, **payload: Any) -> None:
                 job.progress = float(progress_value)
         elif event_type == "status":
             state = payload.get("state")
-            if isinstance(state, str):
+            if isinstance(state, str) and not (job.status in TERMINAL_JOB_STATUSES and state == "in_progress"):
                 job.status = state
         elif event_type == "summary":
+            existing = job.result or {}
             job.result = {
-                "summary": payload.get("summary"),
-                "greeting": payload.get("greeting"),
-                "message": payload.get("message"),
+                "summary": payload.get("summary") or existing.get("summary"),
+                "short_summary": payload.get("short_summary") or existing.get("short_summary"),
+                "greeting": payload.get("greeting") or existing.get("greeting"),
+                "categories": payload.get("categories") if payload.get("categories") is not None else existing.get("categories"),
             }
         elif event_type == "error":
             message = payload.get("message")
@@ -137,6 +151,8 @@ def _simulate_progress(test_id: str) -> None:
 
 def _emit_heartbeats(test_id: str, stop_event: threading.Event) -> None:
     while not stop_event.wait(HEARTBEAT_INTERVAL_SECONDS):
+        if stop_event.is_set():
+            break
         emit_event(
             test_id,
             "status",
@@ -165,12 +181,26 @@ def _run_sparky_worker(test_id: str, url: str) -> None:
         result = CREW.run_sparky_pipeline(url)
         summary = result.get("short_summary") or result.get("summary") or "Analysis complete"
         greeting = result.get("greeting") or "Hi! Here is your test report."
+        result_payload = to_terminal_result_payload({
+            **result,
+            "summary": result.get("summary") or summary,
+            "short_summary": result.get("short_summary") or summary,
+            "greeting": greeting,
+        })
+
+        with JOBS_LOCK:
+            job = JOBS.get(test_id)
+            if job is not None:
+                job.result = result_payload
+                job.updated_at = now_ts()
 
         emit_event(
             test_id,
             "summary",
             summary=summary,
             greeting=greeting,
+            short_summary=result_payload.get("short_summary"),
+            categories=result_payload.get("categories"),
             message="Analysis complete",
         )
         emit_event(test_id, "status", state="completed", message="done")
@@ -184,6 +214,7 @@ def _run_sparky_worker(test_id: str, url: str) -> None:
 
 @app.route("/api/test/start", methods=["POST"])
 def start_homepage_test() -> Response:
+    purge_expired_jobs()
     try:
         data = request.get_json(force=True)
     except Exception as e:  # noqa: BLE001
@@ -201,7 +232,6 @@ def start_homepage_test() -> Response:
     test_id = uuid.uuid4().hex
     job = TestJob(id=test_id, url=url)
     save_job(job)
-    purge_expired_jobs()
 
     worker = threading.Thread(target=_run_sparky_worker, args=(test_id, url), daemon=True)
     worker.start()
@@ -268,19 +298,10 @@ def get_test_results(test_id: str):
     if job is None:
         return jsonify({"error": "result not found"}), 404
 
-    if job.result is None and job.status not in {"completed", "failed", "error"}:
+    if job.status != "completed" or job.result is None:
         return jsonify({"error": "result not ready", "status": job.status}), 404
 
-    return jsonify({
-        "id": job.id,
-        "test_id": job.id,
-        "status": job.status,
-        "progress": job.progress,
-        "summary": (job.result or {}).get("summary"),
-        "greeting": (job.result or {}).get("greeting"),
-        "message": (job.result or {}).get("message"),
-        "error": job.error,
-    })
+    return jsonify({"id": job.id, "test_id": job.id, **job.result})
 
 
 @app.route("/analyze", methods=["POST"])
