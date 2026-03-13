@@ -1,3 +1,8 @@
+/**
+ * In-memory event bus for single-instance fan-out only.
+ * Do not use this to bridge independent routes in serverless/multi-instance deployments
+ * (for example /api/test/start -> /api/test/events/[testId]), because memory is not shared.
+ */
 import type { CockpitEvent } from './sse-events';
 
 const siteSubscribers = new Map<string, Set<ReadableStreamDefaultController<string>>>();
