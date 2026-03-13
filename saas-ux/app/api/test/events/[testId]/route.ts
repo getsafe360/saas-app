@@ -127,7 +127,7 @@ export async function GET(
         }
 
         flush();
-        send({ type: 'status', state: 'completed', message: 'Backend stream ended' });
+        send({ type: 'debug', message: 'Backend stream ended' });
       } catch (error) {
         const message =
           error instanceof Error

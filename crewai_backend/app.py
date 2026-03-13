@@ -8,13 +8,17 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlparse
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except Exception:  # noqa: BLE001
+    load_dotenv = None
 from flask import Flask, Response, jsonify, request, stream_with_context
 from flask_cors import CORS
 
 from crew import CrewService
 
-load_dotenv()
+if load_dotenv is not None:
+    load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -37,6 +41,40 @@ class TestJob:
 JOBS: dict[str, TestJob] = {}
 JOBS_LOCK = threading.Lock()
 CREW = CrewService(model=os.environ.get("CREW_MODEL", "openai/gpt-5-mini"))
+JOB_TTL_SECONDS = int(os.environ.get("TEST_JOB_TTL_SECONDS", "1800"))
+HEARTBEAT_INTERVAL_SECONDS = int(os.environ.get("TEST_SSE_HEARTBEAT_SECONDS", "10"))
+
+
+def now_ts() -> float:
+    return time.time()
+
+
+def get_job(test_id: str) -> TestJob | None:
+    with JOBS_LOCK:
+        return JOBS.get(test_id)
+
+
+def save_job(job: TestJob) -> None:
+    with JOBS_LOCK:
+        JOBS[job.id] = job
+
+
+def is_terminal_event(event: dict[str, Any]) -> bool:
+    return event.get("type") == "error" or (event.get("type") == "status" and event.get("state") == "completed")
+
+
+def should_purge_job(job: TestJob, current_ts: float) -> bool:
+    terminal_states = {"completed", "failed", "error"}
+    return job.status in terminal_states and (current_ts - job.updated_at) > JOB_TTL_SECONDS
+
+
+def purge_expired_jobs() -> int:
+    current_ts = now_ts()
+    with JOBS_LOCK:
+        expired_ids = [job_id for job_id, job in JOBS.items() if should_purge_job(job, current_ts)]
+        for job_id in expired_ids:
+            del JOBS[job_id]
+    return len(expired_ids)
 
 
 def validate_url(url: str) -> str:
@@ -55,7 +93,7 @@ def emit_event(test_id: str, event_type: str, **payload: Any) -> None:
             return
 
         job.events.append(event)
-        job.updated_at = time.time()
+        job.updated_at = now_ts()
 
         if event_type == "progress":
             progress_value = payload.get("progress")
@@ -85,10 +123,11 @@ def emit_event(test_id: str, event_type: str, **payload: Any) -> None:
 
 def _simulate_progress(test_id: str) -> None:
     milestones = [
-        (0.1, "Fetching HTML"),
-        (0.3, "Analyzing accessibility"),
-        (0.6, "Checking SEO"),
-        (0.8, "Running security checks"),
+        # Emit 0..100 progress integers to keep the contract explicit across backend and tests.
+        (10, "Fetching HTML"),
+        (30, "Analyzing accessibility"),
+        (60, "Checking SEO"),
+        (80, "Running security checks"),
     ]
 
     for progress, message in milestones:
@@ -96,11 +135,26 @@ def _simulate_progress(test_id: str) -> None:
         emit_event(test_id, "progress", progress=progress, message=message)
 
 
+def _emit_heartbeats(test_id: str, stop_event: threading.Event) -> None:
+    while not stop_event.wait(HEARTBEAT_INTERVAL_SECONDS):
+        emit_event(
+            test_id,
+            "status",
+            state="in_progress",
+            message="heartbeat",
+            timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        )
+
+
 def _run_sparky_worker(test_id: str, url: str) -> None:
     import logging
 
     logger = logging.getLogger(__name__)
     logger.info("[WORKER] Starting test_id=%s url=%s", test_id, url)
+
+    heartbeat_stop = threading.Event()
+    heartbeat_worker = threading.Thread(target=_emit_heartbeats, args=(test_id, heartbeat_stop), daemon=True)
+    heartbeat_worker.start()
 
     try:
         emit_event(test_id, "status", state="in_progress", message="started")
@@ -124,6 +178,8 @@ def _run_sparky_worker(test_id: str, url: str) -> None:
     except Exception as exc:  # noqa: BLE001
         logger.error("[WORKER] Failed test_id=%s error=%s", test_id, str(exc), exc_info=True)
         emit_event(test_id, "error", message=str(exc))
+    finally:
+        heartbeat_stop.set()
 
 
 @app.route("/api/test/start", methods=["POST"])
@@ -144,9 +200,8 @@ def start_homepage_test() -> Response:
 
     test_id = uuid.uuid4().hex
     job = TestJob(id=test_id, url=url)
-
-    with JOBS_LOCK:
-        JOBS[test_id] = job
+    save_job(job)
+    purge_expired_jobs()
 
     worker = threading.Thread(target=_run_sparky_worker, args=(test_id, url), daemon=True)
     worker.start()
@@ -161,9 +216,13 @@ def stream_events(test_id: str):
         if job is None:
             return jsonify({"error": "stream not found"}), 404
 
-        subscriber_queue: "queue.Queue[dict[str, Any]]" = queue.Queue()
         history = list(job.events)
-        job.subscribers.add(subscriber_queue)
+        terminal_after_replay = bool(history) and is_terminal_event(history[-1])
+        subscriber_queue: "queue.Queue[dict[str, Any]] | None" = None
+
+        if not terminal_after_replay:
+            subscriber_queue = queue.Queue()
+            job.subscribers.add(subscriber_queue)
 
     def to_sse(event: dict[str, Any]) -> str:
         return f"event: {event.get('type', 'message')}\ndata: {json.dumps(event)}\n\n"
@@ -173,21 +232,25 @@ def stream_events(test_id: str):
             for historical_event in history:
                 yield to_sse(historical_event)
 
+            # Replay-only clients should receive history and then terminate immediately when
+            # the final replayed event is terminal, instead of hanging indefinitely.
+            if terminal_after_replay or subscriber_queue is None:
+                return
+
             while True:
                 try:
                     event = subscriber_queue.get(timeout=15)
                     yield to_sse(event)
-                    if event.get("type") in {"error"}:
-                        break
-                    if event.get("type") == "status" and event.get("state") == "completed":
+                    if is_terminal_event(event):
                         break
                 except queue.Empty:
                     yield ": keepalive\n\n"
         finally:
-            with JOBS_LOCK:
-                current = JOBS.get(test_id)
-                if current is not None:
-                    current.subscribers.discard(subscriber_queue)
+            if subscriber_queue is not None:
+                with JOBS_LOCK:
+                    current = JOBS.get(test_id)
+                    if current is not None:
+                        current.subscribers.discard(subscriber_queue)
 
     response = Response(
         stream_with_context(event_stream()),
@@ -197,6 +260,27 @@ def stream_events(test_id: str):
     response.headers["Connection"] = "keep-alive"
     response.headers["X-Accel-Buffering"] = "no"
     return response
+
+
+@app.route("/api/test/results/<test_id>", methods=["GET"])
+def get_test_results(test_id: str):
+    job = get_job(test_id)
+    if job is None:
+        return jsonify({"error": "result not found"}), 404
+
+    if job.result is None and job.status not in {"completed", "failed", "error"}:
+        return jsonify({"error": "result not ready", "status": job.status}), 404
+
+    return jsonify({
+        "id": job.id,
+        "test_id": job.id,
+        "status": job.status,
+        "progress": job.progress,
+        "summary": (job.result or {}).get("summary"),
+        "greeting": (job.result or {}).get("greeting"),
+        "message": (job.result or {}).get("message"),
+        "error": job.error,
+    })
 
 
 @app.route("/analyze", methods=["POST"])
