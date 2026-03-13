@@ -5,6 +5,7 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass, field
+from typing import Any
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
@@ -20,14 +21,21 @@ CORS(app)
 
 
 @dataclass
-class StreamEntry:
-    queue: "queue.Queue[dict]" = field(default_factory=queue.Queue)
-    done: bool = False
+class TestJob:
+    id: str
+    url: str
+    status: str = "pending"
+    progress: float = 0.0
+    result: dict[str, Any] | None = None
+    error: str | None = None
     created_at: float = field(default_factory=time.time)
+    updated_at: float = field(default_factory=time.time)
+    events: list[dict[str, Any]] = field(default_factory=list)
+    subscribers: set["queue.Queue[dict[str, Any]]"] = field(default_factory=set)
 
 
-STREAMS = {}
-STREAM_LOCK = threading.Lock()
+JOBS: dict[str, TestJob] = {}
+JOBS_LOCK = threading.Lock()
 CREW = CrewService(model=os.environ.get("CREW_MODEL", "openai/gpt-5-mini"))
 
 
@@ -38,20 +46,94 @@ def validate_url(url: str) -> str:
     return url
 
 
-def _emit(q: "queue.Queue[dict]", event_type: str, **payload):
+def emit_event(test_id: str, event_type: str, **payload: Any) -> None:
     event = {"type": event_type, **payload}
-    q.put(event)
+
+    with JOBS_LOCK:
+        job = JOBS.get(test_id)
+        if job is None:
+            return
+
+        job.events.append(event)
+        job.updated_at = time.time()
+
+        if event_type == "progress":
+            progress_value = payload.get("progress")
+            if isinstance(progress_value, (int, float)):
+                job.progress = float(progress_value)
+        elif event_type == "status":
+            state = payload.get("state")
+            if isinstance(state, str):
+                job.status = state
+        elif event_type == "summary":
+            job.result = {
+                "summary": payload.get("summary"),
+                "greeting": payload.get("greeting"),
+                "message": payload.get("message"),
+            }
+        elif event_type == "error":
+            message = payload.get("message")
+            if isinstance(message, str):
+                job.error = message
+                job.status = "failed"
+
+        subscribers = list(job.subscribers)
+
+    for subscriber in subscribers:
+        subscriber.put(event)
+
+
+def _simulate_progress(test_id: str) -> None:
+    milestones = [
+        (0.1, "Fetching HTML"),
+        (0.3, "Analyzing accessibility"),
+        (0.6, "Checking SEO"),
+        (0.8, "Running security checks"),
+    ]
+
+    for progress, message in milestones:
+        time.sleep(1.0)
+        emit_event(test_id, "progress", progress=progress, message=message)
+
+
+def _run_sparky_worker(test_id: str, url: str) -> None:
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.info("[WORKER] Starting test_id=%s url=%s", test_id, url)
+
+    try:
+        emit_event(test_id, "status", state="in_progress", message="started")
+        emit_event(test_id, "debug", message="Sparky pipeline bootstrapped")
+
+        _simulate_progress(test_id)
+
+        result = CREW.run_sparky_pipeline(url)
+        summary = result.get("short_summary") or result.get("summary") or "Analysis complete"
+        greeting = result.get("greeting") or "Hi! Here is your test report."
+
+        emit_event(
+            test_id,
+            "summary",
+            summary=summary,
+            greeting=greeting,
+            message="Analysis complete",
+        )
+        emit_event(test_id, "status", state="completed", message="done")
+        logger.info("[WORKER] Completed test_id=%s", test_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("[WORKER] Failed test_id=%s error=%s", test_id, str(exc), exc_info=True)
+        emit_event(test_id, "error", message=str(exc))
 
 
 @app.route("/api/test/start", methods=["POST"])
 def start_homepage_test() -> Response:
     try:
         data = request.get_json(force=True)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return jsonify({"error": f"Invalid JSON: {str(e)}"}), 400
 
     url = data.get("url") if isinstance(data, dict) else None
-
     if not isinstance(url, str):
         return jsonify({"error": "url required"}), 400
 
@@ -60,102 +142,61 @@ def start_homepage_test() -> Response:
     except ValueError as err:
         return jsonify({"error": str(err)}), 400
 
-    stream_id = uuid.uuid4().hex
+    test_id = uuid.uuid4().hex
+    job = TestJob(id=test_id, url=url)
 
-    with STREAM_LOCK:
-        STREAMS[stream_id] = StreamEntry()
+    with JOBS_LOCK:
+        JOBS[test_id] = job
 
-    worker = threading.Thread(target=_run_sparky_worker, args=(stream_id, url), daemon=True)
+    worker = threading.Thread(target=_run_sparky_worker, args=(test_id, url), daemon=True)
     worker.start()
 
-    return jsonify({
-        "id": stream_id,
-        "test_id": stream_id,
-        "status": "started"
-    })
+    return jsonify({"id": test_id, "test_id": test_id, "status": "started"})
 
 
-@app.route("/api/test/events/<stream_id>", methods=["GET"])
-def stream_events(stream_id: str):
-    with STREAM_LOCK:
-        stream = STREAMS.get(stream_id)
+@app.route("/api/test/events/<test_id>", methods=["GET"])
+def stream_events(test_id: str):
+    with JOBS_LOCK:
+        job = JOBS.get(test_id)
+        if job is None:
+            return jsonify({"error": "stream not found"}), 404
 
-    if stream is None:
-        return jsonify({"error": "stream not found"}), 404
+        subscriber_queue: "queue.Queue[dict[str, Any]]" = queue.Queue()
+        history = list(job.events)
+        job.subscribers.add(subscriber_queue)
 
-    q = stream.queue
+    def to_sse(event: dict[str, Any]) -> str:
+        return f"event: {event.get('type', 'message')}\ndata: {json.dumps(event)}\n\n"
 
     def event_stream():
         try:
-            yield "event: status\ndata: {\"type\":\"status\",\"status\":\"connecting\"}\n\n"
+            for historical_event in history:
+                yield to_sse(historical_event)
+
             while True:
                 try:
-                    item = q.get(timeout=15)
-                    event_type = item.get("type", "message")
-                    yield f"event: {event_type}\ndata: {json.dumps(item)}\n\n"
-                    if event_type in ("done", "error"):
+                    event = subscriber_queue.get(timeout=15)
+                    yield to_sse(event)
+                    if event.get("type") in {"error"}:
+                        break
+                    if event.get("type") == "status" and event.get("state") == "completed":
                         break
                 except queue.Empty:
                     yield ": keepalive\n\n"
         finally:
-            with STREAM_LOCK:
-                STREAMS.pop(stream_id, None)
+            with JOBS_LOCK:
+                current = JOBS.get(test_id)
+                if current is not None:
+                    current.subscribers.discard(subscriber_queue)
 
-    return Response(
+    response = Response(
         stream_with_context(event_stream()),
         mimetype="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache, no-transform",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
     )
-
-
-def _run_sparky_worker(stream_id: str, url: str):
-    import logging
-
-    logger = logging.getLogger(__name__)
-
-    with STREAM_LOCK:
-        stream = STREAMS.get(stream_id)
-
-    if stream is None:
-        return
-
-    q = stream.queue
-    logger.info("[WORKER] Starting sparky pipeline test_id=%s url=%s", stream_id, url)
-
-    try:
-        _emit(q, "status", test_id=stream_id, status="started", message="Pipeline started")
-        _emit(q, "log", test_id=stream_id, message="Scanning URL and bootstrapping agents")
-        _emit(q, "progress", test_id=stream_id, progress=10, message="Initialized")
-
-        _emit(q, "log", test_id=stream_id, message="Running content and performance checks")
-        _emit(q, "progress", test_id=stream_id, progress=35, message="Collecting signals")
-
-        result = CREW.run_sparky_pipeline(url)
-        logger.info("[WORKER] Pipeline completed successfully test_id=%s", stream_id)
-
-        _emit(q, "log", test_id=stream_id, message="Synthesizing recommendations")
-        _emit(q, "progress", test_id=stream_id, progress=80, message="Finalizing report")
-        _emit(
-            q,
-            "result",
-            test_id=stream_id,
-            greeting=result.get("greeting"),
-            categories=result.get("categories", []),
-            summary=result.get("summary"),
-            short_summary=result.get("short_summary"),
-        )
-        _emit(q, "progress", test_id=stream_id, progress=100, message="Complete")
-        _emit(q, "status", test_id=stream_id, status="done", message="Pipeline finished")
-        _emit(q, "done", test_id=stream_id)
-    except Exception as exc:  # noqa: BLE001
-        logger.error("[WORKER] Pipeline failed test_id=%s: %s", stream_id, str(exc), exc_info=True)
-        _emit(q, "error", test_id=stream_id, message=str(exc))
-    finally:
-        stream.done = True
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["Connection"] = "keep-alive"
+    response.headers["X-Accel-Buffering"] = "no"
+    return response
 
 
 @app.route("/analyze", methods=["POST"])
@@ -173,14 +214,14 @@ def legacy_analyze():
 def backend_health():
     crew_ok = CREW is not None
     api_key_ok = bool(os.environ.get("OPENAI_API_KEY"))
-    streams_ok = isinstance(STREAMS, dict)
-    healthy = crew_ok and api_key_ok and streams_ok
+    jobs_ok = isinstance(JOBS, dict)
+    healthy = crew_ok and api_key_ok and jobs_ok
 
     return jsonify({
         "status": "ok" if healthy else "error",
         "crew_service": crew_ok,
         "openai_key_present": api_key_ok,
-        "streams_registry": streams_ok,
+        "jobs_registry": jobs_ok,
         "message": "Backend is running and healthy" if healthy else "Backend dependencies are not ready",
     }), 200 if healthy else 503
 
