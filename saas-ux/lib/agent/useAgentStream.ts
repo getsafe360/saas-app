@@ -76,13 +76,14 @@ export function useAgentStream() {
 
       source.addEventListener('message', (event: MessageEvent<string>) => {
         try {
-          const payload = JSON.parse(event.data) as { text?: string };
-          if (!payload.text) {
+          const payload = JSON.parse(event.data) as { text?: unknown };
+          const text = typeof payload.text === 'string' ? payload.text : '';
+          if (!text) {
             return;
           }
 
           setState((prev) => {
-            const messages = [...prev.messages, payload.text];
+            const messages = [...prev.messages, text];
             const progress = Math.min(95, Math.max(10, messages.length * 20));
             return { ...prev, messages, progress, phase: 'streaming' };
           });
