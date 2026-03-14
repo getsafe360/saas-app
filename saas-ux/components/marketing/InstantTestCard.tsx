@@ -221,7 +221,7 @@ export default function InstantTestCard() {
           {stashUrl && signupRedirect && (
             <div className="mt-3">
               <SignedOut>
-                <SignUpButton mode="modal" forceRedirectUrl={signupRedirect}>
+                <SignUpButton mode="modal">
                   <Button className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium ring ring-sky-600/30 bg-sky-50 text-sky-700 transition hover:bg-sky-100 hover:shadow-none dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/30 dark:hover:bg-sky-400/20">
                     Create your free account to see full details and repairs
                     <ArrowRightIcon className="size-4" aria-hidden="true" />

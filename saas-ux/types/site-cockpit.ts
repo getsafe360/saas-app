@@ -20,6 +20,7 @@ export type CategoryType =
   | "security"
   | "seo"
   | "accessibility"
+  | "content"
   | "wordpress"
   | "tech"
   | "geo";
@@ -730,28 +731,34 @@ export interface CategoryTheme {
 
 export const CATEGORY_THEMES: Record<CategoryType, CategoryTheme> = {
   performance: {
-    color: "#10B981",
-    bgGradient: "from-green-500/10 to-green-600/5",
-    border: "border-green-500/20",
-    glow: "shadow-green-500/50",
+    color: "#FACC15",
+    bgGradient: "from-yellow-400/10 to-yellow-500/5",
+    border: "border-yellow-400/20",
+    glow: "shadow-yellow-400/50",
   },
   security: {
-    color: "#EF4444",
-    bgGradient: "from-red-500/10 to-red-600/5",
-    border: "border-red-500/20",
-    glow: "shadow-red-500/50",
-  },
-  seo: {
     color: "#3B82F6",
     bgGradient: "from-blue-500/10 to-blue-600/5",
     border: "border-blue-500/20",
     glow: "shadow-blue-500/50",
   },
-  accessibility: {
-    color: "#8B5CF6",
-    bgGradient: "from-purple-500/10 to-purple-600/5",
+  seo: {
+    color: "#A855F7",
+    bgGradient: "from-purple-500/10 to-violet-600/5",
     border: "border-purple-500/20",
     glow: "shadow-purple-500/50",
+  },
+  accessibility: {
+    color: "#14B8A6",
+    bgGradient: "from-teal-500/10 to-teal-600/5",
+    border: "border-teal-500/20",
+    glow: "shadow-teal-500/50",
+  },
+  content: {
+    color: "#FF6F5E",
+    bgGradient: "from-orange-400/10 to-rose-500/5",
+    border: "border-orange-400/20",
+    glow: "shadow-orange-400/50",
   },
   wordpress: {
     color: "#21759B",

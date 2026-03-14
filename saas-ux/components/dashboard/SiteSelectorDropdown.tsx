@@ -14,6 +14,7 @@ import {
   Search,
   Accessibility,
   Check,
+  FileText,
 } from "lucide-react";
 
 interface SiteData {
@@ -26,6 +27,7 @@ interface SiteData {
     security?: number;
     seo?: number;
     accessibility?: number;
+    content?: number;
     overall?: number;
   };
   lastFaviconUrl?: string;
@@ -74,6 +76,14 @@ const CATEGORY_LINKS = [
     href: (siteId: string) =>
       `/dashboard/sites/${siteId}/cockpit?category=accessibility`,
   },
+  {
+    id: "content",
+    labelKey: "content",
+    icon: FileText,
+    color: "var(--category-content)",
+    iconBg: "oklch(from var(--category-content) l c h / 0.15)",
+    href: (siteId: string) => `/dashboard/content?siteId=${siteId}`,
+  },
 ] as const;
 
 function formatHost(host: string) {
@@ -110,8 +120,6 @@ export function SiteSelectorDropdown({
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
-
-  const isConnected = currentSite?.status === "connected";
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -218,23 +226,14 @@ export function SiteSelectorDropdown({
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
               {tNav("optimize")}
             </span>
-            <div className="flex items-center gap-1.5 text-xs text-gray-300">
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  isConnected ? "bg-emerald-400" : "bg-amber-400"
-                }`}
-              />
-              {isConnected ? (
-                <span>{tNav("connected")}</span>
-              ) : (
-                <Link
-                  href={`/dashboard/sites/connect?siteId=${currentSite.id}`}
-                  className="text-amber-300 hover:text-amber-200 underline underline-offset-2"
-                >
-                  {tNav("connectNow")}
-                </Link>
-              )}
-            </div>
+            {currentSite.status !== "connected" && (
+              <Link
+                href={`/dashboard/sites/connect?siteId=${currentSite.id}`}
+                className="text-xs text-amber-300 hover:text-amber-200 underline underline-offset-2"
+              >
+                {tNav("connectNow")}
+              </Link>
+            )}
           </div>
           {CATEGORY_LINKS.map((category) => {
             const Icon = category.icon;
@@ -255,14 +254,7 @@ export function SiteSelectorDropdown({
                 >
                   <Icon className="h-4 w-4" style={{ color: category.color }} />
                 </span>
-                <span className="text-sm flex items-center gap-2">
-                  {tNav(category.labelKey)}
-                  {category.id === "seo" && (
-                    <span className="inline-flex items-center rounded-full border border-purple-400/50 bg-purple-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-purple-200">
-                      {tNav("geoNew")}
-                    </span>
-                  )}
-                </span>
+                <span className="text-sm">{tNav(category.labelKey)}</span>
               </Link>
             );
           })}

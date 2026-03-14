@@ -26,7 +26,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         </Script>
       </head>
       <body className="min-h-[100dvh] antialiased bg-stone-50 dark:bg-[#0d1117] text-gray-900 dark:text-gray-100">
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider
+          signUpForceRedirectUrl="/dashboard/welcome"
+          signUpFallbackRedirectUrl="/dashboard/welcome"
+          afterSignUpUrl="/dashboard/welcome"
+        >
+          {children}
+        </ClerkProvider>
 
         {/* GTM noscript fallback (uses /ns.html, not gtag/js) */}
         <noscript>

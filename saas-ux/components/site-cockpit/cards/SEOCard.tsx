@@ -22,7 +22,7 @@ export function SEOCard({ data, stats, onOptimize, optimizing }: SEOCardProps) {
     <CockpitCard
       id="seo"
       category="seo"
-      title="SEO"
+      title="SEO GEO"
       score={data.score}
       grade={data.grade}
       stats={stats}

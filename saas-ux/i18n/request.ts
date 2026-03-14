@@ -24,6 +24,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     supportMessages,
     privacyMessages,
     termsMessages,
+    metaFaqMessages,
     // Add more as you create them:
     // dashboardMessages,
     // settingsMessages,
@@ -35,6 +36,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     import(`@/messages/Support/${locale}.json`),
     import(`@/messages/Privacy/${locale}.json`),
     import(`@/messages/Terms/${locale}.json`),
+    import(`@/locales/${locale}/metaFaq.json`),
     // import(`@/messages/Dashboard/${locale}.json`),
     // import(`@/messages/Settings/${locale}.json`),
     // import(`@/messages/i18n/${locale}.json`),
@@ -52,6 +54,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       Support: supportMessages.default.Support,
       privacy: privacyMessages.default.privacy,
       Terms: termsMessages.default.Terms,
+      metaFaq: metaFaqMessages.default,
 
       // Future features (uncomment as you add them):
       // Dashboard: dashboardMessages.default.Dashboard,

@@ -25,12 +25,6 @@ export default function CTA() {
   const hasTest = testContext?.hasCompletedTest ?? false;
   const quickWinsCount = testContext?.quickWinsCount ?? 0;
   const overallScore = testContext?.overallScore ?? 0;
-  const stashUrl = testContext?.stashUrl ?? null;
-
-  // Build redirect URL for Clerk signup
-  const redirectUrl = stashUrl
-    ? `/dashboard/welcome?u=${encodeURIComponent(stashUrl)}`
-    : "/dashboard";
 
   // Dynamic messaging based on test state
   const getCtaContent = () => {
@@ -93,7 +87,7 @@ export default function CTA() {
 
           <div className="mt-6 flex items-center justify-center gap-3">
             <SignedOut>
-              <SignUpButton mode="modal" forceRedirectUrl={redirectUrl}>
+              <SignUpButton mode="modal">
                 <button
                   className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-lg font-semibold ring-1 transition-all cursor-pointer ${
                     ctaContent.highlight

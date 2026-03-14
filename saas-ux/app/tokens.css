@@ -34,10 +34,21 @@
   --color-danger: oklch(0.63 0.24 29.23);
 
   /* Cockpit Category Theme */
-  --category-performance: #10b981;
-  --category-security: #ef4444;
-  --category-seo: #3b82f6;
-  --category-accessibility: #f59e0b;
+  --category-performance: #facc15;
+  --category-performance-light: #fde047;
+  --category-performance-dark: #eab308;
+  --category-security: #3b82f6;
+  --category-security-light: #60a5fa;
+  --category-security-dark: #2563eb;
+  --category-seo: #a855f7;
+  --category-seo-light: #c084fc;
+  --category-seo-dark: #9333ea;
+  --category-accessibility: #14b8a6;
+  --category-accessibility-light: #2dd4bf;
+  --category-accessibility-dark: #0d9488;
+  --category-content: #ff6f5e;
+  --category-content-light: #ff8a7a;
+  --category-content-dark: #e65a4b;
   --category-wordpress: #21759b;
   --category-wordpress-gradient-start: #4f46e5;
   --category-wordpress-gradient-end: #ec4899;
@@ -122,10 +133,21 @@
   --color-danger: oklch(58% 0.2 29.23);
 
   /* Cockpit Category Theme */
-  --category-performance: #34d399;
-  --category-security: #f87171;
-  --category-seo: #60a5fa;
-  --category-accessibility: #fbbf24;
+  --category-performance: #facc15;
+  --category-performance-light: #fde047;
+  --category-performance-dark: #eab308;
+  --category-security: #3b82f6;
+  --category-security-light: #60a5fa;
+  --category-security-dark: #2563eb;
+  --category-seo: #a855f7;
+  --category-seo-light: #c084fc;
+  --category-seo-dark: #9333ea;
+  --category-accessibility: #14b8a6;
+  --category-accessibility-light: #2dd4bf;
+  --category-accessibility-dark: #0d9488;
+  --category-content: #ff6f5e;
+  --category-content-light: #ff8a7a;
+  --category-content-dark: #e65a4b;
   --category-wordpress: #48a9d0;
   --category-wordpress-gradient-start: #818cf8;
   --category-wordpress-gradient-end: #f472b6;
