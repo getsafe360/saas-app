@@ -6,6 +6,7 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   Accessibility,
   Bot,
+  FileText,
   GripVertical,
   Loader2,
   Search,
@@ -67,9 +68,15 @@ const CATEGORY_STYLES: Record<
   },
   accessibility: {
     color: "var(--category-accessibility)",
-    glow: "0 0 30px rgba(245,158,11,0.18)",
+    glow: "0 0 30px rgba(20,184,166,0.18)",
     icon: Accessibility,
     scorePillBg: "oklch(from var(--category-accessibility) l c h / 0.12)",
+  },
+  content: {
+    color: "var(--category-content)",
+    glow: "0 0 30px rgba(255,111,94,0.18)",
+    icon: FileText,
+    scorePillBg: "oklch(from var(--category-content) l c h / 0.12)",
   },
   tech: {
     color: "var(--category-tech)",

@@ -28,7 +28,7 @@
     "websites": "Sites",
     "activity": "Atividade",
     "performance": "Desempenho",
-    "seo": "SEO",
+    "seo": "SEO GEO",
     "security": "Segurança",
     "accessibility": "Acessibilidade",
     "settings": "Configurações",
@@ -36,10 +36,9 @@
     "noSites": "Nenhum site adicionado ainda",
     "addNewSite": "Adicionar novo site",
     "optimize": "Otimizar",
-    "connected": "Conectado",
     "connectNow": "Conectar agora",
-    "geoNew": "NOVO · GEO",
-    "toggleSidebar": "Alternar barra lateral"
+    "toggleSidebar": "Alternar barra lateral",
+    "content": "Content"
   },
   "DashboardMeta": {
     "title": "Meu Painel - GetSafe 360",

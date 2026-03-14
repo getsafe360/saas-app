@@ -35,23 +35,20 @@ export default function CTA({ analysis }: { analysis?: typeof AnalysisPayload })
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || "stash failed");
 
-      // 2) Build redirect with BOTH stash key and public blob URL
-      const redirect = `/dashboard/welcome?stash=${encodeURIComponent(
+      // 2) Build welcome URL
+      const welcomeUrl = `/dashboard/welcome?stash=${encodeURIComponent(
         data.stashKey
       )}&u=${encodeURIComponent(data.url)}`;
 
-      // 3) If already signed in → go directly; else open Clerk with redirect
+      // 3) If already signed in → go directly; else open Clerk sign-up
       if (isSignedIn) {
-        router.push(redirect);
+        router.push(welcomeUrl);
         return;
       }
       if (openSignUp) {
-        openSignUp({
-          afterSignUpUrl: redirect,
-          afterSignInUrl: redirect,
-        });
+        openSignUp();
       } else {
-        window.location.href = `/sign-up?redirect_url=${encodeURIComponent(redirect)}`;
+        window.location.href = "/sign-up";
       }
     } catch (err) {
       console.error("CTA signup error:", err);

@@ -2,7 +2,7 @@
 import "server-only";
 
 // keep category values in one place
-export const CATEGORIES = ["seo", "performance", "accessibility", "security"] as const;
+export const CATEGORIES = ["performance", "security", "seo", "accessibility", "content"] as const;
 type Category = typeof CATEGORIES[number];
 
 export type ScanIssue = {
@@ -93,6 +93,19 @@ export async function callAgentsService(
         "Inline critical CSS, defer the rest; purge unused classes in build.",
       fixAvailable: true,
       estTokens: 1500,
+    },
+
+    {
+      id: "thin-content-sections",
+      category: "content",
+      title: "Thin or duplicated content blocks",
+      severity: "medium",
+      description:
+        "Some pages likely have shallow sections that can hurt topical relevance and user trust.",
+      suggestion:
+        "Expand key sections with unique, audience-focused copy and clear calls to action.",
+      fixAvailable: true,
+      estTokens: 1100,
     },
     {
       id: "outdated-plugins",

@@ -28,7 +28,7 @@
     "websites": "Websites",
     "activity": "Activity",
     "performance": "Performance",
-    "seo": "SEO",
+    "seo": "SEO GEO",
     "security": "Security",
     "accessibility": "Accessibility",
     "settings": "Settings",
@@ -36,10 +36,9 @@
     "noSites": "No sites added yet",
     "addNewSite": "Add New Site",
     "optimize": "Optimize",
-    "connected": "Connected",
     "connectNow": "Connect now",
-    "geoNew": "NEW · GEO",
-    "toggleSidebar": "Toggle sidebar"
+    "toggleSidebar": "Toggle sidebar",
+    "content": "Content"
   },
   "DashboardMeta": {
     "title": "My Dashboard - GetSafe 360",

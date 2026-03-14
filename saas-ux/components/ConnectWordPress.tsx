@@ -129,15 +129,7 @@ export default function ConnectWordPress({
             <span className="font-mono">{url || "your site"}</span>.
           </p>
           <div className="mt-3">
-            <SignInButton
-              mode="modal"
-              forceRedirectUrl={`/dashboard/sites/connect?url=${encodeURIComponent(
-                url || ""
-              )}${siteId ? `&siteId=${siteId}` : ""}`}
-              signUpForceRedirectUrl={`/dashboard/sites/connect?url=${encodeURIComponent(
-                url || ""
-              )}${siteId ? `&siteId=${siteId}` : ""}`}
-            >
+            <SignInButton mode="modal">
               <button className="px-4 py-2 rounded bg-blue-600 text-white">
                 Sign in
               </button>
