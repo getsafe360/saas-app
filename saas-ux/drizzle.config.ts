@@ -18,10 +18,8 @@ export default defineConfig({
   verbose: true,
   strict: true,
 
-  // 🔥 NEW MIGRATOR MODE — no snapshots, no auto-generation
   migrations: {
-    table: '__drizzle_migrations',   // migration journal table
-    schema: 'drizzle',               // journal lives in schema "drizzle"
-    mode: 'custom',                  // <— THE IMPORTANT PART
+    table: '__drizzle_migrations',
+    schema: 'drizzle'
   },
 });
