@@ -1,5 +1,3 @@
-'use server';
-
 import { eq, sql } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
 import { teams } from '@/lib/db/schema/auth';
