@@ -1,7 +1,9 @@
 // lib/plans/config.ts
 // Pricing plans and token pack configurations
+import { TOKENS_PER_FIX_UNIT } from '@/config/billing/token-economy';
+import { TOKEN_PACKS as SHARED_TOKEN_PACKS } from '@/config/billing/token-packs';
 
-export type PlanName = 'free' | 'pro' | 'agency';
+export type PlanName = 'free' | 'pro' | 'agent' | 'business' | 'agency';
 
 export interface PlanConfig {
   name: PlanName;
@@ -80,10 +82,10 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     ],
     isPopular: true,
   },
-  agency: {
-    name: 'agency',
-    displayName: 'Agency',
-    description: 'For agencies managing multiple clients',
+  agent: {
+    name: 'agent',
+    displayName: 'Agent',
+    description: 'For agencies and professionals managing multiple client sites',
     price: 4900, // €49.00
     priceDisplay: '€49',
     stripePriceId: 'price_1SpxuBCs6GUQsp1IriBKXbat',
@@ -100,6 +102,41 @@ export const PLANS: Record<PlanName, PlanConfig> = {
       'Custom integrations',
     ],
   },
+  agency: {
+    name: 'agency',
+    displayName: 'Agency',
+    description: 'Legacy alias for Agent',
+    price: 4900,
+    priceDisplay: '€49',
+    stripePriceId: 'price_1SpxuBCs6GUQsp1IriBKXbat',
+    stripeBuyButtonId: 'buy_btn_1Sr2ybCs6GUQsp1IMUpTefbp',
+    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/14AbJ09s61mE2cF5W2bAs01',
+    tokensIncluded: 300000,
+    features: [
+      'Everything in Pro',
+      'Unlimited sites',
+      'Client-ready reports',
+      'Best queue priority',
+    ],
+  },
+  business: {
+    name: 'business',
+    displayName: 'Business',
+    description: 'Custom enterprise plan',
+    price: 0,
+    priceDisplay: 'Custom',
+    stripePriceId: null,
+    stripeBuyButtonId: null,
+    stripeCheckoutUrl: null,
+    tokensIncluded: 0,
+    features: [
+      'Everything in Agent',
+      'Team seats',
+      'SLA',
+      'API access (future)',
+      'Custom integrations',
+    ],
+  },
 };
 
 /**
@@ -109,38 +146,17 @@ export const PLANS: Record<PlanName, PlanConfig> = {
  * Perfect for occasional users or as top-ups for Pro/Agency plans.
  */
 export const TOKEN_PACKS: TokenPackConfig[] = [
-  {
-    id: 'small',
-    name: 'Small Pack',
-    tokens: 10000, // ~5 AI fixes
-    price: 500, // €5.00
-    priceDisplay: '€5',
-    stripePriceId: 'price_1SqaxtCs6GUQsp1IL0d9dOgV',
-    stripeBuyButtonId: 'buy_btn_1Sr34XCs6GUQsp1IkA8tPkeC',
-    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/8x214m9s69Ta5oR4RYbAs03',
-  },
-  {
-    id: 'medium',
-    name: 'Medium Pack',
-    tokens: 25000, // ~12 AI fixes
-    price: 1000, // €10.00
-    priceDisplay: '€10',
-    stripePriceId: 'price_1SqazKCs6GUQsp1IP9mYvV5n',
-    stripeBuyButtonId: 'buy_btn_1Sr32bCs6GUQsp1IBbqDko7o',
-    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/dRm8wO9s6d5mbNf2JQbAs02',
-    savingsPercent: 25, // 25% more tokens than 2x small
-  },
-  {
-    id: 'large',
-    name: 'Large Pack',
-    tokens: 40000, // ~20 AI fixes
-    price: 1500, // €15.00
-    priceDisplay: '€15',
-    stripePriceId: 'price_1Sqb0CCs6GUQsp1INNhNduLq',
-    stripeBuyButtonId: 'buy_btn_1Sr35qCs6GUQsp1IpsO9Wuil',
-    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/eVq14m1ZE4yQg3v706bAs04',
-    savingsPercent: 33, // 33% more tokens than 3x small
-  },
+  ...SHARED_TOKEN_PACKS.map((pack) => ({
+    id: pack.id,
+    name: pack.name,
+    tokens: pack.tokens,
+    price: pack.priceEur * 100,
+    priceDisplay: `€${pack.priceEur}`,
+    stripePriceId: pack.stripePriceId,
+    stripeBuyButtonId: '',
+    stripeCheckoutUrl: pack.stripeCheckoutUrl,
+    savingsPercent: pack.id === 'medium' ? 25 : pack.id === 'large' ? 33 : undefined,
+  })),
 ];
 
 /**
@@ -155,7 +171,7 @@ export const USAGE_THRESHOLDS = {
  * Token cost estimates for different operations
  */
 export const TOKEN_COSTS = {
-  AI_FIX: 2000, // Average tokens per AI fix
+  AI_FIX: TOKENS_PER_FIX_UNIT,
   ANALYSIS: 0, // Site analyses are free
 } as const;
 
@@ -272,6 +288,18 @@ export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
     maxTeamMembers: 3,
     reportRetentionDays: 0,
   },
+  agent: {
+    reportGeneration: true,
+    whiteLabel: true,
+    exportFormats: ['pdf', 'csv', 'html'],
+    priorityProcessing: true,
+    teamCollaboration: true,
+    customIntegrations: true,
+    scheduledScans: true,
+    maxSites: 100,
+    maxTeamMembers: 10,
+    reportRetentionDays: 365,
+  },
   agency: {
     reportGeneration: true,
     whiteLabel: true,
@@ -283,6 +311,18 @@ export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
     maxSites: 100,
     maxTeamMembers: 10,
     reportRetentionDays: 365,
+  },
+  business: {
+    reportGeneration: true,
+    whiteLabel: true,
+    exportFormats: ['pdf', 'csv', 'html'],
+    priorityProcessing: true,
+    teamCollaboration: true,
+    customIntegrations: true,
+    scheduledScans: true,
+    maxSites: 1000,
+    maxTeamMembers: 100,
+    reportRetentionDays: 3650,
   },
 };
 
@@ -328,7 +368,7 @@ export function canExportFormat(planName: PlanName, format: 'pdf' | 'csv' | 'htm
  * Get the minimum plan required for a feature
  */
 export function getMinimumPlanForFeature(feature: keyof PlanFeatures): PlanName {
-  const planOrder: PlanName[] = ['free', 'pro', 'agency'];
+  const planOrder: PlanName[] = ['free', 'pro', 'agent', 'business'];
 
   for (const plan of planOrder) {
     const featureValue = PLAN_FEATURES[plan][feature];
@@ -344,7 +384,7 @@ export function getMinimumPlanForFeature(feature: keyof PlanFeatures): PlanName 
     }
   }
 
-  return 'agency'; // Default to highest tier
+  return 'business'; // Default to highest tier
 }
 
 /**
@@ -355,7 +395,7 @@ export function getUpgradeSuggestion(
   feature: keyof PlanFeatures
 ): { suggestedPlan: PlanName; price: string } | null {
   const requiredPlan = getMinimumPlanForFeature(feature);
-  const planOrder: PlanName[] = ['free', 'pro', 'agency'];
+  const planOrder: PlanName[] = ['free', 'pro', 'agent', 'business'];
 
   const currentIndex = planOrder.indexOf(currentPlan);
   const requiredIndex = planOrder.indexOf(requiredPlan);

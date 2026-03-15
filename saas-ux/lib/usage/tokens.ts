@@ -194,7 +194,7 @@ export async function addPurchasedTokens(
  */
 export async function updatePlanTokens(
   teamId: number,
-  newPlanName: 'free' | 'pro' | 'agency'
+  newPlanName: 'free' | 'pro' | 'agency' | 'agent'
 ): Promise<boolean> {
   try {
     const db = getDb();

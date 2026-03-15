@@ -7,7 +7,10 @@ import { getDb } from '@/lib/db/drizzle';
 import { webhookEvents } from '@/lib/db/schema';
 import { teamSubscriptions } from '@/lib/db/schema';
 import { plans } from '@/lib/db/schema/billing/plans';
+import { teams } from '@/lib/db/schema/auth';
 import { and, eq } from 'drizzle-orm';
+import { recordTokenPurchase } from '@/lib/usage/token-transactions';
+import { getTokenPackById } from '@/config/billing/token-packs';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -58,25 +61,54 @@ export async function POST(req: Request) {
 
         if (mode === 'subscription' && subId && custId && teamId) {
           const planSlug = meta.plan_slug as string | undefined;
-          if (!planSlug) break;
 
-          const [pl] = await db.select().from(plans).where(eq(plans.slug, planSlug)).limit(1);
-          if (!pl) break;
+          if (planSlug) {
+            const [pl] = await db.select().from(plans).where(eq(plans.slug, planSlug)).limit(1);
+            if (pl) {
+              await db
+                .insert(teamSubscriptions)
+                .values({
+                  teamId,
+                  planId: pl.id,
+                  status: 'active',
+                  stripeCustomerId: custId,
+                  stripeSubscriptionId: subId,
+                })
+                .onConflictDoUpdate({
+                  target: [teamSubscriptions.teamId, teamSubscriptions.stripeSubscriptionId],
+                  set: { status: 'active' },
+                });
+            }
+          }
 
-          await db
-            .insert(teamSubscriptions)
-            .values({
-              teamId,
-              planId: pl.id,
-              status: 'active',
-              stripeCustomerId: custId,
-              stripeSubscriptionId: subId,
-            })
-            .onConflictDoUpdate({
-              target: [teamSubscriptions.teamId, teamSubscriptions.stripeSubscriptionId],
-              set: { status: 'active' },
-            });
+          if (planSlug) {
+            await db
+              .update(teams)
+              .set({
+                planName: planSlug,
+                subscriptionStatus: 'active',
+                stripeCustomerId: custId,
+                stripeSubscriptionId: subId,
+                updatedAt: new Date(),
+              })
+              .where(eq(teams.id, teamId));
+          }
         }
+
+        if (mode === 'payment' && teamId) {
+          const packSlug = meta.pack_slug as string | undefined;
+          const pack = getTokenPackById(packSlug);
+          if (pack) {
+            await recordTokenPurchase({
+              teamId,
+              pack,
+              amountEur: pack.priceEur,
+              stripePaymentId: (s.payment_intent as string | null) ?? undefined,
+              type: 'purchase',
+            });
+          }
+        }
+
         break;
       }
 
