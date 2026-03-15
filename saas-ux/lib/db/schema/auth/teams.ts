@@ -1,7 +1,7 @@
 // lib/db/schema/auth/teams.ts
 // Team management, members, and invitations
 
-import { pgTable, serial, integer, varchar, text, timestamp, uniqueIndex, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, varchar, text, timestamp, uniqueIndex, boolean, numeric } from 'drizzle-orm/pg-core';
 import { users } from './users';
 
 export const teams = pgTable('teams', {
@@ -21,17 +21,24 @@ export const teams = pgTable('teams', {
   subscriptionStatus: varchar('subscription_status', { length: 20 }).notNull().default('active'),
 
   // Token tracking for usage-based billing
-  tokensIncluded: integer('tokens_included').notNull().default(5000), // Monthly token allowance based on plan
-  tokensUsedThisMonth: integer('tokens_used_this_month').notNull().default(0), // Resets each billing cycle
-  tokensPurchased: integer('tokens_purchased').notNull().default(0), // One-time token packs purchased (never expire)
-  tokensRemaining: integer('tokens_remaining').notNull().default(5000), // Deprecated: use tokensIncluded + tokensPurchased - tokensUsedThisMonth
+  tokensIncluded: integer('tokens_included').notNull().default(5000),
+  tokensUsedThisMonth: integer('tokens_used_this_month').notNull().default(0),
+  tokensPurchased: integer('tokens_purchased').notNull().default(0),
+  tokensPurchasedThisMonth: integer('tokens_purchased_this_month').notNull().default(0),
+  tokensPurchasedThisMonthEur: numeric('tokens_purchased_this_month_eur', { precision: 10, scale: 2 }).notNull().default('0'),
+  tokensRemaining: integer('tokens_remaining').notNull().default(5000),
+
+  // Auto replenish and low-token UI state
+  autoReplenishEnabled: boolean('auto_replenish_enabled').notNull().default(false),
+  showLowTokenBanner: boolean('show_low_token_banner').notNull().default(false),
+  lastPurchasedPackId: varchar('last_purchased_pack_id', { length: 50 }),
 
   // Billing cycle management
-  billingCycleStart: timestamp('billing_cycle_start').notNull().defaultNow(), // When current billing cycle started
+  billingCycleStart: timestamp('billing_cycle_start').notNull().defaultNow(),
 
   // Usage notifications
-  notifiedAt80Percent: boolean('notified_at_80_percent').notNull().default(false), // Alert sent at 80% usage
-  notifiedAt100Percent: boolean('notified_at_100_percent').notNull().default(false), // Alert sent at 100% usage
+  notifiedAt80Percent: boolean('notified_at_80_percent').notNull().default(false),
+  notifiedAt100Percent: boolean('notified_at_100_percent').notNull().default(false),
 });
 
 export const teamMembers = pgTable('team_members', {
@@ -56,7 +63,6 @@ export const invitations = pgTable('invitations', {
   invitedToOnce: uniqueIndex('invitations_team_email_uq').on(t.teamId, t.email),
 }));
 
-// Type exports
 export type Team = typeof teams.$inferSelect;
 export type NewTeam = typeof teams.$inferInsert;
 

@@ -27,6 +27,8 @@ export { plans, planPrices, planTranslations } from './billing/plans';
 export type { Plan, PlanPrice } from './billing/plans';
 export { teamSubscriptions, planPackInclusions } from './billing/subscriptions';
 export type { TeamSubscription, PlanPackInclusion } from './billing/subscriptions';
+export { tokenTransactions, tokenTransactionTypeEnum } from './billing/token-transactions';
+export type { TokenTransaction, NewTokenTransaction } from './billing/token-transactions';
 
 // Features
 export { cockpitLayouts } from './features/cockpit-layouts';
