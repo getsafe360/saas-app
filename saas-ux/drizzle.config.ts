@@ -4,15 +4,24 @@ import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
   dialect: 'postgresql',
+
+  // Your schema folder stays the same
   schema: './lib/db/schema',
-  out: './lib/db/migrations',           // single canonical folder (commit SQL + meta)
+
+  // Your migrations folder stays the same
+  out: './lib/db/migrations',
+
   dbCredentials: {
     url: process.env.DATABASE_URL ?? process.env.POSTGRES_URL!,
   },
+
   verbose: true,
-  strict: true,                         // fail fast if meta/journal are inconsistent
+  strict: true,
+
+  // 🔥 NEW MIGRATOR MODE — no snapshots, no auto-generation
   migrations: {
-    table: '__drizzle_migrations',
-    schema: 'drizzle',                  // journal lives in schema "drizzle"
+    table: '__drizzle_migrations',   // migration journal table
+    schema: 'drizzle',               // journal lives in schema "drizzle"
+    mode: 'custom',                  // <— THE IMPORTANT PART
   },
 });
