@@ -241,3 +241,17 @@ body {
   animation: bg-move linear 3s infinite;
   background-size: 200% auto;
 }
+
+@layer utilities {
+  .bg-surface-primary {
+    background-color: rgba(30, 30, 30, 0.9);
+  }
+
+  .hover\:bg-surface-primaryHover:hover {
+    background-color: rgba(45, 45, 45, 0.95);
+  }
+
+  .border-border-primary {
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+}
