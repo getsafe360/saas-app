@@ -2,12 +2,12 @@
 
 import { useClerk } from "@clerk/nextjs";
 import { Check, Code2, Coins, Sparkles } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import type { BillingCycle } from "@/config/plans.config";
 
 import { MICROCOPY_TOOLTIPS, MicrocopyTooltip } from "./MicrocopyTooltips";
+import { getPricingCopy } from "./pricing-copy";
 
 interface PlanCardProps {
   nameKey: string;
@@ -44,12 +44,14 @@ export default function PlanCard({
   ctaLabelKey,
   billingCycle,
 }: PlanCardProps) {
-  const t = useTranslations("pricingPage");
   const { openSignIn } = useClerk();
   const [isPriceVisible, setIsPriceVisible] = useState(true);
 
   const displayPrice = billingCycle === "monthly" ? priceMonthly : priceYearly;
-  const suffix = billingCycle === "monthly" ? t("labels.perMonth") : t("labels.perYear");
+  const suffix =
+    billingCycle === "monthly"
+      ? getPricingCopy("labels.perMonth")
+      : getPricingCopy("labels.perYear");
   const isCustomPrice = priceMonthly === 0 && priceYearly === 0;
 
   useEffect(() => {
@@ -88,11 +90,11 @@ export default function PlanCard({
         <Icon className={`h-6 w-6 ${iconStyles.icon}`} />
       </div>
 
-      <h3 className="text-2xl font-semibold text-slate-100">{t(nameKey)}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-slate-300">{t(descriptionKey)}</p>
+      <h3 className="text-2xl font-semibold text-slate-100">{getPricingCopy(nameKey)}</h3>
+      <p className="mt-3 text-sm leading-relaxed text-slate-300">{getPricingCopy(descriptionKey)}</p>
 
       <p className={`mt-6 text-3xl font-semibold text-slate-100 transition-all duration-200 ${isPriceVisible ? "opacity-100" : "opacity-40"}`}>
-        {isCustomPrice ? t("labels.custom") : `€${displayPrice}`}{" "}
+        {isCustomPrice ? getPricingCopy("labels.custom") : `€${displayPrice}`}{" "}
         {!isCustomPrice && <span className="text-base font-normal text-slate-400">{suffix}</span>}
       </p>
 
@@ -101,9 +103,9 @@ export default function PlanCard({
           <li key={featureKey} className="flex items-start gap-3 text-sm text-slate-200">
             <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
             <span>
-              {t(featureKey)}
+              {getPricingCopy(featureKey)}
               {FEATURE_TOOLTIP_MAP[featureKey] && (
-                <MicrocopyTooltip text={t(FEATURE_TOOLTIP_MAP[featureKey])} />
+                <MicrocopyTooltip text={getPricingCopy(FEATURE_TOOLTIP_MAP[featureKey])} />
               )}
             </span>
           </li>
@@ -111,7 +113,7 @@ export default function PlanCard({
       </ul>
 
       <p className="mt-6 text-sm text-slate-400">
-        <span className="font-medium text-slate-200">{t("labels.bestFor")}</span> {t(bestForKey)}
+        <span className="font-medium text-slate-200">{getPricingCopy("labels.bestFor")}</span> {getPricingCopy(bestForKey)}
       </p>
 
       {type === "free" ? (
@@ -120,7 +122,7 @@ export default function PlanCard({
           onClick={() => openSignIn?.()}
           className="mt-6 w-full rounded-md border border-slate-500/70 bg-slate-900/40 px-4 py-2.5 text-base font-medium text-slate-100 transition-colors duration-200 hover:bg-slate-800/60"
         >
-          {t(ctaLabelKey)}
+          {getPricingCopy(ctaLabelKey)}
         </button>
       ) : (
         <a
@@ -129,7 +131,7 @@ export default function PlanCard({
           rel="noreferrer"
           className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-slate-500/70 bg-slate-900/40 px-4 py-2.5 text-base font-medium text-slate-100 transition-colors duration-200 hover:bg-slate-800/60"
         >
-          {t(ctaLabelKey)}
+          {getPricingCopy(ctaLabelKey)}
         </a>
       )}
     </article>
