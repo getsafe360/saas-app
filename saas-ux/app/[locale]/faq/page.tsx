@@ -86,14 +86,18 @@ export default async function FAQPage({ params }: Props) {
                 {item.q}
               </span>
               <span
-                className="ml-4 size-6 rounded-md ring-1 ring-slate-900/10 dark:ring-white/10 grid place-items-center text-slate-500 group-open:rotate-180 transition-transform"
+                className="ml-4 size-6 rounded-md ring-1 ring-slate-900/10 dark:ring-white/10 grid place-items-center text-slate-500 group-open:rotate-180 transition-transform duration-300"
                 aria-hidden
               >
                 ▾
               </span>
             </summary>
-            <div className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-              {item.a}
+            <div className="grid grid-rows-[0fr] transition-all duration-300 ease-out group-open:grid-rows-[1fr]">
+              <div className="overflow-hidden">
+                <div className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                  {item.a}
+                </div>
+              </div>
             </div>
           </details>
         ))}

@@ -12,7 +12,7 @@ export default function PricingPage() {
   const { billingCycle, toggleBillingCycle } = usePricingToggle();
 
   return (
-    <div className="min-h-screen bg-[#161616]">
+    <div className="min-h-screen bg-[#0D1117]">
       <PricingHero />
       <PricingToggle billingCycle={billingCycle} onToggle={toggleBillingCycle} />
       <PlanGrid billingCycle={billingCycle} />

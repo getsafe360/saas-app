@@ -1,129 +1,123 @@
 export type BillingCycle = "monthly" | "yearly";
 
 export interface PlanDefinition {
-  name: string;
-  description: string;
+  nameKey: string;
+  descriptionKey: string;
   priceMonthly: number;
   priceYearly: number;
   features: string[];
-  bestFor: string;
+  bestForKey: string;
   stripeUrl?: string;
   borderColorToken: string;
   type: "free" | "pro" | "agency";
-  ctaLabel: string;
+  ctaLabelKey: string;
 }
 
 export interface TokenPackDefinition {
-  name: string;
+  nameKey: string;
   price: string;
   stripeUrl: string;
 }
 
 export const PRICING_PLANS: PlanDefinition[] = [
   {
-    name: "Pay-as-you-go",
-    description:
-      "Our most flexible option for webmasters and small teams. Pay only for the fixes and analyses you need — perfect for emerging sites or occasional maintenance without a monthly commitment.",
+    nameKey: "plans.payg.name",
+    descriptionKey: "plans.payg.description",
     priceMonthly: 0,
     priceYearly: 0,
     features: [
-      "Access to all analysis tools",
-      "On-demand AI repairs (token-based)",
-      "No monthly fees",
-      "Ideal for low-frequency usage",
+      "plans.payg.features.analysis",
+      "plans.payg.features.repairs",
+      "plans.payg.features.noMonthlyFees",
+      "plans.payg.features.lowFrequency",
     ],
-    bestFor: "Webmasters, small teams, and new projects.",
+    bestForKey: "plans.payg.bestFor",
     borderColorToken: "var(--color-primary-700)",
     type: "free",
-    ctaLabel: "Create free account",
+    ctaLabelKey: "plans.payg.cta",
   },
   {
-    name: "Pro",
-    description:
-      "Unlimited AI repairs, builds, and analysis tools. Ideal for developers, freelancers, and organizations managing one or more sites. Full power without limits.",
+    nameKey: "plans.pro.name",
+    descriptionKey: "plans.pro.description",
     priceMonthly: 19,
     priceYearly: 190,
     features: [
-      "Unlimited AI repairs",
-      "Unlimited builds",
-      "Full site analysis suite",
-      "Multi-site support",
-      "Priority queue",
+      "plans.pro.features.unlimitedRepairs",
+      "plans.pro.features.unlimitedBuilds",
+      "plans.pro.features.fullSuite",
+      "plans.pro.features.multiSite",
+      "plans.pro.features.priorityQueue",
     ],
-    bestFor: "Developers, freelancers, and growing organizations.",
+    bestForKey: "plans.pro.bestFor",
     stripeUrl: "https://buy.stripe.com/8x214mfQud5mbNf84abAs00",
     borderColorToken: "var(--color-primary-500)",
     type: "pro",
-    ctaLabel: "Start Pro",
+    ctaLabelKey: "plans.pro.cta",
   },
   {
-    name: "Agency",
-    description:
-      "Built for agencies and professionals managing multiple client sites. Includes client-ready white-label reports, priority processing, and advanced collaboration features.",
+    nameKey: "plans.agency.name",
+    descriptionKey: "plans.agency.description",
     priceMonthly: 49,
     priceYearly: 490,
     features: [
-      "Everything in Pro",
-      "White-label client reports",
-      "Priority processing",
-      "Team collaboration features",
-      "Multi-client management",
+      "plans.agency.features.everythingInPro",
+      "plans.agency.features.whiteLabelReports",
+      "plans.agency.features.priorityProcessing",
+      "plans.agency.features.teamCollaboration",
+      "plans.agency.features.multiClient",
     ],
-    bestFor: "Agencies, studios, and professionals managing multiple client sites.",
+    bestForKey: "plans.agency.bestFor",
     stripeUrl: "https://buy.stripe.com/14AbJ09s61mE2cF5W2bAs01",
     borderColorToken: "var(--color-primary-300)",
     type: "agency",
-    ctaLabel: "Start Agency",
+    ctaLabelKey: "plans.agency.cta",
   },
 ];
 
 export const TOKEN_PACKS: TokenPackDefinition[] = [
   {
-    name: "Small",
+    nameKey: "tokenPacks.items.small",
     price: "€5",
     stripeUrl: "https://buy.stripe.com/8x214m9s69Ta5oR4RYbAs03",
   },
   {
-    name: "Medium",
+    nameKey: "tokenPacks.items.medium",
     price: "€10",
     stripeUrl: "https://buy.stripe.com/dRm8wO9s6d5mbNf2JQbAs02",
   },
   {
-    name: "Large",
+    nameKey: "tokenPacks.items.large",
     price: "€15",
     stripeUrl: "https://buy.stripe.com/eVq14m1ZE4yQg3v706bAs04",
   },
 ];
 
 export const PRICING_FOOTNOTES = [
-  "Annual billing saves you 2 months.",
-  "Unlimited usage is subject to fair-use guidelines.",
-  "Token consumption varies by operation complexity.",
+  "footnotes.saveTwoMonths",
+  "footnotes.fairUse",
+  "footnotes.tokenVaries",
 ];
 
 export const PRICING_DISCLAIMERS = [
-  "Cancel anytime. No hidden fees.",
-  "Prices exclude VAT where applicable.",
+  "disclaimers.cancelAnytime",
+  "disclaimers.excludeVat",
 ];
 
 export const PRICING_FAQ = [
   {
-    question: "How do tokens work?",
-    answer:
-      "Tokens are used to pay for AI-powered repairs, builds, and advanced analyses. Each operation consumes a specific number of tokens based on complexity.",
+    questionKey: "faq.items.tokens.question",
+    answerKey: "faq.items.tokens.answer",
   },
   {
-    question: "Can I switch plans later?",
-    answer:
-      "Yes. You can upgrade or downgrade your plan at any time from your account settings.",
+    questionKey: "faq.items.switchPlans.question",
+    answerKey: "faq.items.switchPlans.answer",
   },
   {
-    question: "Do my tokens expire?",
-    answer:
-      "Tokens do not expire within the current billing year. We’ll notify you well in advance if this changes.",
+    questionKey: "faq.items.expire.question",
+    answerKey: "faq.items.expire.answer",
   },
   {
-    question: "Can I use token packs on any plan?",
-    answer: "Yes. Token packs work with all plans, including Pay-as-you-go.",
+    questionKey: "faq.items.anyPlan.question",
+    answerKey: "faq.items.anyPlan.answer",
   },
 ];
