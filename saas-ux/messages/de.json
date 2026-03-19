@@ -340,5 +340,111 @@
     "legalNoticeTitle": "Haftungsausschluss:",
     "legalNoticeLine1": "Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für die Inhalte externer Links.",
     "legalNoticeLine2": "Für den Inhalt verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich."
+  },
+  "pricingPage": {
+    "hero": {
+      "title": "Plans & Pricing",
+      "description": "Choose the plan that matches your workflow, then scale with flexible token packs whenever your team needs extra AI throughput."
+    },
+    "billing": {
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "save": "save 2 months",
+      "toggleAria": "Toggle billing cycle"
+    },
+    "labels": {
+      "perMonth": "/month",
+      "perYear": "/year",
+      "bestFor": "Best for:",
+      "custom": "Custom"
+    },
+    "plans": {
+      "payg": {
+        "name": "Pay-as-you-go",
+        "description": "Our most flexible option for webmasters and small teams. Pay only for the fixes and analyses you need — perfect for emerging sites or occasional maintenance without a monthly commitment.",
+        "bestFor": "Webmasters, small teams, and new projects.",
+        "cta": "Start Pay-as-you-go",
+        "features": {
+          "analysis": "Access to all analysis tools",
+          "repairs": "On-demand AI repairs (token-based)",
+          "noMonthlyFees": "No monthly fees",
+          "lowFrequency": "Ideal for low-frequency usage"
+        }
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Unlimited AI repairs, builds, and analysis tools. Ideal for developers, freelancers, and organizations managing one or more sites. Full power without limits.",
+        "bestFor": "Developers, freelancers, and growing organizations.",
+        "cta": "Start Pro Plan",
+        "features": {
+          "unlimitedRepairs": "Unlimited AI repairs",
+          "unlimitedBuilds": "Unlimited builds",
+          "fullSuite": "Full site analysis suite",
+          "multiSite": "Multi-site support",
+          "priorityQueue": "Priority queue"
+        }
+      },
+      "agency": {
+        "name": "Agency",
+        "description": "Built for agencies and professionals managing multiple client sites. Includes client-ready white-label reports, priority processing, and advanced collaboration features.",
+        "bestFor": "Agencies, studios, and professionals managing multiple client sites.",
+        "cta": "Start Agency Plan",
+        "features": {
+          "everythingInPro": "Everything in Pro",
+          "whiteLabelReports": "White-label client reports",
+          "priorityProcessing": "Priority processing",
+          "teamCollaboration": "Team collaboration features",
+          "multiClient": "Multi-client management"
+        }
+      }
+    },
+    "tokenPacks": {
+      "title": "Token Packs",
+      "description": "Buy tokens on demand and keep AI operations moving with no subscription lock-in.",
+      "button": "Buy tokens",
+      "items": {
+        "small": "Small",
+        "medium": "Medium",
+        "large": "Large"
+      }
+    },
+    "footnotes": {
+      "saveTwoMonths": "Annual billing saves you 2 months.",
+      "fairUse": "Unlimited usage is subject to fair-use guidelines.",
+      "tokenVaries": "Token consumption varies by operation complexity."
+    },
+    "disclaimers": {
+      "cancelAnytime": "Cancel anytime. No hidden fees.",
+      "excludeVat": "Prices exclude VAT where applicable."
+    },
+    "faq": {
+      "title": "Pricing & Tokens FAQ",
+      "items": {
+        "tokens": {
+          "question": "How do tokens work?",
+          "answer": "Tokens are used to pay for AI-powered repairs, builds, and advanced analyses. Each operation consumes a specific number of tokens based on complexity."
+        },
+        "switchPlans": {
+          "question": "Can I switch plans later?",
+          "answer": "Yes. You can upgrade or downgrade your plan at any time from your account settings."
+        },
+        "expire": {
+          "question": "Do my tokens expire?",
+          "answer": "Tokens do not expire within the current billing year. We’ll notify you well in advance if this changes."
+        },
+        "anyPlan": {
+          "question": "Can I use token packs on any plan?",
+          "answer": "Yes. Token packs work with all plans, including Pay-as-you-go."
+        }
+      }
+    },
+    "tooltips": {
+      "unlimitedRepairs": "Unlimited repairs: Run as many AI fixes as you need without limits.",
+      "unlimitedBuilds": "Unlimited builds: Generate new components, pages, and code with no usage cap.",
+      "priorityQueue": "Priority queue: Your tasks are processed faster during peak times.",
+      "whiteLabelReports": "White-label reports: Export client-ready reports with your own branding.",
+      "tokenUsage": "Token usage: Tokens are consumed when running AI operations.",
+      "tokenPackUsage": "Tokens are consumed when running AI repairs, builds, or advanced analyses."
+    }
   }
 }

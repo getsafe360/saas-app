@@ -1,98 +1,135 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { CheckCircle2 } from "lucide-react";
+import { Check, Code2, Coins, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 
 import type { BillingCycle } from "@/config/plans.config";
 
 import { MICROCOPY_TOOLTIPS, MicrocopyTooltip } from "./MicrocopyTooltips";
 
 interface PlanCardProps {
-  name: string;
-  description: string;
+  nameKey: string;
+  descriptionKey: string;
   priceMonthly: number;
   priceYearly: number;
   features: string[];
-  bestFor: string;
+  bestForKey: string;
   stripeUrl?: string;
   borderColorToken: string;
   type: "free" | "pro" | "agency";
-  ctaLabel: string;
+  ctaLabelKey: string;
   billingCycle: BillingCycle;
 }
 
 const FEATURE_TOOLTIP_MAP: Record<string, string> = {
-  "Unlimited AI repairs": MICROCOPY_TOOLTIPS.unlimitedRepairs,
-  "Unlimited builds": MICROCOPY_TOOLTIPS.unlimitedBuilds,
-  "Priority queue": MICROCOPY_TOOLTIPS.priorityQueue,
-  "White-label client reports": MICROCOPY_TOOLTIPS.whiteLabelReports,
-  "On-demand AI repairs (token-based)": MICROCOPY_TOOLTIPS.tokenUsage,
+  "plans.pro.features.unlimitedRepairs": MICROCOPY_TOOLTIPS.unlimitedRepairs,
+  "plans.pro.features.unlimitedBuilds": MICROCOPY_TOOLTIPS.unlimitedBuilds,
+  "plans.pro.features.priorityQueue": MICROCOPY_TOOLTIPS.priorityQueue,
+  "plans.agency.features.whiteLabelReports": MICROCOPY_TOOLTIPS.whiteLabelReports,
+  "plans.payg.features.repairs": MICROCOPY_TOOLTIPS.tokenUsage,
 };
 
 export default function PlanCard({
-  name,
-  description,
+  nameKey,
+  descriptionKey,
   priceMonthly,
   priceYearly,
   features,
-  bestFor,
+  bestForKey,
   stripeUrl,
   borderColorToken,
   type,
-  ctaLabel,
+  ctaLabelKey,
   billingCycle,
 }: PlanCardProps) {
+  const t = useTranslations("pricingPage");
   const { openSignIn } = useClerk();
+  const [isPriceVisible, setIsPriceVisible] = useState(true);
 
   const displayPrice = billingCycle === "monthly" ? priceMonthly : priceYearly;
-  const suffix = billingCycle === "monthly" ? "/month" : "/year";
+  const suffix = billingCycle === "monthly" ? t("labels.perMonth") : t("labels.perYear");
+  const isCustomPrice = priceMonthly === 0 && priceYearly === 0;
+
+  useEffect(() => {
+    setIsPriceVisible(false);
+    const timeoutId = setTimeout(() => setIsPriceVisible(true), 90);
+    return () => clearTimeout(timeoutId);
+  }, [billingCycle]);
+
+  const iconStyles =
+    type === "agency"
+      ? {
+          wrapper: "from-sky-500/15 to-cyan-400/10 dark:from-sky-400/20 dark:to-cyan-400/10 ring-sky-500/20",
+          icon: "text-sky-600 dark:text-sky-400",
+          Icon: Sparkles,
+        }
+      : type === "pro"
+        ? {
+            wrapper: "from-violet-500/15 to-fuchsia-400/10 dark:from-violet-400/20 dark:to-fuchsia-400/10 ring-violet-500/20",
+            icon: "text-violet-600 dark:text-violet-400",
+            Icon: Code2,
+          }
+        : {
+            wrapper: "from-emerald-500/15 to-teal-400/10 dark:from-emerald-400/20 dark:to-teal-400/10 ring-emerald-500/20",
+            icon: "text-emerald-600 dark:text-emerald-400",
+            Icon: Coins,
+          };
+
+  const Icon = iconStyles.Icon;
 
   return (
     <article
-      className="group rounded-xl border border-neutral-700 bg-[#1b1b1b] p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg md:p-8"
+      className="group overflow-hidden rounded-2xl border border-slate-700/70 bg-white/[0.03] p-6 shadow-sm transition-colors duration-200 hover:border-slate-500/70 md:p-8"
       style={{ borderTop: `3px solid ${borderColorToken}` }}
     >
-      <h3 className="text-2xl font-semibold text-white">{name}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-neutral-300">{description}</p>
+      <div className={`mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-gradient-to-br ring-1 ${iconStyles.wrapper}`}>
+        <Icon className={`h-6 w-6 ${iconStyles.icon}`} />
+      </div>
 
-      <p className="mt-6 text-3xl font-semibold text-white">
-        €{displayPrice} <span className="text-base font-normal text-neutral-400">{suffix}</span>
+      <h3 className="text-2xl font-semibold text-slate-100">{t(nameKey)}</h3>
+      <p className="mt-3 text-sm leading-relaxed text-slate-300">{t(descriptionKey)}</p>
+
+      <p className={`mt-6 text-3xl font-semibold text-slate-100 transition-all duration-200 ${isPriceVisible ? "opacity-100" : "opacity-40"}`}>
+        {isCustomPrice ? t("labels.custom") : `€${displayPrice}`}{" "}
+        {!isCustomPrice && <span className="text-base font-normal text-slate-400">{suffix}</span>}
       </p>
 
       <ul className="mt-6 space-y-3">
-        {features.map((feature) => (
-          <li key={feature} className="flex items-start gap-3 text-sm text-neutral-200">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary-300" />
+        {features.map((featureKey) => (
+          <li key={featureKey} className="flex items-start gap-3 text-sm text-slate-200">
+            <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
             <span>
-              {feature}
-              {FEATURE_TOOLTIP_MAP[feature] && (
-                <MicrocopyTooltip text={FEATURE_TOOLTIP_MAP[feature]} />
+              {t(featureKey)}
+              {FEATURE_TOOLTIP_MAP[featureKey] && (
+                <MicrocopyTooltip text={t(FEATURE_TOOLTIP_MAP[featureKey])} />
               )}
             </span>
           </li>
         ))}
       </ul>
 
-      <p className="mt-6 text-sm text-neutral-400">
-        <span className="font-medium text-neutral-200">Best for:</span> {bestFor}
+      <p className="mt-6 text-sm text-slate-400">
+        <span className="font-medium text-slate-200">{t("labels.bestFor")}</span> {t(bestForKey)}
       </p>
 
       {type === "free" ? (
         <button
           type="button"
           onClick={() => openSignIn?.()}
-          className="mt-6 w-full bg-surface-primary border border-border-primary rounded-md px-4 py-2.5 text-base font-medium text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] hover:bg-surface-primaryHover"
+          className="mt-6 w-full rounded-md border border-slate-500/70 bg-slate-900/40 px-4 py-2.5 text-base font-medium text-slate-100 transition-colors duration-200 hover:bg-slate-800/60"
         >
-          {ctaLabel}
+          {t(ctaLabelKey)}
         </button>
       ) : (
         <a
           href={stripeUrl}
           target="_blank"
           rel="noreferrer"
-          className="mt-6 inline-flex w-full items-center justify-center bg-surface-primary border border-border-primary rounded-md px-4 py-2.5 text-base font-medium text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] hover:bg-surface-primaryHover"
+          className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-slate-500/70 bg-slate-900/40 px-4 py-2.5 text-base font-medium text-slate-100 transition-colors duration-200 hover:bg-slate-800/60"
         >
-          {ctaLabel}
+          {t(ctaLabelKey)}
         </a>
       )}
     </article>
