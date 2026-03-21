@@ -8,7 +8,7 @@ import { Settings, Activity, Menu, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { UserGreeting } from "@/components/ui/user-greeting";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import CTA from "@/components/marketing/CTA";
 import { SiteSelectorDropdown } from "@/components/dashboard/SiteSelectorDropdown";
 
