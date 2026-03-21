@@ -15,6 +15,8 @@ import {
 // import { ActivityType } from '@/lib/db/schema'; // removed
 import { getActivityLogs } from "@/lib/db/queries";
 
+export const dynamic = "force-dynamic";
+
 // Canonical action values (match what you store in DB)
 const ACTIONS = {
   SIGN_UP: "sign_up",
