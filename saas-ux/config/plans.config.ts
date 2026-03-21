@@ -21,7 +21,7 @@ export interface TokenPackDefinition {
 
 export const PRICING_PLANS: PlanDefinition[] = [
   {
-    nameKey: "plans.payg.name",
+    nameKey: "plans.payg.name", 
     descriptionKey: "plans.payg.description",
     priceMonthly: 0,
     priceYearly: 0,
@@ -49,7 +49,7 @@ export const PRICING_PLANS: PlanDefinition[] = [
       "plans.pro.features.priorityQueue",
     ],
     bestForKey: "plans.pro.bestFor",
-    stripeUrl: "https://buy.stripe.com/8x214mfQud5mbNf84abAs00",
+    stripeUrl: "https://buy.getsafe360.ai/b/8x214mfQud5mbNf84abAs00",
     borderColorToken: "var(--color-primary-500)",
     type: "pro",
     ctaLabelKey: "plans.pro.cta",
@@ -67,7 +67,7 @@ export const PRICING_PLANS: PlanDefinition[] = [
       "plans.agency.features.multiClient",
     ],
     bestForKey: "plans.agency.bestFor",
-    stripeUrl: "https://buy.stripe.com/14AbJ09s61mE2cF5W2bAs01",
+    stripeUrl: "https://buy.getsafe360.ai/b/14AbJ09s61mE2cF5W2bAs01",
     borderColorToken: "var(--color-primary-300)",
     type: "agency",
     ctaLabelKey: "plans.agency.cta",
@@ -78,17 +78,17 @@ export const TOKEN_PACKS: TokenPackDefinition[] = [
   {
     nameKey: "tokenPacks.items.small",
     price: "€5",
-    stripeUrl: "https://buy.stripe.com/8x214m9s69Ta5oR4RYbAs03",
+    stripeUrl: "https://buy.getsafe360.ai/b/8x214m9s69Ta5oR4RYbAs03",
   },
   {
     nameKey: "tokenPacks.items.medium",
     price: "€10",
-    stripeUrl: "https://buy.stripe.com/dRm8wO9s6d5mbNf2JQbAs02",
+    stripeUrl: "https://buy.getsafe360.ai/b/dRm8wO9s6d5mbNf2JQbAs02",
   },
   {
     nameKey: "tokenPacks.items.large",
     price: "€15",
-    stripeUrl: "https://buy.stripe.com/eVq14m1ZE4yQg3v706bAs04",
+    stripeUrl: "https://buy.getsafe360.ai/b/eVq14m1ZE4yQg3v706bAs04",
   },
 ];
 

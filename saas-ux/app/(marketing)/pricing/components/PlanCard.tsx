@@ -8,6 +8,7 @@ import type { BillingCycle } from "@/config/plans.config";
 
 import { MICROCOPY_TOOLTIPS, MicrocopyTooltip } from "./MicrocopyTooltips";
 import { getPricingCopy } from "./pricing-copy";
+import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 
 interface PlanCardProps {
   nameKey: string;
@@ -27,7 +28,8 @@ const FEATURE_TOOLTIP_MAP: Record<string, string> = {
   "plans.pro.features.unlimitedRepairs": MICROCOPY_TOOLTIPS.unlimitedRepairs,
   "plans.pro.features.unlimitedBuilds": MICROCOPY_TOOLTIPS.unlimitedBuilds,
   "plans.pro.features.priorityQueue": MICROCOPY_TOOLTIPS.priorityQueue,
-  "plans.agency.features.whiteLabelReports": MICROCOPY_TOOLTIPS.whiteLabelReports,
+  "plans.agency.features.whiteLabelReports":
+    MICROCOPY_TOOLTIPS.whiteLabelReports,
   "plans.payg.features.repairs": MICROCOPY_TOOLTIPS.tokenUsage,
 };
 
@@ -47,7 +49,9 @@ export default function PlanCard({
   const { openSignIn } = useClerk();
   const [isPriceVisible, setIsPriceVisible] = useState(true);
 
-  const displayPrice = billingCycle === "monthly" ? priceMonthly : priceYearly;
+  const targetPrice = billingCycle === "monthly" ? priceMonthly : priceYearly;
+  const animatedPrice = useAnimatedNumber(targetPrice);
+
   const suffix =
     billingCycle === "monthly"
       ? getPricingCopy("labels.perMonth")
@@ -55,26 +59,35 @@ export default function PlanCard({
   const isCustomPrice = priceMonthly === 0 && priceYearly === 0;
 
   useEffect(() => {
+    // Phase 1: scale down + fade out
     setIsPriceVisible(false);
-    const timeoutId = setTimeout(() => setIsPriceVisible(true), 90);
+
+    const timeoutId = setTimeout(() => {
+      // Phase 2: scale up + fade in
+      setIsPriceVisible(true);
+    }, 180); // 150–200ms is ideal
+
     return () => clearTimeout(timeoutId);
   }, [billingCycle]);
 
   const iconStyles =
     type === "agency"
       ? {
-          wrapper: "from-sky-500/15 to-cyan-400/10 dark:from-sky-400/20 dark:to-cyan-400/10 ring-sky-500/20",
+          wrapper:
+            "from-sky-500/15 to-cyan-400/10 dark:from-sky-400/20 dark:to-cyan-400/10 ring-sky-500/20",
           icon: "text-sky-600 dark:text-sky-400",
           Icon: Sparkles,
         }
       : type === "pro"
         ? {
-            wrapper: "from-violet-500/15 to-fuchsia-400/10 dark:from-violet-400/20 dark:to-fuchsia-400/10 ring-violet-500/20",
+            wrapper:
+              "from-violet-500/15 to-fuchsia-400/10 dark:from-violet-400/20 dark:to-fuchsia-400/10 ring-violet-500/20",
             icon: "text-violet-600 dark:text-violet-400",
             Icon: Code2,
           }
         : {
-            wrapper: "from-emerald-500/15 to-teal-400/10 dark:from-emerald-400/20 dark:to-teal-400/10 ring-emerald-500/20",
+            wrapper:
+              "from-emerald-500/15 to-teal-400/10 dark:from-emerald-400/20 dark:to-teal-400/10 ring-emerald-500/20",
             icon: "text-emerald-600 dark:text-emerald-400",
             Icon: Coins,
           };
@@ -86,26 +99,45 @@ export default function PlanCard({
       className="group overflow-hidden rounded-2xl border border-slate-700/70 bg-white/[0.03] p-6 shadow-sm transition-colors duration-200 hover:border-slate-500/70 md:p-8"
       style={{ borderTop: `3px solid ${borderColorToken}` }}
     >
-      <div className={`mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-gradient-to-br ring-1 ${iconStyles.wrapper}`}>
+      <div
+        className={`mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-gradient-to-br ring-1 ${iconStyles.wrapper}`}
+      >
         <Icon className={`h-6 w-6 ${iconStyles.icon}`} />
       </div>
 
-      <h3 className="text-2xl font-semibold text-slate-100">{getPricingCopy(nameKey)}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-slate-300">{getPricingCopy(descriptionKey)}</p>
+      <h3 className="text-2xl font-semibold text-slate-100">
+        {getPricingCopy(nameKey)}
+      </h3>
+      <p className="mt-3 text-sm leading-relaxed text-slate-300">
+        {getPricingCopy(descriptionKey)}
+      </p>
 
-      <p className={`mt-6 text-3xl font-semibold text-slate-100 transition-all duration-200 ${isPriceVisible ? "opacity-100" : "opacity-40"}`}>
-        {isCustomPrice ? getPricingCopy("labels.custom") : `€${displayPrice}`}{" "}
-        {!isCustomPrice && <span className="text-base font-normal text-slate-400">{suffix}</span>}
+      <p className="mt-6 text-3xl font-semibold text-slate-100">
+        {isCustomPrice ? (
+          getPricingCopy("labels.custom")
+        ) : (
+          <>
+            €{animatedPrice}
+            <span className="ml-1 text-base font-normal text-slate-400">
+              {suffix}
+            </span>
+          </>
+        )}
       </p>
 
       <ul className="mt-6 space-y-3">
         {features.map((featureKey) => (
-          <li key={featureKey} className="flex items-start gap-3 text-sm text-slate-200">
+          <li
+            key={featureKey}
+            className="flex items-start gap-3 text-sm text-slate-200"
+          >
             <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
             <span>
               {getPricingCopy(featureKey)}
               {FEATURE_TOOLTIP_MAP[featureKey] && (
-                <MicrocopyTooltip text={getPricingCopy(FEATURE_TOOLTIP_MAP[featureKey])} />
+                <MicrocopyTooltip
+                  text={getPricingCopy(FEATURE_TOOLTIP_MAP[featureKey])}
+                />
               )}
             </span>
           </li>
@@ -113,7 +145,10 @@ export default function PlanCard({
       </ul>
 
       <p className="mt-6 text-sm text-slate-400">
-        <span className="font-medium text-slate-200">{getPricingCopy("labels.bestFor")}</span> {getPricingCopy(bestForKey)}
+        <span className="font-medium text-slate-200">
+          {getPricingCopy("labels.bestFor")}
+        </span>{" "}
+        {getPricingCopy(bestForKey)}
       </p>
 
       {type === "free" ? (

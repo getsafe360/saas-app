@@ -3,13 +3,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import {
-  Sparkles,
-  Code2,
-  CheckCircle2,
-  ArrowRight,
-  Dot,
-} from "lucide-react";
+import { Sparkles, Code2, CheckCircle2, ArrowRight, Dot } from "lucide-react";
 
 export default function AudienceInfoBoxes({
   ownerVariant = "spark",
@@ -41,25 +35,35 @@ export default function AudienceInfoBoxes({
 
   return (
     <section
-      aria-label={tib("sectionLabel")} 
-      className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-6 px-4 sm:px-6 lg:px-8 mb-12"
+      aria-label={tib("sectionLabel")}
+      className="mx-auto max-w-6xl grid lg:grid-cols-2 gap-6 px-4 sm:px-6 lg:px-8 mb-12"
     >
       {/* Owners/Webmasters Card */}
-      <Card accent="sky" icon={
-        <div
-          className="size-12 rounded-xl bg-gradient-to-br from-sky-500/15 to-cyan-400/10 dark:from-sky-400/20 dark:to-cyan-400/10 flex items-center justify-center ring-1 ring-sky-500/20"
-          aria-hidden
+      <Card
+        accent="sky"
+        icon={
+          <div
+            className="size-12 rounded-xl bg-gradient-to-br from-sky-500/15 to-cyan-400/10 dark:from-sky-400/20 dark:to-cyan-400/10 flex items-center justify-center ring-1 ring-sky-500/20"
+            aria-hidden
+          >
+            <Sparkles className="size-7 text-sky-600 dark:text-sky-400" />
+          </div>
+        }
+      >
+        <h3
+          id="owners-heading"
+          className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100"
         >
-          <Sparkles className="size-7 text-sky-600 dark:text-sky-400" />
-        </div>
-      }>
-        <h3 id="owners-heading" className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           {tib("owners.title")}
         </h3>
         <p className="mt-2 text-base leading-relaxed text-slate-700 dark:text-slate-300">
           {tib.rich("owners.lead", {
             b: (chunks) => <strong className="font-semibold">{chunks}</strong>,
-            em: (chunks) => <em className="not-italic underline decoration-sky-400/60 decoration-2 underline-offset-4">{chunks}</em>,
+            em: (chunks) => (
+              <em className="not-italic underline decoration-sky-400/60 decoration-2 underline-offset-4">
+                {chunks}
+              </em>
+            ),
           })}
         </p>
         <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
@@ -87,21 +91,31 @@ export default function AudienceInfoBoxes({
       </Card>
 
       {/* Developers/Pros Card */}
-      <Card accent="violet" icon={
-        <div
-          className="size-12 rounded-xl bg-gradient-to-br from-violet-500/15 to-fuchsia-400/10 dark:from-violet-400/20 dark:to-fuchsia-400/10 flex items-center justify-center ring-1 ring-violet-500/20"
-          aria-hidden
+      <Card
+        accent="violet"
+        icon={
+          <div
+            className="size-12 rounded-xl bg-gradient-to-br from-violet-500/15 to-fuchsia-400/10 dark:from-violet-400/20 dark:to-fuchsia-400/10 flex items-center justify-center ring-1 ring-violet-500/20"
+            aria-hidden
+          >
+            <Code2 className="size-7 text-violet-600 dark:text-violet-400" />
+          </div>
+        }
+      >
+        <h3
+          id="devs-heading"
+          className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100"
         >
-          <Code2 className="size-7 text-violet-600 dark:text-violet-400" />
-        </div>
-      }>
-        <h3 id="devs-heading" className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           {tib("devs.title")}
         </h3>
         <p className="mt-2 text-base leading-relaxed text-slate-700 dark:text-slate-300">
           {tib.rich("devs.lead", {
             b: (chunks) => <strong className="font-semibold">{chunks}</strong>,
-            em: (chunks) => <em className="not-italic underline decoration-violet-400/60 decoration-2 underline-offset-4">{chunks}</em>,
+            em: (chunks) => (
+              <em className="not-italic underline decoration-violet-400/60 decoration-2 underline-offset-4">
+                {chunks}
+              </em>
+            ),
           })}
         </p>
         <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
@@ -110,7 +124,12 @@ export default function AudienceInfoBoxes({
 
         <ul role="list" className="mt-4 space-y-2">
           {devItems.map((text, i) => (
-            <ListItem key={i} text={text} accent="violet" variant={devVariant} />
+            <ListItem
+              key={i}
+              text={text}
+              accent="violet"
+              variant={devVariant}
+            />
           ))}
         </ul>
 
@@ -147,9 +166,7 @@ function Card({
       : "bg-gradient-to-r from-sky-500/70 via-cyan-400/70 to-teal-400/70";
 
   return (
-    <div
-      className="group relative overflow-hidden rounded-2xl ring-1 ring-slate-900/10 dark:ring-white/10 bg-white/70 dark:bg-white/[0.04] backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm hover:shadow-xl transition-shadow"
-    >
+    <div className="group relative overflow-hidden rounded-2xl ring-1 ring-slate-900/10 dark:ring-white/10 bg-white/70 dark:bg-white/[0.04] backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm hover:shadow-xl transition-shadow">
       <div className={`h-1 ${accentTopBar}`} aria-hidden />
 
       <div className="p-6">
@@ -174,10 +191,21 @@ function ListItem({
   accent?: "sky" | "violet";
   variant?: "check" | "dot" | "spark" | "code";
 }) {
-  const iconClass = accent === "violet" ? "text-violet-600 dark:text-violet-400" : "text-sky-600 dark:text-sky-400";
-  const ringClass = accent === "violet" ? "ring-violet-500/20" : "ring-sky-500/20";
+  const iconClass =
+    accent === "violet"
+      ? "text-violet-600 dark:text-violet-400"
+      : "text-sky-600 dark:text-sky-400";
+  const ringClass =
+    accent === "violet" ? "ring-violet-500/20" : "ring-sky-500/20";
 
-  const Icon = variant === "spark" ? Sparkles : variant === "dot" ? Dot : variant === "code" ? Code2 : CheckCircle2;
+  const Icon =
+    variant === "spark"
+      ? Sparkles
+      : variant === "dot"
+        ? Dot
+        : variant === "code"
+          ? Code2
+          : CheckCircle2;
 
   return (
     <li className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-300">

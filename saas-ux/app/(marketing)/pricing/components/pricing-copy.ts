@@ -1,57 +1,89 @@
 const PRICING_COPY: Record<string, string> = {
   "hero.title": "Plans & Pricing",
-  "hero.description":
-    "Choose the plan that matches your workflow, then scale with flexible token packs whenever your team needs extra AI throughput.",
+  "hero.description": "Choose the plan that matches your workflow.",
+
   "billing.monthly": "Monthly",
   "billing.yearly": "Yearly",
   "billing.save": "save 2 months",
   "billing.toggleAria": "Toggle billing cycle",
+
   "labels.perMonth": "/month",
   "labels.perYear": "/year",
   "labels.bestFor": "Best for:",
-  "labels.custom": "Custom",
+  "labels.custom": "Free",
+
+  // PAYG
   "plans.payg.name": "Pay-as-you-go",
   "plans.payg.description":
-    "Our most flexible option for webmasters and small teams. Pay only for the fixes and analyses you need — perfect for emerging sites or occasional maintenance without a monthly commitment.",
-  "plans.payg.bestFor": "Webmasters, small teams, and new projects.",
-  "plans.payg.cta": "Start Pay-as-you-go",
-  "plans.payg.features.analysis": "Access to all analysis tools",
-  "plans.payg.features.repairs": "On-demand AI repairs (token-based)",
+    "Flexible, commitment-free access to all Pro-level tools. Buy tokens and fix issues instantly — only pay when you need help.",
+  "plans.payg.bestFor": "Webmasters, DIY site owners, small businesses.",
+  "plans.payg.cta": "Start PAYG Plan →",
+
+  "plans.payg.features.tools": "Access to all AI tools",
+  "plans.payg.features.optimization": "SEO, GEO & AEO tools",
+  "plans.payg.features.wp": "WordPress toolset",
+  "plans.payg.features.accessibility": "Accessibility, performance & security tools",
+  "plans.payg.features.tokenUsage": "Token-based usage",
   "plans.payg.features.noMonthlyFees": "No monthly fees",
-  "plans.payg.features.lowFrequency": "Ideal for low-frequency usage",
+  "plans.payg.features.lowFrequency": "Ideal for low-frequency maintenance",
+
+  // PRO
   "plans.pro.name": "Pro",
   "plans.pro.description":
-    "Unlimited AI repairs, builds, and analysis tools. Ideal for developers, freelancers, and organizations managing one or more sites. Full power without limits.",
+    "Unlimited AI repairs, builds, and optimization tools for professionals managing one or multiple sites.",
   "plans.pro.bestFor": "Developers, freelancers, and growing organizations.",
-  "plans.pro.cta": "Start Pro Plan",
+  "plans.pro.cta": "Start Pro Plan →",
+
+  "plans.pro.features.optimization": "SEO, GEO & AEO tools",
+  "plans.pro.features.accessibility": "Accessibility, performance & security tools",
+  "plans.pro.features.contentCreator": "Content creator/writer",
+  "plans.pro.features.oneClickFixes": "One-click fixes",
+  "plans.pro.features.sparky": "Sparky AI assistant",
+  "plans.pro.features.multiSite": "Multi-site support",
   "plans.pro.features.unlimitedRepairs": "Unlimited AI repairs",
   "plans.pro.features.unlimitedBuilds": "Unlimited builds",
-  "plans.pro.features.fullSuite": "Full site analysis suite",
-  "plans.pro.features.multiSite": "Multi-site support",
-  "plans.pro.features.priorityQueue": "Priority queue",
+
+  // AGENCY
   "plans.agency.name": "Agency",
   "plans.agency.description":
-    "Built for agencies and professionals managing multiple client sites. Includes client-ready white-label reports, priority processing, and advanced collaboration features.",
+    "Unlimited usage for agencies managing multiple client sites. Deliver client-ready reports in seconds and scale your client operations.",
   "plans.agency.bestFor":
     "Agencies, studios, and professionals managing multiple client sites.",
-  "plans.agency.cta": "Start Agency Plan",
+  "plans.agency.cta": "Start Agency Plan →",
+
   "plans.agency.features.everythingInPro": "Everything in Pro",
   "plans.agency.features.whiteLabelReports": "White-label client reports",
   "plans.agency.features.priorityProcessing": "Priority processing",
-  "plans.agency.features.teamCollaboration": "Team collaboration features",
   "plans.agency.features.multiClient": "Multi-client management",
-  "tokenPacks.title": "Token Packs",
-  "tokenPacks.description":
-    "Buy tokens on demand and keep AI operations moving with no subscription lock-in.",
-  "tokenPacks.button": "Buy tokens",
-  "tokenPacks.items.small": "Small",
-  "tokenPacks.items.medium": "Medium",
-  "tokenPacks.items.large": "Large",
+
+// Token Packs
+"tokenPacks.title": "Token Packs",
+"tokenPacks.description":
+  "Buy tokens on demand and keep AI operations moving with no subscription lock-in.",
+"tokenPacks.button": "Buy tokens",
+
+"tokenPacks.items.small": "Small",
+"tokenPacks.items.small.description":
+  "10,000 AI tokens for automated fixes (~25 website operations). One-time purchase — tokens never expire.",
+
+"tokenPacks.items.medium": "Medium",
+"tokenPacks.items.medium.description":
+  "25,000 AI tokens for automated fixes (~50 website operations). Great value — tokens never expire.",
+
+"tokenPacks.items.large": "Large",
+"tokenPacks.items.large.description":
+  "50,000 AI tokens for automated fixes (~100 website operations). Maximum value — tokens never expire.",
+
+  // Footnotes
   "footnotes.saveTwoMonths": "Annual billing saves you 2 months.",
   "footnotes.fairUse": "Unlimited usage is subject to fair-use guidelines.",
   "footnotes.tokenVaries": "Token consumption varies by operation complexity.",
+
+  // Disclaimers
   "disclaimers.cancelAnytime": "Cancel anytime. No hidden fees.",
   "disclaimers.excludeVat": "Prices exclude VAT where applicable.",
+
+  // FAQ
   "faq.title": "Pricing & Tokens FAQ",
   "faq.items.tokens.question": "How do tokens work?",
   "faq.items.tokens.answer":
@@ -65,18 +97,20 @@ const PRICING_COPY: Record<string, string> = {
   "faq.items.anyPlan.question": "Can I use token packs on any plan?",
   "faq.items.anyPlan.answer":
     "Yes. Token packs work with all plans, including Pay-as-you-go.",
+
+  // Tooltips
   "tooltips.unlimitedRepairs":
-    "Unlimited repairs: Run as many AI fixes as you need without limits.",
+    "Run as many AI repairs as you need without limits.",
   "tooltips.unlimitedBuilds":
-    "Unlimited builds: Generate new components, pages, and code with no usage cap.",
+    "Generate new components, pages, and code with no usage cap.",
   "tooltips.priorityQueue":
-    "Priority queue: Your tasks are processed faster during peak times.",
+    "Your tasks are processed faster during peak times.",
   "tooltips.whiteLabelReports":
-    "White-label reports: Export client-ready reports with your own branding.",
+    "Export client-ready reports with your own branding.",
   "tooltips.tokenUsage":
-    "Token usage: Tokens are consumed when running AI operations.",
-  "tooltips.tokenPackUsage":
-    "Tokens are consumed when running AI repairs, builds, or advanced analyses.",
+    "Tokens are consumed when running AI operations.",
+    "tooltips.tokenPackUsage":
+  "Tokens are consumed when running AI repairs, builds, or advanced operations.",
 };
 
 export function getPricingCopy(key: string): string {
