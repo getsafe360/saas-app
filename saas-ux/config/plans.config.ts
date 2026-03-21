@@ -82,19 +82,19 @@ export const PRICING_PLANS: PlanDefinition[] = [
 
 export const TOKEN_PACKS: TokenPackDefinition[] = [
   {
-    nameKey: "tokenPacks.items.small",
+    nameKey: "tokenPacks.items.small.name",
     descriptionKey: "tokenPacks.items.small.description",
     price: "€5",
     stripeUrl: "https://buy.getsafe360.ai/b/8x214m9s69Ta5oR4RYbAs03",
   },
   {
-    nameKey: "tokenPacks.items.medium",
+    nameKey: "tokenPacks.items.medium.name",
     descriptionKey: "tokenPacks.items.medium.description",
     price: "€10",
     stripeUrl: "https://buy.getsafe360.ai/b/dRm8wO9s6d5mbNf2JQbAs02",
   },
   {
-    nameKey: "tokenPacks.items.large",
+    nameKey: "tokenPacks.items.large.name",
     descriptionKey: "tokenPacks.items.large.description",
     price: "€15",
     stripeUrl: "https://buy.getsafe360.ai/b/eVq14m1ZE4yQg3v706bAs04",

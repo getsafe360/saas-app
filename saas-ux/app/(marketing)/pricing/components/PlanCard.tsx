@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import type { BillingCycle } from "@/config/plans.config";
 
 import { MICROCOPY_TOOLTIPS, MicrocopyTooltip } from "./MicrocopyTooltips";
-import { getPricingCopy } from "./pricing-copy";
+import { usePricingCopy } from "./pricing-copy";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 
 interface PlanCardProps {
@@ -46,6 +46,7 @@ export default function PlanCard({
   ctaLabelKey,
   billingCycle,
 }: PlanCardProps) {
+  const t = usePricingCopy();
   const { openSignIn } = useClerk();
   const [isPriceVisible, setIsPriceVisible] = useState(true);
 
@@ -54,8 +55,8 @@ export default function PlanCard({
 
   const suffix =
     billingCycle === "monthly"
-      ? getPricingCopy("labels.perMonth")
-      : getPricingCopy("labels.perYear");
+      ? t("labels.perMonth")
+      : t("labels.perYear");
   const isCustomPrice = priceMonthly === 0 && priceYearly === 0;
 
   useEffect(() => {
@@ -106,15 +107,15 @@ export default function PlanCard({
       </div>
 
       <h3 className="text-2xl font-semibold text-slate-100">
-        {getPricingCopy(nameKey)}
+        {t(nameKey)}
       </h3>
       <p className="mt-3 text-sm leading-relaxed text-slate-300">
-        {getPricingCopy(descriptionKey)}
+        {t(descriptionKey)}
       </p>
 
       <p className="mt-6 text-3xl font-semibold text-slate-100">
         {isCustomPrice ? (
-          getPricingCopy("labels.custom")
+          t("labels.custom")
         ) : (
           <>
             €{animatedPrice}
@@ -133,10 +134,10 @@ export default function PlanCard({
           >
             <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
             <span>
-              {getPricingCopy(featureKey)}
+              {t(featureKey)}
               {FEATURE_TOOLTIP_MAP[featureKey] && (
                 <MicrocopyTooltip
-                  text={getPricingCopy(FEATURE_TOOLTIP_MAP[featureKey])}
+                  text={t(FEATURE_TOOLTIP_MAP[featureKey])}
                 />
               )}
             </span>
@@ -146,9 +147,9 @@ export default function PlanCard({
 
       <p className="mt-6 text-sm text-slate-400">
         <span className="font-medium text-slate-200">
-          {getPricingCopy("labels.bestFor")}
+          {t("labels.bestFor")}
         </span>{" "}
-        {getPricingCopy(bestForKey)}
+        {t(bestForKey)}
       </p>
 
       {type === "free" ? (
@@ -157,7 +158,7 @@ export default function PlanCard({
           onClick={() => openSignIn?.()}
           className="mt-6 w-full rounded-md border border-slate-500/70 bg-slate-900/40 px-4 py-2.5 text-base font-medium text-slate-100 transition-colors duration-200 hover:bg-slate-800/60"
         >
-          {getPricingCopy(ctaLabelKey)}
+          {t(ctaLabelKey)}
         </button>
       ) : (
         <a
@@ -166,7 +167,7 @@ export default function PlanCard({
           rel="noreferrer"
           className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-slate-500/70 bg-slate-900/40 px-4 py-2.5 text-base font-medium text-slate-100 transition-colors duration-200 hover:bg-slate-800/60"
         >
-          {getPricingCopy(ctaLabelKey)}
+          {t(ctaLabelKey)}
         </a>
       )}
     </article>

@@ -1,96 +1,120 @@
 {
   "hero": {
-    "title": "",
-    "subtitle": ""
+    "title": "Planes y precios",
+    "description": "Elige el plan que mejor se adapte a tu flujo de trabajo."
   },
-  "toggle": {
-    "monthly": "",
-    "yearly": "",
-    "save": ""
+  "billing": {
+    "monthly": "Mensual",
+    "yearly": "Anual",
+    "save": "ahorra 2 meses",
+    "toggleAria": "Cambiar ciclo de facturación"
+  },
+  "labels": {
+    "perMonth": "/mes",
+    "perYear": "/año",
+    "bestFor": "Ideal para:",
+    "custom": "Gratis"
   },
   "plans": {
     "payg": {
-      "name": "",
-      "description": "",
-      "features": [
-        "",
-        "",
-        "",
-        ""
-      ],
-      "bestFor": "",
-      "cta": ""
+      "name": "Pago por uso",
+      "description": "Acceso flexible y sin compromiso a todas las herramientas de nivel Pro. Compra tokens y corrige problemas al instante: solo pagas cuando necesitas ayuda.",
+      "bestFor": "Webmasters, propietarios de sitios DIY y pequeñas empresas.",
+      "cta": "Comenzar plan PAYG →",
+      "features": {
+        "tools": "Acceso a todas las herramientas de IA",
+        "optimization": "Herramientas SEO, GEO y AEO",
+        "wp": "Suite de herramientas para WordPress",
+        "accessibility": "Herramientas de accesibilidad, rendimiento y seguridad",
+        "tokenUsage": "Uso basado en tokens",
+        "noMonthlyFees": "Sin cuotas mensuales",
+        "lowFrequency": "Ideal para mantenimiento de baja frecuencia"
+      }
     },
     "pro": {
-      "name": "",
-      "description": "",
-      "features": [
-        "",
-        "",
-        "",
-        "",
-        ""
-      ],
-      "bestFor": "",
-      "cta": ""
+      "name": "Pro",
+      "description": "Reparaciones con IA ilimitadas, builds ilimitados y herramientas de optimización para profesionales que gestionan uno o varios sitios.",
+      "bestFor": "Desarrolladores, freelancers y organizaciones en crecimiento.",
+      "cta": "Comenzar plan Pro →",
+      "features": {
+        "optimization": "Herramientas SEO, GEO y AEO",
+        "accessibility": "Herramientas de accesibilidad, rendimiento y seguridad",
+        "contentCreator": "Creador/redactor de contenido",
+        "oneClickFixes": "Correcciones en un clic",
+        "sparky": "Asistente de IA Sparky",
+        "multiSite": "Soporte multisitio",
+        "unlimitedRepairs": "Reparaciones con IA ilimitadas",
+        "unlimitedBuilds": "Builds ilimitados"
+      }
     },
     "agency": {
-      "name": "",
-      "description": "",
-      "features": [
-        "",
-        "",
-        "",
-        "",
-        ""
-      ],
-      "bestFor": "",
-      "cta": ""
-    },
-    "bestForLabel": ""
+      "name": "Agency",
+      "description": "Uso ilimitado para agencias que gestionan múltiples sitios de clientes. Entrega informes listos para clientes en segundos y escala tus operaciones.",
+      "bestFor": "Agencias, estudios y profesionales que gestionan varios sitios de clientes.",
+      "cta": "Comenzar plan Agency →",
+      "features": {
+        "everythingInPro": "Todo lo incluido en Pro",
+        "whiteLabelReports": "Informes para clientes con marca blanca",
+        "priorityProcessing": "Procesamiento prioritario",
+        "multiClient": "Gestión multicliente"
+      }
+    }
   },
   "tokenPacks": {
-    "title": "",
-    "subtitle": "",
-    "buy": "",
-    "small": "",
-    "medium": "",
-    "large": ""
-  },
-  "microcopy": {
-    "unlimitedRepairs": "",
-    "unlimitedBuilds": "",
-    "priorityQueue": "",
-    "whiteLabelReports": "",
-    "tokenUsage": "",
-    "tokenPackUsage": ""
+    "title": "Paquetes de tokens",
+    "description": "Compra tokens bajo demanda y mantén tus operaciones de IA activas sin suscripción obligatoria.",
+    "button": "Comprar tokens",
+    "items": {
+      "small": {
+        "description": "10.000 tokens de IA para correcciones automatizadas (~25 operaciones de sitio web). Compra única: los tokens nunca caducan.",
+        "name": "Pequeño"
+      },
+      "medium": {
+        "description": "25.000 tokens de IA para correcciones automatizadas (~50 operaciones de sitio web). Gran relación calidad-precio: los tokens nunca caducan.",
+        "name": "Mediano"
+      },
+      "large": {
+        "description": "50.000 tokens de IA para correcciones automatizadas (~100 operaciones de sitio web). Máximo valor: los tokens nunca caducan.",
+        "name": "Grande"
+      }
+    }
   },
   "footnotes": {
-    "annualSavings": "",
-    "fairUse": "",
-    "tokenComplexity": ""
+    "saveTwoMonths": "La facturación anual te ahorra 2 meses.",
+    "fairUse": "El uso ilimitado está sujeto a políticas de uso justo.",
+    "tokenVaries": "El consumo de tokens varía según la complejidad de la operación."
   },
   "disclaimers": {
-    "cancelAnytime": "",
-    "vatExcluded": ""
+    "cancelAnytime": "Cancela cuando quieras. Sin cargos ocultos.",
+    "excludeVat": "Precios sin IVA cuando aplique."
   },
   "faq": {
-    "title": "",
-    "q1": {
-      "question": "",
-      "answer": ""
-    },
-    "q2": {
-      "question": "",
-      "answer": ""
-    },
-    "q3": {
-      "question": "",
-      "answer": ""
-    },
-    "q4": {
-      "question": "",
-      "answer": ""
+    "title": "FAQ de precios y tokens",
+    "items": {
+      "tokens": {
+        "question": "¿Cómo funcionan los tokens?",
+        "answer": "Los tokens se utilizan para pagar reparaciones, builds y análisis avanzados impulsados por IA. Cada operación consume una cantidad específica de tokens según su complejidad."
+      },
+      "switchPlans": {
+        "question": "¿Puedo cambiar de plan más adelante?",
+        "answer": "Sí. Puedes cambiar a un plan superior o inferior en cualquier momento desde la configuración de tu cuenta."
+      },
+      "expire": {
+        "question": "¿Caducan mis tokens?",
+        "answer": "Los tokens no caducan durante el año de facturación actual. Te avisaremos con suficiente antelación si esto cambia."
+      },
+      "anyPlan": {
+        "question": "¿Puedo usar paquetes de tokens en cualquier plan?",
+        "answer": "Sí. Los paquetes de tokens funcionan con todos los planes, incluido pago por uso."
+      }
     }
+  },
+  "tooltips": {
+    "unlimitedRepairs": "Ejecuta tantas reparaciones con IA como necesites, sin límites.",
+    "unlimitedBuilds": "Genera nuevos componentes, páginas y código sin límite de uso.",
+    "priorityQueue": "Tus tareas se procesan más rápido en horas pico.",
+    "whiteLabelReports": "Exporta informes listos para clientes con tu propia marca.",
+    "tokenUsage": "Los tokens se consumen al ejecutar operaciones de IA.",
+    "tokenPackUsage": "Los tokens se consumen al ejecutar reparaciones con IA, builds u operaciones avanzadas."
   }
 }
