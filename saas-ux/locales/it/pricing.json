@@ -1,96 +1,120 @@
 {
   "hero": {
-    "title": "",
-    "subtitle": ""
+    "title": "Piani e prezzi",
+    "description": "Scegli il piano più adatto al tuo flusso di lavoro."
   },
-  "toggle": {
-    "monthly": "",
-    "yearly": "",
-    "save": ""
+  "billing": {
+    "monthly": "Mensile",
+    "yearly": "Annuale",
+    "save": "risparmia 2 mesi",
+    "toggleAria": "Cambia ciclo di fatturazione"
+  },
+  "labels": {
+    "perMonth": "/mese",
+    "perYear": "/anno",
+    "bestFor": "Ideale per:",
+    "custom": "Gratis"
   },
   "plans": {
     "payg": {
-      "name": "",
-      "description": "",
-      "features": [
-        "",
-        "",
-        "",
-        ""
-      ],
-      "bestFor": "",
-      "cta": ""
+      "name": "Pay-as-you-go",
+      "description": "Accesso flessibile e senza impegno a tutti gli strumenti di livello Pro. Acquista token e correggi i problemi all’istante: paghi solo quando ti serve aiuto.",
+      "bestFor": "Webmaster, proprietari di siti fai-da-te e piccole imprese.",
+      "cta": "Avvia piano PAYG →",
+      "features": {
+        "tools": "Accesso a tutti gli strumenti AI",
+        "optimization": "Strumenti SEO, GEO e AEO",
+        "wp": "Suite strumenti WordPress",
+        "accessibility": "Strumenti per accessibilità, performance e sicurezza",
+        "tokenUsage": "Utilizzo basato su token",
+        "noMonthlyFees": "Nessun costo mensile",
+        "lowFrequency": "Ideale per manutenzione a bassa frequenza"
+      }
     },
     "pro": {
-      "name": "",
-      "description": "",
-      "features": [
-        "",
-        "",
-        "",
-        "",
-        ""
-      ],
-      "bestFor": "",
-      "cta": ""
+      "name": "Pro",
+      "description": "Riparazioni AI illimitate, build illimitati e strumenti di ottimizzazione per professionisti che gestiscono uno o più siti.",
+      "bestFor": "Sviluppatori, freelance e organizzazioni in crescita.",
+      "cta": "Avvia piano Pro →",
+      "features": {
+        "optimization": "Strumenti SEO, GEO e AEO",
+        "accessibility": "Strumenti per accessibilità, performance e sicurezza",
+        "contentCreator": "Creatore/scrittore di contenuti",
+        "oneClickFixes": "Correzioni con un clic",
+        "sparky": "Assistente AI Sparky",
+        "multiSite": "Supporto multi-sito",
+        "unlimitedRepairs": "Riparazioni AI illimitate",
+        "unlimitedBuilds": "Build illimitati"
+      }
     },
     "agency": {
-      "name": "",
-      "description": "",
-      "features": [
-        "",
-        "",
-        "",
-        "",
-        ""
-      ],
-      "bestFor": "",
-      "cta": ""
-    },
-    "bestForLabel": ""
+      "name": "Agency",
+      "description": "Utilizzo illimitato per agenzie che gestiscono più siti cliente. Consegna report pronti per i clienti in pochi secondi e scala le tue operazioni.",
+      "bestFor": "Agenzie, studi e professionisti che gestiscono più siti cliente.",
+      "cta": "Avvia piano Agency →",
+      "features": {
+        "everythingInPro": "Tutto ciò che include Pro",
+        "whiteLabelReports": "Report clienti white-label",
+        "priorityProcessing": "Elaborazione prioritaria",
+        "multiClient": "Gestione multi-cliente"
+      }
+    }
   },
   "tokenPacks": {
-    "title": "",
-    "subtitle": "",
-    "buy": "",
-    "small": "",
-    "medium": "",
-    "large": ""
-  },
-  "microcopy": {
-    "unlimitedRepairs": "",
-    "unlimitedBuilds": "",
-    "priorityQueue": "",
-    "whiteLabelReports": "",
-    "tokenUsage": "",
-    "tokenPackUsage": ""
+    "title": "Pacchetti token",
+    "description": "Acquista token on demand e mantieni attive le operazioni AI senza vincoli di abbonamento.",
+    "button": "Acquista token",
+    "items": {
+      "small": {
+        "description": "10.000 token AI per correzioni automatizzate (~25 operazioni del sito). Acquisto una tantum: i token non scadono mai.",
+        "name": "Piccolo"
+      },
+      "medium": {
+        "description": "25.000 token AI per correzioni automatizzate (~50 operazioni del sito). Ottimo valore: i token non scadono mai.",
+        "name": "Medio"
+      },
+      "large": {
+        "description": "50.000 token AI per correzioni automatizzate (~100 operazioni del sito). Valore massimo: i token non scadono mai.",
+        "name": "Grande"
+      }
+    }
   },
   "footnotes": {
-    "annualSavings": "",
-    "fairUse": "",
-    "tokenComplexity": ""
+    "saveTwoMonths": "La fatturazione annuale ti fa risparmiare 2 mesi.",
+    "fairUse": "L’uso illimitato è soggetto a linee guida di fair use.",
+    "tokenVaries": "Il consumo di token varia in base alla complessità dell’operazione."
   },
   "disclaimers": {
-    "cancelAnytime": "",
-    "vatExcluded": ""
+    "cancelAnytime": "Annulla in qualsiasi momento. Nessun costo nascosto.",
+    "excludeVat": "I prezzi sono IVA esclusa ove applicabile."
   },
   "faq": {
-    "title": "",
-    "q1": {
-      "question": "",
-      "answer": ""
-    },
-    "q2": {
-      "question": "",
-      "answer": ""
-    },
-    "q3": {
-      "question": "",
-      "answer": ""
-    },
-    "q4": {
-      "question": "",
-      "answer": ""
+    "title": "FAQ su prezzi e token",
+    "items": {
+      "tokens": {
+        "question": "Come funzionano i token?",
+        "answer": "I token vengono usati per pagare riparazioni, build e analisi avanzate basate su AI. Ogni operazione consuma un numero specifico di token in base alla complessità."
+      },
+      "switchPlans": {
+        "question": "Posso cambiare piano in seguito?",
+        "answer": "Sì. Puoi passare a un piano superiore o inferiore in qualsiasi momento dalle impostazioni del tuo account."
+      },
+      "expire": {
+        "question": "I miei token scadono?",
+        "answer": "I token non scadono durante l’anno di fatturazione corrente. Ti avviseremo con largo anticipo se questo dovesse cambiare."
+      },
+      "anyPlan": {
+        "question": "Posso usare i pacchetti token con qualsiasi piano?",
+        "answer": "Sì. I pacchetti token funzionano con tutti i piani, incluso Pay-as-you-go."
+      }
     }
+  },
+  "tooltips": {
+    "unlimitedRepairs": "Esegui tutte le riparazioni AI che ti servono, senza limiti.",
+    "unlimitedBuilds": "Genera nuovi componenti, pagine e codice senza limiti di utilizzo.",
+    "priorityQueue": "Le tue attività vengono elaborate più rapidamente nelle ore di punta.",
+    "whiteLabelReports": "Esporta report pronti per i clienti con il tuo brand.",
+    "tokenUsage": "I token vengono consumati durante l’esecuzione di operazioni AI.",
+    "tokenPackUsage": "I token vengono consumati durante riparazioni AI, build o operazioni avanzate."
   }
 }

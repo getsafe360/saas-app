@@ -1,96 +1,120 @@
 {
   "hero": {
-    "title": "",
-    "subtitle": ""
+    "title": "Pläne & Preise",
+    "description": "Wähle den Plan, der zu deinem Workflow passt."
   },
-  "toggle": {
-    "monthly": "",
-    "yearly": "",
-    "save": ""
+  "billing": {
+    "monthly": "Monatlich",
+    "yearly": "Jährlich",
+    "save": "2 Monate sparen",
+    "toggleAria": "Abrechnungszeitraum umschalten"
+  },
+  "labels": {
+    "perMonth": "/Monat",
+    "perYear": "/Jahr",
+    "bestFor": "Am besten für:",
+    "custom": "Kostenlos"
   },
   "plans": {
     "payg": {
-      "name": "",
-      "description": "",
-      "features": [
-        "",
-        "",
-        "",
-        ""
-      ],
-      "bestFor": "",
-      "cta": ""
+      "name": "Pay-as-you-go",
+      "description": "Flexibler, unverbindlicher Zugang zu allen Pro-Tools. Kaufe Tokens und behebe Probleme sofort — du zahlst nur, wenn du Hilfe brauchst.",
+      "bestFor": "Webmaster, DIY‑Website-Betreiber und kleine Unternehmen.",
+      "cta": "PAYG-Plan starten →",
+      "features": {
+        "tools": "Zugriff auf alle KI-Tools",
+        "optimization": "SEO-, GEO- & AEO-Tools",
+        "wp": "WordPress-Toolset",
+        "accessibility": "Tools für Barrierefreiheit, Performance & Sicherheit",
+        "tokenUsage": "Nutzung auf Token-Basis",
+        "noMonthlyFees": "Keine monatlichen Gebühren",
+        "lowFrequency": "Ideal für seltene Wartung"
+      }
     },
     "pro": {
-      "name": "",
-      "description": "",
-      "features": [
-        "",
-        "",
-        "",
-        "",
-        ""
-      ],
-      "bestFor": "",
-      "cta": ""
+      "name": "Pro",
+      "description": "Unbegrenzte KI-Reparaturen, Builds und Optimierungstools für Profis mit einer oder mehreren Websites.",
+      "bestFor": "Entwickler, Freelancer und wachsende Organisationen.",
+      "cta": "Pro-Plan starten →",
+      "features": {
+        "optimization": "SEO-, GEO- & AEO-Tools",
+        "accessibility": "Tools für Barrierefreiheit, Performance & Sicherheit",
+        "contentCreator": "Content-Ersteller/-Writer",
+        "oneClickFixes": "One-Click-Fixes",
+        "sparky": "Sparky KI-Assistent",
+        "multiSite": "Multi-Site-Unterstützung",
+        "unlimitedRepairs": "Unbegrenzte KI-Reparaturen",
+        "unlimitedBuilds": "Unbegrenzte Builds"
+      }
     },
     "agency": {
-      "name": "",
-      "description": "",
-      "features": [
-        "",
-        "",
-        "",
-        "",
-        ""
-      ],
-      "bestFor": "",
-      "cta": ""
-    },
-    "bestForLabel": ""
+      "name": "Agency",
+      "description": "Unbegrenzte Nutzung für Agenturen mit mehreren Kundenseiten. Liefere kundentaugliche Berichte in Sekunden und skaliere deinen Kundenbetrieb.",
+      "bestFor": "Agenturen, Studios und Profis mit mehreren Kundenseiten.",
+      "cta": "Agency-Plan starten →",
+      "features": {
+        "everythingInPro": "Alles aus Pro",
+        "whiteLabelReports": "White-Label-Kundenberichte",
+        "priorityProcessing": "Priorisierte Verarbeitung",
+        "multiClient": "Multi-Client-Management"
+      }
+    }
   },
   "tokenPacks": {
-    "title": "",
-    "subtitle": "",
-    "buy": "",
-    "small": "",
-    "medium": "",
-    "large": ""
-  },
-  "microcopy": {
-    "unlimitedRepairs": "",
-    "unlimitedBuilds": "",
-    "priorityQueue": "",
-    "whiteLabelReports": "",
-    "tokenUsage": "",
-    "tokenPackUsage": ""
+    "title": "Token-Pakete",
+    "description": "Kaufe Tokens nach Bedarf und halte KI-Prozesse ohne Abo-Bindung am Laufen.",
+    "button": "Tokens kaufen",
+    "items": {
+      "small": {
+        "description": "10.000 KI-Tokens für automatisierte Fixes (~25 Website-Operationen). Einmaliger Kauf — Tokens verfallen nie.",
+        "name": "Klein"
+      },
+      "medium": {
+        "description": "25.000 KI-Tokens für automatisierte Fixes (~50 Website-Operationen). Starkes Preis-Leistungs-Verhältnis — Tokens verfallen nie.",
+        "name": "Mittel"
+      },
+      "large": {
+        "description": "50.000 KI-Tokens für automatisierte Fixes (~100 Website-Operationen). Maximaler Gegenwert — Tokens verfallen nie.",
+        "name": "Groß"
+      }
+    }
   },
   "footnotes": {
-    "annualSavings": "",
-    "fairUse": "",
-    "tokenComplexity": ""
+    "saveTwoMonths": "Jährliche Abrechnung spart dir 2 Monate.",
+    "fairUse": "Unbegrenzte Nutzung unterliegt Fair-Use-Richtlinien.",
+    "tokenVaries": "Der Token-Verbrauch variiert je nach Komplexität der Operation."
   },
   "disclaimers": {
-    "cancelAnytime": "",
-    "vatExcluded": ""
+    "cancelAnytime": "Jederzeit kündbar. Keine versteckten Gebühren.",
+    "excludeVat": "Preise zzgl. MwSt., sofern anwendbar."
   },
   "faq": {
-    "title": "",
-    "q1": {
-      "question": "",
-      "answer": ""
-    },
-    "q2": {
-      "question": "",
-      "answer": ""
-    },
-    "q3": {
-      "question": "",
-      "answer": ""
-    },
-    "q4": {
-      "question": "",
-      "answer": ""
+    "title": "FAQ zu Preisen & Tokens",
+    "items": {
+      "tokens": {
+        "question": "Wie funktionieren Tokens?",
+        "answer": "Tokens werden für KI-gestützte Reparaturen, Builds und erweiterte Analysen verwendet. Jede Operation verbraucht je nach Komplexität eine bestimmte Anzahl an Tokens."
+      },
+      "switchPlans": {
+        "question": "Kann ich später den Plan wechseln?",
+        "answer": "Ja. Du kannst deinen Plan jederzeit in den Kontoeinstellungen hoch- oder herunterstufen."
+      },
+      "expire": {
+        "question": "Verfallen meine Tokens?",
+        "answer": "Tokens verfallen innerhalb des aktuellen Abrechnungsjahres nicht. Falls sich das ändert, informieren wir dich frühzeitig."
+      },
+      "anyPlan": {
+        "question": "Kann ich Token-Pakete mit jedem Plan nutzen?",
+        "answer": "Ja. Token-Pakete funktionieren mit allen Plänen, einschließlich Pay-as-you-go."
+      }
     }
+  },
+  "tooltips": {
+    "unlimitedRepairs": "Führe so viele KI-Reparaturen aus, wie du brauchst — ohne Limits.",
+    "unlimitedBuilds": "Erstelle neue Komponenten, Seiten und Code ohne Nutzungslimit.",
+    "priorityQueue": "Deine Aufgaben werden zu Spitzenzeiten schneller verarbeitet.",
+    "whiteLabelReports": "Exportiere kundenfertige Berichte mit deinem eigenen Branding.",
+    "tokenUsage": "Bei KI-Operationen werden Tokens verbraucht.",
+    "tokenPackUsage": "Tokens werden bei KI-Reparaturen, Builds oder erweiterten Operationen verbraucht."
   }
 }
