@@ -1,5 +1,7 @@
 import { FileText } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default function ContentPage() {
   return (
     <section className="flex-1 p-4 lg:p-8">
