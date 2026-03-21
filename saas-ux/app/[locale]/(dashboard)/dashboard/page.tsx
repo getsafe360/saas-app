@@ -11,6 +11,8 @@ import { and, eq, desc } from "drizzle-orm";
 import { DashboardClient } from "./DashboardClient";
 import { ensureAppUserId } from "@/lib/auth/ensure-app-user";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {

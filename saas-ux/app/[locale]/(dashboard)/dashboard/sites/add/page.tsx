@@ -8,6 +8,8 @@ import { Globe, Loader2, ArrowLeft, CheckCircle, AlertCircle } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+export const dynamic = "force-dynamic";
+
 function normalizeUrl(input: string): string | null {
   try {
     const trimmed = input.trim();

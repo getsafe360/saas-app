@@ -7,6 +7,7 @@ import { getTranslations } from "next-intl/server";
 import AnalyzeClient from "./AnalyzeClient";
 
 const DEFAULT_LOCALE = "en";
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

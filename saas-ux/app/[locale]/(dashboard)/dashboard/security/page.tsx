@@ -8,6 +8,8 @@ import { Lock, Trash2, Loader2 } from "lucide-react";
 import { useActionState } from "react";
 import { updatePassword, deleteAccount } from "@/app/[locale]/(login)/actions";
 
+export const dynamic = "force-dynamic";
+
 type PasswordState = {
   currentPassword?: string;
   newPassword?: string;

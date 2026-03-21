@@ -2,6 +2,8 @@
 import { UserProfile } from "@clerk/nextjs";
 import { CreditCard, ExternalLink } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 const STRIPE_CUSTOMER_PORTAL_URL = "https://buy.getsafe360.ai/p/login/8x214mfQud5mbNf84abAs00";
 
 export default function SettingsPage() {
