@@ -26,7 +26,10 @@ export default function TokenPacks() {
             className="rounded-xl border border-slate-700/70 bg-white/[0.03] p-6 shadow-sm transition-colors duration-200 hover:border-slate-500/70 md:p-8"
           >
             <h3 className="text-xl font-semibold text-slate-100">{getPricingCopy(pack.nameKey)}</h3>
-            <p className="mt-2 text-3xl font-semibold text-slate-100">{pack.price}</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">
+              {getPricingCopy(pack.descriptionKey)}
+            </p>
+            <p className="mt-4 text-3xl font-semibold text-slate-100">{pack.price}</p>
 
             <a
               href={pack.stripeUrl}

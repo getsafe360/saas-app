@@ -27,10 +27,10 @@ interface PlanCardProps {
 const FEATURE_TOOLTIP_MAP: Record<string, string> = {
   "plans.pro.features.unlimitedRepairs": MICROCOPY_TOOLTIPS.unlimitedRepairs,
   "plans.pro.features.unlimitedBuilds": MICROCOPY_TOOLTIPS.unlimitedBuilds,
-  "plans.pro.features.priorityQueue": MICROCOPY_TOOLTIPS.priorityQueue,
+  "plans.agency.features.priorityProcessing": MICROCOPY_TOOLTIPS.priorityQueue,
   "plans.agency.features.whiteLabelReports":
     MICROCOPY_TOOLTIPS.whiteLabelReports,
-  "plans.payg.features.repairs": MICROCOPY_TOOLTIPS.tokenUsage,
+  "plans.payg.features.tokenUsage": MICROCOPY_TOOLTIPS.tokenUsage,
 };
 
 export default function PlanCard({

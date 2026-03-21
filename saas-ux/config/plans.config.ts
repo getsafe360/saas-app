@@ -15,6 +15,7 @@ export interface PlanDefinition {
 
 export interface TokenPackDefinition {
   nameKey: string;
+  descriptionKey: string;
   price: string;
   stripeUrl: string;
 }
@@ -26,8 +27,11 @@ export const PRICING_PLANS: PlanDefinition[] = [
     priceMonthly: 0,
     priceYearly: 0,
     features: [
-      "plans.payg.features.analysis",
-      "plans.payg.features.repairs",
+      "plans.payg.features.tools",
+      "plans.payg.features.optimization",
+      "plans.payg.features.wp",
+      "plans.payg.features.accessibility",
+      "plans.payg.features.tokenUsage",
       "plans.payg.features.noMonthlyFees",
       "plans.payg.features.lowFrequency",
     ],
@@ -42,11 +46,14 @@ export const PRICING_PLANS: PlanDefinition[] = [
     priceMonthly: 19,
     priceYearly: 190,
     features: [
+      "plans.pro.features.optimization",
+      "plans.pro.features.accessibility",
+      "plans.pro.features.contentCreator",
+      "plans.pro.features.oneClickFixes",
+      "plans.pro.features.sparky",
       "plans.pro.features.unlimitedRepairs",
       "plans.pro.features.unlimitedBuilds",
-      "plans.pro.features.fullSuite",
       "plans.pro.features.multiSite",
-      "plans.pro.features.priorityQueue",
     ],
     bestForKey: "plans.pro.bestFor",
     stripeUrl: "https://buy.getsafe360.ai/b/8x214mfQud5mbNf84abAs00",
@@ -63,7 +70,6 @@ export const PRICING_PLANS: PlanDefinition[] = [
       "plans.agency.features.everythingInPro",
       "plans.agency.features.whiteLabelReports",
       "plans.agency.features.priorityProcessing",
-      "plans.agency.features.teamCollaboration",
       "plans.agency.features.multiClient",
     ],
     bestForKey: "plans.agency.bestFor",
@@ -77,16 +83,19 @@ export const PRICING_PLANS: PlanDefinition[] = [
 export const TOKEN_PACKS: TokenPackDefinition[] = [
   {
     nameKey: "tokenPacks.items.small",
+    descriptionKey: "tokenPacks.items.small.description",
     price: "€5",
     stripeUrl: "https://buy.getsafe360.ai/b/8x214m9s69Ta5oR4RYbAs03",
   },
   {
     nameKey: "tokenPacks.items.medium",
+    descriptionKey: "tokenPacks.items.medium.description",
     price: "€10",
     stripeUrl: "https://buy.getsafe360.ai/b/dRm8wO9s6d5mbNf2JQbAs02",
   },
   {
     nameKey: "tokenPacks.items.large",
+    descriptionKey: "tokenPacks.items.large.description",
     price: "€15",
     stripeUrl: "https://buy.getsafe360.ai/b/eVq14m1ZE4yQg3v706bAs04",
   },
