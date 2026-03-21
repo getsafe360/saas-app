@@ -10,6 +10,8 @@ import { updateAccount } from "@/app/[locale]/(login)/actions";
 import useSWR from "swr";
 import { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 type ActionState = {

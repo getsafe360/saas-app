@@ -15,6 +15,8 @@ import {
 // import { ActivityType } from '@/lib/db/schema'; // removed
 import { getActivityLogs } from "@/lib/db/queries";
 
+export const dynamic = "force-dynamic";
+
 // Canonical action values (match what you store in DB)
 const ACTIONS = {
   SIGN_UP: "sign_up",
@@ -94,7 +96,8 @@ function formatAction(action: ActivityType): string {
 }
 
 export default async function ActivityPage() {
-  const logs = (await getActivityLogs()) as ActivityLog[];
+  const logsResult = (await getActivityLogs()) as ActivityLog[] | undefined;
+  const logs = Array.isArray(logsResult) ? logsResult : [];
 
   return (
     <section className="flex-1 p-4 lg:p-8">
@@ -112,6 +115,10 @@ export default async function ActivityPage() {
                 const action = log.action as ActivityType;
                 const Icon = iconMap[action] || Settings;
                 const formattedAction = formatAction(action);
+                const timestamp = new Date(log.timestamp);
+                const relativeTime = Number.isNaN(timestamp.getTime())
+                  ? "Unknown time"
+                  : getRelativeTime(timestamp);
 
                 return (
                   <li
@@ -127,7 +134,7 @@ export default async function ActivityPage() {
                         {log.ipAddress ? ` from IP ${log.ipAddress}` : null}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {getRelativeTime(new Date(log.timestamp))}
+                        {relativeTime}
                       </p>
                     </div>
                   </li>

@@ -12,6 +12,8 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 import CTA from "@/components/marketing/CTA";
 import { SiteSelectorDropdown } from "@/components/dashboard/SiteSelectorDropdown";
 
+export const dynamic = "force-dynamic";
+
 // Site data type
 interface SiteData {
   id: string;

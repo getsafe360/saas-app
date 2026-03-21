@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { WelcomeClient } from './WelcomeClient';
 
 export const runtime = 'nodejs';
+export const dynamic = "force-dynamic";
 
 function buildPublicUrlFromKey(key: string) {
   const base = process.env.NEXT_PUBLIC_BLOB_BASE_URL || process.env.BLOB_PUBLIC_BASE;
