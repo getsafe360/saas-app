@@ -17,7 +17,8 @@ interface PlanCardProps {
   priceYearly: number;
   features: string[];
   bestForKey: string;
-  stripeUrl?: string;
+  stripeUrlMonthly?: string;
+  stripeUrlYearly?: string;
   borderColorToken: string;
   type: "free" | "pro" | "agency";
   ctaLabelKey: string;
@@ -40,7 +41,8 @@ export default function PlanCard({
   priceYearly,
   features,
   bestForKey,
-  stripeUrl,
+  stripeUrlMonthly,
+  stripeUrlYearly,
   borderColorToken,
   type,
   ctaLabelKey,
@@ -57,6 +59,8 @@ export default function PlanCard({
     billingCycle === "monthly"
       ? t("labels.perMonth")
       : t("labels.perYear");
+  const checkoutUrl =
+    billingCycle === "yearly" ? stripeUrlYearly ?? stripeUrlMonthly : stripeUrlMonthly;
   const isCustomPrice = priceMonthly === 0 && priceYearly === 0;
 
   useEffect(() => {
@@ -162,7 +166,7 @@ export default function PlanCard({
         </button>
       ) : (
         <a
-          href={stripeUrl}
+          href={checkoutUrl}
           target="_blank"
           rel="noreferrer"
           className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-slate-500/70 bg-slate-900/40 px-4 py-2.5 text-base font-medium text-slate-100 transition-colors duration-200 hover:bg-slate-800/60"

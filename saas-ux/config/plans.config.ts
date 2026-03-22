@@ -7,7 +7,8 @@ export interface PlanDefinition {
   priceYearly: number;
   features: string[];
   bestForKey: string;
-  stripeUrl?: string;
+  stripeUrlMonthly?: string;
+  stripeUrlYearly?: string;
   borderColorToken: string;
   type: "free" | "pro" | "agency";
   ctaLabelKey: string;
@@ -56,7 +57,8 @@ export const PRICING_PLANS: PlanDefinition[] = [
       "plans.pro.features.multiSite",
     ],
     bestForKey: "plans.pro.bestFor",
-    stripeUrl: "https://buy.getsafe360.ai/b/8x214mfQud5mbNf84abAs00",
+    stripeUrlMonthly: "https://buy.getsafe360.ai/b/28EdR833Ie9q04x5W2bAs07",
+    stripeUrlYearly: "https://buy.getsafe360.ai/b/fZu8wOdIm1mE04x3NUbAs08",
     borderColorToken: "var(--color-primary-500)",
     type: "pro",
     ctaLabelKey: "plans.pro.cta",
@@ -73,7 +75,8 @@ export const PRICING_PLANS: PlanDefinition[] = [
       "plans.agency.features.multiClient",
     ],
     bestForKey: "plans.agency.bestFor",
-    stripeUrl: "https://buy.getsafe360.ai/b/14AbJ09s61mE2cF5W2bAs01",
+    stripeUrlMonthly: "https://buy.getsafe360.ai/b/5kQdR8cEi0iA6sV1FMbAs09",
+    stripeUrlYearly: "https://buy.getsafe360.ai/b/28E8wOawa8P66sV0BIbAs0a",
     borderColorToken: "var(--color-primary-300)",
     type: "agency",
     ctaLabelKey: "plans.agency.cta",
@@ -85,19 +88,19 @@ export const TOKEN_PACKS: TokenPackDefinition[] = [
     nameKey: "tokenPacks.items.small.name",
     descriptionKey: "tokenPacks.items.small.description",
     price: "€5",
-    stripeUrl: "https://buy.getsafe360.ai/b/8x214m9s69Ta5oR4RYbAs03",
+    stripeUrl: "https://buy.getsafe360.ai/b/8x200ifQuc1i6sVgAGbAs0b",
   },
   {
     nameKey: "tokenPacks.items.medium.name",
     descriptionKey: "tokenPacks.items.medium.description",
     price: "€10",
-    stripeUrl: "https://buy.getsafe360.ai/b/dRm8wO9s6d5mbNf2JQbAs02",
+    stripeUrl: "https://buy.getsafe360.ai/b/fZubJ05bQ6GY04x1FMbAs0c",
   },
   {
     nameKey: "tokenPacks.items.large.name",
     descriptionKey: "tokenPacks.items.large.description",
     price: "€15",
-    stripeUrl: "https://buy.getsafe360.ai/b/eVq14m1ZE4yQg3v706bAs04",
+    stripeUrl: "https://buy.getsafe360.ai/b/9B6fZg6fUd5m3gJdoubAs0d",
   },
 ];
 
