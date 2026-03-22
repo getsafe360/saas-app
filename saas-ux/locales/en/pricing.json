@@ -1,96 +1,120 @@
 {
   "hero": {
     "title": "Plans & Pricing",
-    "subtitle": "Choose the plan that matches your workflow, then scale with flexible token packs whenever your team needs extra AI throughput."
+    "description": "Choose the plan that matches your workflow."
   },
-  "toggle": {
+  "billing": {
     "monthly": "Monthly",
     "yearly": "Yearly",
-    "save": "save 2 months"
+    "save": "save 2 months",
+    "toggleAria": "Toggle billing cycle"
+  },
+  "labels": {
+    "perMonth": "/month",
+    "perYear": "/year",
+    "bestFor": "Best for:",
+    "custom": "Free"
   },
   "plans": {
     "payg": {
       "name": "Pay-as-you-go",
-      "description": "Our most flexible option for webmasters and small teams. Pay only for the fixes and analyses you need — perfect for emerging sites or occasional maintenance without a monthly commitment.",
-      "features": [
-        "Access to all analysis tools",
-        "On-demand AI repairs (token-based)",
-        "No monthly fees",
-        "Ideal for low-frequency usage"
-      ],
-      "bestFor": "Webmasters, small teams, and new projects.",
-      "cta": "Create free account"
+      "description": "Flexible, commitment-free access to all Pro-level tools. Buy tokens and fix issues instantly — only pay when you need help.",
+      "bestFor": "Webmasters, DIY site owners, small businesses.",
+      "cta": "Start PAYG Plan →",
+      "features": {
+        "tools": "Access to all AI tools",
+        "optimization": "SEO, GEO & AEO tools",
+        "wp": "WordPress toolset",
+        "accessibility": "Accessibility, performance & security tools",
+        "tokenUsage": "Token-based usage",
+        "noMonthlyFees": "No monthly fees",
+        "lowFrequency": "Ideal for low-frequency maintenance"
+      }
     },
     "pro": {
       "name": "Pro",
-      "description": "Unlimited AI repairs, builds, and analysis tools. Ideal for developers, freelancers, and organizations managing one or more sites. Full power without limits.",
-      "features": [
-        "Unlimited AI repairs",
-        "Unlimited builds",
-        "Full site analysis suite",
-        "Multi-site support",
-        "Priority queue"
-      ],
+      "description": "Unlimited AI repairs, builds, and optimization tools for professionals managing one or multiple sites.",
       "bestFor": "Developers, freelancers, and growing organizations.",
-      "cta": "Start Pro"
+      "cta": "Start Pro Plan →",
+      "features": {
+        "optimization": "SEO, GEO & AEO tools",
+        "accessibility": "Accessibility, performance & security tools",
+        "contentCreator": "Content creator/writer",
+        "oneClickFixes": "One-click fixes",
+        "sparky": "Sparky AI assistant",
+        "multiSite": "Multi-site support",
+        "unlimitedRepairs": "Unlimited AI repairs",
+        "unlimitedBuilds": "Unlimited builds"
+      }
     },
     "agency": {
       "name": "Agency",
-      "description": "Built for agencies and professionals managing multiple client sites. Includes client-ready white-label reports, priority processing, and advanced collaboration features.",
-      "features": [
-        "Everything in Pro",
-        "White-label client reports",
-        "Priority processing",
-        "Team collaboration features",
-        "Multi-client management"
-      ],
+      "description": "Unlimited usage for agencies managing multiple client sites. Deliver client-ready reports in seconds and scale your client operations.",
       "bestFor": "Agencies, studios, and professionals managing multiple client sites.",
-      "cta": "Start Agency"
-    },
-    "bestForLabel": "Best for"
+      "cta": "Start Agency Plan →",
+      "features": {
+        "everythingInPro": "Everything in Pro",
+        "whiteLabelReports": "White-label client reports",
+        "priorityProcessing": "Priority processing",
+        "multiClient": "Multi-client management"
+      }
+    }
   },
   "tokenPacks": {
     "title": "Token Packs",
-    "subtitle": "Buy tokens on demand and keep AI operations moving with no subscription lock-in.",
-    "buy": "Buy tokens",
-    "small": "Small",
-    "medium": "Medium",
-    "large": "Large"
-  },
-  "microcopy": {
-    "unlimitedRepairs": "Unlimited repairs: Run as many AI fixes as you need without limits.",
-    "unlimitedBuilds": "Unlimited builds: Generate new components, pages, and code with no usage cap.",
-    "priorityQueue": "Priority queue: Your tasks are processed faster during peak times.",
-    "whiteLabelReports": "White-label reports: Export client-ready reports with your own branding.",
-    "tokenUsage": "Token usage: Tokens are consumed when running AI operations.",
-    "tokenPackUsage": "Tokens are consumed when running AI repairs, builds, or advanced analyses."
+    "description": "Buy tokens on demand and keep AI operations moving with no subscription lock-in.",
+    "button": "Buy tokens",
+    "items": {
+      "small": {
+        "description": "10,000 AI tokens for automated fixes (~25 website operations). One-time purchase — tokens never expire.",
+        "name": "Small"
+      },
+      "medium": {
+        "description": "25,000 AI tokens for automated fixes (~50 website operations). Great value — tokens never expire.",
+        "name": "Medium"
+      },
+      "large": {
+        "description": "50,000 AI tokens for automated fixes (~100 website operations). Maximum value — tokens never expire.",
+        "name": "Large"
+      }
+    }
   },
   "footnotes": {
-    "annualSavings": "Annual billing saves you 2 months.",
+    "saveTwoMonths": "Annual billing saves you 2 months.",
     "fairUse": "Unlimited usage is subject to fair-use guidelines.",
-    "tokenComplexity": "Token consumption varies by operation complexity."
+    "tokenVaries": "Token consumption varies by operation complexity."
   },
   "disclaimers": {
     "cancelAnytime": "Cancel anytime. No hidden fees.",
-    "vatExcluded": "Prices exclude VAT where applicable."
+    "excludeVat": "Prices exclude VAT where applicable."
   },
   "faq": {
     "title": "Pricing & Tokens FAQ",
-    "q1": {
-      "question": "How do tokens work?",
-      "answer": "Tokens are used to pay for AI-powered repairs, builds, and advanced analyses. Each operation consumes a specific number of tokens based on complexity."
-    },
-    "q2": {
-      "question": "Can I switch plans later?",
-      "answer": "Yes. You can upgrade or downgrade your plan at any time from your account settings."
-    },
-    "q3": {
-      "question": "Do my tokens expire?",
-      "answer": "Tokens do not expire within the current billing year. We’ll notify you well in advance if this changes."
-    },
-    "q4": {
-      "question": "Can I use token packs on any plan?",
-      "answer": "Yes. Token packs work with all plans, including Pay-as-you-go."
+    "items": {
+      "tokens": {
+        "question": "How do tokens work?",
+        "answer": "Tokens are used to pay for AI-powered repairs, builds, and advanced analyses. Each operation consumes a specific number of tokens based on complexity."
+      },
+      "switchPlans": {
+        "question": "Can I switch plans later?",
+        "answer": "Yes. You can upgrade or downgrade your plan at any time from your account settings."
+      },
+      "expire": {
+        "question": "Do my tokens expire?",
+        "answer": "Tokens do not expire within the current billing year. We’ll notify you well in advance if this changes."
+      },
+      "anyPlan": {
+        "question": "Can I use token packs on any plan?",
+        "answer": "Yes. Token packs work with all plans, including Pay-as-you-go."
+      }
     }
+  },
+  "tooltips": {
+    "unlimitedRepairs": "Run as many AI repairs as you need without limits.",
+    "unlimitedBuilds": "Generate new components, pages, and code with no usage cap.",
+    "priorityQueue": "Your tasks are processed faster during peak times.",
+    "whiteLabelReports": "Export client-ready reports with your own branding.",
+    "tokenUsage": "Tokens are consumed when running AI operations.",
+    "tokenPackUsage": "Tokens are consumed when running AI repairs, builds, or advanced operations."
   }
 }
