@@ -1,49 +1,88 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 
-import { locales, defaultLocale, type Locale } from "@/config/i18n";
-
-import dePricing from "@/locales/de/pricing.json";
+import { defaultLocale, locales, type Locale } from "@/config/i18n";
 import enPricing from "@/locales/en/pricing.json";
-import esPricing from "@/locales/es/pricing.json";
-import frPricing from "@/locales/fr/pricing.json";
-import itPricing from "@/locales/it/pricing.json";
-import ptPricing from "@/locales/pt/pricing.json";
 
 type PricingMessages = Record<string, unknown>;
 
-const PRICING_BY_LOCALE: Record<Locale, PricingMessages> = {
-  en: enPricing,
-  de: dePricing,
-  fr: frPricing,
-  es: esPricing,
-  it: itPricing,
-  pt: ptPricing,
+type PricingTranslator = (key: string) => string;
+
+const PRICING_LOADERS: Record<Locale, () => Promise<PricingMessages>> = {
+  en: () => import("@/locales/en/pricing.json").then((mod) => mod.default),
+  de: () => import("@/locales/de/pricing.json").then((mod) => mod.default),
+  fr: () => import("@/locales/fr/pricing.json").then((mod) => mod.default),
+  es: () => import("@/locales/es/pricing.json").then((mod) => mod.default),
+  it: () => import("@/locales/it/pricing.json").then((mod) => mod.default),
+  pt: () => import("@/locales/pt/pricing.json").then((mod) => mod.default),
 };
+
+const messageCache = new Map<Locale, PricingMessages>([["en", enPricing as PricingMessages]]);
 
 function resolveLocaleFromPath(pathname: string): Locale {
   const segment = pathname.split("/").filter(Boolean)[0];
-  return locales.includes(segment as Locale) ? (segment as Locale) : defaultLocale;
+  return locales.includes(segment as Locale)
+    ? (segment as Locale)
+    : defaultLocale;
 }
 
 function getValueByKey(messages: PricingMessages, key: string): string {
-  const value = key
-    .split(".")
-    .reduce<unknown>((current, part) => {
-      if (current && typeof current === "object" && part in current) {
-        return (current as Record<string, unknown>)[part];
-      }
-      return undefined;
-    }, messages);
+  const value = key.split(".").reduce<unknown>((current, part) => {
+    if (current && typeof current === "object" && part in current) {
+      return (current as Record<string, unknown>)[part];
+    }
+
+    return undefined;
+  }, messages);
 
   return typeof value === "string" ? value : key;
 }
 
-export function usePricingCopy() {
+export function usePricingCopy(): PricingTranslator {
   const pathname = usePathname();
-  const locale = resolveLocaleFromPath(pathname || "/");
-  const messages = PRICING_BY_LOCALE[locale] ?? PRICING_BY_LOCALE[defaultLocale];
+  const locale = useMemo(
+    () => resolveLocaleFromPath(pathname ?? "/"),
+    [pathname],
+  );
+  const [messages, setMessages] = useState<PricingMessages | null>(() => {
+    if (messageCache.has(locale)) {
+      return messageCache.get(locale) ?? null;
+    }
 
-  return (key: string) => getValueByKey(messages, key);
+    return messageCache.get(defaultLocale) ?? null;
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (messageCache.has(locale)) {
+      setMessages(messageCache.get(locale) ?? null);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    void PRICING_LOADERS[locale]().then((loadedMessages) => {
+      if (!isMounted) {
+        return;
+      }
+
+      messageCache.set(locale, loadedMessages);
+      setMessages(loadedMessages);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [locale]);
+
+  return (key: string) => {
+    if (!messages) {
+      return key;
+    }
+
+    return getValueByKey(messages, key);
+  };
 }
