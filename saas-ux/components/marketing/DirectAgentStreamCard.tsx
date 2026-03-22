@@ -149,7 +149,7 @@ export default function DirectAgentStreamCard() {
           value={urlInput}
           onChange={(e) => setUrlInput(e.target.value)}
           placeholder="https://example.com"
-          className="h-11 w-full border-white/10 bg-slate-950/80 text-base font-medium text-slate-100 placeholder:text-slate-500"
+          className="h-11 w-full border-white/10 bg-slate-950/80 text-base font-medium text-slate-100 placeholder:text-slate-500 focus-visible:border-sky-400/40 focus-visible:ring-1 focus-visible:ring-sky-500/25"
         />
         <Button
           onClick={start}
