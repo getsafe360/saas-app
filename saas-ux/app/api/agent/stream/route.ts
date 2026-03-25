@@ -271,6 +271,47 @@ function normalizeGeminiJson(rawText: string): string {
   return (fenced || trimmed).trim();
 }
 
+function extractBalancedJsonObject(input: string): string | null {
+  const start = input.indexOf("{");
+  if (start < 0) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < input.length; i += 1) {
+    const char = input[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (char === "\\") {
+        escaped = true;
+        continue;
+      }
+      if (char === "\"") inString = false;
+      continue;
+    }
+
+    if (char === "\"") {
+      inString = true;
+      continue;
+    }
+
+    if (char === "{") depth += 1;
+    if (char === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        return input.slice(start, i + 1);
+      }
+    }
+  }
+
+  return null;
+}
+
 function safeText(value: unknown, fallback: string): string {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
 }
@@ -290,6 +331,25 @@ function normalizeLogs(logs: unknown): TerminalLog[] {
       return { level: typedLevel, stage, text };
     })
     .filter((entry): entry is TerminalLog => Boolean(entry));
+}
+
+function fallbackSnapshot(url: string, parseError?: string): GeminiSnapshotResult {
+  const host = new URL(url).hostname;
+  return {
+    greeting: "Hi, I'm Sparky. I'll walk you through what we find in real time.",
+    summaryText: `Quick snapshot for ${host}: Core checks completed. Some AI formatting was incomplete, so Sparky returned a safe fallback. Continue to full report for detailed evidence and one-click fixes.`,
+    sections: {
+      seoGeo: "Basic indexability checks completed; detailed SEO/GEO signals available in full report.",
+      accessibility: "Initial accessibility sweep completed; inspect full report for issue-level WCAG guidance.",
+      performance: "HTML payload and rendering signals captured; full report includes optimization priorities.",
+      security: "Transport and baseline security heuristics checked; review full report for remediation steps.",
+      content: "Content structure sampled for quality and clarity; expand in full report for targeted actions.",
+      ctaLine: "Open the full report to unlock detailed checklist and automated fixes.",
+    },
+    terminalLogs: parseError
+      ? [{ level: "WARNING", stage: "AI", text: `Malformed Gemini JSON handled via fallback (${parseError}).` }]
+      : [{ level: "WARNING", stage: "AI", text: "Malformed Gemini JSON handled via fallback." }],
+  };
 }
 
 function composeSnapshotText(url: string, sections: SnapshotSections): string {
@@ -349,8 +409,20 @@ async function generateGeminiSnapshot(args: { url: string; locale: string; facts
   const data = (await response.json()) as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   };
-  const raw = data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "{}";
-  const parsed = JSON.parse(normalizeGeminiJson(raw)) as Partial<GeminiSnapshotResult> & { sections?: Partial<SnapshotSections> };
+  const raw = data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
+  if (!raw.trim()) {
+    return fallbackSnapshot(args.url, "empty-response");
+  }
+
+  const normalized = normalizeGeminiJson(raw);
+  const balanced = extractBalancedJsonObject(normalized) ?? normalized;
+
+  let parsed: Partial<GeminiSnapshotResult> & { sections?: Partial<SnapshotSections> };
+  try {
+    parsed = JSON.parse(balanced) as Partial<GeminiSnapshotResult> & { sections?: Partial<SnapshotSections> };
+  } catch {
+    return fallbackSnapshot(args.url, "json-parse-failed");
+  }
 
   const sections: SnapshotSections = {
     seoGeo: safeText(parsed.sections?.seoGeo, "No SEO/GEO signal."),
