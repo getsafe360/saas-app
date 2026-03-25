@@ -17,10 +17,14 @@ import { Button } from "@/components/ui/button";
 import { useSparkyStream } from "@/lib/agent/useSparkyStream";
 
 function normalizeUrl(input: string): string | null {
-  const candidate = /^https?:\/\//i.test(input.trim()) ? input.trim() : `https://${input.trim()}`;
+  const candidate = /^https?:\/\//i.test(input.trim())
+    ? input.trim()
+    : `https://${input.trim()}`;
   try {
     const parsed = new URL(candidate);
-    return ["http:", "https:"].includes(parsed.protocol) ? parsed.toString() : null;
+    return ["http:", "https:"].includes(parsed.protocol)
+      ? parsed.toString()
+      : null;
   } catch {
     return null;
   }
@@ -108,11 +112,15 @@ export default function DirectAgentStreamCard() {
         testId: `sparky-${Date.now()}`,
         categories: sections.map((section) => ({
           id: section.id,
-          severity: /missing|no signal|risk|issue|slow|weak/i.test(section.text) ? "medium" : "low",
+          severity: /missing|no signal|risk|issue|slow|weak/i.test(section.text)
+            ? "medium"
+            : "low",
           issues: [{ summary: section.text }],
         })),
         summary: snapshot.text,
-        platform: /wordpress|wp/i.test(snapshot.sections.content) ? "wordpress" : "generic",
+        platform: /wordpress|wp/i.test(snapshot.sections.content)
+          ? "wordpress"
+          : "generic",
         timestamp: snapshot.generatedAt,
       };
 
@@ -124,14 +132,19 @@ export default function DirectAgentStreamCard() {
         });
 
         if (!response.ok) throw new Error(`stash failed (${response.status})`);
-        const data = (await response.json()) as { stashUrl?: string; url?: string };
+        const data = (await response.json()) as {
+          stashUrl?: string;
+          url?: string;
+        };
         const nextUrl = data.stashUrl ?? data.url;
         if (!nextUrl) throw new Error("missing stash url");
 
         setStashUrl(nextUrl);
         stashedRef.current = true;
       } catch (error) {
-        setStashError("Couldn't save this test automatically. Signup still works.");
+        setStashError(
+          "Couldn't save this test automatically. Signup still works.",
+        );
       } finally {
         setIsStashing(false);
       }
@@ -140,10 +153,12 @@ export default function DirectAgentStreamCard() {
     void run();
   }, [sections, stream.snapshot]);
 
-  const signupRedirect = stashUrl ? `/dashboard/welcome?u=${encodeURIComponent(stashUrl)}` : null;
+  const signupRedirect = stashUrl
+    ? `/dashboard/welcome?u=${encodeURIComponent(stashUrl)}`
+    : null;
 
   return (
-    <section className="mx-auto max-w-3xl rounded-2xl border border-white/15 bg-slate-900/70 p-5 shadow-2xl">
+    <section className="mx-auto max-w-5xl rounded-2xl border border-cyan-400/30 bg-[#070c17] p-5 shadow-[0_0_40px_rgba(14,165,233,0.15)]">
       <div className="gs-input-submit-combo flex-col sm:flex-row">
         <Input
           value={urlInput}
@@ -162,34 +177,58 @@ export default function DirectAgentStreamCard() {
       </div>
 
       {(stream.messages.length > 0 || stream.snapshot || stream.error) && (
-        <div className="mt-4 space-y-4">
-          <div className="rounded-xl border border-white/10 bg-slate-900/40 p-4 text-base leading-relaxed text-slate-200">
-            <p className="font-medium text-emerald-200">Sparky</p>
-            <p className="mt-2 text-slate-200">{stream.snapshot?.greeting ?? "Hi, I'm Sparky. I'll walk you through what we find in real time."}</p>
-            <div className="mt-3 space-y-2 text-sm text-slate-300 font-mono">
-              {stream.messages.map((message) => (
-                <div key={message.id} className="grid grid-cols-[66px_74px_1fr] gap-2 rounded-md border border-white/10 bg-slate-950/40 px-3 py-2">
-                  <span className="text-slate-500">[{message.timestamp ?? "--:--:--"}]</span>
-                  <span className="text-cyan-300">[{message.level ?? "INFO"}]</span>
-                  <span>
-                    <span className="text-slate-400">{message.stage ?? "Stream"}:</span> {message.text}
-                  </span>
-                </div>
-              ))}
+        <div className="mt-4 space-y-4 text-left">
+          <div className="overflow-hidden rounded-xl border border-cyan-400/25 bg-[#020617] text-base leading-relaxed text-slate-200">
+            <div className="flex items-center justify-between border-b border-cyan-500/20 bg-slate-900/70 px-4 py-2 text-[11px] uppercase tracking-[0.24em] text-cyan-200/80">
+              <p>SPARKY ENGINE v2.5.0</p>
+              <p>STANDBY</p>
+            </div>
+            <div className="bg-[linear-gradient(rgba(6,182,212,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.06)_1px,transparent_1px)] bg-[size:20px_20px] p-4">
+              <p className="font-medium text-emerald-200">Sparky</p>
+              <p className="mt-2 text-slate-200">
+                {stream.snapshot?.greeting ??
+                  "Hi, I'm Sparky. I'll walk you through what we find in real time."}
+              </p>
+              <div className="mt-3 space-y-2 font-mono text-sm text-slate-300">
+                {stream.messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className="grid grid-cols-[66px_74px_1fr] gap-2 rounded-md border border-cyan-400/20 bg-slate-950/70 px-3 py-2 text-left"
+                  >
+                    <span className="text-slate-500">
+                      [{message.timestamp ?? "--:--:--"}]
+                    </span>
+                    <span className="text-cyan-300">
+                      [{message.level ?? "INFO"}]
+                    </span>
+                    <span className="text-left">
+                      <span className="text-slate-400">
+                        {message.stage ?? "Stream"}:
+                      </span>{" "}
+                      {message.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           {sections.length > 0 && (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 lg:grid-cols-5 sm:grid-cols-2">
               {sections.map((section) => {
                 const Icon = section.icon;
                 return (
-                  <div key={section.id} className={`rounded-lg border p-3 ${section.tone}`}>
+                  <div
+                    key={section.id}
+                    className={`rounded-lg border p-3 backdrop-blur-sm ${section.tone}`}
+                  >
                     <div className="flex items-center gap-2 text-sm font-semibold">
                       <Icon className="size-4" />
                       <span>{section.label}</span>
                     </div>
-                    <p className="mt-2 text-sm leading-relaxed">{section.text}</p>
+                    <p className="mt-2 text-sm leading-relaxed">
+                      {section.text}
+                    </p>
                   </div>
                 );
               })}
@@ -199,10 +238,18 @@ export default function DirectAgentStreamCard() {
           {stream.snapshot && (
             <div className="rounded-lg border border-emerald-400/30 bg-emerald-950/20 p-4">
               <p className="text-sm text-emerald-100">
-                Want the full actionable report and automated fixes (including WordPress automation if detected)? Create a free account to unlock the detailed checklist and one-click fixes.
+                Want the full actionable report and automated fixes (including
+                WordPress automation if detected)? Create a free account to
+                unlock the detailed checklist and one-click fixes.
               </p>
-              {isStashing && <p className="mt-2 text-sm text-slate-300">Saving snapshot for onboarding…</p>}
-              {stashError && <p className="mt-2 text-sm text-amber-200">{stashError}</p>}
+              {isStashing && (
+                <p className="mt-2 text-sm text-slate-300">
+                  Saving snapshot for onboarding…
+                </p>
+              )}
+              {stashError && (
+                <p className="mt-2 text-sm text-amber-200">{stashError}</p>
+              )}
 
               {signupRedirect && (
                 <div className="mt-3">
@@ -228,7 +275,9 @@ export default function DirectAgentStreamCard() {
             </div>
           )}
 
-          {stream.error && <p className="text-sm text-amber-300">{stream.error}</p>}
+          {stream.error && (
+            <p className="text-sm text-amber-300">{stream.error}</p>
+          )}
         </div>
       )}
     </section>
