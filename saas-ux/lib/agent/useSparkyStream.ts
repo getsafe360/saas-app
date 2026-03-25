@@ -2,10 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+export type SparkyLogLevel = "INFO" | "SUCCESS" | "WARNING" | "METRIC" | "ERROR";
+
 export type SparkyMessage = {
   id: string;
   text: string;
   role: "system" | "sparky";
+  level?: SparkyLogLevel;
+  stage?: string;
+  timestamp?: string;
 };
 
 export type SparkySnapshot = {
@@ -13,6 +18,7 @@ export type SparkySnapshot = {
   locale: string;
   generatedAt: string;
   text: string;
+  greeting?: string;
   sections: {
     seoGeo: string;
     accessibility: string;
@@ -22,6 +28,10 @@ export type SparkySnapshot = {
     ctaLine: string;
   };
 };
+
+function nowTime(): string {
+  return new Date().toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
 
 export function useSparkyStream(url: string, locale: string) {
   const [messages, setMessages] = useState<SparkyMessage[]>([]);
@@ -36,29 +46,15 @@ export function useSparkyStream(url: string, locale: string) {
     setIsStreaming(false);
   }, []);
 
-  const appendChunk = useCallback((chunk: string) => {
-    const segments = chunk.replace(/\r/g, "").split("\n").filter(Boolean);
-    if (segments.length === 0) return;
-
-    setMessages((prev) => {
-      const next = [...prev];
-      for (const part of segments) {
-        const last = next[next.length - 1];
-        if (last?.role === "sparky") {
-          last.text = `${last.text}${part}`;
-        } else {
-          next.push({ id: crypto.randomUUID(), text: part, role: "sparky" });
-        }
-      }
-      return next;
-    });
+  const appendMessage = useCallback((message: Omit<SparkyMessage, "id">) => {
+    setMessages((prev) => [...prev, { ...message, id: crypto.randomUUID() }]);
   }, []);
 
   const start = useCallback(() => {
     if (!url) return;
 
     close();
-    setMessages([{ id: crypto.randomUUID(), role: "system", text: "Connecting to Sparky stream..." }]);
+    setMessages([{ id: crypto.randomUUID(), role: "system", text: "Connecting to Sparky stream...", level: "INFO", stage: "Boot", timestamp: nowTime() }]);
     setError(undefined);
     setSnapshot(null);
     setIsStreaming(true);
@@ -75,8 +71,26 @@ export function useSparkyStream(url: string, locale: string) {
     sourceRef.current = source;
 
     source.addEventListener("message", (event: MessageEvent<string>) => {
-      const payload = JSON.parse(event.data) as { text?: string };
-      if (payload.text) appendChunk(payload.text);
+      try {
+        const payload = JSON.parse(event.data) as {
+          text?: string;
+          level?: SparkyLogLevel;
+          stage?: string;
+          timestamp?: string;
+        };
+
+        if (!payload.text) return;
+
+        appendMessage({
+          role: "sparky",
+          text: payload.text,
+          level: payload.level ?? "INFO",
+          stage: payload.stage ?? "Stream",
+          timestamp: payload.timestamp ?? nowTime(),
+        });
+      } catch {
+        // Ignore malformed payloads.
+      }
     });
 
     source.addEventListener("snapshot", (event: MessageEvent<string>) => {
@@ -100,7 +114,7 @@ export function useSparkyStream(url: string, locale: string) {
     source.onerror = () => {
       close();
     };
-  }, [appendChunk, close, locale, url]);
+  }, [appendMessage, close, locale, url]);
 
   useEffect(() => () => close(), [close]);
 

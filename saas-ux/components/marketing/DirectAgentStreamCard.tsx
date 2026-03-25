@@ -165,12 +165,16 @@ export default function DirectAgentStreamCard() {
         <div className="mt-4 space-y-4">
           <div className="rounded-xl border border-white/10 bg-slate-900/40 p-4 text-base leading-relaxed text-slate-200">
             <p className="font-medium text-emerald-200">Sparky</p>
-            <p className="mt-2 text-slate-200">Hi, I&apos;m Sparky. I&apos;ll walk you through what we find in real time.</p>
-            <div className="mt-3 space-y-2 text-sm text-slate-300">
+            <p className="mt-2 text-slate-200">{stream.snapshot?.greeting ?? "Hi, I'm Sparky. I'll walk you through what we find in real time."}</p>
+            <div className="mt-3 space-y-2 text-sm text-slate-300 font-mono">
               {stream.messages.map((message) => (
-                <p key={message.id} className="rounded-md border border-white/10 bg-slate-950/40 px-3 py-2">
-                  {message.text}
-                </p>
+                <div key={message.id} className="grid grid-cols-[66px_74px_1fr] gap-2 rounded-md border border-white/10 bg-slate-950/40 px-3 py-2">
+                  <span className="text-slate-500">[{message.timestamp ?? "--:--:--"}]</span>
+                  <span className="text-cyan-300">[{message.level ?? "INFO"}]</span>
+                  <span>
+                    <span className="text-slate-400">{message.stage ?? "Stream"}:</span> {message.text}
+                  </span>
+                </div>
               ))}
             </div>
           </div>
