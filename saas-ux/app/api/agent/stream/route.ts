@@ -1,5 +1,3 @@
-import { openai } from "@ai-sdk/openai";
-import { streamText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import dns from "node:dns/promises";
 import net from "node:net";
@@ -17,12 +15,26 @@ type SnapshotSections = {
   ctaLine: string;
 };
 
+type TerminalLog = {
+  level: "INFO" | "SUCCESS" | "WARNING" | "METRIC" | "ERROR";
+  stage: string;
+  text: string;
+};
+
 type SnapshotPayload = {
   url: string;
   locale: string;
   generatedAt: string;
   text: string;
   sections: SnapshotSections;
+  greeting?: string;
+};
+
+type GeminiSnapshotResult = {
+  greeting: string;
+  summaryText: string;
+  sections: SnapshotSections;
+  terminalLogs: TerminalLog[];
 };
 
 const MAX_URL_LENGTH = 2048;
@@ -30,6 +42,7 @@ const FETCH_TIMEOUT_MS = 8_000;
 const FETCH_MAX_BYTES = 300_000;
 const LLM_TIMEOUT_MS = 20_000;
 const CACHE_TTL_SECONDS = 60 * 60 * 8;
+const GEMINI_MODEL = process.env.GEMINI_SNAPSHOT_MODEL || "gemini-3-flash-preview";
 
 const memoryRateLimit = new Map<string, { count: number; resetAt: number }>();
 
@@ -185,6 +198,7 @@ function buildFacts(url: string, html: string): string {
     hasCspMeta: /<meta[^>]+http-equiv=["']content-security-policy["']/i.test(html),
     hasWpMarkers: /wp-content|wordpress|wp-includes/i.test(html),
     hasInlineScripts: /<script(?![^>]+src=)/i.test(html),
+    domNodesEstimate: (html.match(/<[^/!][^>]*>/g) ?? []).length,
   };
 
   const facts = {
@@ -196,7 +210,7 @@ function buildFacts(url: string, html: string): string {
   };
 
   const compact = JSON.stringify(facts);
-  return compact.length > 1000 ? `${compact.slice(0, 997)}...` : compact;
+  return compact.length > 3500 ? `${compact.slice(0, 3497)}...` : compact;
 }
 
 function parseSnapshotSections(text: string): SnapshotSections {
@@ -247,6 +261,114 @@ async function hashKey(input: string): Promise<string> {
     .join("");
 }
 
+function nowStamp(): string {
+  return new Date().toISOString().substring(11, 19);
+}
+
+function normalizeGeminiJson(rawText: string): string {
+  const trimmed = rawText.trim();
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1];
+  return (fenced || trimmed).trim();
+}
+
+function safeText(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
+}
+
+function normalizeLogs(logs: unknown): TerminalLog[] {
+  if (!Array.isArray(logs)) return [];
+  return logs
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") return null;
+      const level = safeText((entry as { level?: string }).level, "INFO").toUpperCase();
+      const stage = safeText((entry as { stage?: string }).stage, "Stream");
+      const text = safeText((entry as { text?: string }).text, "");
+      if (!text) return null;
+      const typedLevel = ["INFO", "SUCCESS", "WARNING", "METRIC", "ERROR"].includes(level)
+        ? (level as TerminalLog["level"])
+        : "INFO";
+      return { level: typedLevel, stage, text };
+    })
+    .filter((entry): entry is TerminalLog => Boolean(entry));
+}
+
+function composeSnapshotText(url: string, sections: SnapshotSections): string {
+  const domain = new URL(url).hostname;
+  return [
+    `Quick snapshot for ${domain}:`,
+    `SEO & GEO — ${sections.seoGeo}`,
+    `Accessibility — ${sections.accessibility}`,
+    `Performance — ${sections.performance}`,
+    `Security — ${sections.security}`,
+    `Content — ${sections.content}`,
+    `CTA line — ${sections.ctaLine}`,
+  ].join("\n");
+}
+
+async function generateGeminiSnapshot(args: { url: string; locale: string; facts: string; signal: AbortSignal }): Promise<GeminiSnapshotResult> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not configured.");
+  }
+
+  const prompt = [
+    `Target locale: ${args.locale}`,
+    `Analyze website snapshot facts for ${args.url}.`,
+    "Return strict JSON with fields:",
+    "greeting (string)",
+    "summaryText (string)",
+    "sections object with keys: seoGeo, accessibility, performance, security, content, ctaLine",
+    "terminalLogs array of objects with: level(INFO|SUCCESS|WARNING|METRIC|ERROR), stage, text",
+    "Rules:",
+    "- terminalLogs must be concise developer terminal messages.",
+    "- Include at least 1 METRIC log with concrete value.",
+    "- SEO/GEO section must never be empty.",
+    "- Mention WordPress risk/automation if WP markers are present.",
+    "- Keep summary under 180 words.",
+    `Facts JSON: ${args.facts}`,
+  ].join("\n");
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+    {
+      method: "POST",
+      signal: args.signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.15, maxOutputTokens: 1100, responseMimeType: "application/json" },
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Gemini request failed (${response.status}): ${text.slice(0, 180)}`);
+  }
+
+  const data = (await response.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  const raw = data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "{}";
+  const parsed = JSON.parse(normalizeGeminiJson(raw)) as Partial<GeminiSnapshotResult> & { sections?: Partial<SnapshotSections> };
+
+  const sections: SnapshotSections = {
+    seoGeo: safeText(parsed.sections?.seoGeo, "No SEO/GEO signal."),
+    accessibility: safeText(parsed.sections?.accessibility, "No accessibility signal."),
+    performance: safeText(parsed.sections?.performance, "No performance signal."),
+    security: safeText(parsed.sections?.security, "No security signal."),
+    content: safeText(parsed.sections?.content, "No content signal."),
+    ctaLine: safeText(parsed.sections?.ctaLine, "Want the full actionable report and automated fixes."),
+  };
+
+  return {
+    greeting: safeText(parsed.greeting, "Hi, I'm Sparky. I'll walk you through what we find in real time."),
+    summaryText: safeText(parsed.summaryText, composeSnapshotText(args.url, sections)),
+    sections,
+    terminalLogs: normalizeLogs(parsed.terminalLogs),
+  };
+}
+
 export async function GET(req: NextRequest) {
   const rawUrl = req.nextUrl.searchParams.get("url");
   const locale = normalizeLocale(req.nextUrl.searchParams.get("locale"));
@@ -278,10 +400,11 @@ export async function GET(req: NextRequest) {
     const cached = JSON.parse(cachedRaw) as SnapshotPayload;
     const cachedStream = new ReadableStream({
       start(controller) {
-        controller.enqueue(encoder.encode(sseEvent("message", { text: "Cache hit. Replaying recent snapshot..." })));
-        controller.enqueue(encoder.encode(sseEvent("message", { text: cached.text })));
-        controller.enqueue(encoder.encode(sseEvent("snapshot", cached)));
-        controller.enqueue(encoder.encode(sseEvent("done", { ok: true, cached: true })));
+        const emit = (event: string, data: unknown) => controller.enqueue(encoder.encode(sseEvent(event, data)));
+        emit("message", { level: "INFO", stage: "Cache", text: "Cache hit. Replaying recent snapshot...", timestamp: nowStamp() });
+        emit("message", { level: "SUCCESS", stage: "Cache", text: cached.greeting || "Snapshot restored.", timestamp: nowStamp() });
+        emit("snapshot", cached);
+        emit("done", { ok: true, cached: true });
         controller.close();
       },
     });
@@ -298,60 +421,43 @@ export async function GET(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       const emit = (event: string, data: unknown) => controller.enqueue(encoder.encode(sseEvent(event, data)));
+      const log = (level: TerminalLog["level"], stage: string, text: string) => {
+        emit("message", { level, stage, text, timestamp: nowStamp() });
+      };
+
       try {
-        emit("message", { text: "Hi, I'm Sparky. I'll walk you through what we find in real time." });
-        emit("message", { text: "Hi! Here is your test report." });
-        emit("message", { text: "Fetching HTML..." });
+        log("INFO", "Boot", "Hi, I'm Sparky. I'll walk you through what we find in real time.");
+        log("INFO", "Fetch", "Fetching HTML...");
 
         const html = await limitedHtmlFetch(normalizedUrl);
         const facts = buildFacts(normalizedUrl, html);
-
-        emit("message", { text: "Analyzing accessibility..." });
-        emit("message", { text: "Checking SEO..." });
-        emit("message", { text: "Running security checks..." });
+        log("SUCCESS", "Fetch", "HTML fetched successfully.");
+        log("METRIC", "Fetch", `Payload ${(html.length / 1024).toFixed(1)}KB`);
+        log("INFO", "AI", "Running Gemini quick snapshot...");
 
         const llmController = new AbortController();
         const llmTimeout = setTimeout(() => llmController.abort("timeout"), LLM_TIMEOUT_MS);
 
-        const systemPrompt = "You are Sparky, a concise website analyzer.";
-        const userPrompt = [
-          `Target locale: ${locale}`,
-          "Use this exact section order and one line per section:",
-          "Quick snapshot for <domain>:",
-          "SEO & GEO — ...",
-          "Accessibility — ...",
-          "Performance — ...",
-          "Security — ...",
-          "Content — ...",
-          "CTA line: 'Want the full actionable report and automated fixes.'",
-          "Hard limits: 150-200 words total. No reasoning steps. No chain-of-thought. Output only in requested locale.",
-          `Facts JSON: ${facts}`,
-        ].join("\n");
-
-        const { textStream } = streamText({
-          model: openai("gpt-4o-mini"),
-          system: systemPrompt,
-          prompt: userPrompt,
-          temperature: 0.1,
-          maxOutputTokens: 260,
-          abortSignal: llmController.signal,
+        const generated = await generateGeminiSnapshot({
+          url: normalizedUrl,
+          locale,
+          facts,
+          signal: llmController.signal,
         });
 
-        let assembled = "";
-        for await (const token of textStream) {
-          if (!token) continue;
-          assembled += token;
-          emit("message", { text: token });
-        }
-
         clearTimeout(llmTimeout);
+
+        for (const entry of generated.terminalLogs) {
+          log(entry.level, entry.stage, entry.text);
+        }
 
         const payload: SnapshotPayload = {
           url: normalizedUrl,
           locale,
           generatedAt: new Date().toISOString(),
-          text: assembled.trim(),
-          sections: parseSnapshotSections(assembled),
+          text: generated.summaryText || composeSnapshotText(normalizedUrl, generated.sections),
+          sections: generated.sections,
+          greeting: generated.greeting,
         };
 
         await kvSet(cacheKey, JSON.stringify(payload), CACHE_TTL_SECONDS);
@@ -359,7 +465,9 @@ export async function GET(req: NextRequest) {
         emit("done", { ok: true, cached: false });
         controller.close();
       } catch (error) {
-        emit("error", { message: (error as Error).message || "Failed to generate snapshot." });
+        const message = (error as Error).message || "Failed to generate snapshot.";
+        log("ERROR", "Pipeline", message);
+        emit("error", { message });
         emit("done", { ok: false });
         controller.close();
       }
