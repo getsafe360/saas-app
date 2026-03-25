@@ -42,7 +42,8 @@ const FETCH_TIMEOUT_MS = 8_000;
 const FETCH_MAX_BYTES = 300_000;
 const LLM_TIMEOUT_MS = 20_000;
 const CACHE_TTL_SECONDS = 60 * 60 * 8;
-const GEMINI_MODEL = process.env.GEMINI_SNAPSHOT_MODEL || "gemini-3-flash-preview";
+const GEMINI_MODEL =
+  process.env.GEMINI_SNAPSHOT_MODEL || "gemini-3-flash-preview";
 
 const memoryRateLimit = new Map<string, { count: number; resetAt: number }>();
 
@@ -60,12 +61,19 @@ const IPV4_PRIVATE_RANGES: Array<[number, number]> = [
 ];
 
 function toIPv4Int(ip: string): number {
-  return ip.split(".").map(Number).reduce((acc, part) => (acc << 8) + part, 0) >>> 0;
+  return (
+    ip
+      .split(".")
+      .map(Number)
+      .reduce((acc, part) => (acc << 8) + part, 0) >>> 0
+  );
 }
 
 function isPrivateIPv4(ip: string): boolean {
   const value = toIPv4Int(ip);
-  return IPV4_PRIVATE_RANGES.some(([start, end]) => value >= start && value <= end);
+  return IPV4_PRIVATE_RANGES.some(
+    ([start, end]) => value >= start && value <= end,
+  );
 }
 
 function isPrivateIPv6(address: string): boolean {
@@ -91,7 +99,9 @@ function normalizeLocale(rawLocale: string | null): string {
 }
 
 function normalizeUrl(rawUrl: string): string | null {
-  const withScheme = /^https?:\/\//i.test(rawUrl.trim()) ? rawUrl.trim() : `https://${rawUrl.trim()}`;
+  const withScheme = /^https?:\/\//i.test(rawUrl.trim())
+    ? rawUrl.trim()
+    : `https://${rawUrl.trim()}`;
   try {
     const parsed = new URL(withScheme);
     if (!["http:", "https:"].includes(parsed.protocol)) return null;
@@ -104,25 +114,35 @@ function normalizeUrl(rawUrl: string): string | null {
 
 async function assertPublicDestination(urlString: string): Promise<void> {
   const url = new URL(urlString);
-  if (url.username || url.password) throw new Error("Credentialed URLs are not allowed.");
+  if (url.username || url.password)
+    throw new Error("Credentialed URLs are not allowed.");
   const host = url.hostname;
 
   if (net.isIP(host)) {
     const version = net.isIP(host);
-    if ((version === 4 && isPrivateIPv4(host)) || (version === 6 && isPrivateIPv6(host))) {
+    if (
+      (version === 4 && isPrivateIPv4(host)) ||
+      (version === 6 && isPrivateIPv6(host))
+    ) {
       throw new Error("Private network targets are blocked.");
     }
     return;
   }
 
-  if (/localhost$/i.test(host) || /\.local$/i.test(host) || /\.internal$/i.test(host)) {
+  if (
+    /localhost$/i.test(host) ||
+    /\.local$/i.test(host) ||
+    /\.internal$/i.test(host)
+  ) {
     throw new Error("Local network hostnames are blocked.");
   }
 
   const records = await dns.lookup(host, { all: true });
   if (
     records.some((record) =>
-      record.family === 4 ? isPrivateIPv4(record.address) : isPrivateIPv6(record.address),
+      record.family === 4
+        ? isPrivateIPv4(record.address)
+        : isPrivateIPv6(record.address),
     )
   ) {
     throw new Error("Target resolves to a private IP.");
@@ -131,16 +151,22 @@ async function assertPublicDestination(urlString: string): Promise<void> {
 
 async function limitedHtmlFetch(url: string): Promise<string> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort("timeout"), FETCH_TIMEOUT_MS);
+  const timeout = setTimeout(
+    () => controller.abort("timeout"),
+    FETCH_TIMEOUT_MS,
+  );
   try {
     const response = await fetch(url, {
       redirect: "follow",
       signal: controller.signal,
-      headers: { "User-Agent": "SparkySiteAnalyzer/1.0 (+https://getsafe360.com)" },
+      headers: {
+        "User-Agent": "SparkySiteAnalyzer/1.0 (+https://www.getsafe360.ai)",
+      },
       cache: "no-store",
     });
 
-    if (!response.ok || !response.body) throw new Error(`Failed to fetch HTML (${response.status})`);
+    if (!response.ok || !response.body)
+      throw new Error(`Failed to fetch HTML (${response.status})`);
 
     const reader = response.body.getReader();
     const chunks: Uint8Array[] = [];
@@ -195,7 +221,9 @@ function buildFacts(url: string, html: string): string {
     hasLang: /<html[^>]+lang=["']/i.test(html),
     hasSchemaOrg: /schema\.org/i.test(html),
     hasRobotsMeta: /<meta[^>]+name=["']robots["']/i.test(html),
-    hasCspMeta: /<meta[^>]+http-equiv=["']content-security-policy["']/i.test(html),
+    hasCspMeta: /<meta[^>]+http-equiv=["']content-security-policy["']/i.test(
+      html,
+    ),
     hasWpMarkers: /wp-content|wordpress|wp-includes/i.test(html),
     hasInlineScripts: /<script(?![^>]+src=)/i.test(html),
     domNodesEstimate: (html.match(/<[^/!][^>]*>/g) ?? []).length,
@@ -216,7 +244,9 @@ function buildFacts(url: string, html: string): string {
 function parseSnapshotSections(text: string): SnapshotSections {
   const clean = text.replace(/\r/g, "");
   const line = (name: string) =>
-    clean.match(new RegExp(`${name}\\s*[—:-]\\s*([^\\n]+)`, "i"))?.[1]?.trim() ?? "No signal.";
+    clean
+      .match(new RegExp(`${name}\\s*[—:-]\\s*([^\\n]+)`, "i"))?.[1]
+      ?.trim() ?? "No signal.";
 
   return {
     seoGeo: line("SEO\\s*&\\s*GEO|SEO\\s*&\\s*discovery"),
@@ -254,7 +284,10 @@ function rateLimitOk(clientId: string): boolean {
 }
 
 async function hashKey(input: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(input),
+  );
   return Array.from(new Uint8Array(digest))
     .slice(0, 12)
     .map((n) => n.toString(16).padStart(2, "0"))
@@ -269,6 +302,51 @@ function normalizeGeminiJson(rawText: string): string {
   const trimmed = rawText.trim();
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1];
   return (fenced || trimmed).trim();
+}
+
+function sanitizeJsonCandidate(input: string): string {
+  return input
+    .replace(/^\uFEFF/, "")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/,\s*([}\]])/g, "$1")
+    .trim();
+}
+
+function parseGeminiJson(
+  rawText: string,
+):
+  | (Partial<GeminiSnapshotResult> & { sections?: Partial<SnapshotSections> })
+  | null {
+  const normalized = normalizeGeminiJson(rawText);
+  const balanced = extractBalancedJsonObject(normalized);
+  const jsonSlice = (() => {
+    const first = normalized.indexOf("{");
+    const last = normalized.lastIndexOf("}");
+    return first >= 0 && last > first ? normalized.slice(first, last + 1) : "";
+  })();
+
+  const attempts = [balanced, normalized, jsonSlice]
+    .filter(
+      (candidate): candidate is string =>
+        typeof candidate === "string" && candidate.trim().length > 0,
+    )
+    .flatMap((candidate) => {
+      const clean = sanitizeJsonCandidate(candidate);
+      return clean === candidate ? [candidate] : [candidate, clean];
+    });
+
+  for (const attempt of attempts) {
+    try {
+      return JSON.parse(attempt) as Partial<GeminiSnapshotResult> & {
+        sections?: Partial<SnapshotSections>;
+      };
+    } catch {
+      // Try next candidate.
+    }
+  }
+
+  return null;
 }
 
 function extractBalancedJsonObject(input: string): string | null {
@@ -291,11 +369,11 @@ function extractBalancedJsonObject(input: string): string | null {
         escaped = true;
         continue;
       }
-      if (char === "\"") inString = false;
+      if (char === '"') inString = false;
       continue;
     }
 
-    if (char === "\"") {
+    if (char === '"') {
       inString = true;
       continue;
     }
@@ -313,7 +391,9 @@ function extractBalancedJsonObject(input: string): string | null {
 }
 
 function safeText(value: unknown, fallback: string): string {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : fallback;
 }
 
 function normalizeLogs(logs: unknown): TerminalLog[] {
@@ -321,11 +401,20 @@ function normalizeLogs(logs: unknown): TerminalLog[] {
   return logs
     .map((entry) => {
       if (!entry || typeof entry !== "object") return null;
-      const level = safeText((entry as { level?: string }).level, "INFO").toUpperCase();
+      const level = safeText(
+        (entry as { level?: string }).level,
+        "INFO",
+      ).toUpperCase();
       const stage = safeText((entry as { stage?: string }).stage, "Stream");
       const text = safeText((entry as { text?: string }).text, "");
       if (!text) return null;
-      const typedLevel = ["INFO", "SUCCESS", "WARNING", "METRIC", "ERROR"].includes(level)
+      const typedLevel = [
+        "INFO",
+        "SUCCESS",
+        "WARNING",
+        "METRIC",
+        "ERROR",
+      ].includes(level)
         ? (level as TerminalLog["level"])
         : "INFO";
       return { level: typedLevel, stage, text };
@@ -333,22 +422,44 @@ function normalizeLogs(logs: unknown): TerminalLog[] {
     .filter((entry): entry is TerminalLog => Boolean(entry));
 }
 
-function fallbackSnapshot(url: string, parseError?: string): GeminiSnapshotResult {
+function fallbackSnapshot(
+  url: string,
+  parseError?: string,
+): GeminiSnapshotResult {
   const host = new URL(url).hostname;
   return {
-    greeting: "Hi, I'm Sparky. I'll walk you through what we find in real time.",
+    greeting:
+      "Hi, I'm Sparky. I'll walk you through what we find in real time.",
     summaryText: `Quick snapshot for ${host}: Core checks completed. Some AI formatting was incomplete, so Sparky returned a safe fallback. Continue to full report for detailed evidence and one-click fixes.`,
     sections: {
-      seoGeo: "Basic indexability checks completed; detailed SEO/GEO signals available in full report.",
-      accessibility: "Initial accessibility sweep completed; inspect full report for issue-level WCAG guidance.",
-      performance: "HTML payload and rendering signals captured; full report includes optimization priorities.",
-      security: "Transport and baseline security heuristics checked; review full report for remediation steps.",
-      content: "Content structure sampled for quality and clarity; expand in full report for targeted actions.",
-      ctaLine: "Open the full report to unlock detailed checklist and automated fixes.",
+      seoGeo:
+        "Basic indexability checks completed; detailed SEO/GEO signals available in full report.",
+      accessibility:
+        "Initial accessibility sweep completed; inspect full report for issue-level WCAG guidance.",
+      performance:
+        "HTML payload and rendering signals captured; full report includes optimization priorities.",
+      security:
+        "Transport and baseline security heuristics checked; review full report for remediation steps.",
+      content:
+        "Content structure sampled for quality and clarity; expand in full report for targeted actions.",
+      ctaLine:
+        "Open the full report to unlock detailed checklist and automated fixes.",
     },
     terminalLogs: parseError
-      ? [{ level: "WARNING", stage: "AI", text: `Malformed Gemini JSON handled via fallback (${parseError}).` }]
-      : [{ level: "WARNING", stage: "AI", text: "Malformed Gemini JSON handled via fallback." }],
+      ? [
+          {
+            level: "WARNING",
+            stage: "AI",
+            text: `Malformed Gemini JSON handled via fallback (${parseError}).`,
+          },
+        ]
+      : [
+          {
+            level: "WARNING",
+            stage: "AI",
+            text: "Malformed Gemini JSON handled via fallback.",
+          },
+        ],
   };
 }
 
@@ -365,7 +476,12 @@ function composeSnapshotText(url: string, sections: SnapshotSections): string {
   ].join("\n");
 }
 
-async function generateGeminiSnapshot(args: { url: string; locale: string; facts: string; signal: AbortSignal }): Promise<GeminiSnapshotResult> {
+async function generateGeminiSnapshot(args: {
+  url: string;
+  locale: string;
+  facts: string;
+  signal: AbortSignal;
+}): Promise<GeminiSnapshotResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not configured.");
@@ -396,46 +512,65 @@ async function generateGeminiSnapshot(args: { url: string; locale: string; facts
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.15, maxOutputTokens: 1100, responseMimeType: "application/json" },
+        generationConfig: {
+          temperature: 0.15,
+          maxOutputTokens: 1100,
+          responseMimeType: "application/json",
+        },
       }),
     },
   );
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`Gemini request failed (${response.status}): ${text.slice(0, 180)}`);
+    throw new Error(
+      `Gemini request failed (${response.status}): ${text.slice(0, 180)}`,
+    );
   }
 
   const data = (await response.json()) as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   };
-  const raw = data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
+  const raw =
+    data.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text || "")
+      .join("") || "";
   if (!raw.trim()) {
     return fallbackSnapshot(args.url, "empty-response");
   }
 
-  const normalized = normalizeGeminiJson(raw);
-  const balanced = extractBalancedJsonObject(normalized) ?? normalized;
-
-  let parsed: Partial<GeminiSnapshotResult> & { sections?: Partial<SnapshotSections> };
-  try {
-    parsed = JSON.parse(balanced) as Partial<GeminiSnapshotResult> & { sections?: Partial<SnapshotSections> };
-  } catch {
+  const parsed = parseGeminiJson(raw);
+  if (!parsed) {
     return fallbackSnapshot(args.url, "json-parse-failed");
   }
 
   const sections: SnapshotSections = {
     seoGeo: safeText(parsed.sections?.seoGeo, "No SEO/GEO signal."),
-    accessibility: safeText(parsed.sections?.accessibility, "No accessibility signal."),
-    performance: safeText(parsed.sections?.performance, "No performance signal."),
+    accessibility: safeText(
+      parsed.sections?.accessibility,
+      "No accessibility signal.",
+    ),
+    performance: safeText(
+      parsed.sections?.performance,
+      "No performance signal.",
+    ),
     security: safeText(parsed.sections?.security, "No security signal."),
     content: safeText(parsed.sections?.content, "No content signal."),
-    ctaLine: safeText(parsed.sections?.ctaLine, "Want the full actionable report and automated fixes."),
+    ctaLine: safeText(
+      parsed.sections?.ctaLine,
+      "Want the full actionable report and automated fixes.",
+    ),
   };
 
   return {
-    greeting: safeText(parsed.greeting, "Hi, I'm Sparky. I'll walk you through what we find in real time."),
-    summaryText: safeText(parsed.summaryText, composeSnapshotText(args.url, sections)),
+    greeting: safeText(
+      parsed.greeting,
+      "Hi, I'm Sparky. I'll walk you through what we find in real time.",
+    ),
+    summaryText: safeText(
+      parsed.summaryText,
+      composeSnapshotText(args.url, sections),
+    ),
     sections,
     terminalLogs: normalizeLogs(parsed.terminalLogs),
   };
@@ -446,22 +581,34 @@ export async function GET(req: NextRequest) {
   const locale = normalizeLocale(req.nextUrl.searchParams.get("locale"));
 
   if (!rawUrl || rawUrl.length > MAX_URL_LENGTH) {
-    return NextResponse.json({ error: "Invalid url parameter." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid url parameter." },
+      { status: 400 },
+    );
   }
 
   if (!rateLimitOk(getClientId(req))) {
-    return NextResponse.json({ error: "Rate limit exceeded." }, { status: 429 });
+    return NextResponse.json(
+      { error: "Rate limit exceeded." },
+      { status: 429 },
+    );
   }
 
   const normalizedUrl = normalizeUrl(rawUrl);
   if (!normalizedUrl) {
-    return NextResponse.json({ error: "URL must be valid http/https." }, { status: 400 });
+    return NextResponse.json(
+      { error: "URL must be valid http/https." },
+      { status: 400 },
+    );
   }
 
   try {
     await assertPublicDestination(normalizedUrl);
   } catch (error) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 },
+    );
   }
 
   const cacheKey = `sparky:snapshot:${await hashKey(`${normalizedUrl}|${locale}`)}`;
@@ -472,9 +619,20 @@ export async function GET(req: NextRequest) {
     const cached = JSON.parse(cachedRaw) as SnapshotPayload;
     const cachedStream = new ReadableStream({
       start(controller) {
-        const emit = (event: string, data: unknown) => controller.enqueue(encoder.encode(sseEvent(event, data)));
-        emit("message", { level: "INFO", stage: "Cache", text: "Cache hit. Replaying recent snapshot...", timestamp: nowStamp() });
-        emit("message", { level: "SUCCESS", stage: "Cache", text: cached.greeting || "Snapshot restored.", timestamp: nowStamp() });
+        const emit = (event: string, data: unknown) =>
+          controller.enqueue(encoder.encode(sseEvent(event, data)));
+        emit("message", {
+          level: "INFO",
+          stage: "Cache",
+          text: "Cache hit. Replaying recent snapshot...",
+          timestamp: nowStamp(),
+        });
+        emit("message", {
+          level: "SUCCESS",
+          stage: "Cache",
+          text: cached.greeting || "Snapshot restored.",
+          timestamp: nowStamp(),
+        });
         emit("snapshot", cached);
         emit("done", { ok: true, cached: true });
         controller.close();
@@ -492,13 +650,22 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      const emit = (event: string, data: unknown) => controller.enqueue(encoder.encode(sseEvent(event, data)));
-      const log = (level: TerminalLog["level"], stage: string, text: string) => {
+      const emit = (event: string, data: unknown) =>
+        controller.enqueue(encoder.encode(sseEvent(event, data)));
+      const log = (
+        level: TerminalLog["level"],
+        stage: string,
+        text: string,
+      ) => {
         emit("message", { level, stage, text, timestamp: nowStamp() });
       };
 
       try {
-        log("INFO", "Boot", "Hi, I'm Sparky. I'll walk you through what we find in real time.");
+        log(
+          "INFO",
+          "Boot",
+          "Hi, I'm Sparky. I'll walk you through what we find in real time.",
+        );
         log("INFO", "Fetch", "Fetching HTML...");
 
         const html = await limitedHtmlFetch(normalizedUrl);
@@ -508,7 +675,10 @@ export async function GET(req: NextRequest) {
         log("INFO", "AI", "Running Gemini quick snapshot...");
 
         const llmController = new AbortController();
-        const llmTimeout = setTimeout(() => llmController.abort("timeout"), LLM_TIMEOUT_MS);
+        const llmTimeout = setTimeout(
+          () => llmController.abort("timeout"),
+          LLM_TIMEOUT_MS,
+        );
 
         const generated = await generateGeminiSnapshot({
           url: normalizedUrl,
@@ -527,7 +697,9 @@ export async function GET(req: NextRequest) {
           url: normalizedUrl,
           locale,
           generatedAt: new Date().toISOString(),
-          text: generated.summaryText || composeSnapshotText(normalizedUrl, generated.sections),
+          text:
+            generated.summaryText ||
+            composeSnapshotText(normalizedUrl, generated.sections),
           sections: generated.sections,
           greeting: generated.greeting,
         };
@@ -537,7 +709,8 @@ export async function GET(req: NextRequest) {
         emit("done", { ok: true, cached: false });
         controller.close();
       } catch (error) {
-        const message = (error as Error).message || "Failed to generate snapshot.";
+        const message =
+          (error as Error).message || "Failed to generate snapshot.";
         log("ERROR", "Pipeline", message);
         emit("error", { message });
         emit("done", { ok: false });
