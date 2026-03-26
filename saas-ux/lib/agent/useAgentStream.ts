@@ -14,7 +14,7 @@ export interface AgentStreamState {
   activeUrl: string | null;
 }
 
-const DEFAULT_GREETING = "Hi, I'm Sparky. I'll stream findings as I analyze your site.";
+const DEFAULT_GREETING = "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement.";
 
 function normalizeUrl(input: string): string | null {
   const candidate = /^https?:\/\//i.test(input.trim()) ? input.trim() : `https://${input.trim()}`;

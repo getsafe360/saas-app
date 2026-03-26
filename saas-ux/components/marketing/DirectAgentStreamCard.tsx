@@ -187,7 +187,7 @@ export default function DirectAgentStreamCard() {
               <p className="font-medium text-emerald-200">Sparky</p>
               <p className="mt-2 text-slate-200">
                 {stream.snapshot?.greeting ??
-                  "Hi, I'm Sparky. I'll walk you through what we find in real time."}
+                  "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement."}
               </p>
               <div className="mt-3 space-y-2 font-mono text-sm text-slate-300">
                 {stream.messages.map((message) => (

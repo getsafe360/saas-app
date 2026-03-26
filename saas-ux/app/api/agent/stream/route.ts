@@ -309,8 +309,59 @@ function sanitizeJsonCandidate(input: string): string {
     .replace(/^\uFEFF/, "")
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
     .replace(/,\s*([}\]])/g, "$1")
     .trim();
+}
+
+function extractJsonStringField(input: string, key: string): string | undefined {
+  const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(
+    `(?:"${escapedKey}"|${escapedKey})\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`,
+    "i",
+  );
+  const matched = input.match(pattern)?.[1];
+  if (!matched) return undefined;
+  return matched.replace(/\\n/g, "\n").replace(/\\t/g, "\t").trim();
+}
+
+function parseGeminiJsonHeuristic(
+  rawText: string,
+): Partial<GeminiSnapshotResult> & { sections?: Partial<SnapshotSections> } {
+  const normalized = sanitizeJsonCandidate(normalizeGeminiJson(rawText));
+
+  const sections: SnapshotSections = {
+    seoGeo: safeText(
+      extractJsonStringField(normalized, "seoGeo"),
+      parseSnapshotSections(normalized).seoGeo,
+    ),
+    accessibility: safeText(
+      extractJsonStringField(normalized, "accessibility"),
+      parseSnapshotSections(normalized).accessibility,
+    ),
+    performance: safeText(
+      extractJsonStringField(normalized, "performance"),
+      parseSnapshotSections(normalized).performance,
+    ),
+    security: safeText(
+      extractJsonStringField(normalized, "security"),
+      parseSnapshotSections(normalized).security,
+    ),
+    content: safeText(
+      extractJsonStringField(normalized, "content"),
+      parseSnapshotSections(normalized).content,
+    ),
+    ctaLine: safeText(
+      extractJsonStringField(normalized, "ctaLine"),
+      parseSnapshotSections(normalized).ctaLine,
+    ),
+  };
+
+  return {
+    greeting: extractJsonStringField(normalized, "greeting"),
+    summaryText: extractJsonStringField(normalized, "summaryText"),
+    sections,
+  };
 }
 
 function parseGeminiJson(
@@ -346,7 +397,15 @@ function parseGeminiJson(
     }
   }
 
-  return null;
+  const heuristic = parseGeminiJsonHeuristic(rawText);
+  const hasSignal =
+    typeof heuristic.greeting === "string" ||
+    typeof heuristic.summaryText === "string" ||
+    Object.values(heuristic.sections ?? {}).some(
+      (value) => typeof value === "string" && value.trim().length > 0,
+    );
+
+  return hasSignal ? heuristic : null;
 }
 
 function extractBalancedJsonObject(input: string): string | null {
@@ -429,8 +488,8 @@ function fallbackSnapshot(
   const host = new URL(url).hostname;
   return {
     greeting:
-      "Hi, I'm Sparky. I'll walk you through what we find in real time.",
-    summaryText: `Quick snapshot for ${host}: Core checks completed. Some AI formatting was incomplete, so Sparky returned a safe fallback. Continue to full report for detailed evidence and one-click fixes.`,
+      "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement.",
+    summaryText: `Quick snapshot for ${host}: Core checks completed. Some response formatting was incomplete, so Sparky returned a safe fallback. Continue to full report for detailed evidence and one-click fixes.`,
     sections: {
       seoGeo:
         "Basic indexability checks completed; detailed SEO/GEO signals available in full report.",
@@ -450,14 +509,14 @@ function fallbackSnapshot(
           {
             level: "WARNING",
             stage: "AI",
-            text: `Malformed Gemini JSON handled via fallback (${parseError}).`,
+            text: `Malformed AI snapshot JSON handled via fallback (${parseError}).`,
           },
         ]
       : [
           {
             level: "WARNING",
             stage: "AI",
-            text: "Malformed Gemini JSON handled via fallback.",
+            text: "Malformed AI snapshot JSON handled via fallback.",
           },
         ],
   };
@@ -565,7 +624,7 @@ async function generateGeminiSnapshot(args: {
   return {
     greeting: safeText(
       parsed.greeting,
-      "Hi, I'm Sparky. I'll walk you through what we find in real time.",
+      "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement.",
     ),
     summaryText: safeText(
       parsed.summaryText,
@@ -664,7 +723,7 @@ export async function GET(req: NextRequest) {
         log(
           "INFO",
           "Boot",
-          "Hi, I'm Sparky. I'll walk you through what we find in real time.",
+          "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement.",
         );
         log("INFO", "Fetch", "Fetching HTML...");
 
@@ -672,7 +731,7 @@ export async function GET(req: NextRequest) {
         const facts = buildFacts(normalizedUrl, html);
         log("SUCCESS", "Fetch", "HTML fetched successfully.");
         log("METRIC", "Fetch", `Payload ${(html.length / 1024).toFixed(1)}KB`);
-        log("INFO", "AI", "Running Gemini quick snapshot...");
+        log("INFO", "AI", "Preparing your site snapshot...");
 
         const llmController = new AbortController();
         const llmTimeout = setTimeout(
