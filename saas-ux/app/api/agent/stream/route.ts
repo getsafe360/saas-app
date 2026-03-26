@@ -37,6 +37,23 @@ type GeminiSnapshotResult = {
   terminalLogs: TerminalLog[];
 };
 
+type GeminiResponsePayload = {
+  greeting?: string;
+  summaryText?: string;
+  terminalLogs?: Array<{
+    level?: "INFO" | "SUCCESS" | "WARNING" | "METRIC" | "ERROR" | string;
+    stage?: string;
+    text?: string;
+  }>;
+  sections?: Partial<SnapshotSections>;
+  seoGeo?: string;
+  accessibility?: string;
+  performance?: string;
+  security?: string;
+  content?: string;
+  ctaLine?: string;
+};
+
 const MAX_URL_LENGTH = 2048;
 const FETCH_TIMEOUT_MS = 8_000;
 const FETCH_MAX_BYTES = 300_000;
@@ -367,7 +384,7 @@ function parseGeminiJsonHeuristic(
 function parseGeminiJson(
   rawText: string,
 ):
-  | (Partial<GeminiSnapshotResult> & { sections?: Partial<SnapshotSections> })
+  | (GeminiResponsePayload & { sections?: Partial<SnapshotSections> })
   | null {
   const normalized = normalizeGeminiJson(rawText);
   const balanced = extractBalancedJsonObject(normalized);
@@ -406,6 +423,14 @@ function parseGeminiJson(
     );
 
   return hasSignal ? heuristic : null;
+}
+
+function pickSectionValue(
+  parsed: GeminiResponsePayload,
+  key: keyof SnapshotSections,
+  fallback: string,
+): string {
+  return safeText(parsed.sections?.[key] ?? parsed[key], fallback);
 }
 
 function extractBalancedJsonObject(input: string): string | null {
@@ -575,6 +600,53 @@ async function generateGeminiSnapshot(args: {
           temperature: 0.15,
           maxOutputTokens: 1100,
           responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            required: [
+              "greeting",
+              "summaryText",
+              "sections",
+              "terminalLogs",
+            ],
+            properties: {
+              greeting: { type: "STRING" },
+              summaryText: { type: "STRING" },
+              sections: {
+                type: "OBJECT",
+                required: [
+                  "seoGeo",
+                  "accessibility",
+                  "performance",
+                  "security",
+                  "content",
+                  "ctaLine",
+                ],
+                properties: {
+                  seoGeo: { type: "STRING" },
+                  accessibility: { type: "STRING" },
+                  performance: { type: "STRING" },
+                  security: { type: "STRING" },
+                  content: { type: "STRING" },
+                  ctaLine: { type: "STRING" },
+                },
+              },
+              terminalLogs: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  required: ["level", "stage", "text"],
+                  properties: {
+                    level: {
+                      type: "STRING",
+                      enum: ["INFO", "SUCCESS", "WARNING", "METRIC", "ERROR"],
+                    },
+                    stage: { type: "STRING" },
+                    text: { type: "STRING" },
+                  },
+                },
+              },
+            },
+          },
         },
       }),
     },
@@ -604,19 +676,18 @@ async function generateGeminiSnapshot(args: {
   }
 
   const sections: SnapshotSections = {
-    seoGeo: safeText(parsed.sections?.seoGeo, "No SEO/GEO signal."),
-    accessibility: safeText(
-      parsed.sections?.accessibility,
+    seoGeo: pickSectionValue(parsed, "seoGeo", "No SEO/GEO signal."),
+    accessibility: pickSectionValue(
+      parsed,
+      "accessibility",
       "No accessibility signal.",
     ),
-    performance: safeText(
-      parsed.sections?.performance,
-      "No performance signal.",
-    ),
-    security: safeText(parsed.sections?.security, "No security signal."),
-    content: safeText(parsed.sections?.content, "No content signal."),
-    ctaLine: safeText(
-      parsed.sections?.ctaLine,
+    performance: pickSectionValue(parsed, "performance", "No performance signal."),
+    security: pickSectionValue(parsed, "security", "No security signal."),
+    content: pickSectionValue(parsed, "content", "No content signal."),
+    ctaLine: pickSectionValue(
+      parsed,
+      "ctaLine",
       "Want the full actionable report and automated fixes.",
     ),
   };
