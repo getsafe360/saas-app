@@ -19,7 +19,7 @@ export interface HomepageTestState {
   timestamp: string;
 }
 
-const LIVE_GREETING = "Hi, I'm Sparky. I'll walk you through what we find in real time.";
+const LIVE_GREETING = "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement.";
 const LIVE_SUMMARY = 'Scanning your site and building a live summary…';
 const FALLBACK_PENDING_SUMMARY = "We're analyzing your site… If live updates fail, we'll show final results soon.";
 const FALLBACK_ERROR_SUMMARY = "We couldn't load live updates or final results. Please try again.";
