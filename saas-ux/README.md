@@ -74,6 +74,33 @@ You can listen for Stripe webhooks locally through their CLI to handle subscript
 stripe listen --forward-to localhost:3000/api/stripe/webhook
 ```
 
+## Debug endpoint: env + PageSpeed probe
+
+If you need to verify which runtime env vars are loaded and whether PageSpeed is returning category scores, use:
+
+- `GET /api/debug/env`
+- `GET /api/debug/env?url=https://rumler.com`
+
+### cURL examples
+
+macOS/Linux:
+
+```bash
+curl "http://localhost:3000/api/debug/env?url=https://rumler.com"
+```
+
+Windows CMD (with double quotes):
+
+```bat
+curl "http://localhost:3000/api/debug/env?url=https://rumler.com"
+```
+
+Windows PowerShell:
+
+```powershell
+Invoke-RestMethod "http://localhost:3000/api/debug/env?url=https://rumler.com"
+```
+
 ## Testing Payments
 
 To test Stripe payments, use the following test card details:
