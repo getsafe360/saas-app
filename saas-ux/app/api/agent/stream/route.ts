@@ -83,7 +83,7 @@ const MAX_URL_LENGTH = 2048;
 const FETCH_TIMEOUT_MS = 8_000;
 const FETCH_MAX_BYTES = 300_000;
 const LLM_TIMEOUT_MS = 20_000;
-const PAGESPEED_TIMEOUT_MS = 8_000;
+const PAGESPEED_TIMEOUT_MS = 20_000;
 const CACHE_TTL_SECONDS = 60 * 60 * 8;
 const GEMINI_MODEL =
   process.env.GEMINI_SNAPSHOT_MODEL || "gemini-3-flash-preview";
@@ -272,10 +272,7 @@ async function getPageSpeedSummary(
   if (!apiKey) return null;
 
   const controller = new AbortController();
-  const timeout = setTimeout(
-    () => controller.abort("timeout"),
-    PAGESPEED_TIMEOUT_MS,
-  );
+  const timeout = setTimeout(() => controller.abort(), PAGESPEED_TIMEOUT_MS);
 
   try {
     const response = await fetch(

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PAGESPEED_TIMEOUT_MS = 12_000;
+const PAGESPEED_TIMEOUT_MS = 30_000;
 
 type EnvProbe = {
   loaded: boolean;
@@ -61,7 +61,7 @@ async function probePageSpeed(url: string, apiKey?: string): Promise<PageSpeedPr
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort("timeout"), PAGESPEED_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), PAGESPEED_TIMEOUT_MS);
 
   try {
     const endpoint =
@@ -113,7 +113,12 @@ async function probePageSpeed(url: string, apiKey?: string): Promise<PageSpeedPr
       strategy: null,
       categoriesPresent: [],
       categoryScores: {},
-      error: error instanceof Error ? error.message : "Unknown PageSpeed error",
+      error:
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+            ? error
+            : "Unknown PageSpeed error",
     };
   } finally {
     clearTimeout(timeout);
