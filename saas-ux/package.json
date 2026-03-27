@@ -75,6 +75,7 @@
   "devDependencies": {
     "@playwright/test": "^1.56.1",
     "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.31.10",
     "puppeteer": "^24.17.0"
   }
 }
