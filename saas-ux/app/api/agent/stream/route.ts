@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import dns from "node:dns/promises";
 import net from "node:net";
-import { kvGet, kvSet } from "@/lib/kv";
+import { kvGet, kvIncr, kvSet } from "@/lib/kv";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,11 +30,36 @@ type SnapshotPayload = {
   greeting?: string;
 };
 
+type FetchSnapshot = {
+  html: string;
+  finalUrl: string;
+  status: number;
+  fetchMs: number;
+  bytes: number;
+  headers: Record<string, string>;
+};
+
+type SectionFallbackStats = {
+  usedAnyFallback: boolean;
+  fallbackCount: number;
+  fallbackBySection: Record<keyof SnapshotSections, boolean>;
+};
+
+type PageSpeedSummary = {
+  strategy: "mobile" | "desktop";
+  categories: Partial<Record<"performance" | "accessibility" | "seo", number>>;
+  firstContentfulPaintMs?: number;
+  largestContentfulPaintMs?: number;
+  cumulativeLayoutShift?: number;
+  totalBlockingTimeMs?: number;
+};
+
 type GeminiSnapshotResult = {
   greeting: string;
   summaryText: string;
   sections: SnapshotSections;
   terminalLogs: TerminalLog[];
+  fallbackStats: SectionFallbackStats;
 };
 
 type GeminiResponsePayload = {
@@ -58,6 +83,7 @@ const MAX_URL_LENGTH = 2048;
 const FETCH_TIMEOUT_MS = 8_000;
 const FETCH_MAX_BYTES = 300_000;
 const LLM_TIMEOUT_MS = 20_000;
+const PAGESPEED_TIMEOUT_MS = 8_000;
 const CACHE_TTL_SECONDS = 60 * 60 * 8;
 const GEMINI_MODEL =
   process.env.GEMINI_SNAPSHOT_MODEL || "gemini-3-flash-preview";
@@ -166,12 +192,13 @@ async function assertPublicDestination(urlString: string): Promise<void> {
   }
 }
 
-async function limitedHtmlFetch(url: string): Promise<string> {
+async function limitedHtmlFetch(url: string): Promise<FetchSnapshot> {
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort("timeout"),
     FETCH_TIMEOUT_MS,
   );
+  const started = Date.now();
   try {
     const response = await fetch(url, {
       redirect: "follow",
@@ -208,7 +235,15 @@ async function limitedHtmlFetch(url: string): Promise<string> {
       offset += chunk.byteLength;
     }
 
-    return new TextDecoder().decode(merged);
+    const headers = Object.fromEntries(response.headers.entries());
+    return {
+      html: new TextDecoder().decode(merged),
+      finalUrl: response.url || url,
+      status: response.status,
+      fetchMs: Date.now() - started,
+      bytes: total,
+      headers,
+    };
   } finally {
     clearTimeout(timeout);
   }
@@ -219,17 +254,118 @@ function extractTagContent(html: string, regex: RegExp): string {
   return matched.replace(/\s+/g, " ").trim();
 }
 
-function buildFacts(url: string, html: string): string {
-  const title = extractTagContent(html, /<title[^>]*>([\s\S]*?)<\/title>/i);
-  const description = extractTagContent(
+function parseMetaContent(html: string, name: string): string {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return extractTagContent(
     html,
-    /<meta[^>]+name=["']description["'][^>]+content=["']([\s\S]*?)["'][^>]*>/i,
+    new RegExp(
+      `<meta[^>]+(?:name|property)=["']${escaped}["'][^>]+content=["']([\\s\\S]*?)["'][^>]*>`,
+      "i",
+    ),
   );
+}
+
+async function getPageSpeedSummary(
+  pageUrl: string,
+): Promise<PageSpeedSummary | null> {
+  const apiKey = process.env.PAGESPEED_API_KEY;
+  if (!apiKey) return null;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(
+    () => controller.abort("timeout"),
+    PAGESPEED_TIMEOUT_MS,
+  );
+
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(pageUrl)}&category=performance&category=accessibility&category=seo&strategy=mobile&key=${encodeURIComponent(apiKey)}`,
+      {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) return null;
+    const data = (await response.json()) as {
+      lighthouseResult?: {
+        categories?: Record<string, { score?: number }>;
+        audits?: Record<string, { numericValue?: number }>;
+        configSettings?: { formFactor?: "mobile" | "desktop" };
+      };
+    };
+    const categories = data.lighthouseResult?.categories;
+    const audits = data.lighthouseResult?.audits;
+    if (!categories) return null;
+
+    const score = (key: "performance" | "accessibility" | "seo") => {
+      const raw = categories[key]?.score;
+      return typeof raw === "number" ? Math.round(raw * 100) : undefined;
+    };
+
+    return {
+      strategy: data.lighthouseResult?.configSettings?.formFactor || "mobile",
+      categories: {
+        performance: score("performance"),
+        accessibility: score("accessibility"),
+        seo: score("seo"),
+      },
+      firstContentfulPaintMs: audits?.["first-contentful-paint"]?.numericValue,
+      largestContentfulPaintMs:
+        audits?.["largest-contentful-paint"]?.numericValue,
+      cumulativeLayoutShift: audits?.["cumulative-layout-shift"]?.numericValue,
+      totalBlockingTimeMs: audits?.["total-blocking-time"]?.numericValue,
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function buildFacts(
+  requestedUrl: string,
+  fetchSnapshot: FetchSnapshot,
+  pageSpeed: PageSpeedSummary | null,
+): string {
+  const { html, status, finalUrl, fetchMs, bytes, headers } = fetchSnapshot;
+  const title = extractTagContent(html, /<title[^>]*>([\s\S]*?)<\/title>/i);
+  const description = parseMetaContent(html, "description");
+  const robots = parseMetaContent(html, "robots");
+  const canonical = extractTagContent(
+    html,
+    /<link[^>]+rel=["']canonical["'][^>]+href=["']([\s\S]*?)["'][^>]*>/i,
+  );
+  const ogTitle = parseMetaContent(html, "og:title");
+  const ogDescription = parseMetaContent(html, "og:description");
+  const twitterCard = parseMetaContent(html, "twitter:card");
+  const jsonLdBlocks = (html.match(/<script[^>]+type=["']application\/ld\+json["']/gi) ?? []).length;
+  const wordCount = (html.match(/\b[\p{L}\p{N}]{2,}\b/gu) ?? []).length;
+  const internalLinks = (
+    html.match(/<a[^>]+href=["'](?:\/|https?:\/\/[^"'>]*?)["']/gi) ?? []
+  ).length;
+  const externalLinks = (
+    html.match(/<a[^>]+href=["']https?:\/\/(?![^"'>]*?(?:localhost|127\.0\.0\.1))[^"'>]+["']/gi) ?? []
+  ).length;
+  const imagesWithoutAlt = (
+    html.match(/<img(?![^>]*\balt=)[^>]*>/gi) ?? []
+  ).length;
 
   const headings = {
     h1: (html.match(/<h1\b/gi) ?? []).length,
     h2: (html.match(/<h2\b/gi) ?? []).length,
     h3: (html.match(/<h3\b/gi) ?? []).length,
+  };
+
+  const securityHeaders = {
+    strictTransportSecurity: Boolean(headers["strict-transport-security"]),
+    contentSecurityPolicy: Boolean(headers["content-security-policy"]),
+    xFrameOptions: Boolean(headers["x-frame-options"]),
+    xContentTypeOptions: Boolean(headers["x-content-type-options"]),
+    referrerPolicy: Boolean(headers["referrer-policy"]),
+    permissionsPolicy: Boolean(headers["permissions-policy"]),
+    crossOriginOpenerPolicy: Boolean(headers["cross-origin-opener-policy"]),
   };
 
   const heuristics = {
@@ -247,10 +383,32 @@ function buildFacts(url: string, html: string): string {
   };
 
   const facts = {
-    url,
+    requestedUrl,
+    fetched: {
+      finalUrl,
+      status,
+      fetchMs,
+      htmlKb: Number((bytes / 1024).toFixed(1)),
+      securityHeaders,
+    },
+    pageSpeed,
     title,
     description,
+    robots,
+    canonical,
+    openGraph: {
+      title: ogTitle,
+      description: ogDescription,
+      twitterCard,
+    },
     headings,
+    contentSignals: {
+      wordCount,
+      internalLinks,
+      externalLinks,
+      imagesWithoutAlt,
+      jsonLdBlocks,
+    },
     heuristics,
   };
 
@@ -313,6 +471,17 @@ async function hashKey(input: string): Promise<string> {
 
 function nowStamp(): string {
   return new Date().toISOString().substring(11, 19);
+}
+
+async function trackFallbackStats(stats: SectionFallbackStats): Promise<void> {
+  await kvIncr("sparky:obs:requests_total", 1);
+  if (!stats.usedAnyFallback) return;
+  await kvIncr("sparky:obs:requests_with_fallback_total", 1);
+  await kvIncr("sparky:obs:fallback_sections_total", stats.fallbackCount);
+  const updates = Object.entries(stats.fallbackBySection)
+    .filter(([, used]) => used)
+    .map(([section]) => kvIncr(`sparky:obs:fallback:${section}`, 1));
+  await Promise.all(updates);
 }
 
 function normalizeGeminiJson(rawText: string): string {
@@ -433,6 +602,26 @@ function pickSectionValue(
   return safeText(parsed.sections?.[key] ?? parsed[key], fallback);
 }
 
+function computeFallbackStats(
+  sections: SnapshotSections,
+  fallbacks: SnapshotSections,
+): SectionFallbackStats {
+  const fallbackBySection = {
+    seoGeo: sections.seoGeo === fallbacks.seoGeo,
+    accessibility: sections.accessibility === fallbacks.accessibility,
+    performance: sections.performance === fallbacks.performance,
+    security: sections.security === fallbacks.security,
+    content: sections.content === fallbacks.content,
+    ctaLine: sections.ctaLine === fallbacks.ctaLine,
+  } satisfies Record<keyof SnapshotSections, boolean>;
+  const fallbackCount = Object.values(fallbackBySection).filter(Boolean).length;
+  return {
+    usedAnyFallback: fallbackCount > 0,
+    fallbackCount,
+    fallbackBySection,
+  };
+}
+
 function extractBalancedJsonObject(input: string): string | null {
   const start = input.indexOf("{");
   if (start < 0) return null;
@@ -511,24 +700,25 @@ function fallbackSnapshot(
   parseError?: string,
 ): GeminiSnapshotResult {
   const host = new URL(url).hostname;
+  const fallbackSections: SnapshotSections = {
+    seoGeo:
+      "Basic indexability checks completed; detailed SEO/GEO signals available in full report.",
+    accessibility:
+      "Initial accessibility sweep completed; inspect full report for issue-level WCAG guidance.",
+    performance:
+      "HTML payload and rendering signals captured; full report includes optimization priorities.",
+    security:
+      "Transport and baseline security heuristics checked; review full report for remediation steps.",
+    content:
+      "Content structure sampled for quality and clarity; expand in full report for targeted actions.",
+    ctaLine:
+      "Open the full report to unlock detailed checklist and automated fixes.",
+  };
   return {
     greeting:
       "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement.",
     summaryText: `Quick snapshot for ${host}: Core checks completed. Some response formatting was incomplete, so Sparky returned a safe fallback. Continue to full report for detailed evidence and one-click fixes.`,
-    sections: {
-      seoGeo:
-        "Basic indexability checks completed; detailed SEO/GEO signals available in full report.",
-      accessibility:
-        "Initial accessibility sweep completed; inspect full report for issue-level WCAG guidance.",
-      performance:
-        "HTML payload and rendering signals captured; full report includes optimization priorities.",
-      security:
-        "Transport and baseline security heuristics checked; review full report for remediation steps.",
-      content:
-        "Content structure sampled for quality and clarity; expand in full report for targeted actions.",
-      ctaLine:
-        "Open the full report to unlock detailed checklist and automated fixes.",
-    },
+    sections: fallbackSections,
     terminalLogs: parseError
       ? [
           {
@@ -544,6 +734,7 @@ function fallbackSnapshot(
             text: "Malformed AI snapshot JSON handled via fallback.",
           },
         ],
+    fallbackStats: computeFallbackStats(fallbackSections, fallbackSections),
   };
 }
 
@@ -583,6 +774,8 @@ async function generateGeminiSnapshot(args: {
     "- terminalLogs must be concise developer terminal messages.",
     "- Include at least 1 METRIC log with concrete value.",
     "- SEO/GEO section must never be empty.",
+    "- When PageSpeed scores are present, cite them explicitly in performance/accessibility/SEO sections.",
+    "- Highlight missing security headers or weak transport defaults when detected.",
     "- Mention WordPress risk/automation if WP markers are present.",
     "- Keep summary under 180 words.",
     `Facts JSON: ${args.facts}`,
@@ -675,21 +868,30 @@ async function generateGeminiSnapshot(args: {
     return fallbackSnapshot(args.url, "json-parse-failed");
   }
 
+  const sectionFallbacks: SnapshotSections = {
+    seoGeo: "No SEO/GEO signal.",
+    accessibility: "No accessibility signal.",
+    performance: "No performance signal.",
+    security: "No security signal.",
+    content: "No content signal.",
+    ctaLine: "Want the full actionable report and automated fixes.",
+  };
+
   const sections: SnapshotSections = {
-    seoGeo: pickSectionValue(parsed, "seoGeo", "No SEO/GEO signal."),
+    seoGeo: pickSectionValue(parsed, "seoGeo", sectionFallbacks.seoGeo),
     accessibility: pickSectionValue(
       parsed,
       "accessibility",
-      "No accessibility signal.",
+      sectionFallbacks.accessibility,
     ),
-    performance: pickSectionValue(parsed, "performance", "No performance signal."),
-    security: pickSectionValue(parsed, "security", "No security signal."),
-    content: pickSectionValue(parsed, "content", "No content signal."),
-    ctaLine: pickSectionValue(
+    performance: pickSectionValue(
       parsed,
-      "ctaLine",
-      "Want the full actionable report and automated fixes.",
+      "performance",
+      sectionFallbacks.performance,
     ),
+    security: pickSectionValue(parsed, "security", sectionFallbacks.security),
+    content: pickSectionValue(parsed, "content", sectionFallbacks.content),
+    ctaLine: pickSectionValue(parsed, "ctaLine", sectionFallbacks.ctaLine),
   };
 
   return {
@@ -703,6 +905,7 @@ async function generateGeminiSnapshot(args: {
     ),
     sections,
     terminalLogs: normalizeLogs(parsed.terminalLogs),
+    fallbackStats: computeFallbackStats(sections, sectionFallbacks),
   };
 }
 
@@ -798,10 +1001,22 @@ export async function GET(req: NextRequest) {
         );
         log("INFO", "Fetch", "Fetching HTML...");
 
-        const html = await limitedHtmlFetch(normalizedUrl);
-        const facts = buildFacts(normalizedUrl, html);
+        const fetchSnapshot = await limitedHtmlFetch(normalizedUrl);
+        const pageSpeed = await getPageSpeedSummary(fetchSnapshot.finalUrl);
+        const facts = buildFacts(normalizedUrl, fetchSnapshot, pageSpeed);
         log("SUCCESS", "Fetch", "HTML fetched successfully.");
-        log("METRIC", "Fetch", `Payload ${(html.length / 1024).toFixed(1)}KB`);
+        log(
+          "METRIC",
+          "Fetch",
+          `Status ${fetchSnapshot.status}, payload ${(fetchSnapshot.bytes / 1024).toFixed(1)}KB, fetch ${fetchSnapshot.fetchMs}ms`,
+        );
+        if (pageSpeed?.categories.performance !== undefined) {
+          log(
+            "METRIC",
+            "PageSpeed",
+            `${pageSpeed.strategy} perf ${pageSpeed.categories.performance}/100, a11y ${pageSpeed.categories.accessibility ?? "n/a"}/100, seo ${pageSpeed.categories.seo ?? "n/a"}/100`,
+          );
+        }
         log("INFO", "AI", "Preparing your site snapshot...");
 
         const llmController = new AbortController();
@@ -822,6 +1037,14 @@ export async function GET(req: NextRequest) {
         for (const entry of generated.terminalLogs) {
           log(entry.level, entry.stage, entry.text);
         }
+        if (generated.fallbackStats.usedAnyFallback) {
+          log(
+            "WARNING",
+            "AI",
+            `Fallback text used in ${generated.fallbackStats.fallbackCount} section(s).`,
+          );
+        }
+        await trackFallbackStats(generated.fallbackStats);
 
         const payload: SnapshotPayload = {
           url: normalizedUrl,
