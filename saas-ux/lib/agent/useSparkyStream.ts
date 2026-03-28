@@ -18,6 +18,7 @@ export type SparkySnapshot = {
   locale: string;
   generatedAt: string;
   text: string;
+  platform: "wordpress" | "generic";
   greeting?: string;
   sections: {
     seoGeo: string;
