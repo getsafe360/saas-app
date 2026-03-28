@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dns from "node:dns/promises";
 import net from "node:net";
 import { kvGet, kvIncr, kvSet } from "@/lib/kv";
+import { PageSpeedSummary } from "@/lib/analyzer/pageSpeed";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,15 +46,6 @@ type SectionFallbackStats = {
   fallbackBySection: Record<keyof SnapshotSections, boolean>;
 };
 
-type PageSpeedSummary = {
-  strategy: "mobile" | "desktop";
-  categories: Partial<Record<"performance" | "accessibility" | "seo", number>>;
-  firstContentfulPaintMs?: number;
-  largestContentfulPaintMs?: number;
-  cumulativeLayoutShift?: number;
-  totalBlockingTimeMs?: number;
-};
-
 type GeminiSnapshotResult = {
   greeting: string;
   summaryText: string;
@@ -83,7 +75,6 @@ const MAX_URL_LENGTH = 2048;
 const FETCH_TIMEOUT_MS = 8_000;
 const FETCH_MAX_BYTES = 300_000;
 const LLM_TIMEOUT_MS = 20_000;
-const PAGESPEED_TIMEOUT_MS = 20_000;
 const CACHE_TTL_SECONDS = 60 * 60 * 8;
 const GEMINI_MODEL =
   process.env.GEMINI_SNAPSHOT_MODEL || "gemini-3-flash-preview";
@@ -263,62 +254,6 @@ function parseMetaContent(html: string, name: string): string {
       "i",
     ),
   );
-}
-
-async function getPageSpeedSummary(
-  pageUrl: string,
-): Promise<PageSpeedSummary | null> {
-  const apiKey = process.env.PAGESPEED_API_KEY;
-  if (!apiKey) return null;
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), PAGESPEED_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(
-      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(pageUrl)}&category=performance&category=accessibility&category=seo&strategy=mobile&key=${encodeURIComponent(apiKey)}`,
-      {
-        method: "GET",
-        headers: { Accept: "application/json" },
-        signal: controller.signal,
-        cache: "no-store",
-      },
-    );
-    if (!response.ok) return null;
-    const data = (await response.json()) as {
-      lighthouseResult?: {
-        categories?: Record<string, { score?: number }>;
-        audits?: Record<string, { numericValue?: number }>;
-        configSettings?: { formFactor?: "mobile" | "desktop" };
-      };
-    };
-    const categories = data.lighthouseResult?.categories;
-    const audits = data.lighthouseResult?.audits;
-    if (!categories) return null;
-
-    const score = (key: "performance" | "accessibility" | "seo") => {
-      const raw = categories[key]?.score;
-      return typeof raw === "number" ? Math.round(raw * 100) : undefined;
-    };
-
-    return {
-      strategy: data.lighthouseResult?.configSettings?.formFactor || "mobile",
-      categories: {
-        performance: score("performance"),
-        accessibility: score("accessibility"),
-        seo: score("seo"),
-      },
-      firstContentfulPaintMs: audits?.["first-contentful-paint"]?.numericValue,
-      largestContentfulPaintMs:
-        audits?.["largest-contentful-paint"]?.numericValue,
-      cumulativeLayoutShift: audits?.["cumulative-layout-shift"]?.numericValue,
-      totalBlockingTimeMs: audits?.["total-blocking-time"]?.numericValue,
-    };
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timeout);
-  }
 }
 
 function buildFacts(
@@ -999,21 +934,13 @@ export async function GET(req: NextRequest) {
         log("INFO", "Fetch", "Fetching HTML...");
 
         const fetchSnapshot = await limitedHtmlFetch(normalizedUrl);
-        const pageSpeed = await getPageSpeedSummary(fetchSnapshot.finalUrl);
-        const facts = buildFacts(normalizedUrl, fetchSnapshot, pageSpeed);
+        const facts = buildFacts(normalizedUrl, fetchSnapshot, null);
         log("SUCCESS", "Fetch", "HTML fetched successfully.");
         log(
           "METRIC",
           "Fetch",
           `Status ${fetchSnapshot.status}, payload ${(fetchSnapshot.bytes / 1024).toFixed(1)}KB, fetch ${fetchSnapshot.fetchMs}ms`,
         );
-        if (pageSpeed?.categories.performance !== undefined) {
-          log(
-            "METRIC",
-            "PageSpeed",
-            `${pageSpeed.strategy} perf ${pageSpeed.categories.performance}/100, a11y ${pageSpeed.categories.accessibility ?? "n/a"}/100, seo ${pageSpeed.categories.seo ?? "n/a"}/100`,
-          );
-        }
         log("INFO", "AI", "Preparing your site snapshot...");
 
         const llmController = new AbortController();
