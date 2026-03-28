@@ -10,6 +10,7 @@ import {
   SearchIcon,
   ShieldCheckIcon,
   FileTextIcon,
+  CheckCircle2Icon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -60,7 +61,7 @@ export default function DirectAgentStreamCard() {
 
   const sections = useMemo(() => {
     if (!stream.snapshot) return [];
-    return [
+    const baseSections = [
       {
         id: "accessibility",
         label: "Accessibility",
@@ -97,6 +98,17 @@ export default function DirectAgentStreamCard() {
         tone: "border-rose-400/30 bg-rose-950/20 text-rose-100",
       },
     ];
+    if (stream.snapshot.platform === "wordpress") {
+      baseSections.push({
+        id: "wordpress",
+        label: "WordPress",
+        text:
+          "WordPress signals detected. Run the full report to unlock plugin/theme risk checks, admin hardening, and guided remediation.",
+        icon: ShieldCheckIcon,
+        tone: "border-blue-400/30 bg-blue-950/20 text-blue-100",
+      });
+    }
+    return baseSections;
   }, [stream.snapshot]);
 
   useEffect(() => {
@@ -118,9 +130,7 @@ export default function DirectAgentStreamCard() {
           issues: [{ summary: section.text }],
         })),
         summary: snapshot.text,
-        platform: /wordpress|wp/i.test(snapshot.sections.content)
-          ? "wordpress"
-          : "generic",
+        platform: snapshot.platform,
         timestamp: snapshot.generatedAt,
       };
 
@@ -178,25 +188,36 @@ export default function DirectAgentStreamCard() {
 
       {(stream.messages.length > 0 || stream.snapshot || stream.error) && (
         <div className="mt-4 space-y-4 text-left">
-          <div className="overflow-hidden rounded-xl border border-cyan-400/25 bg-[#020617] text-base leading-relaxed text-slate-200">
+          <div className="overflow-hidden rounded-xl border border-cyan-400/25 bg-[#05070d] text-base leading-relaxed text-slate-200">
             <div className="flex items-center justify-between border-b border-cyan-500/20 bg-slate-900/70 px-4 py-2 text-[11px] uppercase tracking-[0.24em] text-cyan-200/80">
               <p>SPARKY ENGINE v2.5.0</p>
-              <p>STANDBY</p>
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-red-500/25" />
+                <span className="h-2 w-2 rounded-full bg-yellow-500/25" />
+                <span className="h-2 w-2 rounded-full bg-emerald-500/35" />
+              </div>
             </div>
-            <div className="bg-[linear-gradient(rgba(6,182,212,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.06)_1px,transparent_1px)] bg-[size:20px_20px] p-4">
+            <div className="bg-[#090d14] p-4">
               <p className="font-medium text-emerald-200">Sparky</p>
               <p className="mt-2 text-slate-200">
                 {stream.snapshot?.greeting ??
                   "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement."}
               </p>
-              <div className="mt-3 space-y-2 font-mono text-sm text-slate-300">
+              <div className="mt-3 space-y-1.5 font-mono text-sm text-slate-300">
                 {stream.messages.map((message) => (
                   <div
                     key={message.id}
-                    className="grid grid-cols-[66px_74px_1fr] gap-2 rounded-md border border-cyan-400/20 bg-slate-950/70 px-3 py-2 text-left"
+                    className="grid grid-cols-[66px_24px_74px_1fr] gap-2 px-1 py-1 text-left"
                   >
                     <span className="text-slate-500">
                       [{message.timestamp ?? "--:--:--"}]
+                    </span>
+                    <span className="pt-0.5">
+                      {message.level === "SUCCESS" ? (
+                        <CheckCircle2Icon className="size-4 text-emerald-400" />
+                      ) : (
+                        <span className="text-slate-600">·</span>
+                      )}
                     </span>
                     <span className="text-cyan-300">
                       [{message.level ?? "INFO"}]
@@ -214,21 +235,32 @@ export default function DirectAgentStreamCard() {
           </div>
 
           {sections.length > 0 && (
-            <div className="grid gap-3 lg:grid-cols-5 sm:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2">
               {sections.map((section) => {
                 const Icon = section.icon;
                 return (
                   <div
                     key={section.id}
-                    className={`rounded-lg border p-3 backdrop-blur-sm ${section.tone}`}
+                    className={`group relative overflow-hidden rounded-xl border p-4 backdrop-blur-sm transition-all hover:border-white/25 ${section.tone}`}
                   >
-                    <div className="flex items-center gap-2 text-sm font-semibold">
-                      <Icon className="size-4" />
-                      <span>{section.label}</span>
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm font-semibold">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
+                          <Icon className="size-4" />
+                        </div>
+                        <span className="uppercase tracking-[0.12em]">
+                          {section.label}
+                        </span>
+                      </div>
+                      <div className="flex gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
+                      </div>
                     </div>
-                    <p className="mt-2 text-sm leading-relaxed">
+                    <p className="text-sm leading-relaxed">
                       {section.text}
                     </p>
+                    <div className="absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-white/25 to-transparent" />
                   </div>
                 );
               })}
