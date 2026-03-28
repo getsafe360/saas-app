@@ -71,6 +71,23 @@ type GeminiResponsePayload = {
   ctaLine?: string;
 };
 
+const SECTION_KEY_ALIASES: Record<keyof SnapshotSections, readonly string[]> = {
+  seoGeo: [
+    "seoGeo",
+    "seo_geo",
+    "seo",
+    "seogeo",
+    "seoDiscovery",
+    "seoAndGeo",
+    "seoGeoSignal",
+  ],
+  accessibility: ["accessibility", "a11y", "accessibilitySignal"],
+  performance: ["performance", "perf", "performanceSignal"],
+  security: ["security", "securitySignal"],
+  content: ["content", "contentQuality", "contentSignal"],
+  ctaLine: ["ctaLine", "cta", "cta_line", "callToAction", "call_to_action"],
+};
+
 const MAX_URL_LENGTH = 2048;
 const FETCH_TIMEOUT_MS = 8_000;
 const FETCH_MAX_BYTES = 300_000;
@@ -443,6 +460,19 @@ function extractJsonStringField(input: string, key: string): string | undefined 
   return matched.replace(/\\n/g, "\n").replace(/\\t/g, "\t").trim();
 }
 
+function extractAnyJsonStringField(
+  input: string,
+  keys: readonly string[],
+): string | undefined {
+  for (const key of keys) {
+    const value = extractJsonStringField(input, key);
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+  return undefined;
+}
+
 function parseGeminiJsonHeuristic(
   rawText: string,
 ): Partial<GeminiSnapshotResult> & { sections?: Partial<SnapshotSections> } {
@@ -450,27 +480,27 @@ function parseGeminiJsonHeuristic(
 
   const sections: SnapshotSections = {
     seoGeo: safeText(
-      extractJsonStringField(normalized, "seoGeo"),
+      extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.seoGeo),
       parseSnapshotSections(normalized).seoGeo,
     ),
     accessibility: safeText(
-      extractJsonStringField(normalized, "accessibility"),
+      extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.accessibility),
       parseSnapshotSections(normalized).accessibility,
     ),
     performance: safeText(
-      extractJsonStringField(normalized, "performance"),
+      extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.performance),
       parseSnapshotSections(normalized).performance,
     ),
     security: safeText(
-      extractJsonStringField(normalized, "security"),
+      extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.security),
       parseSnapshotSections(normalized).security,
     ),
     content: safeText(
-      extractJsonStringField(normalized, "content"),
+      extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.content),
       parseSnapshotSections(normalized).content,
     ),
     ctaLine: safeText(
-      extractJsonStringField(normalized, "ctaLine"),
+      extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.ctaLine),
       parseSnapshotSections(normalized).ctaLine,
     ),
   };
@@ -531,6 +561,17 @@ function pickSectionValue(
   key: keyof SnapshotSections,
   fallback: string,
 ): string {
+  const aliases = SECTION_KEY_ALIASES[key];
+  const sectionRecord = parsed.sections as Record<string, unknown> | undefined;
+  const rootRecord = parsed as unknown as Record<string, unknown>;
+
+  for (const alias of aliases) {
+    const fromSections = safeText(sectionRecord?.[alias], "");
+    if (fromSections) return fromSections;
+    const fromRoot = safeText(rootRecord[alias], "");
+    if (fromRoot) return fromRoot;
+  }
+
   return safeText(parsed.sections?.[key] ?? parsed[key], fallback);
 }
 
