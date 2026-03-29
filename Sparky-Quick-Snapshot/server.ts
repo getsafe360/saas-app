@@ -65,8 +65,7 @@ function getFallbackCtaUrl(): string {
     return DEFAULT_CTA_URL;
   }
 
-  const hostWithProtocol = `https://${firstAllowedHost}`;
-  const normalizedHost = normalizeUrl(hostWithProtocol);
+  const normalizedHost = normalizeUrl(firstAllowedHost);
   return normalizedHost ?? DEFAULT_CTA_URL;
 }
 
