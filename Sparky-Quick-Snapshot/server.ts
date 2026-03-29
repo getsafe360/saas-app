@@ -19,6 +19,11 @@ interface StreamLogPayload {
 }
 
 const MAX_HTML_CHARS = 140_000;
+const DEFAULT_CTA_URL = "https://getsafe360.com";
+const CTA_ALLOWED_HOSTS = (process.env.CTA_ALLOWED_HOSTS ?? "getsafe360.com")
+  .split(",")
+  .map((host) => host.trim().toLowerCase())
+  .filter(Boolean);
 
 function nowTime(): string {
   return new Date().toISOString();
@@ -35,6 +40,46 @@ function normalizeUrl(input: string): string | null {
   } catch {
     return null;
   }
+}
+
+function isAllowedCtaHost(hostname: string): boolean {
+  const normalizedHostname = hostname.toLowerCase();
+  return CTA_ALLOWED_HOSTS.some(
+    (allowedHost) =>
+      normalizedHostname === allowedHost || normalizedHostname.endsWith(`.${allowedHost}`),
+  );
+}
+
+function sanitizeCtaDeepLink(rawValue: unknown): string {
+  if (typeof rawValue !== "string" || !rawValue.trim()) {
+    return DEFAULT_CTA_URL;
+  }
+
+  try {
+    const parsed = new URL(rawValue);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      return DEFAULT_CTA_URL;
+    }
+    if (!isAllowedCtaHost(parsed.hostname)) {
+      return DEFAULT_CTA_URL;
+    }
+    return parsed.toString();
+  } catch {
+    return DEFAULT_CTA_URL;
+  }
+}
+
+function sanitizeModelResult(result: Record<string, unknown>): Record<string, unknown> {
+  const cta = result.cta;
+  if (cta && typeof cta === "object" && !Array.isArray(cta)) {
+    const ctaObject = cta as Record<string, unknown>;
+    result.cta = {
+      ...ctaObject,
+      deepLink: sanitizeCtaDeepLink(ctaObject.deepLink),
+    };
+  }
+
+  return result;
 }
 
 function writeSseEvent(res: Response, event: string, payload: unknown) {
@@ -234,7 +279,7 @@ async function startServer() {
       });
 
       const text = response.text ?? "{}";
-      const parsed = JSON.parse(text) as Record<string, unknown>;
+      const parsed = sanitizeModelResult(JSON.parse(text) as Record<string, unknown>);
 
       writeLog(res, {
         level: "SUCCESS",

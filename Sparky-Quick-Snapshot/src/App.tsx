@@ -53,6 +53,22 @@ const categories: Array<{ id: Category; title: string; icon: typeof Accessibilit
   },
 ];
 
+function getValidatedCtaHref(rawUrl: string): string | null {
+  if (!rawUrl) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 export default function App() {
   const [url, setUrl] = useState("");
   const [locale, setLocale] = useState<SupportedLocale>("en");
@@ -171,6 +187,8 @@ function ResultSection({
   result: AnalysisResult;
   labels: ReturnType<typeof getLabels>;
 }) {
+  const ctaHref = getValidatedCtaHref(result.cta.deepLink);
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -248,14 +266,20 @@ function ResultSection({
               </h4>
               <p className="text-lg font-medium text-white/90">{result.cta.headline}</p>
               <p className="mt-1 text-sm text-white/70">{result.cta.body}</p>
-              <a
-                href={result.cta.deepLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-emerald-500 hover:underline"
-              >
-                {result.cta.buttonText} <ArrowRight size={14} />
-              </a>
+              {ctaHref ? (
+                <a
+                  href={ctaHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-emerald-500 hover:underline"
+                >
+                  {result.cta.buttonText} <ArrowRight size={14} />
+                </a>
+              ) : (
+                <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-white/40">
+                  {result.cta.buttonText}
+                </span>
+              )}
             </div>
           </div>
         </div>
