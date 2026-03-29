@@ -3,6 +3,7 @@ import dns from "node:dns/promises";
 import net from "node:net";
 import { kvGet, kvIncr, kvSet } from "@/lib/kv";
 import { PageSpeedSummary } from "@/lib/analyzer/pageSpeed";
+import { buildGeminiSnapshotPrompt } from "@/lib/agent/snapshotPrompt";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,6 +28,7 @@ type SnapshotPayload = {
   locale: string;
   generatedAt: string;
   text: string;
+  platform: "wordpress" | "generic";
   sections: SnapshotSections;
   greeting?: string;
 };
@@ -724,6 +726,12 @@ function composeSnapshotText(url: string, sections: SnapshotSections): string {
   ].join("\n");
 }
 
+function detectWordPressPlatform(html: string): "wordpress" | "generic" {
+  return /wp-content|wp-includes|wordpress|wp-json/i.test(html)
+    ? "wordpress"
+    : "generic";
+}
+
 async function generateGeminiSnapshot(args: {
   url: string;
   locale: string;
@@ -735,24 +743,11 @@ async function generateGeminiSnapshot(args: {
     throw new Error("GEMINI_API_KEY is not configured.");
   }
 
-  const prompt = [
-    `Target locale: ${args.locale}`,
-    `Analyze website snapshot facts for ${args.url}.`,
-    "Return strict JSON with fields:",
-    "greeting (string)",
-    "summaryText (string)",
-    "sections object with keys: seoGeo, accessibility, performance, security, content, ctaLine",
-    "terminalLogs array of objects with: level(INFO|SUCCESS|WARNING|METRIC|ERROR), stage, text",
-    "Rules:",
-    "- terminalLogs must be concise developer terminal messages.",
-    "- Include at least 1 METRIC log with concrete value.",
-    "- SEO/GEO section must never be empty.",
-    "- When PageSpeed scores are present, cite them explicitly in performance/accessibility/SEO sections.",
-    "- Highlight missing security headers or weak transport defaults when detected.",
-    "- Mention WordPress risk/automation if WP markers are present.",
-    "- Keep summary under 180 words.",
-    `Facts JSON: ${args.facts}`,
-  ].join("\n");
+  const prompt = buildGeminiSnapshotPrompt({
+    locale: args.locale,
+    url: args.url,
+    facts: args.facts,
+  });
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`,
@@ -1015,6 +1010,7 @@ export async function GET(req: NextRequest) {
           url: normalizedUrl,
           locale,
           generatedAt: new Date().toISOString(),
+          platform: detectWordPressPlatform(fetchSnapshot.html),
           text:
             generated.summaryText ||
             composeSnapshotText(normalizedUrl, generated.sections),
