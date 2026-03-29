@@ -19,11 +19,12 @@ interface StreamLogPayload {
 }
 
 const MAX_HTML_CHARS = 140_000;
-const DEFAULT_CTA_URL = "https://getsafe360.com";
-const CTA_ALLOWED_HOSTS = (process.env.CTA_ALLOWED_HOSTS ?? "getsafe360.com")
+const DEFAULT_CTA_URL = "https://www.getsafe360.ai";
+const CTA_ALLOWED_HOSTS = (process.env.CTA_ALLOWED_HOSTS ?? "getsafe360.ai")
   .split(",")
   .map((host) => host.trim().toLowerCase())
   .filter(Boolean);
+const ANALYSIS_ROUTINE_VERSION = "snapshot-v2";
 
 function nowTime(): string {
   return new Date().toISOString();
@@ -50,22 +51,43 @@ function isAllowedCtaHost(hostname: string): boolean {
   );
 }
 
+function getFallbackCtaUrl(): string {
+  const normalizedDefault = normalizeUrl(DEFAULT_CTA_URL);
+  if (normalizedDefault) {
+    const parsedDefault = new URL(normalizedDefault);
+    if (isAllowedCtaHost(parsedDefault.hostname)) {
+      return parsedDefault.toString();
+    }
+  }
+
+  const [firstAllowedHost] = CTA_ALLOWED_HOSTS;
+  if (!firstAllowedHost) {
+    return DEFAULT_CTA_URL;
+  }
+
+  const hostWithProtocol = `https://${firstAllowedHost}`;
+  const normalizedHost = normalizeUrl(hostWithProtocol);
+  return normalizedHost ?? DEFAULT_CTA_URL;
+}
+
+const FALLBACK_CTA_URL = getFallbackCtaUrl();
+
 function sanitizeCtaDeepLink(rawValue: unknown): string {
   if (typeof rawValue !== "string" || !rawValue.trim()) {
-    return DEFAULT_CTA_URL;
+    return FALLBACK_CTA_URL;
   }
 
   try {
     const parsed = new URL(rawValue);
     if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-      return DEFAULT_CTA_URL;
+      return FALLBACK_CTA_URL;
     }
     if (!isAllowedCtaHost(parsed.hostname)) {
-      return DEFAULT_CTA_URL;
+      return FALLBACK_CTA_URL;
     }
     return parsed.toString();
   } catch {
-    return DEFAULT_CTA_URL;
+    return FALLBACK_CTA_URL;
   }
 }
 
@@ -178,7 +200,7 @@ async function startServer() {
       writeLog(res, {
         level: "INFO",
         stage: "Gemini",
-        message: "Sending payload to Gemini data model",
+        message: `Running analysis routine ${ANALYSIS_ROUTINE_VERSION}`,
       });
 
       const ai = createAiClient();
@@ -186,7 +208,7 @@ async function startServer() {
         model: "gemini-2.5-flash",
         contents: [
           {
-            text: `Locale: ${locale}\n\nAnalyze the HTML from ${targetUrl}. Produce a strict JSON response with actionable sections for: accessibility, performance, seo, security, content.\n\nFor each section use { status, summary, metric, evidence, actionHint }.\n\nStatus must be one of: good, warning, critical.\n\nAlso detect WordPress and return wordpress object with fields: detected(boolean), version(optional), theme(optional), insightsSummary(optional), pluginRisks(optional array), automationHints(optional array).\n\nInclude summary and cta with { headline, body, buttonText, deepLink }.\n\nHTML:\n${html}`,
+            text: `Analysis routine: ${ANALYSIS_ROUTINE_VERSION}\nLocale: ${locale}\n\nAnalyze the HTML from ${targetUrl}. Produce a strict JSON response with actionable sections for: accessibility, performance, seo, security, content.\n\nFor each section use { status, summary, metric, evidence, actionHint }.\n\nStatus must be one of: good, warning, critical.\n\nEach section must include concrete signal from the HTML payload and must not use placeholders such as "no signal", "unknown", or "n/a".\n\nAlso detect WordPress and return wordpress object with fields: detected(boolean), version(optional), theme(optional), insightsSummary(optional), pluginRisks(optional array), automationHints(optional array).\n\nInclude summary and cta with { headline, body, buttonText, deepLink }.\n\nHTML:\n${html}`,
           },
         ],
         config: {
