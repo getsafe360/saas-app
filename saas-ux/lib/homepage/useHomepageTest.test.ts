@@ -6,7 +6,7 @@ import {
   reduceHomepageEvent,
   shouldInvokeFallbackOnSseClose,
   type HomepageTestState,
-} from './useHomepageTest';
+} from './homepage-test-core';
 
 const baseState: HomepageTestState = {
   phase: 'running',
