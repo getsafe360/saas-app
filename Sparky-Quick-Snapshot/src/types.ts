@@ -1,6 +1,6 @@
-export type SupportedLocale = 'en' | 'de' | 'es' | 'fr' | 'pt' | 'it';
+export type SupportedLocale = "en" | "de" | "es" | "fr" | "pt" | "it";
 
-export type LogLevel = 'INFO' | 'SUCCESS' | 'WARNING' | 'METRIC' | 'ERROR';
+export type LogLevel = "INFO" | "SUCCESS" | "WARNING" | "METRIC" | "ERROR";
 
 export interface StreamEvent {
   level: LogLevel;
@@ -19,7 +19,7 @@ export interface TerminalLogEntry {
   metric?: string;
 }
 
-export type InsightStatus = 'good' | 'warning' | 'critical';
+export type InsightStatus = "good" | "warning" | "critical";
 
 export interface InsightCardData {
   status: InsightStatus;
@@ -38,6 +38,13 @@ export interface WordpressInsights {
   automationHints?: string[];
 }
 
+export interface AnalysisCta {
+  headline: string;
+  body: string;
+  buttonText: string;
+  deepLink: string;
+}
+
 export interface AnalysisResult {
   accessibility: InsightCardData;
   performance: InsightCardData;
@@ -47,12 +54,7 @@ export interface AnalysisResult {
   wordpress?: WordpressInsights;
   streamEvents?: StreamEvent[];
   summary: string;
-  cta: {
-    headline: string;
-    body: string;
-    buttonText: string;
-    deepLink: string;
-  };
+  cta: AnalysisCta;
 }
 
-export type Category = 'accessibility' | 'performance' | 'seo' | 'security' | 'content' | 'wordpress';
+export type Category = "accessibility" | "performance" | "seo" | "security" | "content";
