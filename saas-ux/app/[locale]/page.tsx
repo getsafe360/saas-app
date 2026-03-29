@@ -4,7 +4,7 @@
 import React from "react";
 import { useTranslations } from "next-intl";
 import CTA from "@/components/marketing/CTA";
-import DirectAgentStreamCard from "@/components/marketing/DirectAgentStreamCard";
+import InstantTestCard from "@/components/marketing/InstantTestCard";
 import AudienceInfoBoxes from "@/components/marketing/AudienceInfoBoxes";
 import { TestResultProvider } from "@/contexts/TestResultContext";
 
@@ -34,7 +34,7 @@ export default function HomePage() {
               </h2>
 
               <div className="mx-auto max-w-3xl space-y-6">
-                <DirectAgentStreamCard />
+                <InstantTestCard />
               </div>
             </div>
           </div>
