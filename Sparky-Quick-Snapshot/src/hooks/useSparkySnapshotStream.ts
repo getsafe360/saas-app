@@ -76,7 +76,13 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
     (inputUrl: string) => {
       const url = normalizeUrl(inputUrl);
       if (!url) {
-        setState((prev) => ({ ...prev, error: "Please enter a valid URL." }));
+        close();
+        setState({
+          logs: [],
+          result: null,
+          isAnalyzing: false,
+          error: "Please enter a valid URL.",
+        });
         return;
       }
 
