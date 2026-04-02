@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnalysisResult, LogLevel, SupportedLocale, TerminalLogEntry } from "../types";
 import {
+  type AnalysisResultPatch,
   analysisResultPartialSchema,
   analysisResultSchema,
   terminalLogEntrySchema,
@@ -8,9 +9,55 @@ import {
 
 interface StreamState {
   logs: TerminalLogEntry[];
-  result: AnalysisResult | null;
+  result: AnalysisResultPatch | null;
   isAnalyzing: boolean;
   error: string | null;
+}
+
+function mergeAnalysisResult(
+  previous: AnalysisResultPatch | null,
+  incoming: AnalysisResultPatch,
+): AnalysisResultPatch {
+  return {
+    ...(previous ?? {}),
+    ...incoming,
+    accessibility: {
+      ...(previous?.accessibility ?? {}),
+      ...(incoming.accessibility ?? {}),
+    },
+    performance: {
+      ...(previous?.performance ?? {}),
+      ...(incoming.performance ?? {}),
+    },
+    seo: {
+      ...(previous?.seo ?? {}),
+      ...(incoming.seo ?? {}),
+    },
+    security: {
+      ...(previous?.security ?? {}),
+      ...(incoming.security ?? {}),
+    },
+    content: {
+      ...(previous?.content ?? {}),
+      ...(incoming.content ?? {}),
+    },
+    wordpress:
+      previous?.wordpress || incoming.wordpress
+        ? {
+            ...(previous?.wordpress ?? {}),
+            ...(incoming.wordpress ?? {}),
+            vulnerabilities:
+              incoming.wordpress?.vulnerabilities ?? previous?.wordpress?.vulnerabilities,
+          }
+        : undefined,
+    usage:
+      previous?.usage || incoming.usage
+        ? {
+            ...(previous?.usage ?? {}),
+            ...(incoming.usage ?? {}),
+          }
+        : undefined,
+  };
 }
 
 function nowTime(): string {
@@ -167,10 +214,7 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
           const payload = parsed.data;
           setState((prev) => ({
             ...prev,
-            result: {
-              ...(prev.result ?? {}),
-              ...payload,
-            } as AnalysisResult,
+            result: mergeAnalysisResult(prev.result, payload),
           }));
         } catch {
           // Ignore malformed event payloads.

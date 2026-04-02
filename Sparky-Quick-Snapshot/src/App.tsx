@@ -131,12 +131,15 @@ export default function App() {
               animate={{ opacity: 1 }}
               className="space-y-12"
             >
-              {result.usage && (
+              {result.usage?.totalTokens !== undefined && (
                 <div className="flex justify-end">
                   <div className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-1.5 font-mono text-[10px] text-white/40">
                     <Coins size={12} className="text-yellow-500/50" />
                     <span>
-                      TOKENS: {result.usage.totalTokens.toLocaleString()} ({result.usage.promptTokens.toLocaleString()} in / {result.usage.completionTokens.toLocaleString()} out)
+                      TOKENS: {result.usage.totalTokens.toLocaleString()}
+                      {result.usage.promptTokens !== undefined && result.usage.completionTokens !== undefined
+                        ? ` (${result.usage.promptTokens.toLocaleString()} in / ${result.usage.completionTokens.toLocaleString()} out)`
+                        : ""}
                     </span>
                   </div>
                 </div>
@@ -145,7 +148,7 @@ export default function App() {
               {/* Category Cards Loop */}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {coreCategories.map((cat, index) => {
-                  const categoryData: AuditItem | undefined = result[cat.id];
+                  const categoryData: Partial<AuditItem> | undefined = result[cat.id];
                   return (
                   <AnalysisCard 
                     key={cat.id}
