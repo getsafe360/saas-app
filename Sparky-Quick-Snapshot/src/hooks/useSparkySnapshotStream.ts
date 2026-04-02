@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnalysisResult, LogLevel, SupportedLocale, TerminalLogEntry } from "../types";
+import {
+  analysisResultPartialSchema,
+  analysisResultSchema,
+  terminalLogEntrySchema,
+} from "../contracts/snapshot";
 
 interface StreamState {
   logs: TerminalLogEntry[];
@@ -117,24 +122,18 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
 
       source.addEventListener("log", (event: MessageEvent<string>) => {
         try {
-          const payload = JSON.parse(event.data) as {
-            level?: LogLevel;
-            stage?: string;
-            message?: string;
-            metric?: string;
-            timestamp?: string;
-          };
-
-          if (!payload.message) {
+          const rawPayload = JSON.parse(event.data);
+          const payload = terminalLogEntrySchema.partial().safeParse(rawPayload);
+          if (!payload.success || !payload.data.message) {
             return;
           }
 
           appendLog({
-            level: payload.level ?? "INFO",
-            stage: payload.stage ?? "Stream",
-            message: payload.message,
-            metric: payload.metric,
-            timestamp: payload.timestamp,
+            level: (payload.data.level ?? "INFO") as LogLevel,
+            stage: payload.data.stage ?? "Stream",
+            message: payload.data.message,
+            metric: payload.data.metric,
+            timestamp: payload.data.timestamp,
           });
         } catch {
           // Ignore malformed event payloads.
@@ -143,8 +142,12 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
 
       source.addEventListener("result", (event: MessageEvent<string>) => {
         try {
-          const payload = JSON.parse(event.data) as AnalysisResult;
-          setState((prev) => ({ ...prev, result: payload }));
+          const rawPayload = JSON.parse(event.data);
+          const payload = analysisResultSchema.safeParse(rawPayload);
+          if (!payload.success) {
+            throw new Error("Invalid result payload.");
+          }
+          setState((prev) => ({ ...prev, result: payload.data }));
         } catch {
           setState((prev) => ({
             ...prev,
@@ -155,7 +158,13 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
 
       source.addEventListener("partial", (event: MessageEvent<string>) => {
         try {
-          const payload = JSON.parse(event.data) as Partial<AnalysisResult>;
+          const rawPayload = JSON.parse(event.data);
+          const parsed = analysisResultPartialSchema.safeParse(rawPayload);
+          if (!parsed.success) {
+            return;
+          }
+
+          const payload = parsed.data;
           setState((prev) => ({
             ...prev,
             result: {

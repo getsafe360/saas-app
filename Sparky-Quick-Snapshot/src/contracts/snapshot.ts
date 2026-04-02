@@ -34,6 +34,8 @@ export const analysisResultSchema = z.object({
     .optional(),
 });
 
+export const analysisResultPartialSchema = analysisResultSchema.partial();
+
 export const supportedLocaleSchema = z.enum(["en", "de", "es", "fr", "pt", "it"]);
 
 export const logLevelSchema = z.enum(["INFO", "WARN", "ERROR", "SUCCESS"]);
