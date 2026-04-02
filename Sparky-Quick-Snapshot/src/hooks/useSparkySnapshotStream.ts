@@ -252,10 +252,18 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
           const payload = JSON.parse(event.data) as { ok?: boolean };
           setState((prev) => ({
             ...prev,
-            streamOutcome: payload.ok === false ? "error" : "success",
+            streamOutcome:
+              prev.streamOutcome === "error"
+                ? "error"
+                : payload.ok === false
+                  ? "error"
+                  : "success",
           }));
         } catch {
-          setState((prev) => ({ ...prev, streamOutcome: "success" }));
+          setState((prev) => ({
+            ...prev,
+            streamOutcome: prev.streamOutcome === "error" ? "error" : "success",
+          }));
         }
         close();
       });
