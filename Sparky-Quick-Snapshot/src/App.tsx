@@ -23,7 +23,7 @@ import { useSparkySnapshotStream } from './hooks/useSparkySnapshotStream';
 
 export default function App() {
   const [url, setUrl] = useState('');
-  const { isAnalyzing, logs: streamLogs, result, error, start } = useSparkySnapshotStream('en');
+  const { isAnalyzing, logs: streamLogs, result, error, streamOutcome, start, close } = useSparkySnapshotStream('en');
 
   const logs = streamLogs.map((entry) => {
     const prefix =
@@ -102,7 +102,27 @@ export default function App() {
                     </>
                   )}
                 </button>
+                {isAnalyzing ? (
+                  <button
+                    type="button"
+                    onClick={close}
+                    className="flex h-10 items-center rounded-xl border border-white/15 bg-white/5 px-4 font-mono text-[10px] font-bold uppercase tracking-widest text-white/70 transition-all hover:bg-white/10"
+                  >
+                    Stop
+                  </button>
+                ) : null}
               </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between px-1">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">
+                {isAnalyzing
+                  ? 'Stream status: running'
+                  : streamOutcome === 'success'
+                    ? 'Stream status: completed'
+                    : streamOutcome === 'error'
+                      ? 'Stream status: failed'
+                      : 'Stream status: idle'}
+              </p>
             </div>
             
             {error && (

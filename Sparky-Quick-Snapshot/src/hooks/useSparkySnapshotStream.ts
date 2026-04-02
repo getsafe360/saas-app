@@ -12,6 +12,7 @@ interface StreamState {
   result: AnalysisResultPatch | null;
   isAnalyzing: boolean;
   error: string | null;
+  streamOutcome: "idle" | "success" | "error";
 }
 
 function mergeAnalysisResult(
@@ -92,6 +93,7 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
     result: null,
     isAnalyzing: false,
     error: null,
+    streamOutcome: "idle",
   });
 
   const sourceRef = useRef<EventSource | null>(null);
@@ -134,6 +136,7 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
           result: null,
           isAnalyzing: false,
           error: "Please enter a valid URL.",
+          streamOutcome: "error",
         });
         return;
       }
@@ -151,6 +154,7 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
         result: null,
         isAnalyzing: true,
         error: null,
+        streamOutcome: "idle",
       });
 
       if (typeof EventSource === "undefined") {
@@ -158,6 +162,7 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
           ...prev,
           isAnalyzing: false,
           error: "This browser does not support EventSource.",
+          streamOutcome: "error",
         }));
         return;
       }
@@ -199,6 +204,7 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
           setState((prev) => ({
             ...prev,
             error: "Received malformed analysis payload.",
+            streamOutcome: "error",
           }));
         }
       });
@@ -228,18 +234,37 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
             ...prev,
             error: payload.message ?? "Streaming failed.",
             isAnalyzing: false,
+            streamOutcome: "error",
           }));
         } catch {
           setState((prev) => ({
             ...prev,
             error: "Streaming failed.",
             isAnalyzing: false,
+            streamOutcome: "error",
           }));
         }
         close();
       });
 
-      source.addEventListener("done", () => {
+      source.addEventListener("done", (event: MessageEvent<string>) => {
+        try {
+          const payload = JSON.parse(event.data) as { ok?: boolean };
+          setState((prev) => ({
+            ...prev,
+            streamOutcome:
+              prev.streamOutcome === "error"
+                ? "error"
+                : payload.ok === false
+                  ? "error"
+                  : "success",
+          }));
+        } catch {
+          setState((prev) => ({
+            ...prev,
+            streamOutcome: prev.streamOutcome === "error" ? "error" : "success",
+          }));
+        }
         close();
       });
 
@@ -247,6 +272,7 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
         setState((prev) => ({
           ...prev,
           error: prev.error ?? "Streaming connection interrupted.",
+          streamOutcome: "error",
         }));
         close();
       };
