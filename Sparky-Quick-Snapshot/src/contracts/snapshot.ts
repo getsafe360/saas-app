@@ -73,12 +73,20 @@ export const terminalLogEntrySchema = z.object({
   metric: z.string().optional(),
 });
 
+export const streamProgressSchema = z.object({
+  percent: z.number().min(0).max(100),
+  stage: z.string(),
+  message: z.string(),
+  elapsedMs: z.number().nonnegative().optional(),
+});
+
 export type AuditItem = z.infer<typeof auditItemSchema>;
 export type AnalysisResult = z.infer<typeof analysisResultSchema>;
 export type AnalysisResultPatch = z.infer<typeof analysisResultPartialSchema>;
 export type SupportedLocale = z.infer<typeof supportedLocaleSchema>;
 export type LogLevel = z.infer<typeof logLevelSchema>;
 export type TerminalLogEntry = z.infer<typeof terminalLogEntrySchema>;
+export type StreamProgress = z.infer<typeof streamProgressSchema>;
 export type Category =
   | "accessibility"
   | "performance"
