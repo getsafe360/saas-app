@@ -12,7 +12,7 @@ function cn(...inputs: ClassValue[]) {
 interface AnalysisCardProps {
   title: string;
   icon: LucideIcon;
-  data?: AuditItem;
+  data?: Partial<AuditItem>;
   isLoading?: boolean;
   className?: string;
   delay?: number;
@@ -81,15 +81,17 @@ export const AnalysisCard: React.FC<AnalysisCardProps> = ({
         ) : data ? (
           <>
             <p className="font-sans text-sm font-medium leading-relaxed text-white/90">
-              {data.finding}
+              {data.finding ?? 'Analyzing...'}
             </p>
             <div className="space-y-2 rounded-lg bg-white/[0.02] p-3">
-              <div className="flex gap-2">
-                <Zap size={12} className="mt-0.5 shrink-0 text-emerald-500" />
-                <p className="text-[11px] leading-relaxed text-white/50">
-                  <span className="font-bold text-white/70">Impact:</span> {data.impact}
-                </p>
-              </div>
+              {data.impact && (
+                <div className="flex gap-2">
+                  <Zap size={12} className="mt-0.5 shrink-0 text-emerald-500" />
+                  <p className="text-[11px] leading-relaxed text-white/50">
+                    <span className="font-bold text-white/70">Impact:</span> {data.impact}
+                  </p>
+                </div>
+              )}
               {data.fix && (
                 <div className="flex gap-2">
                   <CheckCircle2 size={12} className="mt-0.5 shrink-0 text-blue-500" />

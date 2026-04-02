@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { 
   Search, 
   Accessibility, 
@@ -17,7 +18,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { AnalysisCard } from './components/AnalysisCard';
 import { SparkyTerminal } from './components/SparkyTerminal';
-import { AnalysisResult } from './types';
+import { AuditItem, Category } from './types';
 import { useSparkySnapshotStream } from './hooks/useSparkySnapshotStream';
 
 export default function App() {
@@ -37,6 +38,14 @@ export default function App() {
     e.preventDefault();
     start(url);
   };
+
+  const coreCategories: Array<{ id: Exclude<Category, 'wordpress'>; title: string; icon: LucideIcon }> = [
+    { id: 'accessibility', title: 'Accessibility', icon: Accessibility },
+    { id: 'performance', title: 'Performance', icon: Zap },
+    { id: 'seo', title: 'SEO & GEO', icon: Globe },
+    { id: 'security', title: 'Security', icon: ShieldCheck },
+    { id: 'content', title: 'Content', icon: FileText },
+  ];
 
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-emerald-500/30">
@@ -122,32 +131,34 @@ export default function App() {
               animate={{ opacity: 1 }}
               className="space-y-12"
             >
-              {/* Token Usage (Simulated for Prototype) */}
-              <div className="flex justify-end">
-                <div className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-1.5 font-mono text-[10px] text-white/40">
-                  <Coins size={12} className="text-yellow-500/50" />
-                  <span>EST. USAGE: 1,420 TOKENS (~$0.00014)</span>
+              {result.usage?.totalTokens !== undefined && (
+                <div className="flex justify-end">
+                  <div className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-1.5 font-mono text-[10px] text-white/40">
+                    <Coins size={12} className="text-yellow-500/50" />
+                    <span>
+                      TOKENS: {result.usage.totalTokens.toLocaleString()}
+                      {result.usage.promptTokens !== undefined && result.usage.completionTokens !== undefined
+                        ? ` (${result.usage.promptTokens.toLocaleString()} in / ${result.usage.completionTokens.toLocaleString()} out)`
+                        : ""}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Category Cards Loop */}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { id: 'accessibility', title: 'Accessibility', icon: Accessibility },
-                  { id: 'performance', title: 'Performance', icon: Zap },
-                  { id: 'seo', title: 'SEO & GEO', icon: Globe },
-                  { id: 'security', title: 'Security', icon: ShieldCheck },
-                  { id: 'content', title: 'Content', icon: FileText },
-                ].map((cat, index) => (
+                {coreCategories.map((cat, index) => {
+                  const categoryData: Partial<AuditItem> | undefined = result[cat.id];
+                  return (
                   <AnalysisCard 
                     key={cat.id}
                     title={cat.title}
                     icon={cat.icon}
-                    data={result[cat.id as keyof AnalysisResult] as any}
-                    isLoading={isAnalyzing && !result[cat.id as keyof AnalysisResult]}
+                    data={categoryData}
+                    isLoading={isAnalyzing && !categoryData}
                     delay={0.1 * (index + 1)}
                   />
-                ))}
+                )})}
                 
                 {/* Conditional WordPress Card */}
                 {result.wordpress?.detected ? (

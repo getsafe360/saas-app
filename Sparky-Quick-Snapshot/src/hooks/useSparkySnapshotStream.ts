@@ -1,11 +1,63 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnalysisResult, LogLevel, SupportedLocale, TerminalLogEntry } from "../types";
+import {
+  type AnalysisResultPatch,
+  analysisResultPartialSchema,
+  analysisResultSchema,
+  terminalLogEntrySchema,
+} from "../contracts/snapshot";
 
 interface StreamState {
   logs: TerminalLogEntry[];
-  result: AnalysisResult | null;
+  result: AnalysisResultPatch | null;
   isAnalyzing: boolean;
   error: string | null;
+}
+
+function mergeAnalysisResult(
+  previous: AnalysisResultPatch | null,
+  incoming: AnalysisResultPatch,
+): AnalysisResultPatch {
+  return {
+    ...(previous ?? {}),
+    ...incoming,
+    accessibility: {
+      ...(previous?.accessibility ?? {}),
+      ...(incoming.accessibility ?? {}),
+    },
+    performance: {
+      ...(previous?.performance ?? {}),
+      ...(incoming.performance ?? {}),
+    },
+    seo: {
+      ...(previous?.seo ?? {}),
+      ...(incoming.seo ?? {}),
+    },
+    security: {
+      ...(previous?.security ?? {}),
+      ...(incoming.security ?? {}),
+    },
+    content: {
+      ...(previous?.content ?? {}),
+      ...(incoming.content ?? {}),
+    },
+    wordpress:
+      previous?.wordpress || incoming.wordpress
+        ? {
+            ...(previous?.wordpress ?? {}),
+            ...(incoming.wordpress ?? {}),
+            vulnerabilities:
+              incoming.wordpress?.vulnerabilities ?? previous?.wordpress?.vulnerabilities,
+          }
+        : undefined,
+    usage:
+      previous?.usage || incoming.usage
+        ? {
+            ...(previous?.usage ?? {}),
+            ...(incoming.usage ?? {}),
+          }
+        : undefined,
+  };
 }
 
 function nowTime(): string {
@@ -117,24 +169,18 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
 
       source.addEventListener("log", (event: MessageEvent<string>) => {
         try {
-          const payload = JSON.parse(event.data) as {
-            level?: LogLevel;
-            stage?: string;
-            message?: string;
-            metric?: string;
-            timestamp?: string;
-          };
-
-          if (!payload.message) {
+          const rawPayload = JSON.parse(event.data);
+          const payload = terminalLogEntrySchema.partial().safeParse(rawPayload);
+          if (!payload.success || !payload.data.message) {
             return;
           }
 
           appendLog({
-            level: payload.level ?? "INFO",
-            stage: payload.stage ?? "Stream",
-            message: payload.message,
-            metric: payload.metric,
-            timestamp: payload.timestamp,
+            level: (payload.data.level ?? "INFO") as LogLevel,
+            stage: payload.data.stage ?? "Stream",
+            message: payload.data.message,
+            metric: payload.data.metric,
+            timestamp: payload.data.timestamp,
           });
         } catch {
           // Ignore malformed event payloads.
@@ -143,8 +189,12 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
 
       source.addEventListener("result", (event: MessageEvent<string>) => {
         try {
-          const payload = JSON.parse(event.data) as AnalysisResult;
-          setState((prev) => ({ ...prev, result: payload }));
+          const rawPayload = JSON.parse(event.data);
+          const payload = analysisResultSchema.safeParse(rawPayload);
+          if (!payload.success) {
+            throw new Error("Invalid result payload.");
+          }
+          setState((prev) => ({ ...prev, result: payload.data }));
         } catch {
           setState((prev) => ({
             ...prev,
@@ -155,13 +205,16 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
 
       source.addEventListener("partial", (event: MessageEvent<string>) => {
         try {
-          const payload = JSON.parse(event.data) as Partial<AnalysisResult>;
+          const rawPayload = JSON.parse(event.data);
+          const parsed = analysisResultPartialSchema.safeParse(rawPayload);
+          if (!parsed.success) {
+            return;
+          }
+
+          const payload = parsed.data;
           setState((prev) => ({
             ...prev,
-            result: {
-              ...(prev.result ?? {}),
-              ...payload,
-            } as AnalysisResult,
+            result: mergeAnalysisResult(prev.result, payload),
           }));
         } catch {
           // Ignore malformed event payloads.
