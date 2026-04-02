@@ -153,6 +153,21 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
         }
       });
 
+      source.addEventListener("partial", (event: MessageEvent<string>) => {
+        try {
+          const payload = JSON.parse(event.data) as Partial<AnalysisResult>;
+          setState((prev) => ({
+            ...prev,
+            result: {
+              ...(prev.result ?? {}),
+              ...payload,
+            } as AnalysisResult,
+          }));
+        } catch {
+          // Ignore malformed event payloads.
+        }
+      });
+
       source.addEventListener("error", (event: MessageEvent<string>) => {
         try {
           const payload = JSON.parse(event.data) as { message?: string };
@@ -176,6 +191,10 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
       });
 
       source.onerror = () => {
+        setState((prev) => ({
+          ...prev,
+          error: prev.error ?? "Streaming connection interrupted.",
+        }));
         close();
       };
     },

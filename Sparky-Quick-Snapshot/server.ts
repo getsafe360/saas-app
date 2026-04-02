@@ -4,7 +4,13 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { streamObject } from "ai";
 import { google } from "@ai-sdk/google";
-import { z } from "zod";
+import {
+  analysisResultSchema,
+  logLevelSchema,
+  supportedLocaleSchema,
+  type AnalysisResult,
+  type LogLevel,
+} from "./src/contracts/snapshot";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,66 +21,83 @@ async function startServer() {
 
   app.use(express.json());
 
-  // API Route to fetch HTML of a target URL
-  app.get("/api/fetch-html", async (req, res) => {
-    const targetUrl = req.query.url as string;
-    if (!targetUrl) {
-      return res.status(400).json({ error: "URL is required" });
-    }
+  function normalizeUrl(input: string): string | null {
+    const trimmed = input.trim();
+    if (!trimmed) return null;
+    const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 
     try {
-      const response = await fetch(targetUrl, {
+      const parsed = new URL(candidate);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        return null;
+      }
+      return parsed.toString();
+    } catch {
+      return null;
+    }
+  }
+
+  function sendSseEvent(
+    res: express.Response,
+    event: "log" | "partial" | "result" | "done" | "error",
+    data: unknown,
+  ) {
+    res.write(`event: ${event}\n`);
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  }
+
+  app.get("/api/sparky/stream", async (req, res) => {
+    const targetUrl = typeof req.query.url === "string" ? req.query.url : "";
+    const normalizedUrl = normalizeUrl(targetUrl);
+    const locale = typeof req.query.locale === "string" ? req.query.locale : "en";
+
+    if (!normalizedUrl) {
+      return res.status(400).json({ error: "A valid URL is required" });
+    }
+
+    const safeLocale = supportedLocaleSchema.safeParse(locale).success ? locale : "en";
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+
+    const emitLog = (level: LogLevel, stage: string, message: string, metric?: string) => {
+      const validated = logLevelSchema.parse(level);
+      sendSseEvent(res, "log", {
+        level: validated,
+        stage,
+        message,
+        metric,
+        timestamp: new Date().toISOString(),
+      });
+    };
+
+    try {
+      emitLog("INFO", "Boot", `Initiating scan for: ${normalizedUrl}`);
+      emitLog("INFO", "Fetch", "Fetching remote source code...");
+
+      const fetchStartedAt = Date.now();
+      const response = await fetch(normalizedUrl, {
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         },
       });
-      
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.statusText}`);
+        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
       }
 
-      const html = await response.text();
-      res.json({ html: html.substring(0, 100000) });
-    } catch (error) {
-      console.error("Fetch error:", error);
-      res.status(500).json({ error: "Could not fetch the website content." });
-    }
-  });
-
-  // Vercel AI SDK Style Streaming Endpoint
-  app.post("/api/analyze", async (req, res) => {
-    const { url, html } = req.body;
-
-    if (!url || !html) {
-      return res.status(400).json({ error: "URL and HTML are required" });
-    }
-
-    try {
-      const auditItemSchema = z.object({
-        finding: z.string(),
-        severity: z.enum(['low', 'medium', 'high', 'critical']),
-        impact: z.string(),
-        fix: z.string().optional(),
-      });
+      const html = (await response.text()).substring(0, 100_000);
+      const fetchElapsedMs = Date.now() - fetchStartedAt;
+      emitLog("SUCCESS", "Fetch", "Source code acquired.", `${(html.length / 1024).toFixed(1)}KB`);
+      emitLog("INFO", "Analyze", `Launching structured analysis (${safeLocale})...`, `${fetchElapsedMs}ms`);
 
       const result = await streamObject({
         model: google("gemini-3-flash-preview"),
-        schema: z.object({
-          accessibility: auditItemSchema,
-          performance: auditItemSchema,
-          seo: auditItemSchema,
-          security: auditItemSchema,
-          content: auditItemSchema,
-          wordpress: z.object({
-            detected: z.boolean(),
-            version: z.string().optional(),
-            insights: z.string().optional(),
-            vulnerabilities: z.array(auditItemSchema).optional(),
-          }).optional(),
-          summary: z.string(),
-          cta: z.string(),
-        }),
-        prompt: `Analyze the following HTML content of a website (${url}) and provide a comprehensive developer-focused audit. 
+        schema: analysisResultSchema,
+        prompt: `Analyze the following HTML content of a website (${normalizedUrl}) and provide a comprehensive developer-focused audit.
         Categorize findings into: Accessibility, Performance, SEO, Security, and Content.
         For each category, provide:
         - finding: a concise description of the main issue.
@@ -84,15 +107,28 @@ async function startServer() {
         
         Also, detect if it's a WordPress site (look for wp-content, wp-includes, generator meta tags).
         Provide a summary and a clear call-to-action for the developer.
+        Output language locale preference: ${safeLocale}.
         
         HTML Content:
-        ${html.substring(0, 100000)}`,
+        ${html}`,
       });
 
-      result.pipeTextStreamToResponse(res);
+      for await (const partial of result.partialObjectStream) {
+        sendSseEvent(res, "partial", partial);
+      }
+
+      const finalResult = (await result.object) as AnalysisResult;
+      sendSseEvent(res, "result", finalResult);
+      emitLog("SUCCESS", "Analyze", "Analysis complete.");
+      sendSseEvent(res, "done", { ok: true });
+      res.end();
     } catch (error) {
       console.error("Analysis error:", error);
-      res.status(500).json({ error: "Analysis failed." });
+      sendSseEvent(res, "error", {
+        message: "Analysis failed.",
+      });
+      sendSseEvent(res, "done", { ok: false });
+      res.end();
     }
   });
 

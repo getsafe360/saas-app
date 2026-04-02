@@ -18,100 +18,24 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AnalysisCard } from './components/AnalysisCard';
 import { SparkyTerminal } from './components/SparkyTerminal';
 import { AnalysisResult } from './types';
+import { useSparkySnapshotStream } from './hooks/useSparkySnapshotStream';
 
 export default function App() {
   const [url, setUrl] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [result, setResult] = useState<Partial<AnalysisResult> | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { isAnalyzing, logs: streamLogs, result, error, start } = useSparkySnapshotStream('en');
 
-  const addLog = (msg: string) => setLogs(prev => [...prev, msg]);
+  const logs = streamLogs.map((entry) => {
+    const prefix =
+      entry.level === 'SUCCESS' ? '✓' :
+      entry.level === 'ERROR' ? '!' :
+      entry.level === 'WARN' ? '!' : '•';
+    const metric = entry.metric ? ` (${entry.metric})` : '';
+    return `${prefix} [${entry.stage}] ${entry.message}${metric}`;
+  });
 
-  const analyzeWebsite = async (e: React.FormEvent) => {
+  const analyzeWebsite = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url) return;
-
-    let formattedUrl = url;
-    if (!url.startsWith('http')) {
-      formattedUrl = `https://${url}`;
-    }
-
-    setIsAnalyzing(true);
-    setResult(null);
-    setError(null);
-    setLogs([]);
-    addLog(`Initiating production-grade scan for: ${formattedUrl}`);
-
-    try {
-      // Step 1: Fetch HTML via backend
-      addLog('Fetching remote source code...');
-      const fetchResponse = await fetch(`/api/fetch-html?url=${encodeURIComponent(formattedUrl)}`);
-      if (!fetchResponse.ok) throw new Error('Failed to reach target server.');
-      const { html } = await fetchResponse.json();
-      addLog('✓ Source code acquired. Size: ' + (html.length / 1024).toFixed(2) + 'KB');
-
-      // Step 2: Analyze with Gemini via Vercel AI SDK Stream
-      addLog('Opening Vercel AI SDK stream...');
-      
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: formattedUrl, html }),
-      });
-
-      if (!response.ok) throw new Error('Analysis stream failed.');
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = '';
-
-      if (reader) {
-        addLog('Streaming structured audit data...');
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          const chunk = decoder.decode(value, { stream: true });
-          accumulated += chunk;
-          
-          try {
-            // The Vercel AI SDK streamObject sends partial JSON chunks
-            // We try to parse the most complete object we have
-            const lines = accumulated.split('\n').filter(l => l.trim());
-            for (const line of lines) {
-              if (line.startsWith('0:')) { // Text chunk in some stream formats
-                // Handle different stream formats if necessary
-              }
-            }
-            
-            // For simplicity in this prototype, we'll assume the backend sends 
-            // the object as it's being built. streamObject usually handles this.
-            // We'll parse the last valid JSON object from the stream.
-            // In a real Next.js app, you'd use useObject() hook.
-            
-            // Simple regex to find the last complete-ish JSON object in the stream
-            // This is a placeholder for the actual useObject logic
-            const jsonMatch = accumulated.match(/\{.*\}/s);
-            if (jsonMatch) {
-              const partial = JSON.parse(jsonMatch[0]);
-              setResult(prev => ({ ...prev, ...partial }));
-            }
-          } catch (e) {
-            // Partial JSON, ignore until next chunk
-          }
-        }
-      }
-
-      addLog('✓ Analysis complete.');
-
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'An unexpected error occurred during analysis.');
-      addLog('! ERROR: Sequence terminated prematurely.');
-    } finally {
-      setIsAnalyzing(false);
-    }
+    start(url);
   };
 
   return (
