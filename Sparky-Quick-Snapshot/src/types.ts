@@ -4,5 +4,6 @@ export type {
   Category,
   LogLevel,
   SupportedLocale,
+  StreamProgress,
   TerminalLogEntry,
 } from "./contracts/snapshot";

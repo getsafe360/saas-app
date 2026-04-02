@@ -23,7 +23,7 @@ import { useSparkySnapshotStream } from './hooks/useSparkySnapshotStream';
 
 export default function App() {
   const [url, setUrl] = useState('');
-  const { isAnalyzing, logs: streamLogs, result, error, streamOutcome, start, close } = useSparkySnapshotStream('en');
+  const { isAnalyzing, logs: streamLogs, result, progress, error, streamOutcome, start, close } = useSparkySnapshotStream('en');
 
   const logs = streamLogs.map((entry) => {
     const prefix =
@@ -38,6 +38,7 @@ export default function App() {
     e.preventDefault();
     start(url);
   };
+  const canSubmit = url.trim().length > 0;
 
   const coreCategories: Array<{ id: Exclude<Category, 'wordpress'>; title: string; icon: LucideIcon }> = [
     { id: 'accessibility', title: 'Accessibility', icon: Accessibility },
@@ -91,7 +92,7 @@ export default function App() {
                 />
                 <button
                   type="submit"
-                  disabled={isAnalyzing || !url}
+                  disabled={isAnalyzing || !canSubmit}
                   className="flex h-10 items-center gap-2 rounded-xl bg-emerald-500 px-6 font-mono text-xs font-bold uppercase tracking-widest text-black transition-all hover:bg-emerald-400 disabled:opacity-50"
                 >
                   {isAnalyzing ? (
@@ -123,7 +124,32 @@ export default function App() {
                       ? 'Stream status: failed'
                       : 'Stream status: idle'}
               </p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/30">
+                {progress.percent}% · {progress.stage}
+              </p>
             </div>
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+              <motion.div
+                className="h-full rounded-full bg-emerald-500"
+                initial={false}
+                animate={{ width: `${progress.percent}%` }}
+                transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+              />
+            </div>
+            <p className="mt-2 px-1 font-mono text-[10px] uppercase tracking-[0.15em] text-white/40">
+              {progress.message}
+            </p>
+            {!isAnalyzing && streamOutcome === 'error' && canSubmit ? (
+              <div className="mt-3 px-1">
+                <button
+                  type="button"
+                  onClick={() => start(url)}
+                  className="inline-flex h-9 items-center rounded-lg border border-white/15 bg-white/5 px-4 font-mono text-[10px] font-bold uppercase tracking-widest text-white/70 transition-all hover:bg-white/10"
+                >
+                  Retry scan
+                </button>
+              </div>
+            ) : null}
             
             {error && (
               <motion.div 

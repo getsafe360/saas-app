@@ -7,6 +7,7 @@ import { google } from "@ai-sdk/google";
 import {
   analysisResultSchema,
   logLevelSchema,
+  streamProgressSchema,
   supportedLocaleSchema,
   type AnalysisResult,
   type LogLevel,
@@ -39,7 +40,7 @@ async function startServer() {
 
   function sendSseEvent(
     res: express.Response,
-    event: "log" | "partial" | "result" | "done" | "error",
+    event: "log" | "progress" | "partial" | "result" | "done" | "error",
     data: unknown,
   ) {
     res.write(`event: ${event}\n`);
@@ -72,9 +73,21 @@ async function startServer() {
         timestamp: new Date().toISOString(),
       });
     };
+    const requestStartedAt = Date.now();
+    const emitProgress = (percent: number, stage: string, message: string) => {
+      const payload = streamProgressSchema.parse({
+        percent: Math.max(0, Math.min(100, percent)),
+        stage,
+        message,
+        elapsedMs: Date.now() - requestStartedAt,
+      });
+      sendSseEvent(res, "progress", payload);
+    };
 
     try {
+      emitProgress(5, "Boot", "Initializing scan context.");
       emitLog("INFO", "Boot", `Initiating scan for: ${normalizedUrl}`);
+      emitProgress(15, "Fetch", "Retrieving target page.");
       emitLog("INFO", "Fetch", "Fetching remote source code...");
 
       const fetchStartedAt = Date.now();
@@ -91,7 +104,9 @@ async function startServer() {
 
       const html = (await response.text()).substring(0, 100_000);
       const fetchElapsedMs = Date.now() - fetchStartedAt;
+      emitProgress(35, "Fetch", "Source code captured.");
       emitLog("SUCCESS", "Fetch", "Source code acquired.", `${(html.length / 1024).toFixed(1)}KB`);
+      emitProgress(45, "Analyze", "Building structured analysis.");
       emitLog("INFO", "Analyze", `Launching structured analysis (${safeLocale})...`, `${fetchElapsedMs}ms`);
 
       const result = await streamObject({
@@ -113,17 +128,24 @@ async function startServer() {
         ${html}`,
       });
 
+      let partialCount = 0;
       for await (const partial of result.partialObjectStream) {
+        partialCount += 1;
+        const progressPercent = Math.min(90, 45 + partialCount * 6);
+        emitProgress(progressPercent, "Analyze", "Streaming category insights.");
         sendSseEvent(res, "partial", partial);
       }
 
       const finalResult = (await result.object) as AnalysisResult;
+      emitProgress(96, "Finalize", "Validating final report.");
       sendSseEvent(res, "result", finalResult);
       emitLog("SUCCESS", "Analyze", "Analysis complete.");
+      emitProgress(100, "Done", "Snapshot completed successfully.");
       sendSseEvent(res, "done", { ok: true });
       res.end();
     } catch (error) {
       console.error("Analysis error:", error);
+      emitProgress(100, "Error", "Snapshot failed.");
       sendSseEvent(res, "error", {
         message: "Analysis failed.",
       });

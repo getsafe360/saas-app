@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { AnalysisResult, LogLevel, SupportedLocale, TerminalLogEntry } from "../types";
+import type { LogLevel, StreamProgress, SupportedLocale, TerminalLogEntry } from "../types";
 import {
   type AnalysisResultPatch,
   analysisResultPartialSchema,
   analysisResultSchema,
+  streamProgressSchema,
   terminalLogEntrySchema,
 } from "../contracts/snapshot";
 
 interface StreamState {
   logs: TerminalLogEntry[];
   result: AnalysisResultPatch | null;
+  progress: StreamProgress;
   isAnalyzing: boolean;
   error: string | null;
   streamOutcome: "idle" | "success" | "error";
@@ -91,6 +93,11 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
   const [state, setState] = useState<StreamState>({
     logs: [],
     result: null,
+    progress: {
+      percent: 0,
+      stage: "Idle",
+      message: "Awaiting new scan",
+    },
     isAnalyzing: false,
     error: null,
     streamOutcome: "idle",
@@ -134,6 +141,11 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
         setState({
           logs: [],
           result: null,
+          progress: {
+            percent: 0,
+            stage: "Input",
+            message: "Please enter a valid URL.",
+          },
           isAnalyzing: false,
           error: "Please enter a valid URL.",
           streamOutcome: "error",
@@ -152,6 +164,11 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
           },
         ],
         result: null,
+        progress: {
+          percent: 2,
+          stage: "Boot",
+          message: "Preparing real-time scan pipeline.",
+        },
         isAnalyzing: true,
         error: null,
         streamOutcome: "idle",
@@ -160,6 +177,11 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
       if (typeof EventSource === "undefined") {
         setState((prev) => ({
           ...prev,
+          progress: {
+            percent: 0,
+            stage: "Unsupported",
+            message: "EventSource is not available in this browser.",
+          },
           isAnalyzing: false,
           error: "This browser does not support EventSource.",
           streamOutcome: "error",
@@ -192,6 +214,23 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
         }
       });
 
+      source.addEventListener("progress", (event: MessageEvent<string>) => {
+        try {
+          const rawPayload = JSON.parse(event.data);
+          const payload = streamProgressSchema.safeParse(rawPayload);
+          if (!payload.success) {
+            return;
+          }
+
+          setState((prev) => ({
+            ...prev,
+            progress: payload.data,
+          }));
+        } catch {
+          // Ignore malformed event payloads.
+        }
+      });
+
       source.addEventListener("result", (event: MessageEvent<string>) => {
         try {
           const rawPayload = JSON.parse(event.data);
@@ -204,6 +243,12 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
           setState((prev) => ({
             ...prev,
             error: "Received malformed analysis payload.",
+            progress: {
+              ...prev.progress,
+              percent: prev.progress.percent > 0 ? prev.progress.percent : 1,
+              stage: "Analyze",
+              message: "Received malformed analysis payload.",
+            },
             streamOutcome: "error",
           }));
         }
@@ -233,6 +278,11 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
           setState((prev) => ({
             ...prev,
             error: payload.message ?? "Streaming failed.",
+            progress: {
+              ...prev.progress,
+              stage: "Error",
+              message: payload.message ?? "Streaming failed.",
+            },
             isAnalyzing: false,
             streamOutcome: "error",
           }));
@@ -240,6 +290,11 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
           setState((prev) => ({
             ...prev,
             error: "Streaming failed.",
+            progress: {
+              ...prev.progress,
+              stage: "Error",
+              message: "Streaming failed.",
+            },
             isAnalyzing: false,
             streamOutcome: "error",
           }));
@@ -252,6 +307,11 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
           const payload = JSON.parse(event.data) as { ok?: boolean };
           setState((prev) => ({
             ...prev,
+            progress: {
+              percent: 100,
+              stage: "Done",
+              message: payload.ok === false ? "Scan failed." : "Scan complete.",
+            },
             streamOutcome:
               prev.streamOutcome === "error"
                 ? "error"
@@ -262,6 +322,12 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
         } catch {
           setState((prev) => ({
             ...prev,
+            progress: {
+              ...prev.progress,
+              percent: 100,
+              stage: "Done",
+              message: "Scan complete.",
+            },
             streamOutcome: prev.streamOutcome === "error" ? "error" : "success",
           }));
         }
@@ -272,6 +338,11 @@ export function useSparkySnapshotStream(locale: SupportedLocale) {
         setState((prev) => ({
           ...prev,
           error: prev.error ?? "Streaming connection interrupted.",
+          progress: {
+            ...prev.progress,
+            stage: "Error",
+            message: prev.error ?? "Streaming connection interrupted.",
+          },
           streamOutcome: "error",
         }));
         close();
