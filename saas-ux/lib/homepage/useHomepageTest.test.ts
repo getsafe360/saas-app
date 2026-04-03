@@ -3,6 +3,7 @@ import test from 'node:test';
 import type { CockpitEvent } from '../cockpit/sse-events';
 import {
   applyFallbackResult,
+  isHomepageTerminalEvent,
   reduceHomepageEvent,
   shouldInvokeFallbackOnSseClose,
   type HomepageTestState,
@@ -54,4 +55,9 @@ test('non-terminal event keeps state scoped to matching test id', () => {
 test('fallback is invoked when SSE closes without terminal events', () => {
   assert.equal(shouldInvokeFallbackOnSseClose(false), true);
   assert.equal(shouldInvokeFallbackOnSseClose(true), false);
+});
+
+test('transport error events are not treated as terminal', () => {
+  const errorEvent: CockpitEvent = { type: 'error', message: 'stream connection dropped' };
+  assert.equal(isHomepageTerminalEvent(errorEvent), false);
 });
