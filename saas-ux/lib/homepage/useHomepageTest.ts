@@ -187,6 +187,7 @@ export function useHomepageTest() {
 
       sawTerminalEvent = true;
       closeWithCleanup();
+      void runResultsFallback(testId);
     };
 
     delayedFallbackHintRef.current = window.setTimeout(() => {
