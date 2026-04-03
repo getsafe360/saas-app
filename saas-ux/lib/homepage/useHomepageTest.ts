@@ -187,6 +187,7 @@ export function useHomepageTest() {
 
       sawTerminalEvent = true;
       closeWithCleanup();
+      void runResultsFallback(testId);
     };
 
     delayedFallbackHintRef.current = window.setTimeout(() => {
@@ -202,10 +203,6 @@ export function useHomepageTest() {
         lastEventAt = Date.now();
         applyEvent(parsed, testId);
         maybeFinishAndClose(parsed);
-
-        if (!sawTerminalEvent && parsed.type === 'debug' && parsed.message?.toLowerCase().includes('stream ended')) {
-          void runResultsFallback(testId);
-        }
       } catch {
         // ignore malformed event payload
       }
