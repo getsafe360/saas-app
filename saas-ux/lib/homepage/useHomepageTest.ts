@@ -107,7 +107,12 @@ export function useHomepageTest() {
           }
 
           if (!fallbackResponse.ok) {
-            throw new Error(`Failed to load fallback results (${fallbackResponse.status})`);
+            setState((prev) =>
+              prev.currentTestId === fallbackTestId
+                ? { ...initialHomepageTestState, phase: 'idle', summary: FALLBACK_ERROR_SUMMARY }
+                : prev,
+            );
+            return;
           }
 
           const fallbackBody = (await fallbackResponse.json()) as {
@@ -120,16 +125,12 @@ export function useHomepageTest() {
           setState((prev) => applyFallbackResult(prev, fallbackTestId, fallbackBody));
           return;
         } catch {
-          if (attempt >= FALLBACK_MAX_ATTEMPTS) {
-            setState((prev) =>
-              prev.currentTestId === fallbackTestId
-                ? { ...initialHomepageTestState, phase: 'idle', summary: FALLBACK_ERROR_SUMMARY }
-                : prev,
-            );
-            return;
-          }
-
-          await new Promise((resolve) => window.setTimeout(resolve, attempt * 1000));
+          setState((prev) =>
+            prev.currentTestId === fallbackTestId
+              ? { ...initialHomepageTestState, phase: 'idle', summary: FALLBACK_ERROR_SUMMARY }
+              : prev,
+          );
+          return;
         }
       }
     };
