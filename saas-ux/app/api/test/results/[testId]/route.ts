@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getTestServiceConfig } from '@/lib/homepage/test-service-config';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -8,11 +9,13 @@ export async function GET(
   { params }: { params: Promise<{ testId: string }> },
 ) {
   const { testId } = await params;
-  const baseUrl = process.env.CREW_SERVICE_BASE_URL?.replace(/\/$/, '');
-  const apiKey = process.env.CREW_SERVICE_API_KEY;
+  const { baseUrl, apiKey } = getTestServiceConfig();
 
   if (!baseUrl) {
-    return NextResponse.json({ error: 'CREW_SERVICE_BASE_URL is not configured' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'No test backend URL configured. Set HOMEPAGE_TEST_SERVICE_BASE_URL, TEST_SERVICE_BASE_URL, or CREW_SERVICE_BASE_URL.' },
+      { status: 500 },
+    );
   }
 
   const backendRes = await fetch(`${baseUrl}/api/test/results/${testId}`, {

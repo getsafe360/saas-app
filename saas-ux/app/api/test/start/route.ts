@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getTestServiceConfig, isValidHttpBaseUrl } from '@/lib/homepage/test-service-config';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,18 +13,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'url required' }, { status: 400 });
   }
 
-  const baseUrl = process.env.CREW_SERVICE_BASE_URL?.replace(/\/$/, '');
-  const apiKey = process.env.CREW_SERVICE_API_KEY;
+  const { baseUrl, apiKey, sourceVar } = getTestServiceConfig();
 
   if (!baseUrl) {
-    console.error('CREW_SERVICE_BASE_URL missing or invalid:', process.env.CREW_SERVICE_BASE_URL);
-    return NextResponse.json({ error: 'CREW_SERVICE_BASE_URL is not configured' }, { status: 500 });
+    console.error('[test/start] backend base URL not configured');
+    return NextResponse.json(
+      { error: 'No test backend URL configured. Set HOMEPAGE_TEST_SERVICE_BASE_URL, TEST_SERVICE_BASE_URL, or CREW_SERVICE_BASE_URL.' },
+      { status: 500 },
+    );
   }
 
-  if (!/^https?:\/\//.test(baseUrl)) {
-    console.error('CREW_SERVICE_BASE_URL missing or invalid:', process.env.CREW_SERVICE_BASE_URL);
+  if (!isValidHttpBaseUrl(baseUrl)) {
+    console.error('[test/start] invalid backend base URL:', { sourceVar, baseUrl });
     return NextResponse.json(
-      { error: 'CREW_SERVICE_BASE_URL must be a full URL including protocol' },
+      { error: `${sourceVar ?? 'Configured URL'} must be a full URL including protocol` },
       { status: 500 },
     );
   }
