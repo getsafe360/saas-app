@@ -19,7 +19,10 @@ export function useHomepageTest() {
   const lastMetaRef = useRef<{ revision: number; hash: string }>({ revision: -1, hash: '' });
   const sourceRef = useRef<EventSource | null>(null);
 
-  const FALLBACK_MAX_ATTEMPTS = 8;
+  const FALLBACK_MAX_ATTEMPTS = 12;
+  const FALLBACK_BASE_DELAY_MS = 1000;
+  const STALLED_STREAM_TIMEOUT_MS = 10000;
+  const STALLED_CHECK_INTERVAL_MS = 2000;
 
   const closeSource = useCallback(() => {
     sourceRef.current?.close();
@@ -76,6 +79,7 @@ export function useHomepageTest() {
     sourceRef.current = source;
     let sawTerminalEvent = false;
     let fallbackFetched = false;
+    let lastEventAt = Date.now();
 
     const runResultsFallback = async (fallbackTestId: string) => {
       if (fallbackFetched) {
@@ -113,7 +117,7 @@ export function useHomepageTest() {
                   ? { ...prev, phase: 'running', summary: FALLBACK_PENDING_SUMMARY }
                   : prev,
               );
-              await new Promise((resolve) => window.setTimeout(resolve, attempt * 1000));
+              await new Promise((resolve) => window.setTimeout(resolve, attempt * FALLBACK_BASE_DELAY_MS));
               continue;
             }
 
@@ -144,6 +148,16 @@ export function useHomepageTest() {
           setState((prev) => applyFallbackResult(prev, fallbackTestId, fallbackBody));
           return;
         } catch {
+          if (attempt < FALLBACK_MAX_ATTEMPTS) {
+            setState((prev) =>
+              prev.currentTestId === fallbackTestId
+                ? { ...prev, phase: 'running', summary: FALLBACK_PENDING_SUMMARY }
+                : prev,
+            );
+            await new Promise((resolve) => window.setTimeout(resolve, attempt * FALLBACK_BASE_DELAY_MS));
+            continue;
+          }
+
           setState((prev) =>
             prev.currentTestId === fallbackTestId
               ? { ...initialHomepageTestState, phase: 'idle', summary: FALLBACK_ERROR_SUMMARY }
@@ -154,14 +168,19 @@ export function useHomepageTest() {
       }
     };
 
+    const closeWithCleanup = () => {
+      window.clearTimeout(delayedFallbackHint);
+      window.clearInterval(stalledStreamCheck);
+      closeSource();
+    };
+
     const maybeFinishAndClose = (event: CockpitEvent) => {
       if (!isHomepageTerminalEvent(event)) {
         return;
       }
 
       sawTerminalEvent = true;
-      window.clearTimeout(delayedFallbackHint);
-      closeSource();
+      closeWithCleanup();
     };
 
     const delayedFallbackHint = window.setTimeout(() => {
@@ -174,8 +193,13 @@ export function useHomepageTest() {
     const applyRawEvent = (ev: MessageEvent<string>) => {
       try {
         const parsed = JSON.parse(ev.data) as CockpitEvent;
+        lastEventAt = Date.now();
         applyEvent(parsed, testId);
         maybeFinishAndClose(parsed);
+
+        if (!sawTerminalEvent && parsed.type === 'debug' && parsed.message?.toLowerCase().includes('stream ended')) {
+          void runResultsFallback(testId);
+        }
       } catch {
         // ignore malformed event payload
       }
@@ -197,12 +221,22 @@ export function useHomepageTest() {
     source.onmessage = applyRawEvent as (this: EventSource, ev: MessageEvent) => void;
 
     source.onerror = () => {
-      window.clearTimeout(delayedFallbackHint);
       if (shouldInvokeFallbackOnSseClose(sawTerminalEvent)) {
         void runResultsFallback(testId);
       }
-      closeSource();
+      closeWithCleanup();
     };
+
+    const stalledStreamCheck = window.setInterval(() => {
+      if (sawTerminalEvent || fallbackFetched) {
+        window.clearInterval(stalledStreamCheck);
+        return;
+      }
+
+      if (Date.now() - lastEventAt >= STALLED_STREAM_TIMEOUT_MS) {
+        void runResultsFallback(testId);
+      }
+    }, STALLED_CHECK_INTERVAL_MS);
 
     sourceRef.current = source;
   }, [applyEvent, closeSource]);
