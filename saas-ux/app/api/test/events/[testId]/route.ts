@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import type { CockpitEvent } from '@/lib/cockpit/sse-events';
 import { mapBackendEvent } from '@/lib/cockpit/sse-events';
+import { getTestServiceConfig, isValidHttpBaseUrl } from '@/lib/homepage/test-service-config';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,11 +16,10 @@ export async function GET(
 ) {
   const { testId } = await params;
 
-  const baseUrl = process.env.CREW_SERVICE_BASE_URL?.replace(/\/$/, '');
-  const apiKey = process.env.CREW_SERVICE_API_KEY;
+  const { baseUrl, apiKey, sourceVar } = getTestServiceConfig();
 
   if (!baseUrl) {
-    return new Response('event: error\ndata: {"type":"error","message":"CREW_SERVICE_BASE_URL is not configured"}\n\n', {
+    return new Response('event: error\ndata: {"type":"error","message":"No test backend URL configured"}\n\n', {
       status: 500,
       headers: {
         'Content-Type': 'text/event-stream',
@@ -29,8 +29,9 @@ export async function GET(
     });
   }
 
-  if (!/^https?:\/\//.test(baseUrl)) {
-    return new Response('event: error\ndata: {"type":"error","message":"CREW_SERVICE_BASE_URL must be a full URL including protocol"}\n\n', {
+  if (!isValidHttpBaseUrl(baseUrl)) {
+    const label = sourceVar ?? 'configured backend URL';
+    return new Response(`event: error\ndata: {"type":"error","message":"${label} must be a full URL including protocol"}\n\n`, {
       status: 500,
       headers: {
         'Content-Type': 'text/event-stream',

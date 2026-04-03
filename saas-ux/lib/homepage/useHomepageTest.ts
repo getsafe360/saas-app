@@ -19,6 +19,8 @@ export function useHomepageTest() {
   const lastMetaRef = useRef<{ revision: number; hash: string }>({ revision: -1, hash: '' });
   const sourceRef = useRef<EventSource | null>(null);
 
+  const FALLBACK_MAX_ATTEMPTS = 8;
+
   const closeSource = useCallback(() => {
     sourceRef.current?.close();
     sourceRef.current = null;
@@ -81,35 +83,54 @@ export function useHomepageTest() {
       }
 
       fallbackFetched = true;
-      try {
-        const fallbackResponse = await fetch(`/api/test/results/${fallbackTestId}`, { cache: 'no-store' });
-        if (fallbackResponse.status === 404) {
-          setState((prev) =>
-            prev.currentTestId === fallbackTestId
-              ? { ...initialHomepageTestState, phase: 'idle', summary: FALLBACK_ERROR_SUMMARY }
-              : prev,
-          );
+      for (let attempt = 1; attempt <= FALLBACK_MAX_ATTEMPTS; attempt += 1) {
+        try {
+          const fallbackResponse = await fetch(`/api/test/results/${fallbackTestId}`, { cache: 'no-store' });
+
+          if (fallbackResponse.status === 404) {
+            if (attempt < FALLBACK_MAX_ATTEMPTS) {
+              setState((prev) =>
+                prev.currentTestId === fallbackTestId
+                  ? { ...prev, phase: 'running', summary: FALLBACK_PENDING_SUMMARY }
+                  : prev,
+              );
+              await new Promise((resolve) => window.setTimeout(resolve, attempt * 1000));
+              continue;
+            }
+
+            setState((prev) =>
+              prev.currentTestId === fallbackTestId
+                ? { ...initialHomepageTestState, phase: 'idle', summary: FALLBACK_ERROR_SUMMARY }
+                : prev,
+            );
+            return;
+          }
+
+          if (!fallbackResponse.ok) {
+            throw new Error(`Failed to load fallback results (${fallbackResponse.status})`);
+          }
+
+          const fallbackBody = (await fallbackResponse.json()) as {
+            summary?: string;
+            short_summary?: string;
+            greeting?: string;
+            categories?: CockpitCategory[];
+          };
+
+          setState((prev) => applyFallbackResult(prev, fallbackTestId, fallbackBody));
           return;
+        } catch {
+          if (attempt >= FALLBACK_MAX_ATTEMPTS) {
+            setState((prev) =>
+              prev.currentTestId === fallbackTestId
+                ? { ...initialHomepageTestState, phase: 'idle', summary: FALLBACK_ERROR_SUMMARY }
+                : prev,
+            );
+            return;
+          }
+
+          await new Promise((resolve) => window.setTimeout(resolve, attempt * 1000));
         }
-
-        if (!fallbackResponse.ok) {
-          throw new Error(`Failed to load fallback results (${fallbackResponse.status})`);
-        }
-
-        const fallbackBody = (await fallbackResponse.json()) as {
-          summary?: string;
-          short_summary?: string;
-          greeting?: string;
-          categories?: CockpitCategory[];
-        };
-
-        setState((prev) => applyFallbackResult(prev, fallbackTestId, fallbackBody));
-      } catch {
-        setState((prev) =>
-          prev.currentTestId === fallbackTestId
-            ? { ...initialHomepageTestState, phase: 'idle', summary: FALLBACK_ERROR_SUMMARY }
-            : prev,
-        );
       }
     };
 
