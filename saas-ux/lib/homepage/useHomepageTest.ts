@@ -18,6 +18,8 @@ export function useHomepageTest() {
   const [state, setState] = useState<HomepageTestState>(initialHomepageTestState);
   const lastMetaRef = useRef<{ revision: number; hash: string }>({ revision: -1, hash: '' });
   const sourceRef = useRef<EventSource | null>(null);
+  const stalledStreamCheckRef = useRef<number | null>(null);
+  const delayedFallbackHintRef = useRef<number | null>(null);
 
   const FALLBACK_MAX_ATTEMPTS = 12;
   const FALLBACK_BASE_DELAY_MS = 1000;
@@ -25,6 +27,14 @@ export function useHomepageTest() {
   const STALLED_CHECK_INTERVAL_MS = 2000;
 
   const closeSource = useCallback(() => {
+    if (delayedFallbackHintRef.current !== null) {
+      window.clearTimeout(delayedFallbackHintRef.current);
+      delayedFallbackHintRef.current = null;
+    }
+    if (stalledStreamCheckRef.current !== null) {
+      window.clearInterval(stalledStreamCheckRef.current);
+      stalledStreamCheckRef.current = null;
+    }
     sourceRef.current?.close();
     sourceRef.current = null;
   }, []);
@@ -168,11 +178,7 @@ export function useHomepageTest() {
       }
     };
 
-    const closeWithCleanup = () => {
-      window.clearTimeout(delayedFallbackHint);
-      window.clearInterval(stalledStreamCheck);
-      closeSource();
-    };
+    const closeWithCleanup = () => closeSource();
 
     const maybeFinishAndClose = (event: CockpitEvent) => {
       if (!isHomepageTerminalEvent(event)) {
@@ -183,7 +189,7 @@ export function useHomepageTest() {
       closeWithCleanup();
     };
 
-    const delayedFallbackHint = window.setTimeout(() => {
+    delayedFallbackHintRef.current = window.setTimeout(() => {
       if (sawTerminalEvent) {
         return;
       }
@@ -227,9 +233,12 @@ export function useHomepageTest() {
       closeWithCleanup();
     };
 
-    const stalledStreamCheck = window.setInterval(() => {
+    stalledStreamCheckRef.current = window.setInterval(() => {
       if (sawTerminalEvent || fallbackFetched) {
-        window.clearInterval(stalledStreamCheck);
+        if (stalledStreamCheckRef.current !== null) {
+          window.clearInterval(stalledStreamCheckRef.current);
+          stalledStreamCheckRef.current = null;
+        }
         return;
       }
 
@@ -238,7 +247,6 @@ export function useHomepageTest() {
       }
     }, STALLED_CHECK_INTERVAL_MS);
 
-    sourceRef.current = source;
   }, [applyEvent, closeSource]);
 
   useEffect(() => () => closeSource(), [closeSource]);
