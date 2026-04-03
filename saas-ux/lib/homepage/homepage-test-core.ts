@@ -39,7 +39,6 @@ export const initialHomepageTestState: HomepageTestState = {
 function isTerminalEvent(event: CockpitEvent): boolean {
   return (
     event.type === 'summary'
-    || event.type === 'error'
     || (event.type === 'status' && Boolean(event.state && TERMINAL_STATES.has(event.state)))
   );
 }
