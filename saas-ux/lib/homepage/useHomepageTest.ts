@@ -88,6 +88,25 @@ export function useHomepageTest() {
           const fallbackResponse = await fetch(`/api/test/results/${fallbackTestId}`, { cache: 'no-store' });
 
           if (fallbackResponse.status === 404) {
+            const fallback404Body = (await fallbackResponse.json().catch(() => null)) as {
+              status?: string;
+              error?: string;
+            } | null;
+            const fallbackStatus = fallback404Body?.status;
+
+            if (fallbackStatus === 'failed' || fallbackStatus === 'error') {
+              setState((prev) =>
+                prev.currentTestId === fallbackTestId
+                  ? {
+                    ...initialHomepageTestState,
+                    phase: 'error',
+                    summary: fallback404Body?.error || FALLBACK_ERROR_SUMMARY,
+                  }
+                  : prev,
+              );
+              return;
+            }
+
             if (attempt < FALLBACK_MAX_ATTEMPTS) {
               setState((prev) =>
                 prev.currentTestId === fallbackTestId
