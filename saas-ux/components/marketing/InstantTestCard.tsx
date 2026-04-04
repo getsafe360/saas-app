@@ -14,6 +14,7 @@ import {
 } from "@/contexts/TestResultContext";
 
 export default function InstantTestCard() {
+  const STASH_SLOW_THRESHOLD_MS = 4000;
   const t = useTranslations("analysis");
   const locale = useLocale();
   const router = useRouter();
@@ -23,10 +24,24 @@ export default function InstantTestCard() {
   const [url, setUrl] = useState("");
   const [stashUrl, setStashUrl] = useState<string | null>(null);
   const [isStashing, setIsStashing] = useState(false);
+  const [isStashSlow, setIsStashSlow] = useState(false);
   const [stashErrorMessage, setStashErrorMessage] = useState<string | null>(
     null,
   );
   const hasStashedAfterCompletionRef = useRef(false);
+  const completionTrackedRef = useRef(false);
+
+  const trackEvent = (
+    event: string,
+    payload: Record<string, string | number | boolean | null | undefined> = {},
+  ) => {
+    const telemetryPayload = {
+      event,
+      ts: new Date().toISOString(),
+      ...payload,
+    };
+    console.info("[InstantTestCard:funnel]", telemetryPayload);
+  };
 
   const start = () => {
     if (!url.trim()) return;
@@ -34,8 +49,10 @@ export default function InstantTestCard() {
       ? url.trim()
       : `https://${url.trim()}`;
     setStashUrl(null);
+    setIsStashSlow(false);
     setStashErrorMessage(null);
     hasStashedAfterCompletionRef.current = false;
+    completionTrackedRef.current = false;
     void test.startTest(normalized);
   };
 
@@ -86,6 +103,34 @@ export default function InstantTestCard() {
   }
 
   useEffect(() => {
+    if (test.phase !== "completed" || !testResult || completionTrackedRef.current) {
+      return;
+    }
+    completionTrackedRef.current = true;
+    trackEvent("analysis_completed", {
+      testId: testResult.testId,
+      url: testResult.url,
+    });
+  }, [test.phase, testResult]);
+
+  useEffect(() => {
+    if (!isStashing || stashUrl) {
+      setIsStashSlow(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsStashSlow(true);
+      trackEvent("stash_slow", {
+        thresholdMs: STASH_SLOW_THRESHOLD_MS,
+        testId: testResult?.testId,
+      });
+    }, STASH_SLOW_THRESHOLD_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isStashing, stashUrl, testResult?.testId]);
+
+  useEffect(() => {
     if (!testResult || !testResultContext) return;
     testResultContext.setTestResult(testResult);
   }, [testResult, testResultContext]);
@@ -105,18 +150,35 @@ export default function InstantTestCard() {
     let cancelled = false;
 
     const run = async () => {
+      const stashStart = performance.now();
       setIsStashing(true);
+      setIsStashSlow(false);
       setStashErrorMessage(null);
       console.debug("[InstantTestCard] Running stashAndUpdateContext", {
         testId: testResult.testId,
         phase: test.phase,
       });
+      trackEvent("stash_started", {
+        testId: testResult.testId,
+        url: testResult.url,
+      });
       try {
         const nextUrl = await stashAndUpdateContext(testResult);
+        const durationMs = Math.round(performance.now() - stashStart);
+        trackEvent("stash_succeeded", {
+          testId: testResult.testId,
+          durationMs,
+        });
         if (!cancelled) {
           setStashUrl(nextUrl);
         }
       } catch (error) {
+        const durationMs = Math.round(performance.now() - stashStart);
+        trackEvent("stash_failed", {
+          testId: testResult.testId,
+          durationMs,
+          message: error instanceof Error ? error.message : "unknown_error",
+        });
         console.error("Failed to stash instant test result:", error);
         if (!cancelled) {
           hasStashedAfterCompletionRef.current = false;
@@ -210,9 +272,30 @@ export default function InstantTestCard() {
           <p className="text-sm text-emerald-100">{test.summary}</p>
 
           {isStashing && !stashUrl && (
-            <p className="mt-3 text-sm text-slate-300">
-              Saving your results before signup…
-            </p>
+            <>
+              <p className="mt-3 text-sm text-slate-300">
+                Saving your results before signup…
+              </p>
+              {isStashSlow && (
+                <div className="mt-3">
+                  <SignedOut>
+                    <SignUpButton mode="modal">
+                      <Button
+                        className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium ring ring-sky-600/30 bg-sky-50 text-sky-700 transition hover:bg-sky-100 hover:shadow-none dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/30 dark:hover:bg-sky-400/20"
+                        onClick={() =>
+                          trackEvent("signup_clicked", {
+                            source: "slow_stash_fallback",
+                          })
+                        }
+                      >
+                        Continue to signup now
+                        <ArrowRightIcon className="size-4" aria-hidden="true" />
+                      </Button>
+                    </SignUpButton>
+                  </SignedOut>
+                </div>
+              )}
+            </>
           )}
 
           {stashErrorMessage && (
@@ -222,7 +305,12 @@ export default function InstantTestCard() {
             <div className="mt-3">
               <SignedOut>
                 <SignUpButton mode="modal">
-                  <Button className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium ring ring-sky-600/30 bg-sky-50 text-sky-700 transition hover:bg-sky-100 hover:shadow-none dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/30 dark:hover:bg-sky-400/20">
+                  <Button
+                    className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium ring ring-sky-600/30 bg-sky-50 text-sky-700 transition hover:bg-sky-100 hover:shadow-none dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/30 dark:hover:bg-sky-400/20"
+                    onClick={() =>
+                      trackEvent("signup_clicked", { source: "stash_ready" })
+                    }
+                  >
                     Create your free account to see full details and repairs
                     <ArrowRightIcon className="size-4" aria-hidden="true" />
                   </Button>
@@ -231,7 +319,10 @@ export default function InstantTestCard() {
 
               <SignedIn>
                 <Button
-                  onClick={() => router.push(`/${locale}${signupRedirect}`)}
+                  onClick={() => {
+                    trackEvent("continue_clicked", { source: "stash_ready" });
+                    router.push(`/${locale}${signupRedirect}`);
+                  }}
                   className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium ring ring-sky-600/30 bg-sky-50 text-sky-700 transition hover:bg-sky-100 hover:shadow-none dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/30 dark:hover:bg-sky-400/20"
                 >
                   Continue to your saved report
