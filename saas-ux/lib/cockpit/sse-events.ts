@@ -96,6 +96,30 @@ export function mapBackendEvent(
     };
   }
 
+  if (normalizedType === 'category') {
+    const category =
+      typeof payload.category === 'string'
+        ? payload.category
+        : typeof payload.id === 'string'
+          ? payload.id
+          : typeof payload.name === 'string'
+            ? payload.name
+            : undefined;
+
+    if (!category) {
+      return null;
+    }
+
+    return {
+      type: 'category',
+      category,
+      issues: Array.isArray(payload.issues)
+        ? payload.issues.filter((entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null)
+        : undefined,
+      message: typeof payload.message === 'string' ? payload.message : undefined,
+    };
+  }
+
   if (normalizedType === 'error') {
     return { type: 'error', message: String(payload.message ?? 'Backend error') };
   }
