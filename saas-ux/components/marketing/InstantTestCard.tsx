@@ -269,8 +269,6 @@ export default function InstantTestCard() {
 
       {test.phase === "completed" && (
         <div className="mt-5 rounded-lg border border-emerald-400/30 bg-emerald-950/20 p-4">
-          <p className="text-sm text-emerald-100">{test.summary}</p>
-
           {isStashing && !stashUrl && (
             <>
               <p className="mt-3 text-sm text-slate-300">

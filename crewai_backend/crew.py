@@ -345,8 +345,8 @@ class CrewService:
 
         # Preserve plain-text summaries when JSON is not detected
         if summary_json:
-            final_summary = summary_json.get("summary", "")
-            final_short = summary_json.get("short_summary", final_summary)
+            final_summary = summary_json.get("summary") or summary_json.get("short_summary") or ""
+            final_short = summary_json.get("short_summary") or final_summary
         else:
             text = summary_raw.strip()
             final_summary = text
