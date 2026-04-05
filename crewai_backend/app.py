@@ -227,12 +227,13 @@ def _run_sparky_worker(test_id: str, url: str) -> None:
         _simulate_progress(test_id)
 
         result = CREW.run_sparky_pipeline(url)
-        summary = result.get("short_summary") or result.get("summary") or "Analysis complete"
+        summary = result.get("summary") or result.get("short_summary") or "Analysis complete"
+        short_summary = result.get("short_summary") or summary
         greeting = result.get("greeting") or "Hi! Here is your test report."
         result_payload = to_terminal_result_payload({
             **result,
-            "summary": result.get("summary") or summary,
-            "short_summary": result.get("short_summary") or summary,
+            "summary": summary,
+            "short_summary": short_summary,
             "greeting": greeting,
         })
 
