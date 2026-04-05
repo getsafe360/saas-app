@@ -68,10 +68,12 @@ export function reduceHomepageEvent(prev: HomepageTestState, event: CockpitEvent
 
   if (event.type === 'summary') {
     const terminalSummary = event.message ?? withMessage.summary ?? LIVE_SUMMARY;
+    const normalizedCategories = Array.isArray(event.categories) ? event.categories : withMessage.categories;
     return {
       ...withMessage,
       summary: terminalSummary,
       greeting: event.greeting ?? withMessage.greeting,
+      categories: normalizedCategories,
       phase: 'completed',
       progress: 100,
     };

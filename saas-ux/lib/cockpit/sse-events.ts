@@ -30,6 +30,7 @@ export interface CockpitEvent {
   type: CockpitEventType;
   state?: CockpitStateValue;
   category?: string;
+  categories?: CockpitCategory[];
   progress?: number;
   issues?: Array<Record<string, unknown>>;
   savings?: Partial<CockpitSavings>;
@@ -64,10 +65,17 @@ export function mapBackendEvent(
   }
 
   if (normalizedType === 'result') {
+    const categories = Array.isArray(payload.categories)
+      ? (payload.categories.filter((entry): entry is CockpitCategory => {
+        return typeof entry === 'object' && entry !== null && typeof (entry as { id?: unknown }).id === 'string';
+      }))
+      : undefined;
+
     return {
       type: 'summary',
       message: String(payload.summary ?? payload.short_summary ?? 'Analysis complete'),
       greeting: typeof payload.greeting === 'string' ? payload.greeting : undefined,
+      categories,
     };
   }
 
@@ -109,7 +117,12 @@ export function mapBackendEvent(
   }
 
   if (normalizedType === 'summary') {
-    return { type: 'summary', message: String(payload.summary ?? payload.message ?? '') };
+    const categories = Array.isArray(payload.categories)
+      ? (payload.categories.filter((entry): entry is CockpitCategory => {
+        return typeof entry === 'object' && entry !== null && typeof (entry as { id?: unknown }).id === 'string';
+      }))
+      : undefined;
+    return { type: 'summary', message: String(payload.summary ?? payload.message ?? ''), categories };
   }
 
   console.debug(`[cockpit-sse] dropped unknown backend event testId=${testId} event=${eventName}`);
