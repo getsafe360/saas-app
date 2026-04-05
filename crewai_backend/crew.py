@@ -382,13 +382,55 @@ class CrewService:
 
         return best
 
-    def _normalize_categories(self, cats: Any) -> List[str]:
+    def _normalize_categories(self, cats: Any) -> List[Dict[str, Any]]:
+        """
+        Normalize category payloads into a stable frontend-friendly shape.
+
+        Accepted input shapes:
+        - "seo"
+        - ["seo", "performance"]
+        - [{"id": "seo", "issues": [...]}, {"category": "security"}]
+        """
         if not cats:
             return []
+
+        def _to_category(value: Any) -> Optional[Dict[str, Any]]:
+            if isinstance(value, str):
+                cat_id = value.strip()
+                if not cat_id:
+                    return None
+                return {
+                    "id": cat_id,
+                    "issues": [],
+                    "severity": "medium",
+                    "tokenCost": 0,
+                    "fixAvailable": True,
+                }
+
+            if isinstance(value, dict):
+                raw_id = value.get("id") or value.get("category")
+                if not isinstance(raw_id, str) or not raw_id.strip():
+                    return None
+                issues = value.get("issues")
+                normalized_issues = issues if isinstance(issues, list) else []
+                return {
+                    "id": raw_id.strip(),
+                    "issues": normalized_issues,
+                    "severity": value.get("severity") if isinstance(value.get("severity"), str) else "medium",
+                    "tokenCost": value.get("tokenCost") if isinstance(value.get("tokenCost"), (int, float)) else 0,
+                    "fixAvailable": bool(value.get("fixAvailable", True)),
+                }
+
+            return None
+
         if isinstance(cats, str):
-            return [cats]
+            normalized = _to_category(cats)
+            return [normalized] if normalized else []
+
         if isinstance(cats, list):
-            return [c for c in cats if isinstance(c, str)]
+            normalized_list = [_to_category(item) for item in cats]
+            return [item for item in normalized_list if item is not None]
+
         return []
 
     @staticmethod

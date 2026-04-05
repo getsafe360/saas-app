@@ -210,6 +210,7 @@ export function useHomepageTest() {
 
     source.addEventListener('status', applyRawEvent as EventListener);
     source.addEventListener('progress', applyRawEvent as EventListener);
+    source.addEventListener('category', applyRawEvent as EventListener);
     source.addEventListener('summary', applyRawEvent as EventListener);
     source.addEventListener('greeting', applyRawEvent as EventListener);
     source.addEventListener('debug', applyRawEvent as EventListener);
