@@ -540,7 +540,10 @@ function pickSectionValue(
   key: keyof SnapshotSections,
   fallback: string,
 ): string {
-  return safeText(parsed.sections?.[key] ?? parsed[key], fallback);
+  const fromSection = safeText(parsed.sections?.[key], "");
+  if (fromSection) return fromSection;
+
+  return safeText(parsed[key], fallback);
 }
 
 function computeFallbackStats(
