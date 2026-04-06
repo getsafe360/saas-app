@@ -77,7 +77,7 @@ const MAX_URL_LENGTH = 2048;
 const FETCH_TIMEOUT_MS = 8_000;
 const FETCH_MAX_BYTES = 300_000;
 const LLM_TIMEOUT_MS = 20_000;
-const CACHE_TTL_SECONDS = 60 * 60 * 8;
+const CACHE_TTL_SECONDS = 60 * 60;
 const GEMINI_MODEL =
   process.env.GEMINI_SNAPSHOT_MODEL || "gemini-3-flash-preview";
 const DEFAULT_GREETING_LINE_1 = "Hi, I'm Sparky, your AI-assistant.";
@@ -353,7 +353,7 @@ function buildFacts(
   };
 
   const compact = JSON.stringify(facts);
-  return compact.length > 3500 ? `${compact.slice(0, 3497)}...` : compact;
+  return compact.length > 5000 ? `${compact.slice(0, 4997)}...` : compact;
 }
 
 function parseSnapshotSections(text: string): SnapshotSections {
@@ -544,6 +544,98 @@ function pickSectionValue(
   if (fromSection) return fromSection;
 
   return safeText(parsed[key], fallback);
+}
+
+function firstNonEmpty(...values: unknown[]): string {
+  for (const value of values) {
+    const normalized = safeText(value, "");
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
+function sectionAliasValues(
+  parsed: GeminiResponsePayload,
+  key: keyof SnapshotSections,
+): unknown[] {
+  const sectionObject = parsed.sections as Record<string, unknown> | undefined;
+  const topLevel = parsed as Record<string, unknown>;
+
+  const aliases: Record<keyof SnapshotSections, string[]> = {
+    seoGeo: ["seoGeo", "seo", "seo_geo", "seoAndGeo", "seoDiscovery", "seogeo"],
+    accessibility: ["accessibility", "a11y"],
+    performance: ["performance", "speed", "coreWebVitals"],
+    security: ["security", "sec"],
+    content: ["content", "copy", "messaging"],
+    ctaLine: ["ctaLine", "cta", "cta_line", "callToAction"],
+  };
+
+  const names = aliases[key];
+  return names.flatMap((name) => [sectionObject?.[name], topLevel[name]]);
+}
+
+function hasAllNonEmptySections(sections: SnapshotSections): boolean {
+  return (
+    Boolean(sections.seoGeo) &&
+    Boolean(sections.accessibility) &&
+    Boolean(sections.performance) &&
+    Boolean(sections.security) &&
+    Boolean(sections.content) &&
+    Boolean(sections.ctaLine)
+  );
+}
+
+function buildSectionsFromParsed(
+  parsed: GeminiResponsePayload,
+  rawText: string,
+  fallbacks: SnapshotSections,
+): SnapshotSections {
+  const fromRaw = parseSnapshotSections(rawText);
+  const fromSummary = parseSnapshotSections(safeText(parsed.summaryText, ""));
+
+  const resolved: SnapshotSections = {
+    seoGeo: firstNonEmpty(
+      ...sectionAliasValues(parsed, "seoGeo"),
+      fromSummary.seoGeo,
+      fromRaw.seoGeo,
+    ),
+    accessibility: firstNonEmpty(
+      ...sectionAliasValues(parsed, "accessibility"),
+      fromSummary.accessibility,
+      fromRaw.accessibility,
+    ),
+    performance: firstNonEmpty(
+      ...sectionAliasValues(parsed, "performance"),
+      fromSummary.performance,
+      fromRaw.performance,
+    ),
+    security: firstNonEmpty(
+      ...sectionAliasValues(parsed, "security"),
+      fromSummary.security,
+      fromRaw.security,
+    ),
+    content: firstNonEmpty(
+      ...sectionAliasValues(parsed, "content"),
+      fromSummary.content,
+      fromRaw.content,
+    ),
+    ctaLine: firstNonEmpty(
+      ...sectionAliasValues(parsed, "ctaLine"),
+      fromSummary.ctaLine,
+      fromRaw.ctaLine,
+    ),
+  };
+
+  if (hasAllNonEmptySections(resolved)) return resolved;
+
+  return {
+    seoGeo: resolved.seoGeo || fallbacks.seoGeo,
+    accessibility: resolved.accessibility || fallbacks.accessibility,
+    performance: resolved.performance || fallbacks.performance,
+    security: resolved.security || fallbacks.security,
+    content: resolved.content || fallbacks.content,
+    ctaLine: resolved.ctaLine || fallbacks.ctaLine,
+  };
 }
 
 function computeFallbackStats(
@@ -813,22 +905,18 @@ async function generateGeminiSnapshot(args: {
     ctaLine: "Want the full actionable report and automated fixes.",
   };
 
-  const sections: SnapshotSections = {
-    seoGeo: pickSectionValue(parsed, "seoGeo", sectionFallbacks.seoGeo),
-    accessibility: pickSectionValue(
-      parsed,
-      "accessibility",
-      sectionFallbacks.accessibility,
-    ),
-    performance: pickSectionValue(
-      parsed,
-      "performance",
-      sectionFallbacks.performance,
-    ),
-    security: pickSectionValue(parsed, "security", sectionFallbacks.security),
-    content: pickSectionValue(parsed, "content", sectionFallbacks.content),
-    ctaLine: pickSectionValue(parsed, "ctaLine", sectionFallbacks.ctaLine),
+  const strictSections: SnapshotSections = {
+    seoGeo: pickSectionValue(parsed, "seoGeo", ""),
+    accessibility: pickSectionValue(parsed, "accessibility", ""),
+    performance: pickSectionValue(parsed, "performance", ""),
+    security: pickSectionValue(parsed, "security", ""),
+    content: pickSectionValue(parsed, "content", ""),
+    ctaLine: pickSectionValue(parsed, "ctaLine", ""),
   };
+
+  const sections = hasAllNonEmptySections(strictSections)
+    ? strictSections
+    : buildSectionsFromParsed(parsed, raw, sectionFallbacks);
 
   return {
     greeting: safeText(
