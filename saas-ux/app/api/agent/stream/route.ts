@@ -378,7 +378,7 @@ function parseSnapshotSections(text: string): SnapshotSections {
   const line = (name: string) =>
     clean
       .match(new RegExp(`${name}\\s*[—:-]\\s*([^\\n]+)`, "i"))?.[1]
-      ?.trim() ?? "No signal.";
+      ?.trim() ?? "";
 
   return {
     seoGeo: line("SEO\\s*&\\s*GEO|SEO\\s*&\\s*discovery"),
@@ -485,31 +485,32 @@ function parseGeminiJsonHeuristic(
   rawText: string,
 ): Partial<GeminiSnapshotResult> & { sections?: Partial<SnapshotSections> } {
   const normalized = sanitizeJsonCandidate(normalizeGeminiJson(rawText));
+  const extractedSections = parseSnapshotSections(normalized);
 
   const sections: SnapshotSections = {
     seoGeo: safeText(
       extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.seoGeo),
-      parseSnapshotSections(normalized).seoGeo,
+      extractedSections.seoGeo,
     ),
     accessibility: safeText(
       extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.accessibility),
-      parseSnapshotSections(normalized).accessibility,
+      extractedSections.accessibility,
     ),
     performance: safeText(
       extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.performance),
-      parseSnapshotSections(normalized).performance,
+      extractedSections.performance,
     ),
     security: safeText(
       extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.security),
-      parseSnapshotSections(normalized).security,
+      extractedSections.security,
     ),
     content: safeText(
       extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.content),
-      parseSnapshotSections(normalized).content,
+      extractedSections.content,
     ),
     ctaLine: safeText(
       extractAnyJsonStringField(normalized, SECTION_KEY_ALIASES.ctaLine),
-      parseSnapshotSections(normalized).ctaLine,
+      extractedSections.ctaLine,
     ),
   };
 
