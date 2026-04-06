@@ -31,6 +31,14 @@ function normalizeUrl(input: string): string | null {
   }
 }
 
+function hostnameFromUrl(input: string): string {
+  try {
+    return new URL(input).hostname;
+  } catch {
+    return "your website";
+  }
+}
+
 export default function DirectAgentStreamCard() {
   const t = useTranslations("analysis");
   const locale = useLocale();
@@ -102,14 +110,13 @@ export default function DirectAgentStreamCard() {
       baseSections.push({
         id: "wordpress",
         label: "WordPress",
-        text:
-          "WordPress signals detected. Run the full report to unlock plugin/theme risk checks, admin hardening, and guided remediation.",
+        text: t("wordpress_card_text"),
         icon: ShieldCheckIcon,
         tone: "border-blue-400/30 bg-blue-950/20 text-blue-100",
       });
     }
     return baseSections;
-  }, [stream.snapshot]);
+  }, [stream.snapshot, t]);
 
   useEffect(() => {
     if (!stream.snapshot || stashedRef.current) return;
@@ -201,7 +208,9 @@ export default function DirectAgentStreamCard() {
               <p className="font-medium text-emerald-200">Sparky</p>
               <p className="mt-2 text-slate-200">
                 {stream.snapshot?.greeting ??
-                  "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement."}
+                  `${t("sparky_intro_line1")} ${t("sparky_intro_line2", {
+                    domain: activeUrl ? hostnameFromUrl(activeUrl) : "your website",
+                  })}`}
               </p>
               <div className="mt-3 space-y-1.5 font-mono text-sm text-slate-300">
                 {stream.messages.map((message) => (
@@ -270,9 +279,7 @@ export default function DirectAgentStreamCard() {
           {stream.snapshot && (
             <div className="rounded-lg border border-emerald-400/30 bg-emerald-950/20 p-4">
               <p className="text-sm text-emerald-100">
-                Want the full actionable report and automated fixes (including
-                WordPress automation if detected)? Create a free account to
-                unlock the detailed checklist and one-click fixes.
+                {t("cta_full_report")}
               </p>
               {isStashing && (
                 <p className="mt-2 text-sm text-slate-300">
@@ -288,7 +295,7 @@ export default function DirectAgentStreamCard() {
                   <SignedOut>
                     <SignUpButton mode="modal">
                       <Button className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-base font-medium ring ring-sky-600/30 bg-sky-50 text-sky-700 transition hover:bg-sky-100 hover:shadow-none dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/30 dark:hover:bg-sky-400/20">
-                        Create a free account
+                        {t("cta_create_account")}
                         <ArrowRightIcon className="size-4" aria-hidden="true" />
                       </Button>
                     </SignUpButton>
