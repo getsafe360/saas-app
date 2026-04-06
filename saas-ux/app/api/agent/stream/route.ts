@@ -97,6 +97,12 @@ const LLM_TIMEOUT_MS = 20_000;
 const CACHE_TTL_SECONDS = 60 * 60 * 8;
 const GEMINI_MODEL =
   process.env.GEMINI_SNAPSHOT_MODEL || "gemini-3-flash-preview";
+const DEFAULT_GREETING_LINE_1 = "Hi, I'm Sparky, your AI-assistant.";
+
+function defaultGreeting(url: string): string {
+  const host = new URL(url).hostname;
+  return `${DEFAULT_GREETING_LINE_1} Here's your quick snapshot for ${host}:`;
+}
 
 const memoryRateLimit = new Map<string, { count: number; resetAt: number }>();
 
@@ -690,8 +696,7 @@ function fallbackSnapshot(
       "Open the full report to unlock detailed checklist and automated fixes.",
   };
   return {
-    greeting:
-      "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement.",
+    greeting: defaultGreeting(url),
     summaryText: `Quick snapshot for ${host}: Core checks completed. Some response formatting was incomplete, so Sparky returned a safe fallback. Continue to full report for detailed evidence and one-click fixes.`,
     sections: fallbackSections,
     terminalLogs: parseError
@@ -865,7 +870,7 @@ async function generateGeminiSnapshot(args: {
   return {
     greeting: safeText(
       parsed.greeting,
-      "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement.",
+      defaultGreeting(args.url),
     ),
     summaryText: safeText(
       parsed.summaryText,
@@ -965,7 +970,7 @@ export async function GET(req: NextRequest) {
         log(
           "INFO",
           "Boot",
-          "Hi, I'm Sparky, your AI assistant. I'll give you a site snapshot report on items identified for improvement.",
+          defaultGreeting(normalizedUrl),
         );
         log("INFO", "Fetch", "Fetching HTML...");
 
