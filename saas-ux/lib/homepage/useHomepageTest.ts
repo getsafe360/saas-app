@@ -52,7 +52,7 @@ export function useHomepageTest() {
     setState((prev) => reduceHomepageEvent(prev, event, eventTestId));
   }, []);
 
-  const startTest = useCallback(async (url: string) => {
+  const startTest = useCallback(async (url: string, language?: string) => {
     closeSource();
     setState({ ...initialHomepageTestState, phase: 'running', testedUrl: url, summary: LIVE_SUMMARY });
     lastMetaRef.current = { revision: -1, hash: '' };
@@ -60,7 +60,7 @@ export function useHomepageTest() {
     const response = await fetch('/api/test/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, language }),
     });
 
     if (!response.ok) {
