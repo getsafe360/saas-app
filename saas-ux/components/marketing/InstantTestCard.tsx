@@ -15,6 +15,7 @@ import {
 
 export default function InstantTestCard() {
   const STASH_SLOW_THRESHOLD_MS = 4000;
+  const POPULAR_WP_TEST_URL = "https://wordpress.org";
   const t = useTranslations("analysis");
   const locale = useLocale();
   const router = useRouter();
@@ -54,6 +55,16 @@ export default function InstantTestCard() {
     hasStashedAfterCompletionRef.current = false;
     completionTrackedRef.current = false;
     void test.startTest(normalized);
+  };
+
+  const startPopularWordPressTest = () => {
+    setUrl(POPULAR_WP_TEST_URL);
+    setStashUrl(null);
+    setIsStashSlow(false);
+    setStashErrorMessage(null);
+    hasStashedAfterCompletionRef.current = false;
+    completionTrackedRef.current = false;
+    void test.startTest(POPULAR_WP_TEST_URL);
   };
 
   const testResult: InstantHomepageTestResult | null = useMemo(() => {
@@ -103,7 +114,11 @@ export default function InstantTestCard() {
   }
 
   useEffect(() => {
-    if (test.phase !== "completed" || !testResult || completionTrackedRef.current) {
+    if (
+      test.phase !== "completed" ||
+      !testResult ||
+      completionTrackedRef.current
+    ) {
       return;
     }
     completionTrackedRef.current = true;
@@ -220,6 +235,18 @@ export default function InstantTestCard() {
         >
           {test.phase === "running" ? t("analyzing") : t("analyze_btn")}
           <ArrowRightIcon className="size-4" aria-hidden="true" />
+        </Button>
+      </div>
+      <div className="mt-2 flex items-center gap-2 text-xs text-slate-400">
+        <span>Or</span>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={startPopularWordPressTest}
+          disabled={test.phase === "running"}
+          className="h-auto px-1.5 py-0 text-xs font-medium text-sky-300 hover:bg-transparent hover:text-sky-200"
+        >
+          try a popular WordPress site
         </Button>
       </div>
 
