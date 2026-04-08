@@ -15,7 +15,6 @@ import {
 
 export default function InstantTestCard() {
   const STASH_SLOW_THRESHOLD_MS = 4000;
-  const POPULAR_WP_TEST_URL = "https://wordpress.org";
   const t = useTranslations("analysis");
   const locale = useLocale();
   const router = useRouter();
@@ -54,17 +53,7 @@ export default function InstantTestCard() {
     setStashErrorMessage(null);
     hasStashedAfterCompletionRef.current = false;
     completionTrackedRef.current = false;
-    void test.startTest(normalized);
-  };
-
-  const startPopularWordPressTest = () => {
-    setUrl(POPULAR_WP_TEST_URL);
-    setStashUrl(null);
-    setIsStashSlow(false);
-    setStashErrorMessage(null);
-    hasStashedAfterCompletionRef.current = false;
-    completionTrackedRef.current = false;
-    void test.startTest(POPULAR_WP_TEST_URL);
+    void test.startTest(normalized, locale);
   };
 
   const testResult: InstantHomepageTestResult | null = useMemo(() => {
@@ -237,19 +226,6 @@ export default function InstantTestCard() {
           <ArrowRightIcon className="size-4" aria-hidden="true" />
         </Button>
       </div>
-      <div className="mt-2 flex items-center gap-2 text-xs text-slate-400">
-        <span>Or</span>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={startPopularWordPressTest}
-          disabled={test.phase === "running"}
-          className="h-auto px-1.5 py-0 text-xs font-medium text-sky-300 hover:bg-transparent hover:text-sky-200"
-        >
-          try a popular WordPress site
-        </Button>
-      </div>
-
       {(test.phase === "running" || test.phase === "completed") && (
         <div className="mt-4">
           <div className="h-2 rounded-full border border-emerald-400/20 bg-slate-800/80">

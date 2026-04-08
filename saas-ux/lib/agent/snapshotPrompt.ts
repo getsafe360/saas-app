@@ -18,6 +18,8 @@ export function buildGeminiSnapshotPrompt({
     "sections object with keys: seoGeo, accessibility, performance, security, content, ctaLine",
     "terminalLogs array of objects with: level(INFO|SUCCESS|WARNING|METRIC|ERROR), stage, text",
     "Rules:",
+    "- Write every user-facing text strictly in the target locale language.",
+    "- Never switch to the tested site's language unless it matches the target locale.",
     "- terminalLogs must be concise developer terminal messages.",
     "- Include at least 1 METRIC log with concrete value.",
     "- SEO/GEO section must never be empty.",

@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       'Content-Type': 'application/json',
       ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
     },
-    body: JSON.stringify({ url: input.url }),
+    body: JSON.stringify({ url: input.url, language: input.language }),
     cache: 'no-store',
   });
 
