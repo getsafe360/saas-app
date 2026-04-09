@@ -1,4 +1,4 @@
-export type CockpitEventType = 'status' | 'progress' | 'category' | 'repair' | 'savings' | 'summary' | 'greeting' | 'error' | 'debug';
+export type CockpitEventType = 'status' | 'progress' | 'category' | 'repair' | 'savings' | 'summary' | 'greeting' | 'error' | 'debug' | 'platform';
 
 export type CockpitStateValue =
   | 'idle'
@@ -73,6 +73,7 @@ export function mapBackendEvent(
 
     return {
       type: 'summary',
+      state: 'completed',
       message: String(payload.summary ?? payload.short_summary ?? 'Analysis complete'),
       greeting: typeof payload.greeting === 'string' ? payload.greeting : undefined,
       categories,
@@ -138,6 +139,13 @@ export function mapBackendEvent(
 
   if (normalizedType === 'greeting') {
     return { type: 'greeting', message: String(payload.greeting ?? payload.message ?? '') };
+  }
+
+  if (normalizedType === 'platform') {
+    return {
+      type: 'platform',
+      platform: payload.platform === 'wordpress' ? 'wordpress' : 'generic',
+    };
   }
 
   if (normalizedType === 'summary') {
