@@ -819,7 +819,7 @@ async function generateGeminiSnapshot(args: {
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.15,
-          maxOutputTokens: 1100,
+          maxOutputTokens: 2500,
           responseMimeType: "application/json",
           responseSchema: {
             type: "OBJECT",
@@ -827,7 +827,6 @@ async function generateGeminiSnapshot(args: {
               "greeting",
               "summaryText",
               "sections",
-              "terminalLogs",
             ],
             properties: {
               greeting: { type: "STRING" },
@@ -849,21 +848,6 @@ async function generateGeminiSnapshot(args: {
                   security: { type: "STRING" },
                   content: { type: "STRING" },
                   ctaLine: { type: "STRING" },
-                },
-              },
-              terminalLogs: {
-                type: "ARRAY",
-                items: {
-                  type: "OBJECT",
-                  required: ["level", "stage", "text"],
-                  properties: {
-                    level: {
-                      type: "STRING",
-                      enum: ["INFO", "SUCCESS", "WARNING", "METRIC", "ERROR"],
-                    },
-                    stage: { type: "STRING" },
-                    text: { type: "STRING" },
-                  },
                 },
               },
             },
