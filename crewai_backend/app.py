@@ -116,12 +116,25 @@ def stream_sparky_analysis(url: str) -> Iterator[str]:
     yield to_sse("message", {"text": "Fetching HTML..."})
     snapshot_raw = CREW.site_snapshot_task(url)
 
-    yield to_sse("message", {"text": "Analyzing accessibility..."})
-    yield to_sse("message", {"text": "Checking SEO..."})
-    yield to_sse("message", {"text": "Running security checks..."})
+    # Detect platform early so the frontend can render the WordPress card.
+    snapshot_json = CREW._extract_best_json(snapshot_raw)
+    platform = snapshot_json.get("platform", "generic")
+    yield to_sse("platform", {"platform": platform})
+
+    # Stream categories one by one so cards animate in progressively.
+    categories = CREW._normalize_categories(snapshot_json.get("categories", []))
+    for category in categories:
+        cat_id = category.get("id")
+        if not cat_id:
+            continue
+        yield to_sse("category", {
+            "category": cat_id,
+            "issues": category.get("issues", []),
+            "severity": category.get("severity", "medium"),
+        })
+        yield to_sse("message", {"text": f"Analyzing {cat_id}..."})
 
     summary_raw = CREW.sparky_summary(snapshot_raw)
-    snapshot_json = CREW._extract_best_json(snapshot_raw)
     summary_json = CREW._extract_best_json(summary_raw)
 
     greeting = (
@@ -428,8 +441,10 @@ def stream_agent():
     def event_stream():
         try:
             yield from stream_sparky_analysis(validated_url)
+            yield to_sse("done", {"ok": True})
         except Exception as exc:  # noqa: BLE001
             yield to_sse("error", {"message": str(exc)})
+            yield to_sse("done", {"ok": False})
 
     response = Response(stream_with_context(event_stream()), mimetype="text/event-stream")
     response.headers["Cache-Control"] = "no-cache"
