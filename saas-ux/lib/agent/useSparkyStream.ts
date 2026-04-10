@@ -20,6 +20,9 @@ export type SparkySnapshot = {
   text: string;
   platform: "wordpress" | "generic";
   greeting?: string;
+  /** Server-provided count of high-impact issues. When present, used directly
+   *  in the UI instead of any client-side inference. */
+  highImpactCount?: number;
   sections: {
     seoGeo: string;
     accessibility: string;

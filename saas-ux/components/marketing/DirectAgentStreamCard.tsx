@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ComponentType, useEffect, useMemo, useRef, useState } from "react";
 import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -67,42 +67,50 @@ export default function DirectAgentStreamCard() {
     startStream();
   }, [activeUrl, startStream]);
 
-  const sections = useMemo(() => {
+  type SectionItem = {
+    id: string;
+    label: string;
+    text: string;
+    icon: ComponentType<{ size?: number; className?: string }>;
+    color: string;
+  };
+
+  const sections = useMemo((): SectionItem[] => {
     if (!stream.snapshot) return [];
-    const baseSections = [
+    const baseSections: SectionItem[] = [
       {
         id: "accessibility",
         label: "Accessibility",
         text: stream.snapshot.sections.accessibility,
-        icon: AccessibilityIcon,
+        icon: AccessibilityIcon as SectionItem["icon"],
         color: "var(--category-accessibility)",
       },
       {
         id: "performance",
         label: "Performance",
         text: stream.snapshot.sections.performance,
-        icon: GaugeIcon,
+        icon: GaugeIcon as SectionItem["icon"],
         color: "var(--category-performance)",
       },
       {
         id: "seo",
         label: "SEO & GEO",
         text: stream.snapshot.sections.seoGeo,
-        icon: SearchIcon,
+        icon: SearchIcon as SectionItem["icon"],
         color: "var(--category-seo)",
       },
       {
         id: "content",
         label: "Content",
         text: stream.snapshot.sections.content,
-        icon: FileTextIcon,
+        icon: FileTextIcon as SectionItem["icon"],
         color: "var(--category-content)",
       },
       {
         id: "security",
         label: "Security",
         text: stream.snapshot.sections.security,
-        icon: ShieldCheckIcon,
+        icon: ShieldCheckIcon as SectionItem["icon"],
         color: "var(--category-security)",
       },
     ];
@@ -118,13 +126,12 @@ export default function DirectAgentStreamCard() {
     return baseSections;
   }, [stream.snapshot, t]);
 
-  const highImpactCount = useMemo(
-    () =>
-      sections.filter((s) =>
-        /missing|no signal|risk|issue|slow|weak/i.test(s.text),
-      ).length,
-    [sections],
-  );
+  // Prefer the server-provided count (locale-independent, accurate).
+  // Fall back to the number of non-WordPress sections, which are always
+  // actionable content areas regardless of locale.
+  const highImpactCount =
+    stream.snapshot?.highImpactCount ??
+    sections.filter((s) => s.id !== "wordpress").length;
 
   useEffect(() => {
     if (!stream.snapshot || stashedRef.current) return;
