@@ -233,13 +233,10 @@ export default function DirectAgentStreamCard() {
                 {stream.messages.map((message) => (
                   <div
                     key={message.id}
-                    className="grid grid-cols-[66px_14px_1fr] gap-2 px-1 py-0.5 text-left"
+                    className="grid grid-cols-[66px_1fr] gap-2 px-1 py-0.5 text-left"
                   >
                     <span className="text-slate-700">
                       [{message.timestamp ?? "--:--:--"}]
-                    </span>
-                    <span className="pt-px font-semibold text-emerald-400">
-                      {message.level === "SUCCESS" ? "✓" : ""}
                     </span>
                     <span
                       className={
@@ -248,6 +245,9 @@ export default function DirectAgentStreamCard() {
                           : "text-slate-400"
                       }
                     >
+                      {message.level === "SUCCESS" && (
+                        <span className="mr-1 font-semibold">✓</span>
+                      )}
                       {message.text}
                     </span>
                   </div>
@@ -258,19 +258,16 @@ export default function DirectAgentStreamCard() {
               {stream.snapshot && sections.length > 0 && (
                 <div className="mt-1 font-mono text-sm">
                   {/* Static terminal lines */}
-                  <div className="grid grid-cols-[66px_14px_1fr] gap-2 px-1 py-0.5">
+                  <div className="grid grid-cols-[66px_1fr] gap-2 px-1 py-0.5">
                     <span className="text-slate-700">[{lastTimestamp}]</span>
-                    <span />
                     <span className="text-slate-400">
                       {t("engine_preparing_snapshot")}
                     </span>
                   </div>
-                  <div className="grid grid-cols-[66px_14px_1fr] gap-2 px-1 py-0.5">
+                  <div className="grid grid-cols-[66px_1fr] gap-2 px-1 py-0.5">
                     <span className="text-slate-700">[{lastTimestamp}]</span>
-                    <span className="pt-px font-semibold text-emerald-400">
-                      ✓
-                    </span>
                     <span className="text-emerald-300">
+                      <span className="mr-1 font-semibold">✓</span>
                       {t("engine_snapshot_ready", { domain })}
                     </span>
                   </div>
@@ -318,8 +315,8 @@ export default function DirectAgentStreamCard() {
                 return (
                   <div
                     key={section.id}
-                    style={{ borderLeftColor: section.color }}
-                    className={`group relative overflow-hidden rounded-xl border border-white/10 border-l-2 p-4 transition-all hover:border-white/20 ${
+                    style={{ borderColor: section.color }}
+                    className={`group relative overflow-hidden rounded-xl border p-4 transition-all ${
                       isWordPress
                         ? "bg-gradient-to-br from-[#090d14] to-[#21759b]/10"
                         : "bg-[#090d14] hover:bg-[#0b1020]"
@@ -341,8 +338,8 @@ export default function DirectAgentStreamCard() {
                         </span>
                       </div>
                       <div className="flex gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-white/15" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-white/15" />
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: section.color }} />
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: section.color }} />
                       </div>
                     </div>
                     <p className="text-sm leading-relaxed text-slate-300">
@@ -362,7 +359,7 @@ export default function DirectAgentStreamCard() {
 
           {/* CTA */}
           {stream.snapshot && (
-            <div className="rounded-lg border border-white/10 bg-[#090d14] p-5">
+            <div className="rounded-lg border border-white/10 bg-[#090d14] p-5 text-center">
               <p className="text-sm leading-relaxed text-slate-200">
                 {t("cta_full_report")}
               </p>
@@ -376,7 +373,7 @@ export default function DirectAgentStreamCard() {
               )}
 
               {signupRedirect && (
-                <div className="mt-4">
+                <div className="mt-4 flex flex-col items-center gap-2">
                   <SignedOut>
                     <SignUpButton mode="modal">
                       <Button className="inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-base font-semibold ring ring-sky-600/30 bg-sky-50 text-sky-700 transition hover:bg-sky-100 hover:shadow-none dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/30 dark:hover:bg-sky-400/20">
@@ -394,7 +391,7 @@ export default function DirectAgentStreamCard() {
                       <ArrowRightIcon className="size-4" aria-hidden="true" />
                     </Button>
                   </SignedIn>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="text-xs text-slate-500">
                     {t("cta_subtext")}
                   </p>
                 </div>
