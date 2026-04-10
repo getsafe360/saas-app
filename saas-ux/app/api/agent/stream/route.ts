@@ -80,11 +80,9 @@ const LLM_TIMEOUT_MS = 20_000;
 const CACHE_TTL_SECONDS = 60 * 60;
 const GEMINI_MODEL =
   process.env.GEMINI_SNAPSHOT_MODEL || "gemini-3-flash-preview";
-const DEFAULT_GREETING_LINE_1 = "Hi, I'm Sparky, your AI-assistant.";
-
 function defaultGreeting(url: string): string {
   const host = new URL(url).hostname;
-  return `${DEFAULT_GREETING_LINE_1} Here's your quick snapshot for ${host}:`;
+  return `Here's your quick snapshot for ${host}:`;
 }
 
 const memoryRateLimit = new Map<string, { count: number; resetAt: number }>();
@@ -1007,17 +1005,16 @@ export async function GET(req: NextRequest) {
           "Boot",
           defaultGreeting(normalizedUrl),
         );
-        log("INFO", "Fetch", "Fetching HTML...");
+        log("INFO", "Fetch", "Fetching HTML…");
 
         const fetchSnapshot = await limitedHtmlFetch(normalizedUrl);
         const facts = buildFacts(normalizedUrl, fetchSnapshot, null);
         log("SUCCESS", "Fetch", "HTML fetched successfully.");
         log(
-          "METRIC",
+          "SUCCESS",
           "Fetch",
-          `Status ${fetchSnapshot.status}, payload ${(fetchSnapshot.bytes / 1024).toFixed(1)}KB, fetch ${fetchSnapshot.fetchMs}ms`,
+          `fetched in ${fetchSnapshot.fetchMs}ms`,
         );
-        log("INFO", "AI", "Preparing your site snapshot...");
 
         const llmController = new AbortController();
         const llmTimeout = setTimeout(
