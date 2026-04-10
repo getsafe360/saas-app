@@ -55,7 +55,7 @@ export function useSparkyStream(url: string, locale: string) {
     if (!url) return;
 
     close();
-    setMessages([{ id: crypto.randomUUID(), role: "system", text: "Connecting to Sparky stream...", level: "INFO", stage: "Boot", timestamp: nowTime() }]);
+    setMessages([{ id: crypto.randomUUID(), role: "system", text: "Connecting to analysis engine…", level: "INFO", stage: "Boot", timestamp: nowTime() }]);
     setError(undefined);
     setSnapshot(null);
     setIsStreaming(true);
