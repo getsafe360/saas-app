@@ -736,20 +736,20 @@ function fallbackSnapshot(
   parseError?: string,
 ): GeminiSnapshotResult {
   const host = new URL(url).hostname;
-  const fallbackSections: SnapshotSections = {
-    seoGeo:
-      "Basic indexability checks completed; detailed SEO/GEO signals available in full report.",
-    accessibility:
-      "Initial accessibility sweep completed; inspect full report for issue-level WCAG guidance.",
-    performance:
-      "HTML payload and rendering signals captured; full report includes optimization priorities.",
-    security:
-      "Transport and baseline security heuristics checked; review full report for remediation steps.",
-    content:
-      "Content structure sampled for quality and clarity; expand in full report for targeted actions.",
-    ctaLine:
-      "Open the full report to unlock detailed checklist and automated fixes.",
-  };
+const fallbackSections: SnapshotSections = {
+  seoGeo:
+    "Core SEO signals detected. Structural improvements can increase visibility and ranking performance.",
+  accessibility:
+    "Basic accessibility foundations present. Addressing usability gaps improves compliance and user experience.",
+  performance:
+    "Initial performance signals captured. Optimization opportunities exist to improve speed and rendering efficiency.",
+  security:
+    "Baseline security checks completed. Strengthening protections reduces exposure to common web risks.",
+  content:
+    "Content structure analyzed. Refinements can improve clarity, engagement, and conversion potential.",
+  ctaLine:
+    "Unlock the full report to identify, prioritize, and fix issues instantly.",
+};
   return {
     greeting: defaultGreeting(url),
     summaryText: `Quick snapshot for ${host}: Core checks completed. Some response formatting was incomplete, so Sparky returned a safe fallback. Continue to full report for detailed evidence and one-click fixes.`,

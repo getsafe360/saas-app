@@ -1,6 +1,12 @@
 "use client";
 
-import { type ComponentType, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ComponentType,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -233,11 +239,8 @@ export default function DirectAgentStreamCard() {
                 {stream.messages.map((message) => (
                   <div
                     key={message.id}
-                    className="grid grid-cols-[66px_14px_1fr] gap-2 px-1 py-0.5 text-left"
+                    className="grid grid-cols-[14px_1fr] gap-2 px-1 py-0.5 text-left"
                   >
-                    <span className="text-slate-700">
-                      [{message.timestamp ?? "--:--:--"}]
-                    </span>
                     <span className="pt-px font-semibold text-emerald-400">
                       {message.level === "SUCCESS" ? "✓" : ""}
                     </span>
@@ -299,7 +302,9 @@ export default function DirectAgentStreamCard() {
                         </li>
                       ))}
                     </ol>
-                    <p className="text-slate-400">{t("engine_preview_below")}</p>
+                    <p className="text-slate-400">
+                      {t("engine_preview_below")}
+                    </p>
                     <p className="text-slate-500 text-xs">
                       {t("engine_full_analysis_note")}
                     </p>
