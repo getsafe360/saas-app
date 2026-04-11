@@ -249,9 +249,6 @@ export default function DirectAgentStreamCard() {
                           : "text-slate-400"
                       }
                     >
-                      {message.level === "SUCCESS" && (
-                        <span className="mr-1 font-semibold">✓</span>
-                      )}
                       {message.text}
                     </span>
                   </div>
@@ -265,7 +262,6 @@ export default function DirectAgentStreamCard() {
                   <div className="grid grid-cols-[14px_1fr] gap-2 px-1 py-0.5 text-left">
                     <span className="pt-px font-semibold text-emerald-400">✓</span>
                     <span className="text-emerald-300">
-                      <span className="mr-1 font-semibold">✓</span>
                       {t("engine_snapshot_ready", { domain })}
                     </span>
                   </div>
