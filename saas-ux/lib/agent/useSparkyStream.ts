@@ -10,7 +10,6 @@ export type SparkyMessage = {
   role: "system" | "sparky";
   level?: SparkyLogLevel;
   stage?: string;
-  timestamp?: string;
 };
 
 export type SparkySnapshot = {
@@ -33,10 +32,6 @@ export type SparkySnapshot = {
   };
 };
 
-function nowTime(): string {
-  return new Date().toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
-}
-
 export function useSparkyStream(url: string, locale: string) {
   const [messages, setMessages] = useState<SparkyMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -58,7 +53,7 @@ export function useSparkyStream(url: string, locale: string) {
     if (!url) return;
 
     close();
-    setMessages([{ id: crypto.randomUUID(), role: "system", text: "Connecting to analysis engine…", level: "INFO", stage: "Boot", timestamp: nowTime() }]);
+    setMessages([{ id: crypto.randomUUID(), role: "system", text: "Initializing analysis engine…", level: "INFO", stage: "Boot" }]);
     setError(undefined);
     setSnapshot(null);
     setIsStreaming(true);
@@ -80,7 +75,6 @@ export function useSparkyStream(url: string, locale: string) {
           text?: string;
           level?: SparkyLogLevel;
           stage?: string;
-          timestamp?: string;
         };
 
         if (!payload.text) return;
@@ -90,7 +84,6 @@ export function useSparkyStream(url: string, locale: string) {
           text: payload.text,
           level: payload.level ?? "INFO",
           stage: payload.stage ?? "Stream",
-          timestamp: payload.timestamp ?? nowTime(),
         });
       } catch {
         // Ignore malformed payloads.

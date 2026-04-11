@@ -407,10 +407,6 @@ async function hashKey(input: string): Promise<string> {
     .join("");
 }
 
-function nowStamp(): string {
-  return new Date().toISOString().substring(11, 19);
-}
-
 async function trackFallbackStats(stats: SectionFallbackStats): Promise<void> {
   await kvIncr("sparky:obs:requests_total", 1);
   if (!stats.usedAnyFallback) return;
@@ -964,13 +960,11 @@ export async function GET(req: NextRequest) {
           level: "INFO",
           stage: "Cache",
           text: "Cache hit. Replaying recent snapshot...",
-          timestamp: nowStamp(),
         });
         emit("message", {
           level: "SUCCESS",
           stage: "Cache",
           text: cached.greeting || "Snapshot restored.",
-          timestamp: nowStamp(),
         });
         emit("snapshot", cached);
         emit("done", { ok: true, cached: true });
@@ -996,25 +990,19 @@ export async function GET(req: NextRequest) {
         stage: string,
         text: string,
       ) => {
-        emit("message", { level, stage, text, timestamp: nowStamp() });
+        emit("message", { level, stage, text });
       };
 
       try {
-        log(
-          "INFO",
-          "Boot",
-          defaultGreeting(normalizedUrl),
-        );
+        const host = new URL(normalizedUrl).hostname;
+        log("INFO", "Boot", `Analyzing ${host}…`);
         log("INFO", "Fetch", "Fetching HTML…");
 
         const fetchSnapshot = await limitedHtmlFetch(normalizedUrl);
         const facts = buildFacts(normalizedUrl, fetchSnapshot, null);
-        log("SUCCESS", "Fetch", "HTML fetched successfully.");
-        log(
-          "SUCCESS",
-          "Fetch",
-          `fetched in ${fetchSnapshot.fetchMs}ms`,
-        );
+        log("SUCCESS", "Fetch", `HTML fetched in ${fetchSnapshot.fetchMs}ms`);
+        log("INFO", "Signals", "Extracting key signals…");
+        log("INFO", "Analysis", "Running multi-layer analysis…");
 
         const llmController = new AbortController();
         const llmTimeout = setTimeout(
@@ -1030,6 +1018,9 @@ export async function GET(req: NextRequest) {
         });
 
         clearTimeout(llmTimeout);
+
+        log("SUCCESS", "Analysis", "Analysis complete");
+        log("INFO", "Snapshot", "Generating snapshot…");
 
         for (const entry of generated.terminalLogs) {
           log(entry.level, entry.stage, entry.text);

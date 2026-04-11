@@ -196,8 +196,6 @@ export default function DirectAgentStreamCard() {
     : null;
 
   const domain = activeUrl ? hostnameFromUrl(activeUrl) : "your website";
-  const lastTimestamp =
-    stream.messages[stream.messages.length - 1]?.timestamp ?? "--:--:--";
 
   return (
     <section className="mx-auto max-w-5xl rounded-2xl border border-cyan-400/30 bg-[#070c17] p-5 shadow-[0_0_40px_rgba(14,165,233,0.15)]">
@@ -263,15 +261,9 @@ export default function DirectAgentStreamCard() {
               {/* Snapshot summary — rendered once stream is complete */}
               {stream.snapshot && sections.length > 0 && (
                 <div className="mt-1 font-mono text-sm">
-                  {/* Static terminal lines */}
-                  <div className="grid grid-cols-[66px_1fr] gap-2 px-1 py-0.5">
-                    <span className="text-slate-700">[{lastTimestamp}]</span>
-                    <span className="text-slate-400">
-                      {t("engine_preparing_snapshot")}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-[66px_1fr] gap-2 px-1 py-0.5">
-                    <span className="text-slate-700">[{lastTimestamp}]</span>
+                  {/* Static terminal line — snapshot complete */}
+                  <div className="grid grid-cols-[14px_1fr] gap-2 px-1 py-0.5 text-left">
+                    <span className="pt-px font-semibold text-emerald-400">✓</span>
                     <span className="text-emerald-300">
                       <span className="mr-1 font-semibold">✓</span>
                       {t("engine_snapshot_ready", { domain })}

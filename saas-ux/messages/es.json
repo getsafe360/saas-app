@@ -202,7 +202,7 @@
     "sparky_intro_line2": "Here's your quick snapshot for {domain}:",
     "wordpress_card_text": "Señales de WordPress detectadas. Las verificaciones de riesgo de plugins y temas, el endurecimiento del admin y la corrección guiada están disponibles en tu informe completo.",
     "engine_preparing_snapshot": "Preparando el snapshot de tu sitio…",
-    "engine_snapshot_ready": "El snapshot de tu sitio para {domain} está listo.",
+    "engine_snapshot_ready": "Snapshot listo para {domain}.",
     "engine_identified": "Hemos identificado {count} oportunidades de mejora, incluyendo {highImpact} problemas de alto impacto en tu sitio:",
     "engine_area_1": "Rendimiento y eficiencia de carga",
     "engine_area_2": "Visibilidad SEO y señales de indexación",
