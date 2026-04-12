@@ -132,13 +132,6 @@ export default function DirectAgentStreamCard() {
     return baseSections;
   }, [stream.snapshot, t]);
 
-  // Prefer the server-provided count (locale-independent, accurate).
-  // Fall back to the number of non-WordPress sections, which are always
-  // actionable content areas regardless of locale.
-  const highImpactCount =
-    stream.snapshot?.highImpactCount ??
-    sections.filter((s) => s.id !== "wordpress").length;
-
   useEffect(() => {
     if (!stream.snapshot || stashedRef.current) return;
     const snapshot = stream.snapshot;
@@ -266,37 +259,19 @@ export default function DirectAgentStreamCard() {
                     </span>
                   </div>
 
-                  {/* Narrative summary */}
-                  <div className="mt-4 border-t border-white/5 pt-4 px-1 space-y-3 text-slate-300">
-                    <p className="leading-relaxed">
-                      {t("engine_identified", {
-                        count: sections.length,
-                        highImpact: highImpactCount,
-                      })}
-                    </p>
-                    <ol className="ml-1 space-y-1 text-slate-400">
-                      {[
-                        t("engine_area_1"),
-                        t("engine_area_2"),
-                        t("engine_area_3"),
-                        t("engine_area_4"),
-                        t("engine_area_5"),
-                      ].map((area, i) => (
-                        <li key={i} className="flex gap-2">
-                          <span className="text-slate-600 tabular-nums">
-                            {i + 1}.
-                          </span>
-                          <span>{area}</span>
-                        </li>
+                  {/* AI-generated executive summary */}
+                  {stream.snapshot.text && (
+                    <div className="mt-4 border-t border-white/5 pt-4 px-1 text-slate-300">
+                      {stream.snapshot.text.split("\n\n").map((para, i) => (
+                        <p
+                          key={i}
+                          className={`leading-relaxed${i > 0 ? " mt-3" : ""}`}
+                        >
+                          {para}
+                        </p>
                       ))}
-                    </ol>
-                    <p className="text-slate-400">
-                      {t("engine_preview_below")}
-                    </p>
-                    <p className="text-slate-500 text-xs">
-                      {t("engine_full_analysis_note")}
-                    </p>
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -344,9 +319,13 @@ export default function DirectAgentStreamCard() {
                         />
                       </div>
                     </div>
-                    <p className="text-sm leading-relaxed text-slate-300">
-                      {section.text}
-                    </p>
+                    <div className="space-y-2">
+                      {section.text.split("\n\n").map((para, i) => (
+                        <p key={i} className="text-sm leading-relaxed text-slate-300">
+                          {para}
+                        </p>
+                      ))}
+                    </div>
                     <div
                       className="absolute bottom-0 left-0 h-px w-full"
                       style={{
@@ -363,7 +342,7 @@ export default function DirectAgentStreamCard() {
           {stream.snapshot && (
             <div className="rounded-lg border border-white/10 bg-[#090d14] p-5 text-center">
               <p className="text-sm leading-relaxed text-slate-200">
-                {t("cta_full_report")}
+                {stream.snapshot.sections.ctaLine || t("cta_full_report")}
               </p>
               {isStashing && (
                 <p className="mt-2 text-sm text-slate-400">

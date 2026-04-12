@@ -1047,6 +1047,13 @@ export async function GET(req: NextRequest) {
         };
 
         await kvSet(cacheKey, JSON.stringify(payload), CACHE_TTL_SECONDS);
+        if (payload.greeting) {
+          emit("message", {
+            level: "SUCCESS",
+            stage: "Analysis",
+            text: payload.greeting,
+          });
+        }
         emit("snapshot", payload);
         emit("done", { ok: true, cached: false });
         controller.close();
