@@ -195,7 +195,7 @@ async function assertPublicDestination(urlString: string): Promise<void> {
 async function limitedHtmlFetch(url: string): Promise<FetchSnapshot> {
   const controller = new AbortController();
   const timeout = setTimeout(
-    () => controller.abort("timeout"),
+    () => controller.abort(new Error(`HTML fetch timed out after ${FETCH_TIMEOUT_MS}ms`)),
     FETCH_TIMEOUT_MS,
   );
   const started = Date.now();
@@ -835,57 +835,65 @@ async function generateGeminiSnapshot(args: {
     isWordPress: args.isWordPress,
   });
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`,
-    {
-      method: "POST",
-      signal: args.signal,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.15,
-          maxOutputTokens: 6000,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "OBJECT",
-            required: [
-              "greeting",
-              "summaryText",
-              "sections",
-              ...(args.isWordPress ? ["wordpressSection"] : []),
-            ],
-            properties: {
-              greeting: { type: "STRING" },
-              summaryText: { type: "STRING" },
-              sections: {
-                type: "OBJECT",
-                required: [
-                  "seoGeo",
-                  "accessibility",
-                  "performance",
-                  "security",
-                  "content",
-                  "ctaLine",
-                ],
-                properties: {
-                  seoGeo: { type: "STRING" },
-                  accessibility: { type: "STRING" },
-                  performance: { type: "STRING" },
-                  security: { type: "STRING" },
-                  content: { type: "STRING" },
-                  ctaLine: { type: "STRING" },
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: "POST",
+        signal: args.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.15,
+            maxOutputTokens: 6000,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              required: [
+                "greeting",
+                "summaryText",
+                "sections",
+                ...(args.isWordPress ? ["wordpressSection"] : []),
+              ],
+              properties: {
+                greeting: { type: "STRING" },
+                summaryText: { type: "STRING" },
+                sections: {
+                  type: "OBJECT",
+                  required: [
+                    "seoGeo",
+                    "accessibility",
+                    "performance",
+                    "security",
+                    "content",
+                    "ctaLine",
+                  ],
+                  properties: {
+                    seoGeo: { type: "STRING" },
+                    accessibility: { type: "STRING" },
+                    performance: { type: "STRING" },
+                    security: { type: "STRING" },
+                    content: { type: "STRING" },
+                    ctaLine: { type: "STRING" },
+                  },
                 },
+                ...(args.isWordPress
+                  ? { wordpressSection: { type: "STRING" } }
+                  : {}),
               },
-              ...(args.isWordPress
-                ? { wordpressSection: { type: "STRING" } }
-                : {}),
             },
           },
-        },
-      }),
-    },
-  );
+        }),
+      },
+    );
+  } catch (fetchErr) {
+    if (fetchErr instanceof Error) throw fetchErr;
+    throw new Error(
+      `Gemini fetch failed: ${typeof fetchErr === "string" ? fetchErr : JSON.stringify(fetchErr)}`,
+    );
+  }
 
   if (!response.ok) {
     const text = await response.text();
@@ -1051,10 +1059,11 @@ export async function GET(req: NextRequest) {
 
         const llmController = new AbortController();
         const llmTimeout = setTimeout(
-          () => llmController.abort("timeout"),
+          () => llmController.abort(new Error(`LLM timed out after ${LLM_TIMEOUT_MS / 1000}s`)),
           LLM_TIMEOUT_MS,
         );
 
+        log("INFO", "LLM", `Requesting AI analysis (${GEMINI_MODEL})…`);
         const generated = await generateGeminiSnapshot({
           url: normalizedUrl,
           locale,
@@ -1106,8 +1115,16 @@ export async function GET(req: NextRequest) {
         controller.close();
       } catch (error) {
         const message =
-          (error as Error).message || "Failed to generate snapshot.";
+          error instanceof Error
+            ? error.message || error.name || "LLM error (empty message)"
+            : typeof error === "string"
+            ? error
+            : "Failed to generate snapshot.";
         log("ERROR", "Pipeline", message);
+        if (error instanceof Error && error.stack) {
+          const firstFrame = error.stack.split("\n").slice(1, 3).join(" | ").trim();
+          if (firstFrame) log("ERROR", "Pipeline", firstFrame);
+        }
         emit("error", { message });
         emit("done", { ok: false });
         controller.close();
