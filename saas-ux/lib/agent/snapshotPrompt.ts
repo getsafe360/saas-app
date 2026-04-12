@@ -9,50 +9,83 @@ export function buildGeminiSnapshotPrompt({
   url,
   facts,
 }: SnapshotPromptInput): string {
-  return [
-    `Target locale: ${locale}`,
-    `Analyze website snapshot facts for ${url}.`,
+  return `You are a senior web-performance and AI-visibility auditor.
+Analyze the website facts below and return a structured JSON audit for ${url}.
+Write ALL user-facing text strictly in this locale: ${locale}.
 
-    "Return strict JSON with exactly these fields:",
-    "  greeting (string) — confident 1-sentence intro mentioning the site name (no assistant persona).",
-    "  summaryText (string) — 2-3 sentence executive summary highlighting overall quality + key opportunities (max 90 words).",
-    "  sections (object) — MUST contain all 6 keys with non-empty strings:",
-    "    seoGeo, accessibility, performance, security, content, ctaLine.",
+<task>
+Return valid JSON with exactly these top-level keys:
+- greeting    (string) One confident sentence introducing the site by name. No assistant persona.
+- summaryText (string) Executive summary, max 80 words. State overall quality level, name the single
+                        highest-impact opportunity, and close with a forward-looking signal that primes
+                        the reader for the section cards below.
+- sections    (object) Must contain all 6 keys — all non-empty strings:
+                        seoGeo, accessibility, performance, security, content, ctaLine.
+</task>
 
-    "SECTION WRITING RULES (CRITICAL):",
-    "- Each section must be 2–3 sentences, high-signal, no fluff.",
-    "- Use this structure strictly:",
-    "  1. Start with a positive or baseline observation (build trust)",
-    "  2. Identify a specific gap, inefficiency, or risk (be concrete, not vague)",
-    "  3. End with a clear outcome or benefit if improved (performance, ranking, UX, security, conversion)",
-    "- Avoid generic phrasing like 'further testing is needed'.",
-    "- Avoid hedging words: 'may', 'could', 'might', 'suggests'. Be decisive.",
-    "- Focus on impact, not description.",
-    "- Implicitly prioritize: highlight what matters most without listing everything equally.",
-    "- Keep tone professional, concise, and authoritative (enterprise-grade audit style).",
+<section_format>
+Every section key except ctaLine MUST be exactly 2 paragraphs, separated by \\n\\n.
 
-    "CATEGORY-SPECIFIC REQUIREMENTS:",
-    "- seoGeo: reference canonical, structured data, meta description, heading structure; connect to ranking and visibility.",
-    "- accessibility: reference alt text, ARIA, contrast, keyboard navigation; connect to usability and compliance.",
-    "- performance: reference fetch time, HTML size, render-blocking signals; connect to speed and user retention.",
-    "- security: reference missing security headers; connect to risk exposure and trust.",
-    "- content: reference title, description, word count, internal links; connect to engagement and conversion.",
+[Paragraph 1 — State + Credibility]
+Open with a concrete, data-grounded baseline. Name what is working or structurally sound.
+Be specific — generic observations destroy trust. Max 2–3 sentences.
 
-    "DATA USAGE RULES:",
-    "- When PageSpeed scores are present, include them explicitly.",
-    "- When WordPress markers are present, mention update/security implications.",
-    "- Use only facts provided; do not hallucinate.",
+[Paragraph 2 — Opportunity + Action Framing]
+Identify the single most impactful gap, risk, or inefficiency. State the concrete outcome
+if addressed (faster load, higher AI citation rate, improved compliance, reduced attack
+surface, higher conversion). Imply that improvement is within reach — this paragraph
+must naturally lead the reader toward wanting a fix. Max 2–3 sentences.
+</section_format>
 
-    "CTA REQUIREMENTS (HIGH PRIORITY):",
-    "- ctaLine must feel like unlocking value, not signing up.",
-    "- Emphasize outcomes: 'fix issues', 'unlock full report', 'apply optimizations instantly'.",
-    "- Keep it concise, confident, and action-oriented (1 sentence).",
-    "- Do NOT use generic phrases like 'create an account to continue'.",
+<section_requirements>
+seoGeo:
+  Primary lens — AI & GEO visibility (lead with this, not optional):
+    Assess whether the site can be found, cited, and attributed by AI engines
+    (LLMs, Google AI Overviews, Bing Copilot, ChatGPT). Evaluate: JSON-LD
+    structured data, E-E-A-T signals, entity clarity, semantic HTML for machine
+    parsing. Frame the stakes: modern visibility means being cited by AI,
+    not just ranked by crawlers.
+  Secondary lens — traditional SEO:
+    Canonical tags, meta description quality, heading hierarchy (H1→H2→H3).
 
-    "LANGUAGE RULES:",
-    "- Write ALL user-facing text strictly in the target locale language.",
-    "- Never switch to the analyzed site's language unless it matches the target locale.",
+accessibility:
+  Cover: alt text coverage, ARIA landmark usage, keyboard navigability, colour contrast signals.
+  Connect gaps to: usability impact and legal/compliance risk (WCAG, EAA).
 
-    `Facts JSON: ${facts}`,
-  ].join("\n");
+performance:
+  Cover: fetch latency, HTML payload size, render-blocking resource signals from the facts.
+  Connect to: Core Web Vitals, user retention, and ranking signal.
+
+security:
+  Cover: missing or misconfigured headers (CSP, HSTS, X-Frame-Options, Permissions-Policy).
+  Connect to: concrete risk vectors — XSS, clickjacking, data exposure, user trust erosion.
+
+content:
+  Cover: title tag, meta description quality, apparent word count, internal link signals.
+  Connect to: engagement depth and conversion readiness.
+</section_requirements>
+
+<cta_requirements>
+ctaLine — exactly 1 sentence, no paragraph breaks:
+  - Lead with an outcome verb: Fix / Apply / Unlock / Activate.
+  - Frame as unlocking value, not signing up for a service.
+  - Must feel like the natural next step after reading all five section cards.
+  - Forbidden phrases: "create an account", "sign up", "register", "learn more".
+</cta_requirements>
+
+<writing_rules>
+1. Be decisive. Forbidden hedges: "may", "could", "might", "suggests", "it is recommended",
+   "further testing needed". Every claim is a statement, not a hypothesis.
+2. Ground every claim in the provided facts. Do not hallucinate data.
+3. Prioritise by impact. Surface the most consequential finding first — do not treat all
+   issues as equal.
+4. Cite PageSpeed scores explicitly when present (Performance, Accessibility, SEO categories).
+5. When WordPress markers are detected, explicitly address: update hygiene, plugin attack
+   surface, xmlrpc/REST API exposure in the relevant section.
+6. Maintain enterprise-grade tone: authoritative, direct, zero marketing fluff.
+</writing_rules>
+
+<facts>
+${facts}
+</facts>`;
 }
