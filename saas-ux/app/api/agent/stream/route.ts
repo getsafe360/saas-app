@@ -770,6 +770,24 @@ const SECTION_FALLBACKS: SnapshotSections = {
     "Unlock the full report to identify, prioritize, and fix issues instantly.",
 };
 
+/**
+ * Fallbacks for the partial-parse path (buildSectionsFromParsed).
+ * Uses explicit "no signal" copy so that:
+ *   1. Users are not misled into thinking analysis succeeded for absent sections.
+ *   2. The stash heuristic in DirectAgentStreamCard.tsx (/missing|no signal|…/i)
+ *      can correctly assign "medium" severity to sections that were genuinely missing.
+ * Do NOT replace this with SECTION_FALLBACKS — optimistic copy there overstates
+ * confidence and silently breaks downstream severity tagging.
+ */
+const MISSING_SIGNAL_FALLBACKS: SnapshotSections = {
+  seoGeo: "No SEO signal.",
+  accessibility: "No accessibility signal.",
+  performance: "No performance signal.",
+  security: "No security signal.",
+  content: "No content signal.",
+  ctaLine: "Want the full actionable report and automated fixes?",
+};
+
 function fallbackSnapshot(
   url: string,
   parseError?: string,
@@ -965,7 +983,7 @@ async function generateGeminiSnapshot(args: {
     return fallbackSnapshot(args.url, "json-parse-failed");
   }
 
-  const sectionFallbacks = SECTION_FALLBACKS;
+  const sectionFallbacks = MISSING_SIGNAL_FALLBACKS;
 
   const strictSections: SnapshotSections = {
     seoGeo: pickSectionValue(parsed, "seoGeo", ""),
