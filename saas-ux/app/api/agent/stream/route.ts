@@ -755,12 +755,7 @@ function normalizeLogs(logs: unknown): TerminalLog[] {
     .filter((entry): entry is TerminalLog => Boolean(entry));
 }
 
-function fallbackSnapshot(
-  url: string,
-  parseError?: string,
-): GeminiSnapshotResult {
-  const host = new URL(url).hostname;
-const fallbackSections: SnapshotSections = {
+const SECTION_FALLBACKS: SnapshotSections = {
   seoGeo:
     "Core SEO signals detected. Structural improvements can increase visibility and ranking performance.",
   accessibility:
@@ -774,10 +769,16 @@ const fallbackSections: SnapshotSections = {
   ctaLine:
     "Unlock the full report to identify, prioritize, and fix issues instantly.",
 };
+
+function fallbackSnapshot(
+  url: string,
+  parseError?: string,
+): GeminiSnapshotResult {
+  const host = new URL(url).hostname;
   return {
     greeting: defaultGreeting(url),
     summaryText: `Quick snapshot for ${host}: Core checks completed. Some response formatting was incomplete, so we returned a safe fallback. Continue to full report for detailed evidence and one-click fixes.`,
-    sections: fallbackSections,
+    sections: SECTION_FALLBACKS,
     terminalLogs: parseError
       ? [
           {
@@ -793,7 +794,7 @@ const fallbackSections: SnapshotSections = {
             text: "Malformed AI snapshot JSON handled via fallback.",
           },
         ],
-    fallbackStats: computeFallbackStats(fallbackSections, fallbackSections),
+    fallbackStats: computeFallbackStats(SECTION_FALLBACKS, SECTION_FALLBACKS),
   };
 }
 
@@ -806,7 +807,7 @@ function composeSnapshotText(url: string, sections: SnapshotSections): string {
     `Performance — ${sections.performance}`,
     `Security — ${sections.security}`,
     `Content — ${sections.content}`,
-    `CTA line — ${sections.ctaLine}`,
+    sections.ctaLine,
   ].join("\n\n");
 }
 
@@ -847,7 +848,7 @@ async function generateGeminiSnapshot(args: {
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.15,
-            maxOutputTokens: args.isWordPress ? 1500 : 1200,
+            maxOutputTokens: args.isWordPress ? 2500 : 2000,
             responseMimeType: "application/json",
             responseSchema: {
               type: "OBJECT",
@@ -964,14 +965,7 @@ async function generateGeminiSnapshot(args: {
     return fallbackSnapshot(args.url, "json-parse-failed");
   }
 
-  const sectionFallbacks: SnapshotSections = {
-    seoGeo: "No SEO/GEO signal.",
-    accessibility: "No accessibility signal.",
-    performance: "No performance signal.",
-    security: "No security signal.",
-    content: "No content signal.",
-    ctaLine: "Want the full actionable report and automated fixes?",
-  };
+  const sectionFallbacks = SECTION_FALLBACKS;
 
   const strictSections: SnapshotSections = {
     seoGeo: pickSectionValue(parsed, "seoGeo", ""),
