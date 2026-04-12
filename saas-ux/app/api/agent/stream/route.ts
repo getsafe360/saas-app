@@ -776,7 +776,7 @@ const fallbackSections: SnapshotSections = {
 };
   return {
     greeting: defaultGreeting(url),
-    summaryText: `Quick snapshot for ${host}: Core checks completed. Some response formatting was incomplete, so Sparky returned a safe fallback. Continue to full report for detailed evidence and one-click fixes.`,
+    summaryText: `Quick snapshot for ${host}: Core checks completed. Some response formatting was incomplete, so we returned a safe fallback. Continue to full report for detailed evidence and one-click fixes.`,
     sections: fallbackSections,
     terminalLogs: parseError
       ? [
@@ -847,7 +847,7 @@ async function generateGeminiSnapshot(args: {
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.15,
-            maxOutputTokens: 500,
+            maxOutputTokens: args.isWordPress ? 1500 : 1200,
             responseMimeType: "application/json",
             responseSchema: {
               type: "OBJECT",
@@ -1059,11 +1059,6 @@ export async function GET(req: NextRequest) {
           stage: "Cache",
           text: "Cache hit. Replaying recent snapshot...",
         });
-        emit("message", {
-          level: "SUCCESS",
-          stage: "Cache",
-          text: cached.greeting || "Snapshot restored.",
-        });
         emit("snapshot", cached);
         emit("done", { ok: true, cached: true });
         controller.close();
@@ -1158,13 +1153,6 @@ export async function GET(req: NextRequest) {
         };
 
         await kvSet(cacheKey, JSON.stringify(payload), CACHE_TTL_SECONDS);
-        if (payload.greeting) {
-          emit("message", {
-            level: "SUCCESS",
-            stage: "Analysis",
-            text: payload.greeting,
-          });
-        }
         emit("snapshot", payload);
         emit("done", { ok: true, cached: false });
         controller.close();

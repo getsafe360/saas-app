@@ -67,10 +67,10 @@ const CARD_COMPONENTS: Record<string, ComponentType<any>> = {
 const DEFAULT_CARDS: CockpitCardLayout[] = [
   { id: "performance", visible: true, minimized: false, order: 1 },
   { id: "security", visible: true, minimized: false, order: 2 },
-  { id: "seo", visible: true, minimized: false, order: 3 },
-  { id: "accessibility", visible: true, minimized: false, order: 4 },
-  { id: "geo", visible: true, minimized: false, order: 5 },
-  { id: "wordpress", visible: true, minimized: false, order: 6 },
+  { id: "wordpress", visible: true, minimized: false, order: 3 },
+  { id: "seo", visible: true, minimized: false, order: 4 },
+  { id: "accessibility", visible: true, minimized: false, order: 5 },
+  { id: "geo", visible: true, minimized: false, order: 6 },
   { id: "optimization", visible: true, minimized: false, order: 7 },
 ];
 
@@ -331,17 +331,16 @@ export function SiteCockpit({
 
                 if (card.id === "wordpress") {
                   return (
-                    <div key={card.id} className="lg:col-span-2">
-                      <WordPressCard
-                        id={card.id}
-                        data={data}
-                        siteId={siteId}
-                        minimized={card.minimized}
-                        editable={editable}
-                        connectionStatus={wordpressConnectionStatus}
-                        lastConnected={wordpressLastConnected}
-                      />
-                    </div>
+                    <WordPressCard
+                      key={card.id}
+                      id={card.id}
+                      data={data}
+                      siteId={siteId}
+                      minimized={card.minimized}
+                      editable={editable}
+                      connectionStatus={wordpressConnectionStatus}
+                      lastConnected={wordpressLastConnected}
+                    />
                   );
                 }
 
