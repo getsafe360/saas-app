@@ -79,7 +79,7 @@ type GeminiResponsePayload = {
 const MAX_URL_LENGTH = 2048;
 const FETCH_TIMEOUT_MS = 8_000;
 const FETCH_MAX_BYTES = 300_000;
-const LLM_TIMEOUT_MS = 20_000;
+const LLM_TIMEOUT_MS = 90_000;
 const CACHE_TTL_SECONDS = 60 * 60;
 const GEMINI_MODEL =
   process.env.GEMINI_SNAPSHOT_MODEL || "gemini-3-flash-preview";
@@ -838,7 +838,7 @@ async function generateGeminiSnapshot(args: {
   let response: Response;
   try {
     response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`,
       {
         method: "POST",
         signal: args.signal,
@@ -847,7 +847,7 @@ async function generateGeminiSnapshot(args: {
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.15,
-            maxOutputTokens: 1200,
+            maxOutputTokens: 500,
             responseMimeType: "application/json",
             responseSchema: {
               type: "OBJECT",
@@ -902,13 +902,45 @@ async function generateGeminiSnapshot(args: {
     );
   }
 
-  const data = (await response.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const raw =
-    data.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text || "")
-      .join("") || "";
+  if (!response.body) {
+    return fallbackSnapshot(args.url, "empty-response");
+  }
+
+  // Accumulate streamed SSE chunks from Gemini's streamGenerateContent endpoint.
+  // Each "data: {...}" line is a partial GenerateContentResponse; concatenate all
+  // candidate text parts to reconstruct the complete JSON output.
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let raw = "";
+  let sseBuffer = "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      sseBuffer += decoder.decode(value, { stream: true });
+      const lines = sseBuffer.split("\n");
+      sseBuffer = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const jsonStr = line.slice(6).trim();
+        if (!jsonStr || jsonStr === "[DONE]") continue;
+        try {
+          const chunk = JSON.parse(jsonStr) as {
+            candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+          };
+          raw +=
+            chunk.candidates?.[0]?.content?.parts
+              ?.map((p) => p.text ?? "")
+              .join("") ?? "";
+        } catch {
+          // skip malformed SSE chunk
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
   if (!raw.trim()) {
     return fallbackSnapshot(args.url, "empty-response");
   }
