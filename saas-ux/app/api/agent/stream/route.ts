@@ -847,7 +847,7 @@ async function generateGeminiSnapshot(args: {
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.15,
-            maxOutputTokens: 6000,
+            maxOutputTokens: 1200,
             responseMimeType: "application/json",
             responseSchema: {
               type: "OBJECT",
@@ -1057,22 +1057,31 @@ export async function GET(req: NextRequest) {
         log("INFO", "Signals", "Extracting key signals…");
         log("INFO", "Analysis", "Running multi-layer analysis…");
 
-        const llmController = new AbortController();
-        const llmTimeout = setTimeout(
-          () => llmController.abort(new Error(`LLM timed out after ${LLM_TIMEOUT_MS / 1000}s`)),
-          LLM_TIMEOUT_MS,
-        );
-
-        log("INFO", "LLM", `Requesting AI analysis (${GEMINI_MODEL})…`);
-        const generated = await generateGeminiSnapshot({
-          url: normalizedUrl,
-          locale,
-          facts,
-          signal: llmController.signal,
-          isWordPress: platform === "wordpress",
-        });
-
-        clearTimeout(llmTimeout);
+        let generated: GeminiSnapshotResult | undefined;
+        let llmError: Error | undefined;
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          const llmController = new AbortController();
+          const llmTimeout = setTimeout(
+            () => llmController.abort(new Error(`LLM timed out after ${LLM_TIMEOUT_MS / 1000}s`)),
+            LLM_TIMEOUT_MS,
+          );
+          try {
+            log("INFO", "LLM", attempt === 1 ? "Requesting AI analysis…" : "Retrying AI analysis…");
+            generated = await generateGeminiSnapshot({
+              url: normalizedUrl,
+              locale,
+              facts,
+              signal: llmController.signal,
+              isWordPress: platform === "wordpress",
+            });
+            clearTimeout(llmTimeout);
+            break;
+          } catch (err) {
+            clearTimeout(llmTimeout);
+            llmError = err instanceof Error ? err : new Error(String(err));
+          }
+        }
+        if (!generated) throw llmError ?? new Error("AI analysis failed.");
 
         log("SUCCESS", "Analysis", "Analysis complete");
         log("INFO", "Snapshot", "Generating snapshot…");
