@@ -356,7 +356,7 @@ export default function DirectAgentStreamCard() {
           {stream.snapshot && (
             <div className="rounded-lg border border-white/10 bg-[#090d14] p-5 text-center">
               <p className="text-sm leading-relaxed text-slate-200">
-                {stream.snapshot.sections.ctaLine || t("cta_full_report")}
+                {t("cta_full_report")}
               </p>
               {isStashing && (
                 <p className="mt-2 text-sm text-slate-400">

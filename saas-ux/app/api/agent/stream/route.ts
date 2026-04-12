@@ -73,6 +73,7 @@ type GeminiResponsePayload = {
   security?: string;
   content?: string;
   ctaLine?: string;
+  wordpressSection?: string;
 };
 
 const MAX_URL_LENGTH = 2048;
@@ -570,13 +571,15 @@ function sectionAliasValues(
   return names.flatMap((name) => [sectionObject?.[name], topLevel[name]]);
 }
 
+const MIN_SECTION_LENGTH = 40;
+
 function hasAllNonEmptySections(sections: SnapshotSections): boolean {
   return (
-    Boolean(sections.seoGeo) &&
-    Boolean(sections.accessibility) &&
-    Boolean(sections.performance) &&
-    Boolean(sections.security) &&
-    Boolean(sections.content) &&
+    sections.seoGeo.length >= MIN_SECTION_LENGTH &&
+    sections.accessibility.length >= MIN_SECTION_LENGTH &&
+    sections.performance.length >= MIN_SECTION_LENGTH &&
+    sections.security.length >= MIN_SECTION_LENGTH &&
+    sections.content.length >= MIN_SECTION_LENGTH &&
     Boolean(sections.ctaLine)
   );
 }
@@ -701,6 +704,16 @@ function safeText(value: unknown, fallback: string): string {
     : fallback;
 }
 
+function safeTextMin(
+  value: unknown,
+  minLength: number,
+  fallback: string,
+): string {
+  return typeof value === "string" && value.trim().length >= minLength
+    ? value.trim()
+    : fallback;
+}
+
 function normalizeLogs(logs: unknown): TerminalLog[] {
   if (!Array.isArray(logs)) return [];
   return logs
@@ -779,7 +792,7 @@ function composeSnapshotText(url: string, sections: SnapshotSections): string {
     `Security — ${sections.security}`,
     `Content — ${sections.content}`,
     `CTA line — ${sections.ctaLine}`,
-  ].join("\n");
+  ].join("\n\n");
 }
 
 function detectWordPressPlatform(html: string): "wordpress" | "generic" {
@@ -828,8 +841,8 @@ async function generateGeminiSnapshot(args: {
               ...(args.isWordPress ? ["wordpressSection"] : []),
             ],
             properties: {
-              greeting: { type: "STRING", minLength: 10 },
-              summaryText: { type: "STRING", minLength: 20 },
+              greeting: { type: "STRING" },
+              summaryText: { type: "STRING" },
               sections: {
                 type: "OBJECT",
                 required: [
@@ -841,12 +854,12 @@ async function generateGeminiSnapshot(args: {
                   "ctaLine",
                 ],
                 properties: {
-                  seoGeo: { type: "STRING", minLength: 40 },
-                  accessibility: { type: "STRING", minLength: 40 },
-                  performance: { type: "STRING", minLength: 40 },
-                  security: { type: "STRING", minLength: 40 },
-                  content: { type: "STRING", minLength: 40 },
-                  ctaLine: { type: "STRING", minLength: 10 },
+                  seoGeo: { type: "STRING" },
+                  accessibility: { type: "STRING" },
+                  performance: { type: "STRING" },
+                  security: { type: "STRING" },
+                  content: { type: "STRING" },
+                  ctaLine: { type: "STRING" },
                 },
               },
               ...(args.isWordPress
@@ -905,19 +918,14 @@ async function generateGeminiSnapshot(args: {
     : buildSectionsFromParsed(parsed, raw, sectionFallbacks);
 
   const wordpressSection = args.isWordPress
-    ? extractJsonStringField(
-        sanitizeJsonCandidate(normalizeGeminiJson(raw)),
-        "wordpressSection",
-      ) ?? undefined
+    ? safeText(parsed.wordpressSection, "") || undefined
     : undefined;
 
   return {
-    greeting: safeText(
-      parsed.greeting,
-      defaultGreeting(args.url),
-    ),
-    summaryText: safeText(
+    greeting: safeTextMin(parsed.greeting, 10, defaultGreeting(args.url)),
+    summaryText: safeTextMin(
       parsed.summaryText,
+      20,
       composeSnapshotText(args.url, sections),
     ),
     sections,
