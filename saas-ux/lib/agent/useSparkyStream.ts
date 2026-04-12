@@ -22,6 +22,9 @@ export type SparkySnapshot = {
   /** Server-provided count of high-impact issues. When present, used directly
    *  in the UI instead of any client-side inference. */
   highImpactCount?: number;
+  /** AI-generated WordPress security & maintenance section. Only present when
+   *  WordPress markers are detected in the scanned page. */
+  wordpressSection?: string;
   sections: {
     seoGeo: string;
     accessibility: string;
