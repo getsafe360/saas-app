@@ -31,6 +31,7 @@ type SnapshotPayload = {
   platform: "wordpress" | "generic";
   sections: SnapshotSections;
   greeting?: string;
+  wordpressSection?: string;
 };
 
 type FetchSnapshot = {
@@ -54,6 +55,7 @@ type GeminiSnapshotResult = {
   sections: SnapshotSections;
   terminalLogs: TerminalLog[];
   fallbackStats: SectionFallbackStats;
+  wordpressSection?: string;
 };
 
 type GeminiResponsePayload = {
@@ -791,6 +793,7 @@ async function generateGeminiSnapshot(args: {
   locale: string;
   facts: string;
   signal: AbortSignal;
+  isWordPress?: boolean;
 }): Promise<GeminiSnapshotResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -801,6 +804,7 @@ async function generateGeminiSnapshot(args: {
     locale: args.locale,
     url: args.url,
     facts: args.facts,
+    isWordPress: args.isWordPress,
   });
 
   const response = await fetch(
@@ -821,6 +825,7 @@ async function generateGeminiSnapshot(args: {
               "greeting",
               "summaryText",
               "sections",
+              ...(args.isWordPress ? ["wordpressSection"] : []),
             ],
             properties: {
               greeting: { type: "STRING" },
@@ -844,6 +849,9 @@ async function generateGeminiSnapshot(args: {
                   ctaLine: { type: "STRING" },
                 },
               },
+              ...(args.isWordPress
+                ? { wordpressSection: { type: "STRING" } }
+                : {}),
             },
           },
         },
@@ -896,6 +904,13 @@ async function generateGeminiSnapshot(args: {
     ? strictSections
     : buildSectionsFromParsed(parsed, raw, sectionFallbacks);
 
+  const wordpressSection = args.isWordPress
+    ? extractJsonStringField(
+        sanitizeJsonCandidate(normalizeGeminiJson(raw)),
+        "wordpressSection",
+      ) ?? undefined
+    : undefined;
+
   return {
     greeting: safeText(
       parsed.greeting,
@@ -908,6 +923,7 @@ async function generateGeminiSnapshot(args: {
     sections,
     terminalLogs: normalizeLogs(parsed.terminalLogs),
     fallbackStats: computeFallbackStats(sections, sectionFallbacks),
+    wordpressSection,
   };
 }
 
@@ -999,6 +1015,7 @@ export async function GET(req: NextRequest) {
         log("INFO", "Fetch", "Fetching HTML…");
 
         const fetchSnapshot = await limitedHtmlFetch(normalizedUrl);
+        const platform = detectWordPressPlatform(fetchSnapshot.html);
         const facts = buildFacts(normalizedUrl, fetchSnapshot, null);
         log("SUCCESS", "Fetch", `HTML fetched in ${fetchSnapshot.fetchMs}ms`);
         log("INFO", "Signals", "Extracting key signals…");
@@ -1015,6 +1032,7 @@ export async function GET(req: NextRequest) {
           locale,
           facts,
           signal: llmController.signal,
+          isWordPress: platform === "wordpress",
         });
 
         clearTimeout(llmTimeout);
@@ -1038,12 +1056,13 @@ export async function GET(req: NextRequest) {
           url: normalizedUrl,
           locale,
           generatedAt: new Date().toISOString(),
-          platform: detectWordPressPlatform(fetchSnapshot.html),
+          platform,
           text:
             generated.summaryText ||
             composeSnapshotText(normalizedUrl, generated.sections),
           sections: generated.sections,
           greeting: generated.greeting,
+          wordpressSection: generated.wordpressSection,
         };
 
         await kvSet(cacheKey, JSON.stringify(payload), CACHE_TTL_SECONDS);

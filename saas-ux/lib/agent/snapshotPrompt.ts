@@ -2,13 +2,37 @@ type SnapshotPromptInput = {
   locale: string;
   url: string;
   facts: string;
+  isWordPress?: boolean;
 };
 
 export function buildGeminiSnapshotPrompt({
   locale,
   url,
   facts,
+  isWordPress = false,
 }: SnapshotPromptInput): string {
+  const wpTaskKey = isWordPress
+    ? "\n- wordpressSection (string) WordPress-specific security and maintenance audit. Exactly 2 paragraphs (\\n\\n). See <wordpress_section_requirements>."
+    : "";
+
+  const wpRequirements = isWordPress
+    ? `
+<wordpress_section_requirements>
+wordpressSection — exactly 2 paragraphs, separated by \\n\\n:
+
+[Paragraph 1 — Current WordPress risk profile]
+Surface concrete findings from the facts: core version currency signal, plugin/theme attack surface
+(count if detectable), xmlrpc.php and REST API user-enumeration exposure, admin login hardening
+status. Name what is already protected and what is openly exposed. Max 2–3 sentences.
+
+[Paragraph 2 — Highest-impact hardening action]
+Name the single most critical remediation step and the concrete security outcome it delivers
+(reduced breach probability, blocked lateral movement, SEO spam injection prevention, eliminated
+defacement risk). Imply the fix is automatable. Max 2–3 sentences.
+</wordpress_section_requirements>
+`
+    : "";
+
   return `You are a senior web-performance and AI-visibility auditor.
 Analyze the website facts below and return a structured JSON audit for ${url}.
 Write ALL user-facing text strictly in this locale: ${locale}.
@@ -20,8 +44,8 @@ Return valid JSON with exactly these top-level keys:
                         highest-impact opportunity, and close with a forward-looking signal that primes
                         the reader for the section cards below.
 - sections    (object) Must contain all 6 keys — all non-empty strings:
-                        seoGeo, accessibility, performance, security, content, ctaLine.
-</task>
+                        seoGeo, accessibility, performance, security, content, ctaLine.${wpTaskKey}
+</task>${wpRequirements}
 
 <section_format>
 Every section key except ctaLine MUST be exactly 2 paragraphs, separated by \\n\\n.

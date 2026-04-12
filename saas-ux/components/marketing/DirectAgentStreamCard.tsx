@@ -13,6 +13,7 @@ import {
   ArrowRightIcon,
   AccessibilityIcon,
   GaugeIcon,
+  LoaderCircle,
   SearchIcon,
   ShieldCheckIcon,
   FileTextIcon,
@@ -124,7 +125,7 @@ export default function DirectAgentStreamCard() {
       baseSections.push({
         id: "wordpress",
         label: "WordPress",
-        text: t("wordpress_card_text"),
+        text: stream.snapshot.wordpressSection ?? t("wordpress_card_text"),
         icon: WordPressIcon,
         color: "var(--category-wordpress)",
       });
@@ -227,25 +228,38 @@ export default function DirectAgentStreamCard() {
             <div className="bg-[#090d14] p-4">
               {/* Live stream messages */}
               <div className="space-y-1 font-mono text-sm">
-                {stream.messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className="grid grid-cols-[14px_1fr] gap-2 px-1 py-0.5 text-left"
-                  >
-                    <span className="pt-px font-semibold text-emerald-400">
-                      {message.level === "SUCCESS" ? "✓" : ""}
-                    </span>
-                    <span
-                      className={
-                        message.level === "SUCCESS"
-                          ? "text-emerald-300"
-                          : "text-slate-400"
-                      }
+                {stream.messages.map((message) => {
+                  const isActiveAnalysis =
+                    stream.isStreaming &&
+                    !stream.snapshot &&
+                    message.text.includes("Running multi-layer analysis");
+                  return (
+                    <div
+                      key={message.id}
+                      className="grid grid-cols-[14px_1fr] gap-2 px-1 py-0.5 text-left"
                     >
-                      {message.text}
-                    </span>
-                  </div>
-                ))}
+                      <span className="pt-px font-semibold text-emerald-400">
+                        {message.level === "SUCCESS" ? "✓" : ""}
+                      </span>
+                      {isActiveAnalysis ? (
+                        <span className="flex items-center gap-2 text-slate-400">
+                          <LoaderCircle className="animate-spin h-3.5 w-3.5 flex-shrink-0 text-indigo-400" />
+                          <span className="animate-pulse">{message.text}</span>
+                        </span>
+                      ) : (
+                        <span
+                          className={
+                            message.level === "SUCCESS"
+                              ? "text-emerald-300"
+                              : "text-slate-400"
+                          }
+                        >
+                          {message.text}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Snapshot summary — rendered once stream is complete */}
