@@ -866,7 +866,7 @@ async function generateGeminiSnapshot(args: {
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.15,
-            maxOutputTokens: args.isWordPress ? 2500 : 2000,
+            maxOutputTokens: 6000,
             responseMimeType: "application/json",
             responseSchema: {
               type: "OBJECT",
@@ -877,8 +877,8 @@ async function generateGeminiSnapshot(args: {
                 ...(args.isWordPress ? ["wordpressSection"] : []),
               ],
               properties: {
-                greeting: { type: "STRING" },
-                summaryText: { type: "STRING" },
+                greeting: { type: "STRING", minLength: 10 },
+                summaryText: { type: "STRING", minLength: 20 },
                 sections: {
                   type: "OBJECT",
                   required: [
@@ -890,16 +890,16 @@ async function generateGeminiSnapshot(args: {
                     "ctaLine",
                   ],
                   properties: {
-                    seoGeo: { type: "STRING" },
-                    accessibility: { type: "STRING" },
-                    performance: { type: "STRING" },
-                    security: { type: "STRING" },
-                    content: { type: "STRING" },
-                    ctaLine: { type: "STRING" },
+                    seoGeo: { type: "STRING", minLength: 40 },
+                    accessibility: { type: "STRING", minLength: 40 },
+                    performance: { type: "STRING", minLength: 40 },
+                    security: { type: "STRING", minLength: 40 },
+                    content: { type: "STRING", minLength: 40 },
+                    ctaLine: { type: "STRING", minLength: 10 },
                   },
                 },
                 ...(args.isWordPress
-                  ? { wordpressSection: { type: "STRING" } }
+                  ? { wordpressSection: { type: "STRING", minLength: 40 } }
                   : {}),
               },
             },
