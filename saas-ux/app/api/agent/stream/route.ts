@@ -628,11 +628,26 @@ function buildSectionsFromParsed(
   if (hasAllNonEmptySections(resolved)) return resolved;
 
   return {
-    seoGeo: resolved.seoGeo || fallbacks.seoGeo,
-    accessibility: resolved.accessibility || fallbacks.accessibility,
-    performance: resolved.performance || fallbacks.performance,
-    security: resolved.security || fallbacks.security,
-    content: resolved.content || fallbacks.content,
+    seoGeo:
+      resolved.seoGeo.length >= MIN_SECTION_LENGTH
+        ? resolved.seoGeo
+        : fallbacks.seoGeo,
+    accessibility:
+      resolved.accessibility.length >= MIN_SECTION_LENGTH
+        ? resolved.accessibility
+        : fallbacks.accessibility,
+    performance:
+      resolved.performance.length >= MIN_SECTION_LENGTH
+        ? resolved.performance
+        : fallbacks.performance,
+    security:
+      resolved.security.length >= MIN_SECTION_LENGTH
+        ? resolved.security
+        : fallbacks.security,
+    content:
+      resolved.content.length >= MIN_SECTION_LENGTH
+        ? resolved.content
+        : fallbacks.content,
     ctaLine: resolved.ctaLine || fallbacks.ctaLine,
   };
 }
@@ -918,7 +933,12 @@ async function generateGeminiSnapshot(args: {
     : buildSectionsFromParsed(parsed, raw, sectionFallbacks);
 
   const wordpressSection = args.isWordPress
-    ? safeText(parsed.wordpressSection, "") || undefined
+    ? safeText(parsed.wordpressSection, "") ||
+      extractJsonStringField(
+        sanitizeJsonCandidate(normalizeGeminiJson(raw)),
+        "wordpressSection",
+      ) ||
+      undefined
     : undefined;
 
   return {
