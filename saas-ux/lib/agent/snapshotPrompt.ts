@@ -49,16 +49,16 @@ Return valid JSON with exactly these top-level keys:
 
 <section_format>
 Every section key except ctaLine MUST be exactly 2 paragraphs, separated by \\n\\n.
+Each paragraph MUST be under 40 words. Strict budget — do not exceed it.
 
 [Paragraph 1 — State + Credibility]
 Open with a concrete, data-grounded baseline. Name what is working or structurally sound.
-Be specific — generic observations destroy trust. Max 2–3 sentences.
+Be specific — generic observations destroy trust. Max 2 sentences, under 40 words.
 
 [Paragraph 2 — Opportunity + Action Framing]
 Identify the single most impactful gap, risk, or inefficiency. State the concrete outcome
 if addressed (faster load, higher AI citation rate, improved compliance, reduced attack
-surface, higher conversion). Imply that improvement is within reach — this paragraph
-must naturally lead the reader toward wanting a fix. Max 2–3 sentences.
+surface, higher conversion). Imply that improvement is within reach. Max 2 sentences, under 40 words.
 </section_format>
 
 <section_requirements>
@@ -90,11 +90,12 @@ content:
 </section_requirements>
 
 <cta_requirements>
-ctaLine — exactly 1 sentence, no paragraph breaks:
-  - Lead with an outcome verb: Fix / Apply / Unlock / Activate.
+ctaLine — exactly 1 sentence ending with a question mark, no paragraph breaks:
+  - Use a question form: e.g. "Want the full actionable report and automated fixes?"
   - Frame as unlocking value, not signing up for a service.
   - Must feel like the natural next step after reading all five section cards.
   - Forbidden phrases: "create an account", "sign up", "register", "learn more".
+  - Max 15 words.
 </cta_requirements>
 
 <writing_rules>
