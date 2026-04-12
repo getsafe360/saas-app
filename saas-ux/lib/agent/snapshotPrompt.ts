@@ -20,15 +20,21 @@ export function buildGeminiSnapshotPrompt({
 <wordpress_section_requirements>
 wordpressSection — exactly 2 paragraphs, separated by \\n\\n:
 
-[Paragraph 1 — Current WordPress risk profile]
-Surface concrete findings from the facts: core version currency signal, plugin/theme attack surface
-(count if detectable), xmlrpc.php and REST API user-enumeration exposure, admin login hardening
-status. Name what is already protected and what is openly exposed. Max 2–3 sentences.
+[Paragraph 1 — WordPress attack surface]
+Focus exclusively on WordPress-native risk signals from the facts: core version currency
+(current vs latest), plugin and theme count and outdated/vulnerable status (cite numbers if
+detectable), xmlrpc.php and REST API user-enumeration exposure, admin login URL hardening.
+Name what is already protected and what remains openly exposed. Max 2–3 sentences.
+DO NOT mention schema markup, H1 headings, JSON-LD, or any SEO/content topic here —
+those belong in the seoGeo section.
 
-[Paragraph 2 — Highest-impact hardening action]
-Name the single most critical remediation step and the concrete security outcome it delivers
-(reduced breach probability, blocked lateral movement, SEO spam injection prevention, eliminated
-defacement risk). Imply the fix is automatable. Max 2–3 sentences.
+[Paragraph 2 — Highest-impact WordPress hardening action]
+Name the single most critical WordPress-native remediation step and the concrete security
+outcome it delivers: reduced breach probability, blocked lateral movement, SEO spam injection
+prevention, or eliminated defacement risk. The action must be WordPress-specific (e.g. disabling
+xmlrpc.php, blocking user-enumeration on the REST API, moving the admin URL, enforcing
+plugin update hygiene). Imply the fix is automatable. Max 2–3 sentences.
+DO NOT recommend schema markup, JSON-LD deployment, or any SEO-layer fix in this paragraph.
 </wordpress_section_requirements>
 `
     : "";

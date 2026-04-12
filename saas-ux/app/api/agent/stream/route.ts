@@ -1123,7 +1123,7 @@ export async function GET(req: NextRequest) {
         log("ERROR", "Pipeline", message);
         if (error instanceof Error && error.stack) {
           const firstFrame = error.stack.split("\n").slice(1, 3).join(" | ").trim();
-          if (firstFrame) log("ERROR", "Pipeline", firstFrame);
+          if (firstFrame) console.error("[Stream] Pipeline error:", firstFrame);
         }
         emit("error", { message });
         emit("done", { ok: false });
