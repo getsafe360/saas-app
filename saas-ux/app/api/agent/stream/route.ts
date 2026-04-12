@@ -914,28 +914,42 @@ async function generateGeminiSnapshot(args: {
   let raw = "";
   let sseBuffer = "";
   try {
+    const parseSSELine = (line: string) => {
+      if (!line.startsWith("data: ")) return;
+      const jsonStr = line.slice(6).trim();
+      if (!jsonStr || jsonStr === "[DONE]") return;
+      try {
+        const chunk = JSON.parse(jsonStr) as {
+          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+        };
+        raw +=
+          chunk.candidates?.[0]?.content?.parts
+            ?.map((p) => p.text ?? "")
+            .join("") ?? "";
+      } catch {
+        // skip malformed SSE chunk
+      }
+    };
+
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        // Flush any bytes the decoder held back for multi-byte character assembly
+        sseBuffer += decoder.decode();
+        break;
+      }
       sseBuffer += decoder.decode(value, { stream: true });
       const lines = sseBuffer.split("\n");
       sseBuffer = lines.pop() ?? "";
       for (const line of lines) {
-        if (!line.startsWith("data: ")) continue;
-        const jsonStr = line.slice(6).trim();
-        if (!jsonStr || jsonStr === "[DONE]") continue;
-        try {
-          const chunk = JSON.parse(jsonStr) as {
-            candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-          };
-          raw +=
-            chunk.candidates?.[0]?.content?.parts
-              ?.map((p) => p.text ?? "")
-              .join("") ?? "";
-        } catch {
-          // skip malformed SSE chunk
-        }
+        parseSSELine(line);
       }
+    }
+
+    // Process trailing data: the last SSE frame may not end with \n
+    if (sseBuffer) {
+      parseSSELine(sseBuffer);
+      sseBuffer = "";
     }
   } finally {
     reader.releaseLock();
