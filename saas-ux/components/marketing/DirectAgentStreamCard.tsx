@@ -303,7 +303,7 @@ export default function DirectAgentStreamCard() {
                     style={{ borderColor: section.color }}
                     className={`group relative overflow-hidden rounded-xl border p-4 transition-all ${
                       isWordPress
-                        ? "col-span-full bg-gradient-to-br from-[#090d14] to-[#21759b]/10"
+                        ? "bg-gradient-to-br from-[#090d14] to-[#21759b]/10"
                         : "bg-[#090d14] hover:bg-[#0b1020]"
                     }`}
                   >
