@@ -37,7 +37,7 @@ class WebsiteAnalyzerCrew:
         self.agents_config = self._read_yaml("agents.yaml")
         self.tasks_config = self._read_yaml("tasks.yaml")
         self.models_config = self._read_yaml("models.yaml")
-        self.default_model_name = self.models_config.get("default_model", "gpt_5_mini")
+        self.default_model_name = self.models_config.get("default_model", "claude_opus")
         self.model_settings = self.models_config["models"][self.default_model_name]
         self._validate_configuration()
 
@@ -63,9 +63,9 @@ class WebsiteAnalyzerCrew:
                 raise ConfigurationError(f"Task '{task_id}' references unknown agent '{agent_id}'")
 
         provider_model = self.model_settings.get("provider_model")
-        if provider_model != "openai/gpt-5-mini":
+        if provider_model != "anthropic/claude-opus-4-6":
             raise ConfigurationError(
-                "Production model drift detected: default model must resolve to openai/gpt-5-mini"
+                "Production model drift detected: default model must resolve to anthropic/claude-opus-4-6"
             )
 
     def _normalize_modules(self, selected: List[str]) -> List[str]:
@@ -208,7 +208,7 @@ class CrewService:
 
     CONFIG_DIR = WebsiteAnalyzerCrew.CONFIG_DIR
 
-    def __init__(self, model: str = "openai/gpt-4o-mini", config_dir: Optional[Path] = None) -> None:
+    def __init__(self, model: str = "anthropic/claude-opus-4-6", config_dir: Optional[Path] = None) -> None:
         self.config_dir = config_dir or self.CONFIG_DIR
         self.model = model
         self.agents_config = self._read_yaml("agents.yaml")
@@ -447,6 +447,6 @@ class CrewService:
             return {}
 
 
-def create_wordpress_crew(model: str = "openai/gpt-5-mini") -> CrewService:
+def create_wordpress_crew(model: str = "anthropic/claude-opus-4-6") -> CrewService:
     """Factory for microservice-compatible WordPress task execution."""
     return CrewService(model=model)

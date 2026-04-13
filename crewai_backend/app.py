@@ -40,7 +40,7 @@ class TestJob:
 
 JOBS: dict[str, TestJob] = {}
 JOBS_LOCK = threading.Lock()
-CREW = CrewService(model=os.environ.get("CREW_MODEL", "openai/gpt-5-mini"))
+CREW = CrewService(model=os.environ.get("CREW_MODEL", "anthropic/claude-opus-4-6"))
 JOB_TTL_SECONDS = int(os.environ.get("TEST_JOB_TTL_SECONDS", "1800"))
 HEARTBEAT_INTERVAL_SECONDS = int(os.environ.get("TEST_SSE_HEARTBEAT_SECONDS", "10"))
 TERMINAL_JOB_STATUSES = {"completed", "failed", "error"}
@@ -380,14 +380,14 @@ def legacy_analyze():
 @app.route("/api/health", methods=["GET"])
 def backend_health():
     crew_ok = CREW is not None
-    api_key_ok = bool(os.environ.get("OPENAI_API_KEY"))
+    api_key_ok = bool(os.environ.get("ANTHROPIC_API_KEY"))
     jobs_ok = isinstance(JOBS, dict)
     healthy = crew_ok and api_key_ok and jobs_ok
 
     return jsonify({
         "status": "ok" if healthy else "error",
         "crew_service": crew_ok,
-        "openai_key_present": api_key_ok,
+        "anthropic_key_present": api_key_ok,
         "jobs_registry": jobs_ok,
         "message": "Backend is running and healthy" if healthy else "Backend dependencies are not ready",
     }), 200 if healthy else 503
