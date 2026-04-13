@@ -3,6 +3,5 @@ flask-cors
 python-dotenv
 crewai
 pyyaml
-openai
-tiktoken
+anthropic
 requests

@@ -15,7 +15,7 @@ load_dotenv()
 
 @dataclass(frozen=True)
 class Settings:
-    openai_api_key: str
+    anthropic_api_key: str
     crewai_api_key: str | None
     default_model: str
     app_env: str
@@ -23,9 +23,9 @@ class Settings:
     @classmethod
     def from_env(cls) -> "Settings":
         settings = cls(
-            openai_api_key=os.getenv("OPENAI_API_KEY", ""),
+            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
             crewai_api_key=os.getenv("CREWAI_API_KEY") or None,
-            default_model=os.getenv("CREW_DEFAULT_MODEL", "openai/gpt-5-mini"),
+            default_model=os.getenv("CREW_DEFAULT_MODEL", "anthropic/claude-opus-4-6"),
             app_env=os.getenv("APP_ENV", "development"),
         )
         settings.validate_required()
@@ -33,8 +33,8 @@ class Settings:
 
     def validate_required(self) -> None:
         missing = []
-        if not self.openai_api_key:
-            missing.append("OPENAI_API_KEY")
+        if not self.anthropic_api_key:
+            missing.append("ANTHROPIC_API_KEY")
         if not self.crewai_api_key:
             missing.append("CREWAI_API_KEY")
         if missing:
