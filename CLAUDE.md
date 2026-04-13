@@ -1,7 +1,7 @@
 # CLAUDE.md - GetSafe360 AI Assistant Guide
 
-**Version:** 2.0.0
-**Last Updated:** 2026-02-06
+**Version:** 2.1.0
+**Last Updated:** 2026-04-13
 **Project:** GetSafe360 AI-Powered Website Optimization Platform
 
 > This file is the root hub. Detailed guidance is split across topic files for performance.
@@ -43,8 +43,7 @@ GetSafe360 is an **AI-powered website optimization platform** that empowers webs
 ```
 /home/user/saas-app/
 ├── saas-ux/              # Next.js 15 frontend (primary app)
-├── flask_app/            # Legacy Python Flask backend
-├── latest_ai_development/# CrewAI agent system
+├── crewai_backend/       # CrewAI agent system + Flask HTTP gateway
 ├── package.json          # Root workspace (pnpm@10.23.0)
 └── pnpm-workspace.yaml   # Workspace config
 ```
@@ -72,7 +71,7 @@ GetSafe360 is an **AI-powered website optimization platform** that empowers webs
 |------------|---------|
 | CrewAI (Python) | Multi-agent orchestration (SEO, Performance, Security, A11y) |
 | Flask | HTTP gateway for AI agents |
-| OpenAI API | LLM inference (gpt-4o-mini default) |
+| Anthropic API | LLM inference (claude-opus-4-6 default) |
 
 ### Database
 
