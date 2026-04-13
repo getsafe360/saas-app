@@ -866,7 +866,8 @@ async function generateGeminiSnapshot(args: {
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.15,
-            maxOutputTokens: 6000,
+            maxOutputTokens: 16000,
+            thinkingConfig: { thinkingBudget: 4096 },
             responseMimeType: "application/json",
             responseSchema: {
               type: "OBJECT",
