@@ -485,5 +485,38 @@
       "tokenUsage": "Token usage: Tokens are consumed when running AI operations.",
       "tokenPackUsage": "Tokens are consumed when running AI repairs, builds, or advanced analyses."
     }
+  },
+  "Terminal": {
+    "initializingEngine": "Initializing analysis engine\u2026",
+    "analyzingSite": "Analyzing {site}\u2026",
+    "fetchingHtml": "Fetching HTML\u2026",
+    "htmlFetched": "HTML fetched in {ms}ms",
+    "extractingSignals": "Extracting key signals\u2026",
+    "runningAnalysis": "Running multi-layer analysis\u2026",
+    "analysisComplete": "Analysis complete",
+    "generatingSnapshot": "Generating snapshot\u2026",
+    "snapshotReady": "Snapshot ready for {site}.",
+    "aiAnalysisProgress": [
+      "Conducting a strategic deep-dive",
+      "Uncovering high-impact opportunities",
+      "Refining the diagnostic model",
+      "Surfacing actionable insights",
+      "Evaluating structural weaknesses",
+      "Mapping the underlying architecture",
+      "Identifying optimization leverage points",
+      "Interpreting complex signal patterns",
+      "Assessing performance bottlenecks",
+      "Clarifying the root-cause narrative",
+      "Synthesizing a clear recommendation path",
+      "Benchmarking against best-practice standards",
+      "Highlighting critical improvement areas",
+      "Validating the integrity of key elements",
+      "Reconstructing the full operational picture",
+      "Prioritizing high-value fixes",
+      "Translating findings into next steps",
+      "Aligning insights with best-in-class outcomes",
+      "Preparing a polished executive summary",
+      "Finalizing your optimization blueprint"
+    ]
   }
 }

@@ -454,5 +454,38 @@
       "tokenUsage": "Token usage: Tokens are consumed when running AI operations.",
       "tokenPackUsage": "Tokens are consumed when running AI repairs, builds, or advanced analyses."
     }
+  },
+  "Terminal": {
+    "initializingEngine": "Inicializando el motor de an\u00e1lisis\u2026",
+    "analyzingSite": "Analizando {site}\u2026",
+    "fetchingHtml": "Obteniendo HTML\u2026",
+    "htmlFetched": "HTML obtenido en {ms} ms",
+    "extractingSignals": "Extrayendo se\u00f1ales clave\u2026",
+    "runningAnalysis": "Ejecutando an\u00e1lisis multicapa\u2026",
+    "analysisComplete": "An\u00e1lisis completo",
+    "generatingSnapshot": "Generando instant\u00e1nea\u2026",
+    "snapshotReady": "Instant\u00e1nea lista para {site}.",
+    "aiAnalysisProgress": [
+      "Realizando un an\u00e1lisis estrat\u00e9gico en profundidad",
+      "Identificando oportunidades de alto impacto",
+      "Refinando el modelo de diagn\u00f3stico",
+      "Revelando ideas accionables",
+      "Evaluando debilidades estructurales",
+      "Mapeando la arquitectura subyacente",
+      "Detectando puntos clave de optimizaci\u00f3n",
+      "Interpretando patrones de se\u00f1al complejos",
+      "Analizando cuellos de botella de rendimiento",
+      "Aclarando la narrativa de causa ra\u00edz",
+      "Sintetizando una ruta clara de recomendaciones",
+      "Comparando con est\u00e1ndares de mejores pr\u00e1cticas",
+      "Destacando \u00e1reas cr\u00edticas de mejora",
+      "Validando la integridad de los elementos clave",
+      "Reconstruyendo la visi\u00f3n operativa completa",
+      "Priorizando mejoras de alto valor",
+      "Traduciendo hallazgos en pr\u00f3ximos pasos",
+      "Alineando los resultados con est\u00e1ndares l\u00edderes",
+      "Preparando un resumen ejecutivo pulido",
+      "Finalizando su plan de optimizaci\u00f3n"
+    ]
   }
 }

@@ -454,5 +454,38 @@
       "tokenUsage": "Token usage: Tokens are consumed when running AI operations.",
       "tokenPackUsage": "Tokens are consumed when running AI repairs, builds, or advanced analyses."
     }
+  },
+  "Terminal": {
+    "initializingEngine": "Initialisation du moteur d'analyse\u2026",
+    "analyzingSite": "Analyse de {site} en cours\u2026",
+    "fetchingHtml": "R\u00e9cup\u00e9ration du HTML\u2026",
+    "htmlFetched": "HTML r\u00e9cup\u00e9r\u00e9 en {ms} ms",
+    "extractingSignals": "Extraction des signaux cl\u00e9s\u2026",
+    "runningAnalysis": "Analyse multicouche en cours\u2026",
+    "analysisComplete": "Analyse termin\u00e9e",
+    "generatingSnapshot": "G\u00e9n\u00e9ration du snapshot\u2026",
+    "snapshotReady": "Snapshot pr\u00eat pour {site}.",
+    "aiAnalysisProgress": [
+      "R\u00e9alisation d'une analyse strat\u00e9gique approfondie",
+      "Identification d'opportunit\u00e9s \u00e0 fort impact",
+      "Affinement du mod\u00e8le diagnostique",
+      "Mise en lumi\u00e8re d'insights exploitables",
+      "\u00c9valuation des faiblesses structurelles",
+      "Cartographie de l'architecture sous-jacente",
+      "D\u00e9tection des leviers d'optimisation cl\u00e9s",
+      "Interpr\u00e9tation de sch\u00e9mas de signaux complexes",
+      "Analyse des goulots d'\u00e9tranglement de performance",
+      "Clarification du r\u00e9cit de la cause profonde",
+      "Synth\u00e8se d'un chemin de recommandations clair",
+      "Benchmarking avec les meilleures pratiques",
+      "Mise en avant des axes critiques d'am\u00e9lioration",
+      "Validation de l'int\u00e9grit\u00e9 des \u00e9l\u00e9ments essentiels",
+      "Reconstruction de la vision op\u00e9rationnelle compl\u00e8te",
+      "Priorisation des optimisations \u00e0 forte valeur",
+      "Traduction des constats en actions concr\u00e8tes",
+      "Alignement des insights avec les standards d'excellence",
+      "Pr\u00e9paration d'un r\u00e9sum\u00e9 ex\u00e9cutif soign\u00e9",
+      "Finalisation de votre plan d'optimisation"
+    ]
   }
 }

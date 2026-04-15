@@ -462,5 +462,38 @@
       "tokenUsage": "Token usage: Tokens are consumed when running AI operations.",
       "tokenPackUsage": "Tokens are consumed when running AI repairs, builds, or advanced analyses."
     }
+  },
+  "Terminal": {
+    "initializingEngine": "Analyse-Engine wird gestartet\u2026",
+    "analyzingSite": "{site} wird analysiert\u2026",
+    "fetchingHtml": "HTML wird abgerufen\u2026",
+    "htmlFetched": "HTML in {ms} ms abgerufen",
+    "extractingSignals": "Schl\u00fcsselsignale werden extrahiert\u2026",
+    "runningAnalysis": "Mehrschichtige Analyse l\u00e4uft\u2026",
+    "analysisComplete": "Analyse abgeschlossen",
+    "generatingSnapshot": "Snapshot wird erstellt\u2026",
+    "snapshotReady": "Snapshot f\u00fcr {site} bereit.",
+    "aiAnalysisProgress": [
+      "F\u00fchre eine strategische Tiefenanalyse durch",
+      "Decke wirkungsstarke Chancen auf",
+      "Verfeinere das diagnostische Modell",
+      "Arbeite umsetzbare Erkenntnisse heraus",
+      "Bewerte strukturelle Schw\u00e4chstellen",
+      "Kartiere die zugrunde liegende Architektur",
+      "Identifiziere entscheidende Optimierungshebel",
+      "Interpretiere komplexe Signalmuster",
+      "Analysiere Performance-Engp\u00e4sse",
+      "Kl\u00e4re die eigentliche Ursachenstory",
+      "Forme einen klaren Empfehlungspfad",
+      "Vergleiche mit Best-Practice-Standards",
+      "Hebe kritische Verbesserungsbereiche hervor",
+      "Validiere die Integrit\u00e4t zentraler Elemente",
+      "Rekonstruiere das vollst\u00e4ndige Gesamtbild",
+      "Priorisiere hochwertige Optimierungen",
+      "\u00dcbersetze Erkenntnisse in konkrete Schritte",
+      "Richte die Ergebnisse an Spitzenstandards aus",
+      "Bereite eine pr\u00e4zise Executive-Summary vor",
+      "Finalisiere deinen Optimierungs-Blueprint"
+    ]
   }
 }
