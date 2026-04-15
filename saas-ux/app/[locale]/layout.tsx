@@ -7,7 +7,6 @@ import {
   getTranslations,
   setRequestLocale,
 } from "next-intl/server";
-
 import { locales, defaultLocale, type Locale } from "@/config/i18n";
 import { Header } from "@/components/header/header";
 import { Footer } from "@/components/ui/footer";
