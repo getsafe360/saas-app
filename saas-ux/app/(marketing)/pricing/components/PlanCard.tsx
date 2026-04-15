@@ -101,7 +101,7 @@ export default function PlanCard({
 
   return (
     <article
-      className="group overflow-hidden rounded-2xl border border-slate-700/70 bg-white/[0.03] p-6 shadow-sm transition-colors duration-200 hover:border-slate-500/70 md:p-8"
+      className="group overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--card-bg)] p-6 shadow-sm transition-colors duration-200 hover:border-[var(--color-neutral-400)] md:p-8"
       style={{ borderTop: `3px solid ${borderColorToken}` }}
     >
       <div
@@ -110,20 +110,20 @@ export default function PlanCard({
         <Icon className={`h-6 w-6 ${iconStyles.icon}`} />
       </div>
 
-      <h3 className="text-2xl font-semibold text-slate-100">
+      <h3 className="text-2xl font-semibold text-[var(--text-default)]">
         {t(nameKey)}
       </h3>
-      <p className="mt-3 text-sm leading-relaxed text-slate-300">
+      <p className="mt-3 text-sm leading-relaxed text-[var(--text-subtle)]">
         {t(descriptionKey)}
       </p>
 
-      <p className="mt-6 text-3xl font-semibold text-slate-100">
+      <p className="mt-6 text-3xl font-semibold text-[var(--text-default)]">
         {isCustomPrice ? (
           t("labels.custom")
         ) : (
           <>
             €{animatedPrice}
-            <span className="ml-1 text-base font-normal text-slate-400">
+            <span className="ml-1 text-base font-normal text-[var(--text-subtle)]">
               {suffix}
             </span>
           </>
@@ -134,9 +134,9 @@ export default function PlanCard({
         {features.map((featureKey) => (
           <li
             key={featureKey}
-            className="flex items-start gap-3 text-sm text-slate-200"
+            className="flex items-start gap-3 text-sm text-[var(--text-default)]"
           >
-            <Check className="mt-0.5 h-4 w-4 text-emerald-400" />
+            <Check className="mt-0.5 h-4 w-4 text-emerald-500 dark:text-emerald-400 flex-shrink-0" />
             <span>
               {t(featureKey)}
               {FEATURE_TOOLTIP_MAP[featureKey] && (
@@ -149,8 +149,8 @@ export default function PlanCard({
         ))}
       </ul>
 
-      <p className="mt-6 text-sm text-slate-400">
-        <span className="font-medium text-slate-200">
+      <p className="mt-6 text-sm text-[var(--text-subtle)]">
+        <span className="font-medium text-[var(--text-default)]">
           {t("labels.bestFor")}
         </span>{" "}
         {t(bestForKey)}
@@ -160,7 +160,7 @@ export default function PlanCard({
         <button
           type="button"
           onClick={() => openSignIn?.()}
-          className="mt-6 w-full rounded-md border border-slate-500/70 bg-slate-900/40 px-4 py-2.5 text-base font-medium text-slate-100 transition-colors duration-200 hover:bg-slate-800/60"
+          className="mt-6 w-full rounded-md border border-[var(--border-default)] bg-[var(--color-neutral-200)] px-4 py-2.5 text-base font-medium text-[var(--text-default)] transition-colors duration-200 hover:border-[var(--border-primary)] hover:bg-[var(--color-neutral-300)]"
         >
           {t(ctaLabelKey)}
         </button>
@@ -169,7 +169,7 @@ export default function PlanCard({
           href={checkoutUrl}
           target="_blank"
           rel="noreferrer"
-          className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-slate-500/70 bg-slate-900/40 px-4 py-2.5 text-base font-medium text-slate-100 transition-colors duration-200 hover:bg-slate-800/60"
+          className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-[var(--border-default)] bg-[var(--color-neutral-200)] px-4 py-2.5 text-base font-medium text-[var(--text-default)] transition-colors duration-200 hover:border-[var(--border-primary)] hover:bg-[var(--color-neutral-300)]"
         >
           {t(ctaLabelKey)}
         </a>

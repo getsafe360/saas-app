@@ -10,41 +10,41 @@ export function Footer() {
   const t = useTranslations("footer");
   const year = new Date().getFullYear();
   return (
-    <footer className=" border-t border-color-[--border-default] bg-[oklch(from_var(--color-neutral-900)_l_c_h_/_1)] dark:bg-[oklch(from_var(--color-neutral-50)_l_c_h_/_1)] mt-0">
+    <footer className="border-t border-[var(--border-default)] bg-[var(--footer-bg)] transition-colors duration-300 mt-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Left: Copyright */}
-        <div className="text-gray-600 dark:text-gray-300 text-sm">
+        <div className="text-[var(--text-subtle)] text-sm">
           {t("copyright", { year })}
         </div>
         {/* Center: Footer navigation */}
         <nav className="flex gap-6">
           <Link
             href="/support"
-            className="hover:underline text-gray-600 dark:text-gray-300 text-sm"
+            className="hover:underline text-[var(--text-subtle)] text-sm"
           >
             {t("support")}
           </Link>
           <Link
             href="/terms"
-            className="hover:underline text-gray-600 dark:text-gray-300 text-sm"
+            className="hover:underline text-[var(--text-subtle)] text-sm"
           >
             {t("terms")}
           </Link>
           <Link
             href="/privacy"
-            className="hover:underline text-gray-600 dark:text-gray-300 text-sm"
+            className="hover:underline text-[var(--text-subtle)] text-sm"
           >
             {t("privacy")}
           </Link>
           <Link
             href="/contact"
-            className="hover:underline text-gray-600 dark:text-gray-300 text-sm"
+            className="hover:underline text-[var(--text-subtle)] text-sm"
           >
             {t("contact")}
           </Link>
           <Link
             href="/imprint"
-            className="hover:underline text-gray-600 dark:text-gray-300 text-sm"
+            className="hover:underline text-[var(--text-subtle)] text-sm"
           >
             {t("imprint")}
           </Link>
@@ -64,7 +64,7 @@ export function Footer() {
           >
             <svg
               viewBox="0 0 240 240"
-              className="w-5 h-5 fill-gray-500 hover:fill-sky-600 transition"
+              className="w-5 h-5 fill-[var(--text-subtle)] hover:fill-sky-600 transition"
               style={{ transform: "scaleY(-1)" }}
               role="img"
               aria-label="GitHub"
@@ -79,7 +79,7 @@ export function Footer() {
           >
             <svg
               viewBox="0 0 45.959 45.959"
-              className="w-[18px] h-[18px] fill-gray-500 hover:fill-sky-600 transition"
+              className="w-[18px] h-[18px] fill-[var(--text-subtle)] hover:fill-sky-600 transition"
               role="img"
               aria-label="LinkedIn"
             >
@@ -87,7 +87,7 @@ export function Footer() {
             </svg>
           </Link>
           <Link href="mailto:help@getsafe360.ai" aria-label="Email">
-            <Mail className="w-5 h-5 text-gray-500 hover:text-sky-600 transition" />
+            <Mail className="w-5 h-5 text-[var(--text-subtle)] hover:text-sky-600 transition" />
           </Link>
         </div>
       </div>

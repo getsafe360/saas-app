@@ -31,7 +31,7 @@ function NavLink({
       className={[
         "px-2 py-1 rounded transition-colors",
         "hover:text-sky-600 hover:bg-black/[0.03] dark:hover:bg-white/5",
-        active ? "text-sky-600" : "text-slate-800 dark:text-slate-200",
+        active ? "text-sky-600" : "text-[var(--text-default)]",
         "uppercase tracking-wide text-sm font-light",
       ].join(" ")}
     >
@@ -65,7 +65,7 @@ export function Header() {
         {t("skipToContent")}
       </a>
 
-      <header className="bg-[oklch(from_var(--color-neutral-900)_l_c_h_/_0.7)] dark:bg-[oklch(from_var(--color-neutral-50)_l_c_h_/_0.6)] backdrop-blur">
+      <header className="bg-[var(--header-bg)] backdrop-blur transition-colors duration-300">
         <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
           <div className="h-16 flex items-center justify-between">
             {/* Left: Logo */}
@@ -75,7 +75,7 @@ export function Header() {
               className="flex items-center min-w-0"
             >
               <Logo size={32} />
-              <span className="ml-2 flex items-center text-xl font-medium text-slate-900 dark:text-slate-100 subpixel-antialiased">
+              <span className="ml-2 flex items-center text-xl font-medium text-[var(--text-default)] subpixel-antialiased">
                 Get<span className="ml-0.5">Safe</span>
                 {/* Decorative spark — inherits text color (currentColor) */}
                 <svg
@@ -105,7 +105,7 @@ export function Header() {
                 <NavLink key={it.href} href={it.href} label={it.label} />
               ))}
 
-              <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-white/10" />
+              <div className="mx-1 h-6 w-px bg-[var(--border-default)]" />
 
               <BgColorSelector />
               <LanguageSwitcher />
@@ -127,7 +127,7 @@ export function Header() {
                 aria-controls={mobilePanelId}
                 aria-expanded={open}
                 aria-label={open ? t("closeMenu") : t("openMenu")}
-                className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 dark:text-slate-200 hover:bg-black/[0.05] dark:hover:bg-white/10 transition"
+                className="inline-flex items-center justify-center rounded-md p-2 text-[var(--text-default)] hover:bg-black/[0.05] dark:hover:bg-white/10 transition"
                 onClick={() => setOpen((v) => !v)}
               >
                 {open ? (
@@ -144,7 +144,7 @@ export function Header() {
         {open && (
           <div
             id={mobilePanelId}
-            className="md:hidden border-t border-slate-200/70 dark:border-[#1b2430] bg-white dark:bg-[#080B0E]"
+            className="md:hidden border-t border-[var(--border-default)] bg-[var(--background-default)] transition-colors duration-300"
           >
             <div className="mx-auto max-w-7xl px-4 py-3 flex flex-col gap-1">
               {items.map((it) => (
@@ -155,7 +155,7 @@ export function Header() {
                   onClick={() => setOpen(false)}
                 />
               ))}
-              <div className="my-2 h-px bg-slate-200 dark:bg-white/10" />
+              <div className="my-2 h-px bg-[var(--border-default)]" />
               <div className="flex items-center justify-between">
                 <BgColorSelector />
                 <Suspense fallback={<div className="h-9 w-9" />}>

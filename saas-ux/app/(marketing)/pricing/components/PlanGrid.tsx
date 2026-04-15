@@ -21,12 +21,12 @@ export default function PlanGrid({ billingCycle }: { billingCycle: BillingCycle 
         })}
       </div>
 
-      <div className="mt-8 space-y-2 text-sm text-slate-400">
+      <div className="mt-8 space-y-2 text-sm text-[var(--text-subtle)]">
         {PRICING_FOOTNOTES.map((footnote) => (
           <p key={footnote}>• {t(footnote)}</p>
         ))}
       </div>
-      <div className="mt-4 space-y-1 text-xs text-slate-500">
+      <div className="mt-4 space-y-1 text-xs text-[var(--text-subtle)] opacity-70">
         {PRICING_DISCLAIMERS.map((disclaimer) => (
           <p key={disclaimer}>{t(disclaimer)}</p>
         ))}

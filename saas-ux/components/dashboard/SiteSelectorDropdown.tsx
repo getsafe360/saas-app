@@ -125,13 +125,13 @@ export function SiteSelectorDropdown({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all ${
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-200 ${
           isOpen
-            ? "border-blue-500 bg-blue-500/10"
-            : "border-gray-700 bg-gray-800/50 hover:border-gray-600"
+            ? "border-[var(--border-primary)] bg-[var(--cockpit-sidebar-item-active-bg)]"
+            : "border-[var(--border-default)] bg-[var(--card-bg)] hover:border-[var(--color-neutral-400)]"
         }`}
       >
-        <div className="w-8 h-8 rounded-lg bg-gray-700/50 flex items-center justify-center overflow-hidden">
+        <div className="w-8 h-8 rounded-lg bg-[var(--color-neutral-200)] flex items-center justify-center overflow-hidden">
           {currentSite?.lastFaviconUrl ? (
             <img
               src={currentSite.lastFaviconUrl}
@@ -139,28 +139,28 @@ export function SiteSelectorDropdown({
               className="w-5 h-5"
             />
           ) : (
-            <Globe className="h-4 w-4 text-gray-400" />
+            <Globe className="h-4 w-4 text-[var(--text-subtle)]" />
           )}
         </div>
         <div className="flex-1 text-left min-w-0">
-          <div className="text-sm font-medium text-white truncate">
+          <div className="text-sm font-medium text-[var(--text-default)] truncate">
             {currentSite
               ? formatHost(currentSite.canonicalHost)
               : tNav("selectSite")}
           </div>
         </div>
         <ChevronDown
-          className={`h-4 w-4 text-gray-400 transition-transform ${
+          className={`h-4 w-4 text-[var(--text-subtle)] transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
+        <div className="absolute left-0 right-0 top-full mt-2 bg-[var(--background-default)] border border-[var(--border-default)] rounded-xl shadow-xl z-50 overflow-hidden transition-colors duration-200">
           <div className="max-h-[300px] overflow-y-auto">
             {sites.length === 0 ? (
-              <div className="p-4 text-center text-gray-500 text-sm">
+              <div className="p-4 text-center text-[var(--text-subtle)] text-sm">
                 {tNav("noSites")}
               </div>
             ) : (
@@ -174,11 +174,11 @@ export function SiteSelectorDropdown({
                       onSiteChange?.(site.id);
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-800/50 transition-colors ${
-                      isSelected ? "bg-blue-500/10" : ""
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--cockpit-sidebar-item-hover-bg)] transition-colors ${
+                      isSelected ? "bg-[var(--cockpit-sidebar-item-active-bg)]" : ""
                     }`}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center overflow-hidden">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--color-neutral-200)] flex items-center justify-center overflow-hidden">
                       {site.lastFaviconUrl ? (
                         <img
                           src={site.lastFaviconUrl}
@@ -186,18 +186,18 @@ export function SiteSelectorDropdown({
                           className="w-5 h-5"
                         />
                       ) : (
-                        <Globe className="h-4 w-4 text-gray-500" />
+                        <Globe className="h-4 w-4 text-[var(--text-subtle)]" />
                       )}
                     </div>
 
                     <div className="flex-1 text-left min-w-0">
-                      <div className="text-sm font-medium text-white truncate">
+                      <div className="text-sm font-medium text-[var(--text-default)] truncate">
                         {formatHost(site.canonicalHost)}
                       </div>
                     </div>
 
                     {isSelected && (
-                      <Check className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                      <Check className="h-4 w-4 text-[var(--text-primary)] flex-shrink-0" />
                     )}
                   </button>
                 );
@@ -205,13 +205,19 @@ export function SiteSelectorDropdown({
             )}
           </div>
 
-          <div className="border-t border-gray-700">
+          <div className="border-t border-[var(--border-default)]">
             <Link
               href="/dashboard/sites/add"
-              className="flex items-center gap-3 px-3 py-2.5 text-blue-300 hover:bg-gray-800/50 transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 text-[var(--text-primary)] hover:bg-[var(--cockpit-sidebar-item-hover-bg)] transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              <div className="p-1.5 rounded-lg border border-blue-500/30 bg-blue-500/15">
+              <div
+                className="p-1.5 rounded-lg border"
+                style={{
+                  borderColor: "oklch(from var(--color-primary-500) l c h / 0.4)",
+                  background: "oklch(from var(--color-primary-500) l c h / 0.12)",
+                }}
+              >
                 <Plus className="h-4 w-4" />
               </div>
               <span className="text-sm font-medium">{tNav("addNewSite")}</span>
@@ -223,13 +229,13 @@ export function SiteSelectorDropdown({
       {currentSite && !isOpen && (
         <div className="mt-3 space-y-1">
           <div className="flex items-center justify-between gap-2 px-2 py-1">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <span className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider">
               {tNav("optimize")}
             </span>
             {currentSite.status !== "connected" && (
               <Link
                 href={`/dashboard/sites/connect?siteId=${currentSite.id}`}
-                className="text-xs text-amber-300 hover:text-amber-200 underline underline-offset-2"
+                className="text-xs text-amber-600 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 underline underline-offset-2"
               >
                 {tNav("connectNow")}
               </Link>
@@ -245,7 +251,7 @@ export function SiteSelectorDropdown({
                 key={category.id}
                 href={href}
                 className={`cockpit-nav-item flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  isActive ? "cockpit-nav-item--active" : "hover:text-gray-200"
+                  isActive ? "cockpit-nav-item--active" : "hover:text-[var(--text-default)]"
                 }`}
               >
                 <span
