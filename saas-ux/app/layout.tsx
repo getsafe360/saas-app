@@ -3,6 +3,7 @@ import "./globals.css";
 import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import ClerkLocaleProvider from "@/components/ClerkLocaleProvider";
 
 const geistSans = Geist({ subsets: ["latin"] });
 const geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -34,7 +35,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         </Script>
       </head>
       <body className="min-h-[100dvh] antialiased">
-        {children}
+        <ClerkLocaleProvider>
+          {children}
+        </ClerkLocaleProvider>
 
         {/* GTM noscript fallback (uses /ns.html, not gtag/js) */}
         <noscript>
