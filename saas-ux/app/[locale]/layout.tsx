@@ -7,12 +7,23 @@ import {
   getTranslations,
   setRequestLocale,
 } from "next-intl/server";
+import { ClerkProvider } from "@clerk/nextjs";
+import { enUS, deDE, frFR, esES, itIT, ptBR } from "@clerk/localizations";
 
 import { locales, defaultLocale, type Locale } from "@/config/i18n";
 import { Header } from "@/components/header/header";
 import { Footer } from "@/components/ui/footer";
 import BackToTopButton from "@/components/ui/back-to-top-button";
 import { HtmlLang } from "@/components/HtmlLang";
+
+const clerkLocales: Record<Locale, typeof enUS> = {
+  en: enUS,
+  de: deDE,
+  fr: frFR,
+  es: esES,
+  it: itIT,
+  pt: ptBR,
+};
 
 // Absolute base for OG/canonical
 const siteUrl =
@@ -116,12 +127,19 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      <HtmlLang lang={locale} />
-      <Header />
-      {children}
-      <Footer />
-      <BackToTopButton />
-    </NextIntlClientProvider>
+    <ClerkProvider
+      localization={clerkLocales[locale]}
+      signUpForceRedirectUrl="/dashboard/welcome"
+      signUpFallbackRedirectUrl="/dashboard/welcome"
+      afterSignUpUrl="/dashboard/welcome"
+    >
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        <HtmlLang lang={locale} />
+        <Header />
+        {children}
+        <Footer />
+        <BackToTopButton />
+      </NextIntlClientProvider>
+    </ClerkProvider>
   );
 }
