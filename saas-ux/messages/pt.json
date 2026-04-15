@@ -454,5 +454,38 @@
       "tokenUsage": "Token usage: Tokens are consumed when running AI operations.",
       "tokenPackUsage": "Tokens are consumed when running AI repairs, builds, or advanced analyses."
     }
+  },
+  "Terminal": {
+    "initializingEngine": "Inicializando o motor de an\u00e1lise\u2026",
+    "analyzingSite": "Analisando {site}\u2026",
+    "fetchingHtml": "Obtendo HTML\u2026",
+    "htmlFetched": "HTML obtido em {ms} ms",
+    "extractingSignals": "Extraindo sinais essenciais\u2026",
+    "runningAnalysis": "Executando an\u00e1lise multicamadas\u2026",
+    "analysisComplete": "An\u00e1lise conclu\u00edda",
+    "generatingSnapshot": "Gerando instant\u00e2neo\u2026",
+    "snapshotReady": "Instant\u00e2neo pronto para {site}.",
+    "aiAnalysisProgress": [
+      "Realizando uma an\u00e1lise estrat\u00e9gica aprofundada",
+      "Identificando oportunidades de alto impacto",
+      "Aperfei\u00e7oando o modelo de diagn\u00f3stico",
+      "Revelando insights acion\u00e1veis",
+      "Avaliando fragilidades estruturais",
+      "Mapeando a arquitetura subjacente",
+      "Identificando alavancas essenciais de otimiza\u00e7\u00e3o",
+      "Interpretando padr\u00f5es complexos de sinal",
+      "Analisando gargalos de desempenho",
+      "Esclarecendo a narrativa da causa raiz",
+      "Sintetizando um caminho claro de recomenda\u00e7\u00f5es",
+      "Comparando com padr\u00f5es de melhores pr\u00e1ticas",
+      "Destacando \u00e1reas cr\u00edticas de melhoria",
+      "Validando a integridade dos elementos-chave",
+      "Reconstruindo a vis\u00e3o operacional completa",
+      "Priorizando melhorias de alto valor",
+      "Convertendo descobertas em pr\u00f3ximos passos",
+      "Alinhando insights com padr\u00f5es de excel\u00eancia",
+      "Preparando um resumo executivo refinado",
+      "Finalizando seu plano de otimiza\u00e7\u00e3o"
+    ]
   }
 }

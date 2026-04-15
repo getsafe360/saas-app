@@ -454,5 +454,38 @@
       "tokenUsage": "Token usage: Tokens are consumed when running AI operations.",
       "tokenPackUsage": "Tokens are consumed when running AI repairs, builds, or advanced analyses."
     }
+  },
+  "Terminal": {
+    "initializingEngine": "Avvio del motore di analisi\u2026",
+    "analyzingSite": "Analisi di {site} in corso\u2026",
+    "fetchingHtml": "Recupero HTML in corso\u2026",
+    "htmlFetched": "HTML recuperato in {ms} ms",
+    "extractingSignals": "Estrazione dei segnali chiave\u2026",
+    "runningAnalysis": "Analisi multi-livello in corso\u2026",
+    "analysisComplete": "Analisi completata",
+    "generatingSnapshot": "Generazione dello snapshot\u2026",
+    "snapshotReady": "Snapshot pronto per {site}.",
+    "aiAnalysisProgress": [
+      "Conducendo un'analisi strategica approfondita",
+      "Individuando opportunit\u00e0 ad alto impatto",
+      "Raffinando il modello diagnostico",
+      "Portando alla luce insight attuabili",
+      "Valutando debolezze strutturali",
+      "Mappando l'architettura sottostante",
+      "Identificando leve chiave di ottimizzazione",
+      "Interpretando pattern di segnale complessi",
+      "Analizzando i colli di bottiglia prestazionali",
+      "Chiarendo la narrativa della causa principale",
+      "Sintetizzando un percorso chiaro di raccomandazioni",
+      "Confrontando con gli standard di best practice",
+      "Evidenziando aree critiche di miglioramento",
+      "Validando l'integrit\u00e0 degli elementi fondamentali",
+      "Ricostruendo il quadro operativo completo",
+      "Prioritizzando interventi ad alto valore",
+      "Trasformando le analisi in passi concreti",
+      "Allineando gli insight agli standard di eccellenza",
+      "Preparando un executive summary accurato",
+      "Finalizzando il tuo blueprint di ottimizzazione"
+    ]
   }
 }

@@ -141,6 +141,141 @@ function normalizeLocale(rawLocale: string | null): string {
   return /^[a-z]{2,3}(-[a-z0-9]{2,8})?$/.test(candidate) ? candidate : "en";
 }
 
+const AI_ANALYSIS_PROGRESS: Record<string, string[]> = {
+  en: [
+    "Conducting a strategic deep-dive",
+    "Uncovering high-impact opportunities",
+    "Refining the diagnostic model",
+    "Surfacing actionable insights",
+    "Evaluating structural weaknesses",
+    "Mapping the underlying architecture",
+    "Identifying optimization leverage points",
+    "Interpreting complex signal patterns",
+    "Assessing performance bottlenecks",
+    "Clarifying the root-cause narrative",
+    "Synthesizing a clear recommendation path",
+    "Benchmarking against best-practice standards",
+    "Highlighting critical improvement areas",
+    "Validating the integrity of key elements",
+    "Reconstructing the full operational picture",
+    "Prioritizing high-value fixes",
+    "Translating findings into next steps",
+    "Aligning insights with best-in-class outcomes",
+    "Preparing a polished executive summary",
+    "Finalizing your optimization blueprint",
+  ],
+  de: [
+    "F\u00fchre eine strategische Tiefenanalyse durch",
+    "Decke wirkungsstarke Chancen auf",
+    "Verfeinere das diagnostische Modell",
+    "Arbeite umsetzbare Erkenntnisse heraus",
+    "Bewerte strukturelle Schw\u00e4chstellen",
+    "Kartiere die zugrunde liegende Architektur",
+    "Identifiziere entscheidende Optimierungshebel",
+    "Interpretiere komplexe Signalmuster",
+    "Analysiere Performance-Engp\u00e4sse",
+    "Kl\u00e4re die eigentliche Ursachenstory",
+    "Forme einen klaren Empfehlungspfad",
+    "Vergleiche mit Best-Practice-Standards",
+    "Hebe kritische Verbesserungsbereiche hervor",
+    "Validiere die Integrit\u00e4t zentraler Elemente",
+    "Rekonstruiere das vollst\u00e4ndige Gesamtbild",
+    "Priorisiere hochwertige Optimierungen",
+    "\u00dcbersetze Erkenntnisse in konkrete Schritte",
+    "Richte die Ergebnisse an Spitzenstandards aus",
+    "Bereite eine pr\u00e4zise Executive-Summary vor",
+    "Finalisiere deinen Optimierungs-Blueprint",
+  ],
+  es: [
+    "Realizando un an\u00e1lisis estrat\u00e9gico en profundidad",
+    "Identificando oportunidades de alto impacto",
+    "Refinando el modelo de diagn\u00f3stico",
+    "Revelando ideas accionables",
+    "Evaluando debilidades estructurales",
+    "Mapeando la arquitectura subyacente",
+    "Detectando puntos clave de optimizaci\u00f3n",
+    "Interpretando patrones de se\u00f1al complejos",
+    "Analizando cuellos de botella de rendimiento",
+    "Aclarando la narrativa de causa ra\u00edz",
+    "Sintetizando una ruta clara de recomendaciones",
+    "Comparando con est\u00e1ndares de mejores pr\u00e1cticas",
+    "Destacando \u00e1reas cr\u00edticas de mejora",
+    "Validando la integridad de los elementos clave",
+    "Reconstruyendo la visi\u00f3n operativa completa",
+    "Priorizando mejoras de alto valor",
+    "Traduciendo hallazgos en pr\u00f3ximos pasos",
+    "Alineando los resultados con est\u00e1ndares l\u00edderes",
+    "Preparando un resumen ejecutivo pulido",
+    "Finalizando su plan de optimizaci\u00f3n",
+  ],
+  fr: [
+    "R\u00e9alisation d'une analyse strat\u00e9gique approfondie",
+    "Identification d'opportunit\u00e9s \u00e0 fort impact",
+    "Affinement du mod\u00e8le diagnostique",
+    "Mise en lumi\u00e8re d'insights exploitables",
+    "\u00c9valuation des faiblesses structurelles",
+    "Cartographie de l'architecture sous-jacente",
+    "D\u00e9tection des leviers d'optimisation cl\u00e9s",
+    "Interpr\u00e9tation de sch\u00e9mas de signaux complexes",
+    "Analyse des goulots d'\u00e9tranglement de performance",
+    "Clarification du r\u00e9cit de la cause profonde",
+    "Synth\u00e8se d'un chemin de recommandations clair",
+    "Benchmarking avec les meilleures pratiques",
+    "Mise en avant des axes critiques d'am\u00e9lioration",
+    "Validation de l'int\u00e9grit\u00e9 des \u00e9l\u00e9ments essentiels",
+    "Reconstruction de la vision op\u00e9rationnelle compl\u00e8te",
+    "Priorisation des optimisations \u00e0 forte valeur",
+    "Traduction des constats en actions concr\u00e8tes",
+    "Alignement des insights avec les standards d'excellence",
+    "Pr\u00e9paration d'un r\u00e9sum\u00e9 ex\u00e9cutif soign\u00e9",
+    "Finalisation de votre plan d'optimisation",
+  ],
+  it: [
+    "Conducendo un'analisi strategica approfondita",
+    "Individuando opportunit\u00e0 ad alto impatto",
+    "Raffinando il modello diagnostico",
+    "Portando alla luce insight attuabili",
+    "Valutando debolezze strutturali",
+    "Mappando l'architettura sottostante",
+    "Identificando leve chiave di ottimizzazione",
+    "Interpretando pattern di segnale complessi",
+    "Analizzando i colli di bottiglia prestazionali",
+    "Chiarendo la narrativa della causa principale",
+    "Sintetizzando un percorso chiaro di raccomandazioni",
+    "Confrontando con gli standard di best practice",
+    "Evidenziando aree critiche di miglioramento",
+    "Validando l'integrit\u00e0 degli elementi fondamentali",
+    "Ricostruendo il quadro operativo completo",
+    "Prioritizzando interventi ad alto valore",
+    "Trasformando le analisi in passi concreti",
+    "Allineando gli insight agli standard di eccellenza",
+    "Preparando un executive summary accurato",
+    "Finalizzando il tuo blueprint di ottimizzazione",
+  ],
+  pt: [
+    "Realizando uma an\u00e1lise estrat\u00e9gica aprofundada",
+    "Identificando oportunidades de alto impacto",
+    "Aperfei\u00e7oando o modelo de diagn\u00f3stico",
+    "Revelando insights acion\u00e1veis",
+    "Avaliando fragilidades estruturais",
+    "Mapeando a arquitetura subjacente",
+    "Identificando alavancas essenciais de otimiza\u00e7\u00e3o",
+    "Interpretando padr\u00f5es complexos de sinal",
+    "Analisando gargalos de desempenho",
+    "Esclarecendo a narrativa da causa raiz",
+    "Sintetizando um caminho claro de recomenda\u00e7\u00f5es",
+    "Comparando com padr\u00f5es de melhores pr\u00e1ticas",
+    "Destacando \u00e1reas cr\u00edticas de melhoria",
+    "Validando a integridade dos elementos-chave",
+    "Reconstruindo a vis\u00e3o operacional completa",
+    "Priorizando melhorias de alto valor",
+    "Convertendo descobertas em pr\u00f3ximos passos",
+    "Alinhando insights com padr\u00f5es de excel\u00eancia",
+    "Preparando um resumo executivo refinado",
+    "Finalizando seu plano de otimiza\u00e7\u00e3o",
+  ],
+};
+
 function normalizeUrl(rawUrl: string): string | null {
   const withScheme = /^https?:\/\//i.test(rawUrl.trim())
     ? rawUrl.trim()
@@ -1111,6 +1246,21 @@ export async function GET(req: NextRequest) {
         log("INFO", "Signals", "Extracting key signals…");
         log("INFO", "Analysis", "Running multi-layer analysis…");
 
+        const progressMsgs = AI_ANALYSIS_PROGRESS[locale] ?? AI_ANALYSIS_PROGRESS.en;
+        let msgIdx = 0;
+        let cycleTimer: ReturnType<typeof setInterval> | null = null;
+        const stopCycling = () => {
+          if (cycleTimer !== null) { clearInterval(cycleTimer); cycleTimer = null; }
+        };
+        if (msgIdx < progressMsgs.length) log("INFO", "LLM", progressMsgs[msgIdx++]);
+        cycleTimer = setInterval(() => {
+          if (msgIdx < progressMsgs.length) {
+            log("INFO", "LLM", progressMsgs[msgIdx++]);
+          } else {
+            stopCycling();
+          }
+        }, 3000);
+
         let generated: GeminiSnapshotResult | undefined;
         let llmError: Error | undefined;
         for (let attempt = 1; attempt <= 2; attempt++) {
@@ -1120,7 +1270,6 @@ export async function GET(req: NextRequest) {
             LLM_TIMEOUT_MS,
           );
           try {
-            log("INFO", "LLM", attempt === 1 ? "Requesting AI analysis…" : "Retrying AI analysis…");
             generated = await generateGeminiSnapshot({
               url: normalizedUrl,
               locale,
@@ -1135,6 +1284,7 @@ export async function GET(req: NextRequest) {
             llmError = err instanceof Error ? err : new Error(String(err));
           }
         }
+        stopCycling();
         if (!generated) throw llmError ?? new Error("AI analysis failed.");
 
         log("SUCCESS", "Analysis", "Analysis complete");
