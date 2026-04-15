@@ -60,6 +60,8 @@
   --background-primary: var(--color-primary-500);
   --background-warning: var(--color-warning);
   --header-bg: oklch(from var(--color-neutral-50) l c h / 0.8);
+  /* Footer: slightly off-body so it's visually distinct but theme-aware */
+  --footer-bg: var(--color-neutral-200);
 
   /* Semantic Text */
   --text-default: var(--color-neutral-900);
@@ -159,4 +161,6 @@
   --text-default: var(--color-neutral-950);
   --text-subtle: var(--color-neutral-600);
   --header-bg: oklch(from var(--color-neutral-50) l c h / 0.6);
+  /* Footer: slightly darker than dark body for visual distinction */
+  --footer-bg: var(--color-neutral-50);
 }

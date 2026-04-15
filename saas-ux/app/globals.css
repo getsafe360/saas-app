@@ -4,10 +4,21 @@
 @import "./tokens.css";
 @import "../styles/components.css";
 
-/* Smooth theme transitions */
+/* Smooth theme transitions — applied to structural elements so the whole page
+   transitions when the user switches theme via BgColorSelector. */
 html,
 body {
-  transition: background-color 0.3s, color 0.3s;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+header,
+footer,
+main,
+aside,
+nav,
+.cockpit-sidebar,
+.feature-card {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Global Typography + base colors from tokens */

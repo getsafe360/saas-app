@@ -80,8 +80,8 @@ export default function DashboardLayout({
   return (
     <div className="flex flex-col min-h-[calc(100dvh-68px)] max-w-7xl mx-auto w-full">
       {/* Mobile header */}
-      <div className="lg:hidden flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4">
-        <span className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+      <div className="lg:hidden flex items-center justify-between bg-[var(--background-default)] border-b border-[var(--border-default)] p-4 transition-colors duration-300">
+        <span className="font-semibold text-lg text-[var(--text-default)]">
           {t("overview")}
         </span>
         <Button
@@ -112,7 +112,7 @@ export default function DashboardLayout({
           {/* Site Selector Dropdown with Category Links */}
           <div className="px-3 mb-4">
             {isLoadingSites ? (
-              <div className="h-12 rounded-xl bg-gray-800/30 animate-pulse" />
+              <div className="h-12 rounded-xl bg-[var(--color-neutral-300)] animate-pulse" />
             ) : (
               <SiteSelectorDropdown
                 sites={sites}
@@ -123,11 +123,11 @@ export default function DashboardLayout({
           </div>
 
           {/* Divider */}
-          <div className="mx-3 mb-4 border-t border-gray-200 dark:border-gray-700" />
+          <div className="mx-3 mb-4 border-t border-[var(--border-default)]" />
 
           {/* Static Navigation Items */}
           <nav className="px-2 overflow-y-auto">
-            <div className="px-2 py-1 text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <div className="px-2 py-1 text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider mb-2">
               {t("navigation") || "Navigation"}
             </div>
             {staticNavItems.map((item) => {

@@ -16,6 +16,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${geistSans.className} ${geistMono.className}`}
     >
       <head>
+        {/*
+          Dark-mode init — runs synchronously before first paint to prevent FOUC.
+          Defaults to "dark" unless the user explicitly stored "light" or "system".
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.add('light');}else if(t==='system'){document.documentElement.classList.add(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}else{document.documentElement.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}})();`,
+          }}
+        />
         {/* Correct GTM container snippet */}
         <Script id="gtm" strategy="afterInteractive">
           {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -25,7 +34,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 })(window,document,'script','dataLayer','GTM-NN7RBQ42');`}
         </Script>
       </head>
-      <body className="min-h-[100dvh] antialiased bg-stone-50 dark:bg-[#0d1117] text-gray-900 dark:text-gray-100">
+      <body className="min-h-[100dvh] antialiased">
         <ClerkProvider
           signUpForceRedirectUrl="/dashboard/welcome"
           signUpFallbackRedirectUrl="/dashboard/welcome"

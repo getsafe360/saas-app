@@ -192,7 +192,7 @@ export default function DirectAgentStreamCard() {
   const domain = activeUrl ? hostnameFromUrl(activeUrl) : "your website";
 
   return (
-    <section className="mx-auto max-w-5xl rounded-2xl border border-cyan-400/30 bg-[#070c17] p-5 shadow-[0_0_40px_rgba(14,165,233,0.15)]">
+    <section className="mx-auto max-w-5xl rounded-2xl border border-cyan-400/30 bg-gray-900 dark:bg-[#070c17] p-5 shadow-[0_0_40px_rgba(14,165,233,0.15)] transition-colors duration-300">
       <div className="gs-input-submit-combo flex-col sm:flex-row">
         <Input
           value={urlInput}
@@ -213,9 +213,9 @@ export default function DirectAgentStreamCard() {
       {(stream.messages.length > 0 || stream.snapshot || stream.error) && (
         <div className="mt-4 space-y-4 text-left">
           {/* Terminal */}
-          <div className="overflow-hidden rounded-xl border border-cyan-400/25 bg-[#05070d] text-base leading-relaxed text-slate-200">
+          <div className="overflow-hidden rounded-xl border border-cyan-400/25 bg-gray-950 dark:bg-[#05070d] text-base leading-relaxed text-slate-200 transition-colors duration-300">
             {/* Header bar */}
-            <div className="flex items-center justify-between border-b border-cyan-500/20 bg-slate-900/70 px-4 py-2 text-[11px] uppercase tracking-[0.24em] text-cyan-200/80">
+            <div className="flex items-center justify-between border-b border-cyan-500/20 bg-gray-800/90 dark:bg-slate-900/70 px-4 py-2 text-[11px] uppercase tracking-[0.24em] text-cyan-300/90 dark:text-cyan-200/80 transition-colors duration-300">
               <p>GetSafe 360 AI ANALYSIS ENGINE</p>
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-red-500" />
@@ -225,7 +225,7 @@ export default function DirectAgentStreamCard() {
             </div>
 
             {/* Terminal body */}
-            <div className="bg-[#090d14] p-4">
+            <div className="bg-gray-900 dark:bg-[#090d14] p-4 transition-colors duration-300">
               {/* Live stream messages */}
               <div className="space-y-1 font-mono text-sm">
                 {stream.messages.map((message) => {
@@ -303,8 +303,8 @@ export default function DirectAgentStreamCard() {
                     style={{ borderColor: section.color }}
                     className={`group relative overflow-hidden rounded-xl border p-4 transition-all ${
                       isWordPress
-                        ? "bg-gradient-to-br from-[#090d14] to-[#21759b]/10"
-                        : "bg-[#090d14] hover:bg-[#0b1020]"
+                        ? "bg-gradient-to-br from-gray-900 to-[#21759b]/10 dark:from-[#090d14] dark:to-[#21759b]/10"
+                        : "bg-gray-900 hover:bg-gray-800 dark:bg-[#090d14] dark:hover:bg-[#0b1020]"
                     }`}
                   >
                     <div className="mb-3 flex items-center justify-between">
@@ -354,7 +354,7 @@ export default function DirectAgentStreamCard() {
 
           {/* CTA */}
           {stream.snapshot && (
-            <div className="rounded-lg border border-white/10 bg-[#090d14] p-5 text-center">
+            <div className="rounded-lg border border-white/10 bg-gray-900 dark:bg-[#090d14] p-5 text-center transition-colors duration-300">
               <p className="text-sm leading-relaxed text-slate-200">
                 {t("cta_full_report")}
               </p>
