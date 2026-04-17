@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignUpButton, useClerk, useUser } from "@clerk/nextjs";
 import { useLocale, useTranslations } from "next-intl";
 import {
   ArrowRightIcon,
@@ -46,10 +46,15 @@ function hostnameFromUrl(input: string): string {
   }
 }
 
+const GUEST_SCAN_KEY = "gs360_guest_scans";
+const GUEST_SCAN_LIMIT = 3;
+
 export default function DirectAgentStreamCard() {
   const t = useTranslations("analysis");
   const locale = useLocale();
   const router = useRouter();
+  const { openSignUp } = useClerk();
+  const { isSignedIn } = useUser();
   const [urlInput, setUrlInput] = useState("");
   const [activeUrl, setActiveUrl] = useState("");
   const [stashUrl, setStashUrl] = useState<string | null>(null);
@@ -63,6 +68,16 @@ export default function DirectAgentStreamCard() {
   const start = () => {
     const normalized = normalizeUrl(urlInput);
     if (!normalized) return;
+
+    if (!isSignedIn) {
+      const count = parseInt(localStorage.getItem(GUEST_SCAN_KEY) ?? "0", 10);
+      if (count >= GUEST_SCAN_LIMIT) {
+        void openSignUp({});
+        return;
+      }
+      localStorage.setItem(GUEST_SCAN_KEY, String(count + 1));
+    }
+
     stashedRef.current = false;
     setStashUrl(null);
     setStashError(null);

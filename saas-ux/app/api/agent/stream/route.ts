@@ -1046,7 +1046,7 @@ async function generateGeminiSnapshot(args: {
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.15,
-            maxOutputTokens: 16000,
+            maxOutputTokens: 24000,
             thinkingConfig: { thinkingBudget: 4096 },
             responseMimeType: "application/json",
             responseSchema: {
@@ -1340,13 +1340,6 @@ export async function GET(req: NextRequest) {
 
         for (const entry of generated.terminalLogs) {
           log(entry.level, entry.stage, entry.text);
-        }
-        if (generated.fallbackStats.usedAnyFallback) {
-          log(
-            "WARNING",
-            "AI",
-            `Fallback text used in ${generated.fallbackStats.fallbackCount} section(s).`,
-          );
         }
         await trackFallbackStats(generated.fallbackStats);
 
