@@ -1,113 +1,113 @@
 {
   "Support": {
     "hero": {
-      "title": "Customer Support",
-      "subtitle": "We're here to help you succeed with GetSafe360 AI"
+      "title": "Kundensupport",
+      "subtitle": "Wir sind für Sie da, damit Sie mit GetSafe360 AI erfolgreich sind"
     },
     "contactMethods": {
       "email": {
-        "title": "Email Support",
-        "description": "Our primary support channel for all inquiries",
+        "title": "E-Mail-Support",
+        "description": "Unser primärer Supportkanal für alle Anfragen",
         "address": "support@getsafe360.ai",
-        "action": "Send us an email"
+        "action": "E-Mail senden"
       },
       "responseTime": {
-        "title": "Response Time",
-        "primary": "Within 24 hours",
-        "secondary": "Most inquiries answered within a few hours during business hours"
+        "title": "Antwortzeit",
+        "primary": "Innerhalb von 24 Stunden",
+        "secondary": "Die meisten Anfragen werden innerhalb weniger Stunden während der Geschäftszeiten beantwortet"
       }
     },
     "noPhone": {
-      "message": "We provide support exclusively via email. This ensures you receive accurate, documented responses and allows us to handle technical questions efficiently."
+      "message": "Wir bieten Support ausschließlich per E-Mail an. Dies stellt sicher, dass Sie genaue, dokumentierte Antworten erhalten und ermöglicht uns, technische Fragen effizient zu bearbeiten."
     },
     "whatWeHelp": {
-      "title": "How we can help",
+      "title": "Wie wir helfen können",
       "categories": {
         "account": {
-          "title": "Account & Access",
-          "description": "Login issues, password resets, account management, and settings"
+          "title": "Konto & Zugang",
+          "description": "Anmeldeprobleme, Passwort-Zurücksetzungen, Kontoverwaltung und Einstellungen"
         },
         "billing": {
-          "title": "Billing & Subscriptions",
-          "description": "Payment questions, invoices, subscription changes, and refund requests"
+          "title": "Abrechnung & Abonnements",
+          "description": "Zahlungsfragen, Rechnungen, Abonnementänderungen und Rückerstattungsanfragen"
         },
         "technical": {
-          "title": "Technical Support",
-          "description": "Website analysis, WordPress connections, scanning issues, and integrations"
+          "title": "Technischer Support",
+          "description": "Website-Analyse, WordPress-Verbindungen, Scanprobleme und Integrationen"
         },
         "security": {
-          "title": "Security Concerns",
-          "description": "Vulnerability reports, security alerts, and urgent security issues"
+          "title": "Sicherheitsbedenken",
+          "description": "Sicherheitslückenberichte, Sicherheitswarnungen und dringende Sicherheitsprobleme"
         },
         "general": {
-          "title": "General Questions",
-          "description": "Product features, pricing information, and general inquiries"
+          "title": "Allgemeine Fragen",
+          "description": "Produktfunktionen, Preisinformationen und allgemeine Anfragen"
         }
       }
     },
     "billingSection": {
-      "title": "Billing & Payment Support",
-      "description": "All payments are securely processed through Stripe. For billing inquiries, please include:",
+      "title": "Abrechnungs- & Zahlungssupport",
+      "description": "Alle Zahlungen werden sicher über Stripe verarbeitet. Bitte geben Sie für Abrechnungsanfragen folgende Informationen an:",
       "requirements": {
-        "item1": "Your account email address",
-        "item2": "Invoice or charge reference number (if applicable)",
-        "item3": "Date of the transaction or charge",
-        "item4": "Clear description of your question or concern"
+        "item1": "Ihre Konto-E-Mail-Adresse",
+        "item2": "Rechnungs- oder Belegnummer (falls vorhanden)",
+        "item3": "Datum der Transaktion oder Abbuchung",
+        "item4": "Klare Beschreibung Ihrer Frage oder Ihres Anliegens"
       },
-      "note": "This information helps us locate your records quickly and resolve issues faster.",
-      "stripeInfo": "If you have questions about a charge on your credit card statement, look for \"GETSAFE360\" or \"GetSafe360 AI\" as the merchant name.",
-      "refundPolicy": "For refund requests, please review our refund policy and include your reason for the request."
+      "note": "Diese Informationen helfen uns, Ihre Unterlagen schnell zu finden und Probleme schneller zu lösen.",
+      "stripeInfo": "Wenn Sie Fragen zu einer Abbuchung auf Ihrem Kreditkartenkontoauszug haben, suchen Sie nach \"GETSAFE360\" oder \"GetSafe360 AI\" als Händlername.",
+      "refundPolicy": "Für Rückerstattungsanfragen prüfen Sie bitte unsere Rückerstattungsrichtlinie und geben Sie Ihren Grund für den Antrag an."
     },
     "feedback": {
-      "title": "Product Feedback & Suggestions",
-      "subtitle": "Your input shapes our product",
-      "description": "We actively seek feedback from our users. Your suggestions, feature requests, and constructive criticism help us improve GetSafe360 AI.",
-      "encourage": "Please share:",
+      "title": "Produktfeedback & Vorschläge",
+      "subtitle": "Ihr Beitrag gestaltet unser Produkt",
+      "description": "Wir suchen aktiv nach Feedback von unseren Nutzern. Ihre Vorschläge, Funktionsanfragen und konstruktive Kritik helfen uns, GetSafe360 AI zu verbessern.",
+      "encourage": "Bitte teilen Sie mit uns:",
       "items": {
-        "item1": "Features you'd like to see",
-        "item2": "Improvements to existing functionality",
-        "item3": "Issues or frustrations you've experienced",
-        "item4": "Ideas for new use cases"
+        "item1": "Funktionen, die Sie sich wünschen",
+        "item2": "Verbesserungen bestehender Funktionen",
+        "item3": "Probleme oder Frustrationen, die Sie erlebt haben",
+        "item4": "Ideen für neue Anwendungsfälle"
       },
-      "commitment": "Every piece of feedback is reviewed by our product team and directly influences our development roadmap."
+      "commitment": "Jedes Feedback wird von unserem Produktteam geprüft und beeinflusst direkt unsere Entwicklungsroadmap."
     },
     "commitment": {
-      "title": "Our support commitment",
+      "title": "Unser Support-Versprechen",
       "values": {
         "response": {
-          "title": "Timely Responses",
-          "description": "We aim to respond to all inquiries within 24 hours on business days"
+          "title": "Rechtzeitige Antworten",
+          "description": "Wir bemühen uns, alle Anfragen innerhalb von 24 Stunden an Werktagen zu beantworten"
         },
         "clarity": {
-          "title": "Clear Communication",
-          "description": "No jargon, no confusion—just straightforward, helpful answers"
+          "title": "Klare Kommunikation",
+          "description": "Kein Fachjargon, keine Verwirrung – nur direkte, hilfreiche Antworten"
         },
         "resolution": {
-          "title": "Problem Resolution",
-          "description": "We work with you until your issue is fully resolved"
+          "title": "Problemlösung",
+          "description": "Wir arbeiten mit Ihnen zusammen, bis Ihr Problem vollständig gelöst ist"
         }
       }
     },
     "contactInfo": {
-      "title": "Contact Information",
+      "title": "Kontaktinformationen",
       "company": {
         "name": "GETSAFE 360 AI LIMITED",
-        "description": "AI-powered website security and optimization platform"
+        "description": "KI-gestützte Plattform für Website-Sicherheit und -Optimierung"
       },
       "email": {
         "support": "support@getsafe360.ai",
-        "supportLabel": "General Support",
+        "supportLabel": "Allgemeiner Support",
         "billing": "support@getsafe360.ai",
-        "billingLabel": "Billing & Payments",
+        "billingLabel": "Abrechnung & Zahlungen",
         "security": "security@getsafe360.ai",
-        "securityLabel": "Security Vulnerabilities",
+        "securityLabel": "Sicherheitslücken",
         "legal": "legal@getsafe360.ai",
-        "legalLabel": "Legal Inquiries"
+        "legalLabel": "Rechtliche Anfragen"
       },
-      "emergencyNote": "For urgent security vulnerabilities affecting your website, please email security@getsafe360.ai with \"URGENT\" in the subject line."
+      "emergencyNote": "Für dringende Sicherheitslücken, die Ihre Website betreffen, senden Sie bitte eine E-Mail an security@getsafe360.ai mit \"URGENT\" in der Betreffzeile."
     },
     "legal": {
-      "disclaimer": "By contacting support, you agree that we may use your communication to improve our services. We never share your information with third parties without your consent."
+      "disclaimer": "Indem Sie den Support kontaktieren, stimmen Sie zu, dass wir Ihre Kommunikation zur Verbesserung unserer Dienste verwenden dürfen. Wir geben Ihre Informationen niemals ohne Ihre Zustimmung an Dritte weiter."
     },
     "contactPage": {
       "meta": {
