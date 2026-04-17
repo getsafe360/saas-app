@@ -10,6 +10,7 @@ export type SparkyMessage = {
   role: "system" | "sparky";
   level?: SparkyLogLevel;
   stage?: string;
+  color?: string;
 };
 
 export type SparkySnapshot = {
@@ -78,16 +79,34 @@ export function useSparkyStream(url: string, locale: string) {
           text?: string;
           level?: SparkyLogLevel;
           stage?: string;
+          replace?: boolean;
+          color?: string;
         };
 
         if (!payload.text) return;
 
-        appendMessage({
+        const newMsg: Omit<SparkyMessage, "id"> = {
           role: "sparky",
           text: payload.text,
           level: payload.level ?? "INFO",
           stage: payload.stage ?? "Stream",
-        });
+          color: payload.color,
+        };
+
+        if (payload.replace && payload.stage) {
+          const targetStage = payload.stage;
+          setMessages((prev) => {
+            const lastIdx = prev.findLastIndex(m => m.stage === targetStage);
+            if (lastIdx >= 0) {
+              const updated = [...prev];
+              updated[lastIdx] = { ...updated[lastIdx], text: payload.text!, color: payload.color };
+              return updated;
+            }
+            return [...prev, { ...newMsg, id: crypto.randomUUID() }];
+          });
+        } else {
+          appendMessage(newMsg);
+        }
       } catch {
         // Ignore malformed payloads.
       }

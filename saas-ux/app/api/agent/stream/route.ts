@@ -4,6 +4,12 @@ import net from "node:net";
 import { kvGet, kvIncr, kvSet } from "@/lib/kv";
 import { PageSpeedSummary } from "@/lib/analyzer/pageSpeed";
 import { buildGeminiSnapshotPrompt } from "@/lib/agent/snapshotPrompt";
+import enMessages from "@/messages/en.json";
+import deMessages from "@/messages/de.json";
+import esMessages from "@/messages/es.json";
+import frMessages from "@/messages/fr.json";
+import itMessages from "@/messages/it.json";
+import ptMessages from "@/messages/pt.json";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -275,6 +281,45 @@ const AI_ANALYSIS_PROGRESS: Record<string, string[]> = {
     "Finalizando seu plano de otimiza\u00e7\u00e3o",
   ],
 };
+
+type TerminalMsgs = {
+  initializingEngine: string;
+  analyzingSite: string;
+  fetchingHtml: string;
+  htmlFetched: string;
+  extractingSignals: string;
+  runningAnalysis: string;
+  analysisComplete: string;
+  generatingSnapshot: string;
+  snapshotReady: string;
+  aiAnalysisProgress: readonly string[];
+};
+
+const TERMINAL_MSGS: Record<string, TerminalMsgs> = {
+  en: enMessages.Terminal as TerminalMsgs,
+  de: deMessages.Terminal as TerminalMsgs,
+  es: esMessages.Terminal as TerminalMsgs,
+  fr: frMessages.Terminal as TerminalMsgs,
+  it: itMessages.Terminal as TerminalMsgs,
+  pt: ptMessages.Terminal as TerminalMsgs,
+};
+
+function getTerminalMsgs(locale: string): TerminalMsgs {
+  return TERMINAL_MSGS[locale] ?? TERMINAL_MSGS.en;
+}
+
+const LLM_PROGRESS_COLORS = [
+  "#22d3ee",
+  "#a78bfa",
+  "#34d399",
+  "#f472b6",
+  "#fbbf24",
+  "#38bdf8",
+  "#fb923c",
+  "#a3e635",
+  "#2dd4bf",
+  "#c084fc",
+];
 
 function normalizeUrl(rawUrl: string): string | null {
   const withScheme = /^https?:\/\//i.test(rawUrl.trim())
@@ -1236,30 +1281,33 @@ export async function GET(req: NextRequest) {
 
       try {
         const host = new URL(normalizedUrl).hostname;
-        log("INFO", "Boot", `Analyzing ${host}…`);
-        log("INFO", "Fetch", "Fetching HTML…");
+        const t = getTerminalMsgs(locale);
+        log("INFO", "Boot", t.analyzingSite.replace("{site}", host));
+        log("INFO", "Fetch", t.fetchingHtml);
 
         const fetchSnapshot = await limitedHtmlFetch(normalizedUrl);
         const platform = detectWordPressPlatform(fetchSnapshot.html);
         const facts = buildFacts(normalizedUrl, fetchSnapshot, null);
-        log("SUCCESS", "Fetch", `HTML fetched in ${fetchSnapshot.fetchMs}ms`);
-        log("INFO", "Signals", "Extracting key signals…");
-        log("INFO", "Analysis", "Running multi-layer analysis…");
+        log("SUCCESS", "Fetch", t.htmlFetched.replace("{ms}", String(fetchSnapshot.fetchMs)));
+        log("INFO", "Signals", t.extractingSignals);
+        log("INFO", "Analysis", t.runningAnalysis);
 
-        const progressMsgs = AI_ANALYSIS_PROGRESS[locale] ?? AI_ANALYSIS_PROGRESS.en;
+        const progressMsgs = (AI_ANALYSIS_PROGRESS[locale] ?? AI_ANALYSIS_PROGRESS.en).map(msg => `${msg}\u2026`);
         let msgIdx = 0;
+        let progressColorIdx = 0;
         let cycleTimer: ReturnType<typeof setInterval> | null = null;
         const stopCycling = () => {
           if (cycleTimer !== null) { clearInterval(cycleTimer); cycleTimer = null; }
         };
-        if (msgIdx < progressMsgs.length) log("INFO", "LLM", progressMsgs[msgIdx++]);
-        cycleTimer = setInterval(() => {
-          if (msgIdx < progressMsgs.length) {
-            log("INFO", "LLM", progressMsgs[msgIdx++]);
-          } else {
-            stopCycling();
-          }
-        }, 3000);
+        const emitProgress = () => {
+          if (msgIdx >= progressMsgs.length) { stopCycling(); return; }
+          const isFirst = msgIdx === 0;
+          const color = LLM_PROGRESS_COLORS[progressColorIdx % LLM_PROGRESS_COLORS.length];
+          progressColorIdx++;
+          emit("message", { level: "INFO", stage: "LLM", text: progressMsgs[msgIdx++], replace: !isFirst, color });
+        };
+        emitProgress();
+        cycleTimer = setInterval(emitProgress, 3000);
 
         let generated: GeminiSnapshotResult | undefined;
         let llmError: Error | undefined;
@@ -1287,8 +1335,8 @@ export async function GET(req: NextRequest) {
         stopCycling();
         if (!generated) throw llmError ?? new Error("AI analysis failed.");
 
-        log("SUCCESS", "Analysis", "Analysis complete");
-        log("INFO", "Snapshot", "Generating snapshot…");
+        log("SUCCESS", "Analysis", t.analysisComplete);
+        log("INFO", "Snapshot", t.generatingSnapshot);
 
         for (const entry of generated.terminalLogs) {
           log(entry.level, entry.stage, entry.text);

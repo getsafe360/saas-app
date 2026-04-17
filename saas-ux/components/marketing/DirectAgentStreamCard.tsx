@@ -232,7 +232,7 @@ export default function DirectAgentStreamCard() {
                   const isActiveAnalysis =
                     stream.isStreaming &&
                     !stream.snapshot &&
-                    message.text.includes("Running multi-layer analysis");
+                    message.stage === "LLM";
                   return (
                     <div
                       key={message.id}
@@ -242,9 +242,14 @@ export default function DirectAgentStreamCard() {
                         {message.level === "SUCCESS" ? "✓" : ""}
                       </span>
                       {isActiveAnalysis ? (
-                        <span className="flex items-center gap-2 text-slate-400">
+                        <span className="flex items-center gap-2">
                           <LoaderCircle className="animate-spin h-3.5 w-3.5 flex-shrink-0 text-indigo-400" />
-                          <span className="animate-pulse">{message.text}</span>
+                          <span
+                            className="animate-pulse"
+                            style={message.color ? { color: message.color } : undefined}
+                          >
+                            {message.text}
+                          </span>
                         </span>
                       ) : (
                         <span
@@ -253,6 +258,7 @@ export default function DirectAgentStreamCard() {
                               ? "text-emerald-300"
                               : "text-slate-400"
                           }
+                          style={message.color ? { color: message.color } : undefined}
                         >
                           {message.text}
                         </span>
