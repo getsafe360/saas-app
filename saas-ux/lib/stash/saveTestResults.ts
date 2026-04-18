@@ -102,6 +102,11 @@ export async function saveTestResults(
     const result = await response.json();
 
     if (result.ok && result.stashKey && result.url) {
+      try {
+        sessionStorage.setItem("getsafe360_stash_url", result.url);
+      } catch {
+        // sessionStorage unavailable — WelcomeClient will fall back to test_backup
+      }
       return {
         stashKey: result.stashKey,
         stashUrl: result.url,

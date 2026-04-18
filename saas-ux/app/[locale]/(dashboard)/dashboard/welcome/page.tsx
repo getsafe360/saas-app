@@ -1,5 +1,6 @@
 import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 import { WelcomeClient } from './WelcomeClient';
 
 export const runtime = 'nodejs';
@@ -25,9 +26,9 @@ export default async function WelcomePage({
 
   const resolvedStashUrl = stashUrl || (stashKey ? buildPublicUrlFromKey(stashKey) : null);
 
-  if (!resolvedStashUrl) {
-    redirect('/dashboard/sites?first=1');
-  }
-
-  return <WelcomeClient stashUrl={resolvedStashUrl} />;
+  return (
+    <Suspense>
+      <WelcomeClient stashUrl={resolvedStashUrl ?? null} />
+    </Suspense>
+  );
 }
