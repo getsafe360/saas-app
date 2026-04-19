@@ -88,9 +88,9 @@ export function WelcomeClient({ stashUrl }: { stashUrl: string | null }) {
   const loadingSteps = useMemo(
     () => [
       "Loading your test results...",
-      "Creating your secure cockpit...",
+      "Creating your site...",
       "Storing your initial analysis...",
-      "Launching your dashboard...",
+      "Taking you to your dashboard...",
     ],
     []
   );
@@ -159,7 +159,7 @@ export function WelcomeClient({ stashUrl }: { stashUrl: string | null }) {
         await new Promise((resolve) => setTimeout(resolve, 800));
 
         if (!cancelled) {
-          router.replace(`/dashboard/sites/${created.siteId}/cockpit`);
+          router.replace("/dashboard");
         }
       } catch (e: any) {
         if (!cancelled) {

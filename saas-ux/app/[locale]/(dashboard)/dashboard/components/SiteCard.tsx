@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Globe, ArrowRight, AlertCircle, CheckCircle, Clock, Loader2, Trash2, Play } from "lucide-react";
+import { Globe, ArrowRight, AlertCircle, CheckCircle, Clock, Loader2, Trash2, ScanLine } from "lucide-react";
 import { CMSIcon } from "@/components/ui/cms-icon";
 import { getCMSIcon } from "@/lib/cms-icons";
 import { formatDistanceToNow } from "date-fns";
@@ -169,10 +169,10 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
         <Button
           onClick={handleAction}
           disabled={isLoading}
-          className={`w-full font-semibold shadow-sm hover:shadow-md transition-all disabled:opacity-70 ${
+          className={`w-full font-medium transition-all disabled:opacity-70 ${
             isAnalyzed
-              ? "bg-blue-600 hover:bg-blue-700 text-white"
-              : "bg-emerald-600 hover:bg-emerald-700 text-white"
+              ? "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md"
+              : "bg-emerald-500/10 hover:bg-emerald-500/[0.15] border border-emerald-500/25 hover:border-emerald-500/40 text-emerald-600 dark:text-emerald-400 shadow-none"
           }`}
         >
           {isLoading ? (
@@ -187,7 +187,7 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
             </>
           ) : (
             <>
-              <Play className="w-4 h-4 mr-2" />
+              <ScanLine className="w-4 h-4 mr-2" />
               Analyze
             </>
           )}
