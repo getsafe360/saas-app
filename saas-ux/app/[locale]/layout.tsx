@@ -15,7 +15,7 @@ import { HtmlLang } from "@/components/HtmlLang";
 
 // Absolute base for OG/canonical
 const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.getsafe360.com";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.getsafe360.ai";
 const OG_IMAGE = "/og/featured-1200x630.jpg";
 
 export function generateStaticParams() {
