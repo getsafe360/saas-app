@@ -384,7 +384,7 @@ async function limitedHtmlFetch(url: string): Promise<FetchSnapshot> {
       redirect: "follow",
       signal: controller.signal,
       headers: {
-        "User-Agent": "SparkySiteAnalyzer/1.0 (+https://www.getsafe360.ai)",
+        "User-Agent": "SparkySiteAnalyzer/1.0 (https://www.getsafe360.ai)",
       },
       cache: "no-store",
     });
@@ -1045,9 +1045,11 @@ async function generateGeminiSnapshot(args: {
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.15,
-            maxOutputTokens: 24000,
-            thinkingConfig: { thinkingBudget: 4096 },
+            temperature: 0.1,
+            maxOutputTokens: 2500,
+            thinkingConfig: { 
+              thinkingLevel: "LOW"
+            },
             responseMimeType: "application/json",
             responseSchema: {
               type: "OBJECT",
@@ -1071,16 +1073,16 @@ async function generateGeminiSnapshot(args: {
                     "ctaLine",
                   ],
                   properties: {
-                    seoGeo: { type: "STRING", minLength: 40 },
-                    accessibility: { type: "STRING", minLength: 40 },
-                    performance: { type: "STRING", minLength: 40 },
-                    security: { type: "STRING", minLength: 40 },
-                    content: { type: "STRING", minLength: 40 },
+                    seoGeo: { type: "STRING", minLength: 20 },
+                    accessibility: { type: "STRING", minLength: 20 },
+                    performance: { type: "STRING", minLength: 20 },
+                    security: { type: "STRING", minLength: 20 },
+                    content: { type: "STRING", minLength: 20 },
                     ctaLine: { type: "STRING", minLength: 10 },
                   },
                 },
                 ...(args.isWordPress
-                  ? { wordpressSection: { type: "STRING", minLength: 40 } }
+                  ? { wordpressSection: { type: "STRING", minLength: 20 } }
                   : {}),
               },
             },
