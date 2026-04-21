@@ -508,7 +508,7 @@ export interface ContentData {
   analysis: {
     wordCount: number;
     readingTime: string;
-    language: string;
+    language: string | null;
     quality: "excellent" | "good" | "fair" | "poor";
   };
   metadata: {

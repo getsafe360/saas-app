@@ -78,7 +78,9 @@ function CategoryArc({ label, score, color, icon: Icon }: CategoryArcProps) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <Icon className="h-3 w-3" style={{ color }} />
+          <span style={{ color }}>
+            <Icon className="h-3 w-3" />
+          </span>
           <span className="text-[9px] font-bold leading-none mt-0.5" style={{ color }}>
             {score}
           </span>

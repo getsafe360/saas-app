@@ -314,7 +314,7 @@ function evaluateCategoryChecks(data: any): Record<"performance" | "security" | 
     ],
     content: [
       { ok: !!data.meta?.title && (data.meta?.titleLen || 0) >= 30 && (data.meta?.titleLen || 0) <= 60, severity: "warning" as CheckSeverity, message: "Page title needs optimization (30–60 chars)" },
-      { ok: !!data.meta?.description && (data.meta?.descriptionLen || 0) >= 120, severity: "warning" as CheckSeverity, message: "Meta description too short or missing" },
+      { ok: !!data.meta?.description && (data.meta?.descriptionLen || 0) >= 120 && (data.meta?.descriptionLen || 0) <= 160, severity: "warning" as CheckSeverity, message: "Meta description length outside optimal range (120–160 chars)" },
       { ok: data.dom?.h1Count === 1, severity: "warning" as CheckSeverity, message: "Heading structure should have exactly one H1" },
       { ok: !!data.siteLang, severity: "warning" as CheckSeverity, message: "Missing language declaration" },
     ],
@@ -809,7 +809,7 @@ function transformContentData(apiData: any, contentScore: number): ContentData {
     analysis: {
       wordCount: 0,
       readingTime: "—",
-      language: apiData.siteLang || "en",
+      language: apiData.siteLang || null,
       quality,
     },
     metadata: {

@@ -58,8 +58,8 @@ export function ContentCard({
           </div>
           <div className="rounded-lg border border-slate-700/40 p-2">
             <div className="text-slate-400 text-xs mb-0.5">Language</div>
-            <div className="font-medium uppercase">
-              {data.analysis.language || "—"}
+            <div className={`font-medium uppercase ${!data.analysis.language ? "text-yellow-400" : ""}`}>
+              {data.analysis.language ?? "—"}
             </div>
           </div>
         </div>
