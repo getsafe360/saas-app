@@ -175,6 +175,41 @@
         "recommendations": "Empfehlungen"
       }
     },
+    "content": {
+      "title": "Inhalt",
+      "score": "Inhaltsbewertung",
+      "quality": {
+        "excellent": "Ausgezeichnet",
+        "good": "Gut",
+        "fair": "Akzeptabel",
+        "poor": "Schlecht"
+      },
+      "analysis": {
+        "wordCount": "Wortanzahl",
+        "readingTime": "Lesezeit",
+        "language": "Sprache",
+        "quality": "Qualität"
+      },
+      "metadata": {
+        "titleOptimal": "Titel optimal",
+        "descriptionOptimal": "Beschreibung optimal",
+        "titleLength": "Titellänge",
+        "descriptionLength": "Beschreibungslänge"
+      },
+      "structure": {
+        "hasProperH1": "Einzelne H1-Überschrift",
+        "hasSubheadings": "Hat Unterüberschriften"
+      },
+      "toolkit": {
+        "title": "KI-Optimierungstools",
+        "contentAnalysis": "Inhaltsanalyse",
+        "aiRewriter": "KI-Umschreiber",
+        "multiLanguage": "Mehrsprachigkeit",
+        "schemaBuilder": "Schema-Builder",
+        "aiChatbot": "KI-Chatbot",
+        "soon": "Bald"
+      }
+    },
     "accessibility": {
       "title": "Barrierefreiheit",
       "score": "Barrierefreiheitsbewertung",

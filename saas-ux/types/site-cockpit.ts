@@ -501,6 +501,36 @@ export interface Technology {
   };
 }
 
+// ===== CONTENT =====
+export interface ContentData {
+  score: number;
+  grade: ScoreGrade;
+  analysis: {
+    wordCount: number;
+    readingTime: string;
+    language: string;
+    quality: "excellent" | "good" | "fair" | "poor";
+  };
+  metadata: {
+    titleOptimal: boolean;
+    descriptionOptimal: boolean;
+    titleLength: number;
+    descriptionLength: number;
+  };
+  structure: {
+    hasProperH1: boolean;
+    h1Count: number;
+    hasSubheadings: boolean;
+    headingDepth: number;
+  };
+  tone: {
+    detected: string | null;
+    readabilityLevel: string | null;
+  };
+  issues: string[];
+  recommendations: string[];
+}
+
 // ===== ACCESSIBILITY =====
 export interface Accessibility {
   score: number;
@@ -616,6 +646,7 @@ export interface Summary {
     security: number;
     seo: number;
     accessibility: number;
+    content: number;
     wordpress?: number;
   };
   strengths: string[];
@@ -639,6 +670,12 @@ export interface Summary {
       topIssues: string[];
     };
     accessibility: {
+      criticalIssues: number;
+      warnings: number;
+      passed: number;
+      topIssues: string[];
+    };
+    content: {
       criticalIssues: number;
       warnings: number;
       passed: number;
@@ -697,6 +734,7 @@ export interface SiteCockpitResponse {
   performance: Performance;
   security: SecurityData;
   accessibility: Accessibility;
+  content: ContentData;
 
   // Technology & infrastructure
   technology: Technology;

@@ -11,7 +11,7 @@
  * - Future-proof: Prepared for comprehensive SEO expansion
  */
 
-import type { SiteCockpitResponse, ScoreGrade, WordPress } from "@/types/site-cockpit";
+import type { SiteCockpitResponse, ScoreGrade, WordPress, ContentData } from "@/types/site-cockpit";
 import {
   buildWordPressHealthFindings,
   calculateWordPressCategoryScores,
@@ -233,6 +233,32 @@ export function calculateAccessibilityScore(data: any): number {
   return Math.max(0, 100 - (data.accessibility?.imgWithoutAltRatio || 0) * 100);
 }
 
+export function calculateContentScore(data: any): number {
+  let score = 55; // Base — full content audit requires deep analysis
+
+  const titleLen = data.meta?.titleLen || 0;
+  const descLen = data.meta?.descriptionLen || 0;
+
+  if (data.meta?.title) {
+    if (titleLen >= 30 && titleLen <= 60) score += 15;
+    else if (titleLen > 0) score += 7;
+  }
+
+  if (data.meta?.description) {
+    if (descLen >= 120 && descLen <= 160) score += 12;
+    else if (descLen > 0) score += 6;
+  }
+
+  if (data.dom?.h1Count === 1) score += 10;
+  else if (data.dom?.h1Count > 1) score -= 5;
+
+  if (data.siteLang) score += 5;
+
+  if (data.meta?.hasCanonical) score += 3;
+
+  return Math.min(100, Math.max(0, score));
+}
+
 // ============================================
 // SUMMARY TRANSFORMERS
 // ============================================
@@ -262,7 +288,7 @@ type CategoryInsights = {
   topIssues: string[];
 };
 
-function evaluateCategoryChecks(data: any): Record<"performance" | "security" | "seo" | "accessibility", CategoryInsights> {
+function evaluateCategoryChecks(data: any): Record<"performance" | "security" | "seo" | "accessibility" | "content", CategoryInsights> {
   const checks = {
     performance: [
       { ok: !data.perfHints?.heavyScriptHint, severity: "warning" as CheckSeverity, message: "Heavy scripts detected" },
@@ -286,9 +312,15 @@ function evaluateCategoryChecks(data: any): Record<"performance" | "security" | 
       { ok: (data.accessibility?.imgWithoutAltRatio || 0) < 0.2, severity: "warning" as CheckSeverity, message: "High ratio of images without ALT" },
       { ok: !!data.siteLang, severity: "warning" as CheckSeverity, message: "Missing lang attribute" },
     ],
+    content: [
+      { ok: !!data.meta?.title && (data.meta?.titleLen || 0) >= 30 && (data.meta?.titleLen || 0) <= 60, severity: "warning" as CheckSeverity, message: "Page title needs optimization (30–60 chars)" },
+      { ok: !!data.meta?.description && (data.meta?.descriptionLen || 0) >= 120, severity: "warning" as CheckSeverity, message: "Meta description too short or missing" },
+      { ok: data.dom?.h1Count === 1, severity: "warning" as CheckSeverity, message: "Heading structure should have exactly one H1" },
+      { ok: !!data.siteLang, severity: "warning" as CheckSeverity, message: "Missing language declaration" },
+    ],
   };
 
-  const result = {} as Record<"performance" | "security" | "seo" | "accessibility", CategoryInsights>;
+  const result = {} as Record<"performance" | "security" | "seo" | "accessibility" | "content", CategoryInsights>;
 
   for (const [category, categoryChecks] of Object.entries(checks) as Array<[keyof typeof checks, Array<{ ok: boolean; severity: CheckSeverity; message: string }>]>) {
     let criticalIssues = 0;
@@ -722,6 +754,85 @@ function transformAccessibilityData(apiData: any, accessibilityScore: number) {
   };
 }
 
+function transformContentData(apiData: any, contentScore: number): ContentData {
+  const titleLen = apiData.meta?.titleLen || 0;
+  const descLen = apiData.meta?.descriptionLen || 0;
+
+  const issues: string[] = [];
+  const recommendations: string[] = [];
+
+  if (!apiData.meta?.title || titleLen === 0) {
+    issues.push("Missing page title");
+    recommendations.push("Add a descriptive title between 30–60 characters");
+  } else if (titleLen < 30) {
+    issues.push("Page title is too short");
+    recommendations.push("Extend your title to at least 30 characters");
+  } else if (titleLen > 60) {
+    issues.push("Page title is too long");
+    recommendations.push("Trim your title to under 60 characters");
+  }
+
+  if (!apiData.meta?.description || descLen === 0) {
+    issues.push("Missing meta description");
+    recommendations.push("Write a compelling description between 120–160 characters");
+  } else if (descLen < 120) {
+    issues.push("Meta description is too short");
+    recommendations.push("Expand description to at least 120 characters");
+  } else if (descLen > 160) {
+    issues.push("Meta description is too long");
+    recommendations.push("Shorten description to under 160 characters");
+  }
+
+  const h1Count = apiData.dom?.h1Count || 0;
+  if (h1Count === 0) {
+    issues.push("No H1 heading found");
+    recommendations.push("Add a single H1 heading describing the page");
+  } else if (h1Count > 1) {
+    issues.push("Multiple H1 headings detected");
+    recommendations.push("Use exactly one H1 heading per page");
+  }
+
+  if (!apiData.siteLang) {
+    issues.push("Missing language declaration");
+    recommendations.push("Add a lang attribute to the <html> element");
+  }
+
+  const quality =
+    contentScore >= 90 ? "excellent"
+    : contentScore >= 70 ? "good"
+    : contentScore >= 50 ? "fair"
+    : "poor";
+
+  return {
+    score: contentScore,
+    grade: getScoreGrade(contentScore),
+    analysis: {
+      wordCount: 0,
+      readingTime: "—",
+      language: apiData.siteLang || "en",
+      quality,
+    },
+    metadata: {
+      titleOptimal: titleLen >= 30 && titleLen <= 60,
+      descriptionOptimal: descLen >= 120 && descLen <= 160,
+      titleLength: titleLen,
+      descriptionLength: descLen,
+    },
+    structure: {
+      hasProperH1: h1Count === 1,
+      h1Count,
+      hasSubheadings: false,
+      headingDepth: h1Count > 0 ? 1 : 0,
+    },
+    tone: {
+      detected: null,
+      readabilityLevel: null,
+    },
+    issues,
+    recommendations,
+  };
+}
+
 function transformTechnologyData(apiData: any) {
   return {
     server: {
@@ -836,8 +947,9 @@ export function transformToSiteCockpitResponse(apiData: any): SiteCockpitRespons
   const securityScore = calculateSecurityScore(apiData);
   const seoScore = calculateSEOScore(apiData);
   const accessibilityScore = calculateAccessibilityScore(apiData);
+  const contentScore = calculateContentScore(apiData);
   const overallScore = Math.round(
-    (performanceScore + securityScore + seoScore + accessibilityScore) / 4
+    (performanceScore + securityScore + seoScore + accessibilityScore + contentScore) / 5
   );
   const categoryInsights = evaluateCategoryChecks(apiData);
   const criticalIssues = Object.values(categoryInsights).reduce((sum, item) => sum + item.criticalIssues, 0);
@@ -864,6 +976,7 @@ export function transformToSiteCockpitResponse(apiData: any): SiteCockpitRespons
         security: securityScore,
         seo: seoScore,
         accessibility: accessibilityScore,
+        content: contentScore,
         ...(apiData.cms?.type === "wordpress" ? { wordpress: 68 } : {}),
       },
       strengths: generateStrengths(apiData, performanceScore, securityScore, seoScore, accessibilityScore),
@@ -894,6 +1007,7 @@ export function transformToSiteCockpitResponse(apiData: any): SiteCockpitRespons
     performance: transformPerformanceData(apiData, performanceScore),
     security: transformSecurityData(apiData, securityScore),
     accessibility: transformAccessibilityData(apiData, accessibilityScore),
+    content: transformContentData(apiData, contentScore),
 
     // === TECHNOLOGY & INFRASTRUCTURE ===
     technology: transformTechnologyData(apiData),

@@ -27,6 +27,7 @@ import { PerformanceCard } from "./cards/PerformanceCard";
 import { SecurityCard } from "./cards/SecurityCard";
 import { SEOCard } from "./cards/SEOCard";
 import { AccessibilityCard } from "./cards/AccessibilityCard";
+import { ContentCard } from "./cards/ContentCard";
 import { OverallScoreHero } from "./OverallScoreHero";
 import { GeoCard } from "./cards/GeoCard";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
@@ -59,6 +60,7 @@ const CARD_COMPONENTS: Record<string, ComponentType<any>> = {
   security: SecurityCard,
   seo: SEOCard,
   accessibility: AccessibilityCard,
+  content: ContentCard,
   geo: GeoCard,
   wordpress: WordPressCard,
   optimization: OptimizationCard,
@@ -70,8 +72,9 @@ const DEFAULT_CARDS: CockpitCardLayout[] = [
   { id: "wordpress", visible: true, minimized: false, order: 3 },
   { id: "seo", visible: true, minimized: false, order: 4 },
   { id: "accessibility", visible: true, minimized: false, order: 5 },
-  { id: "geo", visible: true, minimized: false, order: 6 },
-  { id: "optimization", visible: true, minimized: false, order: 7 },
+  { id: "content", visible: true, minimized: false, order: 6 },
+  { id: "geo", visible: true, minimized: false, order: 7 },
+  { id: "optimization", visible: true, minimized: false, order: 8 },
 ];
 
 const DEFAULT_LAYOUT: CockpitLayoutData = {
@@ -200,7 +203,7 @@ export function SiteCockpit({
   }, [siteId]);
 
   const handleOptimizeCategory = useCallback(
-    async (category: "performance" | "security" | "seo" | "accessibility") => {
+    async (category: "performance" | "security" | "seo" | "accessibility" | "content") => {
       setOptimizingCategory(category);
     },
     [],
@@ -321,6 +324,18 @@ export function SiteCockpit({
                       stats={data.summary.categoryInsights?.accessibility}
                       onOptimize={() => handleOptimizeCategory("accessibility")}
                       optimizing={optimizingCategory === "accessibility"}
+                    />
+                  );
+                }
+
+                if (card.id === "content") {
+                  return (
+                    <ContentCard
+                      key={card.id}
+                      data={data.content}
+                      stats={data.summary.categoryInsights?.content}
+                      onOptimize={() => handleOptimizeCategory("content")}
+                      optimizing={optimizingCategory === "content"}
                     />
                   );
                 }
