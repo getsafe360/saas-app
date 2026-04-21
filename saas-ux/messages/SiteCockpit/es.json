@@ -175,6 +175,41 @@
         "recommendations": "Recomendaciones"
       }
     },
+    "content": {
+      "title": "Contenido",
+      "score": "Puntuación de Contenido",
+      "quality": {
+        "excellent": "Excelente",
+        "good": "Bueno",
+        "fair": "Aceptable",
+        "poor": "Deficiente"
+      },
+      "analysis": {
+        "wordCount": "Número de palabras",
+        "readingTime": "Tiempo de lectura",
+        "language": "Idioma",
+        "quality": "Calidad"
+      },
+      "metadata": {
+        "titleOptimal": "Título óptimo",
+        "descriptionOptimal": "Descripción óptima",
+        "titleLength": "Longitud del título",
+        "descriptionLength": "Longitud de la descripción"
+      },
+      "structure": {
+        "hasProperH1": "Un solo encabezado H1",
+        "hasSubheadings": "Tiene subencabezados"
+      },
+      "toolkit": {
+        "title": "Herramientas de optimización IA",
+        "contentAnalysis": "Análisis de contenido",
+        "aiRewriter": "Reescritor IA",
+        "multiLanguage": "Multiidioma",
+        "schemaBuilder": "Constructor de esquemas",
+        "aiChatbot": "Chatbot IA",
+        "soon": "Pronto"
+      }
+    },
     "accessibility": {
       "title": "Accesibilidad",
       "score": "Puntuación de Accesibilidad",
