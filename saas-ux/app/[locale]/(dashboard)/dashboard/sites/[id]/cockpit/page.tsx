@@ -197,7 +197,6 @@ export default async function SiteCockpitPage({
       data={analysisData}
       siteId={id}
       editable={false}
-      wordpressOnly={true}
       wordpressConnectionStatus={toConnectionStatus(site.connectionStatus)}
       wordpressLastConnected={site.lastConnectedAt?.toISOString()}
     />

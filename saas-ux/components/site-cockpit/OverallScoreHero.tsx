@@ -19,6 +19,7 @@ import {
   Lock,
 } from "lucide-react";
 import { getCMSInfo } from "@/components/analyzer/cms/cms-signatures";
+import { WordPressAIIcon } from "@/components/icons/WordPressAI";
 import type { CategoryType, Summary } from "@/types/site-cockpit";
 
 interface OverallScoreHeroProps {
@@ -26,6 +27,7 @@ interface OverallScoreHeroProps {
   domain: string;
   finalUrl: string;
   metaTitle?: string;
+  wordpressScore?: number;
   cms?: {
     type: string;
     name?: string;
@@ -34,7 +36,7 @@ interface OverallScoreHeroProps {
   onOptimizeCategory?: (
     category: Extract<
       CategoryType,
-      "performance" | "security" | "seo" | "accessibility"
+      "performance" | "security" | "seo" | "accessibility" | "wordpress"
     >,
   ) => Promise<void>;
   optimizingCategory?: string | null;
@@ -49,14 +51,21 @@ interface CategoryArcProps {
   label: string;
   score: number;
   color: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string; size?: number }>;
+  onOptimize?: () => void;
+  optimizing?: boolean;
 }
 
-function CategoryArc({ label, score, color, icon: Icon }: CategoryArcProps) {
+function CategoryArc({ label, score, color, icon: Icon, onOptimize, optimizing }: CategoryArcProps) {
   const dash = (score / 100) * ARC_CIRC;
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className="relative h-14 w-14">
+      <div
+        className="relative h-14 w-14 cursor-default"
+        onClick={onOptimize}
+        title={onOptimize ? `Optimize ${label}` : undefined}
+        style={{ cursor: onOptimize ? "pointer" : "default" }}
+      >
         <svg className="h-14 w-14 -rotate-90" viewBox="0 0 56 56">
           <circle
             cx="28"
@@ -75,21 +84,20 @@ function CategoryArc({ label, score, color, icon: Icon }: CategoryArcProps) {
             fill="none"
             strokeLinecap="round"
             strokeDasharray={`${dash} ${ARC_CIRC}`}
+            style={{ transition: "stroke-dasharray 0.5s ease" }}
           />
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span style={{ color }}>
-            <Icon className="h-3 w-3" />
-          </span>
-          <span className="text-[9px] font-bold leading-none mt-0.5" style={{ color }}>
-            {score}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-[11px] font-bold leading-none" style={{ color }}>
+            {optimizing ? "…" : score}
           </span>
         </div>
       </div>
       <span
-        className="text-[10px] font-medium tracking-wide text-center leading-tight"
+        className="inline-flex items-center gap-1 text-[10px] font-medium tracking-wide text-center leading-tight"
         style={{ color: "var(--text-subtle)" }}
       >
+        <Icon className="h-3 w-3 shrink-0" size={12} />
         {label}
       </span>
     </div>
@@ -144,9 +152,10 @@ export function OverallScoreHero({
   domain,
   finalUrl,
   metaTitle,
+  wordpressScore,
   cms,
-  onOptimizeCategory: _onOptimizeCategory,
-  optimizingCategory: _optimizingCategory,
+  onOptimizeCategory,
+  optimizingCategory,
 }: OverallScoreHeroProps) {
   const t = useTranslations("SiteCockpit");
   const [imageError, setImageError] = useState(false);
@@ -161,6 +170,7 @@ export function OverallScoreHero({
   const hasMetaTitle = Boolean(metaTitle?.trim());
 
   const scores = summary.categoryScores;
+  const isWordPress = cms?.type === "wordpress";
 
   const categoryArcs: CategoryArcProps[] = [
     {
@@ -168,24 +178,40 @@ export function OverallScoreHero({
       score: scores.performance,
       color: "var(--category-performance)",
       icon: Zap,
+      onOptimize: onOptimizeCategory
+        ? () => onOptimizeCategory("performance")
+        : undefined,
+      optimizing: optimizingCategory === "performance",
     },
     {
       label: "Security",
       score: scores.security,
       color: "var(--category-security)",
       icon: Shield,
+      onOptimize: onOptimizeCategory
+        ? () => onOptimizeCategory("security")
+        : undefined,
+      optimizing: optimizingCategory === "security",
     },
     {
       label: "SEO",
       score: scores.seo,
       color: "var(--category-seo)",
       icon: Search,
+      onOptimize: onOptimizeCategory
+        ? () => onOptimizeCategory("seo")
+        : undefined,
+      optimizing: optimizingCategory === "seo",
     },
     {
       label: "Accessibility",
       score: scores.accessibility,
       color: "var(--category-accessibility)",
       icon: Accessibility,
+      onOptimize: onOptimizeCategory
+        ? () => onOptimizeCategory("accessibility")
+        : undefined,
+      optimizing: optimizingCategory === "accessibility",
     },
     {
       label: "Content",
@@ -193,6 +219,20 @@ export function OverallScoreHero({
       color: "var(--category-content)",
       icon: FileText,
     },
+    ...(isWordPress && wordpressScore !== undefined
+      ? [
+          {
+            label: "WordPress",
+            score: wordpressScore,
+            color: "var(--category-wordpress)",
+            icon: WordPressAIIcon as ComponentType<{ className?: string; size?: number }>,
+            onOptimize: onOptimizeCategory
+              ? () => onOptimizeCategory("wordpress")
+              : undefined,
+            optimizing: optimizingCategory === "wordpress",
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -204,6 +244,14 @@ export function OverallScoreHero({
       }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* ── Page title (h1) ── */}
+        <h1
+          className="text-sm font-semibold tracking-wide"
+          style={{ color: "var(--text-subtle)" }}
+        >
+          Site dashboard for {domain}
+        </h1>
+
         {/* ── Row 1: Site info + Overall arc ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div
@@ -215,20 +263,27 @@ export function OverallScoreHero({
           >
             <div className="grid grid-cols-3 gap-4 items-center">
               <div className="col-span-1">
+                {/* Screenshot with hover overlay */}
                 <div
-                  className="aspect-[4/3] overflow-hidden rounded-sm border"
+                  className="aspect-[4/3] overflow-hidden rounded-sm border relative group/screenshot"
                   style={{
                     borderColor: "var(--border-default)",
                     background: "var(--color-neutral-200)",
                   }}
                 >
                   {!imageError ? (
-                    <img
-                      src={screenshotUrl}
-                      alt={t("summary.title")}
-                      className="h-full w-full object-cover"
-                      onError={() => setImageError(true)}
-                    />
+                    <>
+                      <img
+                        src={screenshotUrl}
+                        alt={`Screenshot for ${metaTitle || domain}`}
+                        className="h-full w-full object-cover"
+                        onError={() => setImageError(true)}
+                      />
+                      <div
+                        className="absolute inset-0 bg-black/50 transition-opacity duration-[300ms] group-hover/screenshot:opacity-0"
+                        aria-hidden="true"
+                      />
+                    </>
                   ) : (
                     <div className="h-full w-full flex items-center justify-center">
                       <Globe className="h-5 w-5" />
@@ -237,23 +292,18 @@ export function OverallScoreHero({
                 </div>
               </div>
               <div className="col-span-2 min-w-0">
-                <h1
+                <h2
                   className="text-2xl font-semibold truncate"
                   style={{ color: "var(--text-default)" }}
                 >
                   {domain}
-                </h1>
+                </h2>
                 <div
                   className="text-sm mt-1 truncate flex items-center gap-2"
                   style={{ color: "var(--text-subtle)" }}
                 >
                   {hasMetaTitle ? (
-                    <>
-                      <span className="font-medium">
-                        {t("seo.meta.title")}:
-                      </span>
-                      <span>{metaTitle}</span>
-                    </>
+                    <span>{metaTitle}</span>
                   ) : (
                     <span
                       className="inline-flex h-2.5 w-2.5 rounded-full"
