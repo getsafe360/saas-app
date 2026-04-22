@@ -37,6 +37,14 @@ import type {
   CockpitCardLayout,
 } from "@/lib/db/schema/features/cockpit-layouts";
 
+type OptimizeCategory =
+  | "performance"
+  | "security"
+  | "seo"
+  | "accessibility"
+  | "content"
+  | "wordpress";
+
 interface SiteCockpitProps {
   data: SiteCockpitResponse;
   siteId?: string;
@@ -69,11 +77,11 @@ const CARD_COMPONENTS: Record<string, ComponentType<any>> = {
 const DEFAULT_CARDS: CockpitCardLayout[] = [
   { id: "performance", visible: true, minimized: false, order: 1 },
   { id: "security", visible: true, minimized: false, order: 2 },
-  { id: "wordpress", visible: true, minimized: false, order: 3 },
-  { id: "seo", visible: true, minimized: false, order: 4 },
-  { id: "accessibility", visible: true, minimized: false, order: 5 },
-  { id: "content", visible: true, minimized: false, order: 6 },
-  { id: "geo", visible: true, minimized: false, order: 7 },
+  { id: "seo", visible: true, minimized: false, order: 3 },
+  { id: "accessibility", visible: true, minimized: false, order: 4 },
+  { id: "content", visible: true, minimized: false, order: 5 },
+  { id: "geo", visible: true, minimized: false, order: 6 },
+  { id: "wordpress", visible: true, minimized: false, order: 7 },
   { id: "optimization", visible: true, minimized: false, order: 8 },
 ];
 
@@ -114,15 +122,13 @@ export function SiteCockpit({
   initialLayout,
   wordpressConnectionStatus = "disconnected",
   wordpressLastConnected,
-  wordpressOnly = false,
 }: SiteCockpitProps) {
   const t = useTranslations("SiteCockpit");
   const [cards, setCards] = useState<CardConfig[]>(() =>
     layoutToCards(initialLayout || DEFAULT_LAYOUT),
   );
-  const [optimizingCategory, setOptimizingCategory] = useState<string | null>(
-    null,
-  );
+  const [optimizingCategory, setOptimizingCategory] =
+    useState<OptimizeCategory | null>(null);
 
   const [, startTransition] = useTransition();
   const [saveStatus, setSaveStatus] = useState<
@@ -203,24 +209,39 @@ export function SiteCockpit({
   }, [siteId]);
 
   const handleOptimizeCategory = useCallback(
-    async (category: "performance" | "security" | "seo" | "accessibility" | "content") => {
+    async (category: OptimizeCategory) => {
       setOptimizingCategory(category);
+
+      // Persist an AI analysis job + seeded repair actions to the DB
+      if (siteId) {
+        try {
+          await fetch(`/api/sites/${siteId}/ai-optimize`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ category }),
+          });
+        } catch (err) {
+          console.error("[SiteCockpit] Failed to create optimization job", err);
+        }
+      }
     },
-    [],
+    [siteId],
   );
 
-  const visibleCards = (wordpressOnly
-    ? cards.filter((card) => card.id === "wordpress")
-    : cards
-  ).filter((card) => {
+  const isWordPress = data.cms.type === "wordpress";
+  const isWordPressOptimizing = optimizingCategory === "wordpress";
+
+  const visibleCards = cards.filter((card) => {
     if (!card.visible) return false;
 
-    if (!wordpressOnly && card.id === "wordpress" && data.cms.type !== "wordpress") {
-      return false;
+    // WordPress Insights card: only when WordPress AI optimization is triggered
+    if (card.id === "wordpress") {
+      return isWordPress && isWordPressOptimizing;
     }
 
-    if (card.id === "optimization" && !optimizingCategory) {
-      return false;
+    // Optimization card: only when any category optimization is active
+    if (card.id === "optimization") {
+      return !!optimizingCategory;
     }
 
     return true;
@@ -236,10 +257,13 @@ export function SiteCockpit({
         domain={data.domain}
         finalUrl={data.finalUrl}
         metaTitle={data.meta?.title}
+        wordpressScore={data.wordpress?.score}
         cms={data.cms}
+        onOptimizeCategory={handleOptimizeCategory}
+        optimizingCategory={optimizingCategory}
       />
 
-      {editable && !wordpressOnly && (
+      {editable && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
           <div
             className="flex items-center justify-end gap-3 text-sm"
@@ -265,22 +289,34 @@ export function SiteCockpit({
           strategy={rectSortingStrategy}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-            {wordpressOnly && (
+            {/* WordPress AI banner — only when WordPress optimization is active */}
+            {isWordPressOptimizing && (
               <div
                 className="mb-6 rounded-2xl border p-5 backdrop-blur-sm"
-                style={{ borderColor: "var(--border-default)", background: "var(--header-bg)" }}
+                style={{
+                  borderColor: "var(--border-default)",
+                  background: "var(--header-bg)",
+                }}
               >
-                <div className="text-xs uppercase tracking-[0.18em]" style={{ color: "var(--text-subtle)" }}>
+                <div
+                  className="text-xs uppercase tracking-[0.18em]"
+                  style={{ color: "var(--text-subtle)" }}
+                >
                   WordPress AI
                 </div>
-                <h2 className="mt-2 text-2xl font-semibold" style={{ color: "var(--text-primary)" }}>
+                <h2
+                  className="mt-2 text-2xl font-semibold"
+                  style={{ color: "var(--text-primary)" }}
+                >
                   Ultimate AI WP Optimizer
                 </h2>
                 <p className="mt-2 text-sm" style={{ color: "var(--text-subtle)" }}>
-                  Focused WordPress diagnostics and remediation workflow built for reliable checks today and plugin packaging next.
+                  Focused WordPress diagnostics and remediation workflow built
+                  for reliable checks today and plugin packaging next.
                 </p>
               </div>
             )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {visibleCards.map((card) => {
                 if (card.id === "performance") {
