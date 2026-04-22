@@ -72,7 +72,7 @@ export async function POST(
   const [dbUser] = await db
     .select({ id: users.id })
     .from(users)
-    .where(eq(users.clerkId, userId))
+    .where(eq(users.clerkUserId, userId))
     .limit(1);
 
   // Create analysis job
