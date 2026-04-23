@@ -28,8 +28,8 @@ import { SecurityCard } from "./cards/SecurityCard";
 import { SEOCard } from "./cards/SEOCard";
 import { AccessibilityCard } from "./cards/AccessibilityCard";
 import { ContentCard } from "./cards/ContentCard";
+import { SiteSummaryCard } from "./cards/SiteSummaryCard";
 import { OverallScoreHero } from "./OverallScoreHero";
-import { GeoCard } from "./cards/GeoCard";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type { ConnectionStatus } from "./cards/wordpress/types";
 import type {
@@ -50,6 +50,7 @@ interface SiteCockpitProps {
   siteId?: string;
   editable?: boolean;
   initialLayout?: CockpitLayoutData;
+  siteSummary?: string;
   wordpressConnectionStatus?: ConnectionStatus;
   wordpressLastConnected?: string;
   wordpressOnly?: boolean;
@@ -69,7 +70,6 @@ const CARD_COMPONENTS: Record<string, ComponentType<any>> = {
   seo: SEOCard,
   accessibility: AccessibilityCard,
   content: ContentCard,
-  geo: GeoCard,
   wordpress: WordPressCard,
   optimization: OptimizationCard,
 };
@@ -80,9 +80,8 @@ const DEFAULT_CARDS: CockpitCardLayout[] = [
   { id: "seo", visible: true, minimized: false, order: 3 },
   { id: "accessibility", visible: true, minimized: false, order: 4 },
   { id: "content", visible: true, minimized: false, order: 5 },
-  { id: "geo", visible: true, minimized: false, order: 6 },
-  { id: "wordpress", visible: true, minimized: false, order: 7 },
-  { id: "optimization", visible: true, minimized: false, order: 8 },
+  { id: "wordpress", visible: true, minimized: false, order: 6 },
+  { id: "optimization", visible: true, minimized: false, order: 7 },
 ];
 
 const DEFAULT_LAYOUT: CockpitLayoutData = {
@@ -120,6 +119,7 @@ export function SiteCockpit({
   siteId,
   editable = true,
   initialLayout,
+  siteSummary,
   wordpressConnectionStatus = "disconnected",
   wordpressLastConnected,
 }: SiteCockpitProps) {
@@ -212,7 +212,6 @@ export function SiteCockpit({
     async (category: OptimizeCategory) => {
       setOptimizingCategory(category);
 
-      // Persist an AI analysis job + seeded repair actions to the DB
       if (siteId) {
         try {
           await fetch(`/api/sites/${siteId}/ai-optimize`, {
@@ -234,9 +233,9 @@ export function SiteCockpit({
   const visibleCards = cards.filter((card) => {
     if (!card.visible) return false;
 
-    // WordPress Insights card: only when WordPress AI optimization is triggered
+    // WordPress card: show whenever the site is WordPress
     if (card.id === "wordpress") {
-      return isWordPress && isWordPressOptimizing;
+      return isWordPress;
     }
 
     // Optimization card: only when any category optimization is active
@@ -263,21 +262,30 @@ export function SiteCockpit({
         optimizingCategory={optimizingCategory}
       />
 
-      {editable && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-          <div
-            className="flex items-center justify-end gap-3 text-sm"
-            style={{ color: "var(--text-subtle)" }}
-          >
-            {saveStatus === "saving" && <span>{t("common.loading")}</span>}
-            {saveStatus === "saved" && <span>✓ {t("common.save")}</span>}
-            {saveStatus === "error" && <span>✗ {t("common.error")}</span>}
-            <button onClick={resetLayout} className="hover:underline">
-              {t("common.refresh")}
-            </button>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* AI Site Summary — shown between hero and card grid when available */}
+        {siteSummary && (
+          <div className="mb-6">
+            <SiteSummaryCard summary={siteSummary} />
           </div>
-        </div>
-      )}
+        )}
+
+        {editable && (
+          <div className="mb-6">
+            <div
+              className="flex items-center justify-end gap-3 text-sm"
+              style={{ color: "var(--text-subtle)" }}
+            >
+              {saveStatus === "saving" && <span>{t("common.loading")}</span>}
+              {saveStatus === "saved" && <span>✓ {t("common.save")}</span>}
+              {saveStatus === "error" && <span>✗ {t("common.error")}</span>}
+              <button onClick={resetLayout} className="hover:underline">
+                {t("common.refresh")}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <DndContext
         sensors={sensors}
@@ -317,7 +325,7 @@ export function SiteCockpit({
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
               {visibleCards.map((card) => {
                 if (card.id === "performance") {
                   return (
@@ -374,10 +382,6 @@ export function SiteCockpit({
                       optimizing={optimizingCategory === "content"}
                     />
                   );
-                }
-
-                if (card.id === "geo") {
-                  return <GeoCard key={card.id} />;
                 }
 
                 if (card.id === "wordpress") {

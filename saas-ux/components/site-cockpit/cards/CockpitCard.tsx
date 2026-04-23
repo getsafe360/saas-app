@@ -34,6 +34,7 @@ interface CockpitCardProps {
     passed: number;
     warnings: number;
     criticalIssues: number;
+    topIssues?: string[];
   };
   onOptimize?: () => void;
   optimizing?: boolean;
@@ -143,14 +144,14 @@ export function CockpitCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "relative group",
+        "relative group h-full",
         isDragging && "z-50 opacity-50",
         className,
       )}
     >
       <div
         className={cn(
-          "relative overflow-hidden rounded-2xl backdrop-blur-xl bg-gray-900/40 border transition-all duration-300",
+          "relative flex h-full flex-col overflow-hidden rounded-2xl backdrop-blur-xl bg-gray-900/40 border transition-all duration-300",
           isDragging && "scale-105",
         )}
         style={{
@@ -165,120 +166,156 @@ export function CockpitCard({
           e.currentTarget.style.boxShadow = "none";
         }}
       >
-        <div className="relative">
-          <div className="flex items-center justify-between p-6 pb-4">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              {typeof title === "string" ? (
-                <>
-                  <span
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg"
-                    style={{
-                      background: `oklch(from ${styles.color} l c h / 0.12)`,
-                      color: styles.color,
-                    }}
-                  >
-                    <CategoryIcon className="h-4 w-4" />
-                  </span>
-                  <h3 className="text-xl font-bold text-white truncate">
-                    {title}
-                  </h3>
-                </>
-              ) : (
-                <h3 className="text-xl font-bold truncate">{title}</h3>
-              )}
-            </div>
-
-            <div className="ml-4 flex items-center gap-3">
-              {score !== undefined && grade && (
-                <div
-                  className="flex items-center gap-2 px-3 py-1 rounded-full border backdrop-blur-sm"
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between p-6 pb-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            {typeof title === "string" ? (
+              <>
+                <span
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg"
                   style={{
-                    background: styles.scorePillBg,
-                    borderColor: `oklch(from ${styles.color} l c h / 0.45)`,
+                    background: `oklch(from ${styles.color} l c h / 0.12)`,
+                    color: styles.color,
                   }}
                 >
-                  <span
-                    className="text-2xl font-bold"
-                    style={{ color: styles.color }}
-                  >
-                    {grade}
-                  </span>
-                  <span className="text-sm text-gray-400">({score}/100)</span>
-                </div>
-              )}
-
-              {editable && (
-                <button
-                  {...attributes}
-                  {...listeners}
-                  className="cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 transition-colors"
-                  aria-label="Drag to reorder"
-                >
-                  <GripVertical className="h-5 w-5" />
-                </button>
-              )}
-            </div>
+                  <CategoryIcon className="h-4 w-4" />
+                </span>
+                <h3 className="text-xl font-bold text-white truncate">
+                  {title}
+                </h3>
+              </>
+            ) : (
+              <h3 className="text-xl font-bold truncate">{title}</h3>
+            )}
           </div>
 
-          {score !== undefined && !minimized && (
-            <div className="px-6 pb-4">
-              <div className="relative h-2 bg-gray-800/50 rounded-full overflow-hidden">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
-                  style={{
-                    width: `${score}%`,
-                    background:
-                      category === "geo"
-                        ? "linear-gradient(90deg, var(--category-geo), var(--category-seo), var(--category-accessibility))"
-                        : styles.color,
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {!minimized && (
-            <>
-              {stats && (
-                <div
-                  className="px-6 pb-4 text-xs"
-                  style={{ color: "var(--text-subtle)" }}
+          <div className="ml-4 flex items-center gap-3">
+            {score !== undefined && grade && (
+              <div
+                className="flex items-center gap-2 px-3 py-1 rounded-full border backdrop-blur-sm"
+                style={{
+                  background: styles.scorePillBg,
+                  borderColor: `oklch(from ${styles.color} l c h / 0.45)`,
+                }}
+              >
+                <span
+                  className="text-2xl font-bold"
+                  style={{ color: styles.color }}
                 >
-                  {t("summary.passed")}: {stats.passed} ·{" "}
-                  {t("summary.warnings")}: {stats.warnings} ·{" "}
-                  {t("summary.criticalIssues")}: {stats.criticalIssues}
-                </div>
-              )}
-              {onOptimize && (
-                <div className="px-6 pb-4">
-                  <button
-                    className="w-full rounded-xl px-3 py-2 text-sm font-semibold border transition"
-                    style={{
-                      borderColor: `oklch(from ${styles.color} l c h / 0.55)`,
-                      background:
-                        category === "geo"
-                          ? "linear-gradient(135deg, oklch(from var(--category-geo) l c h / 0.16), oklch(from var(--category-seo) l c h / 0.14))"
-                          : `oklch(from ${styles.color} l c h / 0.12)`,
-                      color: styles.color,
-                    }}
-                    onClick={onOptimize}
-                    disabled={optimizing}
-                  >
-                    {optimizing ? (
-                      <span className="inline-flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {t("common.loading")}
-                      </span>
-                    ) : (
-                      t("actions.optimize")
-                    )}
-                  </button>
-                </div>
-              )}
-              <div className="px-6 pb-6">{children}</div>
-            </>
-          )}
+                  {grade}
+                </span>
+                <span className="text-sm text-gray-400">({score}/100)</span>
+              </div>
+            )}
+
+            {editable && (
+              <button
+                {...attributes}
+                {...listeners}
+                className="cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 transition-colors"
+                aria-label="Drag to reorder"
+              >
+                <GripVertical className="h-5 w-5" />
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* ── Score bar ── */}
+        {score !== undefined && !minimized && (
+          <div className="px-6 pb-4">
+            <div className="relative h-2 bg-gray-800/50 rounded-full overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+                style={{
+                  width: `${score}%`,
+                  background: styles.color,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {!minimized && (
+          <>
+            {/* ── Stats line ── */}
+            {stats && (
+              <div
+                className="px-6 pb-3 text-xs"
+                style={{ color: "var(--text-subtle)" }}
+              >
+                {t("summary.passed")}: {stats.passed} ·{" "}
+                {t("summary.warnings")}: {stats.warnings} ·{" "}
+                {t("summary.criticalIssues")}: {stats.criticalIssues}
+              </div>
+            )}
+
+            {/* ── Top issues with severity dots ── */}
+            {stats?.topIssues && stats.topIssues.length > 0 && (
+              <div className="px-6 pb-4 space-y-1.5">
+                {stats.topIssues.map((issue, i) => {
+                  const isCritical = i < stats.criticalIssues;
+                  return (
+                    <div key={i} className="flex items-start gap-2">
+                      <span
+                        className={cn(
+                          "mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full",
+                          isCritical ? "bg-red-400" : "bg-amber-400",
+                        )}
+                      />
+                      <span
+                        className="text-xs leading-relaxed"
+                        style={{ color: "var(--text-subtle)" }}
+                      >
+                        {issue}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ── Card body ── */}
+            <div className="flex-1 px-6 pb-4">{children}</div>
+
+            {/* ── Optimize button pinned to bottom ── */}
+            {onOptimize && (
+              <div className="px-6 pb-6 pt-2">
+                <button
+                  className="group/btn w-full rounded-xl px-3 py-2.5 text-sm font-semibold border transition-all duration-200"
+                  style={{
+                    borderColor: `oklch(from ${styles.color} l c h / 0.45)`,
+                    background: `oklch(from ${styles.color} l c h / 0.10)`,
+                    color: styles.color,
+                  }}
+                  onMouseEnter={(e) => {
+                    const el = e.currentTarget;
+                    el.style.background = `oklch(from ${styles.color} l c h / 0.20)`;
+                    el.style.borderColor = `oklch(from ${styles.color} l c h / 0.70)`;
+                    el.style.boxShadow = styles.glow;
+                  }}
+                  onMouseLeave={(e) => {
+                    const el = e.currentTarget;
+                    el.style.background = `oklch(from ${styles.color} l c h / 0.10)`;
+                    el.style.borderColor = `oklch(from ${styles.color} l c h / 0.45)`;
+                    el.style.boxShadow = "none";
+                  }}
+                  onClick={onOptimize}
+                  disabled={optimizing}
+                >
+                  {optimizing ? (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {t("common.loading")}
+                    </span>
+                  ) : (
+                    t("actions.optimize")
+                  )}
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

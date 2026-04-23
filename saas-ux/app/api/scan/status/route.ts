@@ -34,7 +34,8 @@ function makeSampleReport(siteUrl: string) {
     summary: {
       score: 87,
       counts: { seo: 3, performance: 2, accessibility: 4, security: 1 },
-      estTotalTokens: 12450
+      estTotalTokens: 12450,
+      prose: `This site is generally well-structured and loads over HTTPS with a solid performance baseline. The main opportunities are around image compression, missing security headers, and a few SEO gaps — all of which are fixable in a single optimization pass. Accessibility checks out well for core content areas, though a few contrast ratios and missing alt attributes need attention.`,
     },
     issues: [
       {
@@ -125,6 +126,15 @@ export async function GET(req: NextRequest) {
         updatedAt: new Date()
       })
       .where(eq(scanJobs.id, job.id));
+
+    // Persist the AI prose summary to the site row so the cockpit can display it
+    const proseSummary = report.summary.prose ?? null;
+    if (proseSummary && job.siteId) {
+      await db
+        .update(sites)
+        .set({ lastSummary: proseSummary })
+        .where(eq(sites.id, job.siteId));
+    }
 
     publishEvent(job.siteId, { type: 'savings', savings: { score_before: 62, score_after: report.summary.score, time_saved: '3.5h/week', cost_saved: '$180/mo', tokens_used: report.summary.estTotalTokens } });
     publishEvent(job.siteId, { type: 'status', state: 'completed' });
