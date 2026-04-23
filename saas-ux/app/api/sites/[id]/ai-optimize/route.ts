@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
 import { users } from '@/lib/db/schema/auth/users';
@@ -57,23 +57,27 @@ export async function POST(
 
   const db = getDrizzle();
 
-  // Verify site ownership
-  const [site] = await db
-    .select({ id: sites.id })
-    .from(sites)
-    .where(eq(sites.id, siteId))
-    .limit(1);
-
-  if (!site) {
-    return NextResponse.json({ success: false, error: 'SITE_NOT_FOUND' }, { status: 404 });
-  }
-
   // Resolve internal user id
   const [dbUser] = await db
     .select({ id: users.id })
     .from(users)
     .where(eq(users.clerkUserId, userId))
     .limit(1);
+
+  if (!dbUser) {
+    return NextResponse.json({ success: false, error: 'UNAUTHORIZED' }, { status: 401 });
+  }
+
+  // Verify site exists and belongs to the authenticated user
+  const [site] = await db
+    .select({ id: sites.id })
+    .from(sites)
+    .where(and(eq(sites.id, siteId), eq(sites.userId, dbUser.id)))
+    .limit(1);
+
+  if (!site) {
+    return NextResponse.json({ success: false, error: 'SITE_NOT_FOUND' }, { status: 404 });
+  }
 
   // Create analysis job
   const [analysisJob] = await db
