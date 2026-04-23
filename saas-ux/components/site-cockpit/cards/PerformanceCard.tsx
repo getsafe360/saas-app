@@ -8,6 +8,7 @@ interface PerformanceCardProps {
     passed: number;
     warnings: number;
     criticalIssues: number;
+    topIssues?: string[];
   };
   onOptimize?: () => void;
   optimizing?: boolean;

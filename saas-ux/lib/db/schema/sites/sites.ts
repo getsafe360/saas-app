@@ -60,6 +60,9 @@ export const sites = pgTable('sites', {
   lastFaviconUrl: text('last_favicon_url'),
   lastFindingCount: integer('last_finding_count'),
 
+  // AI-generated prose summary from the most recent scan
+  lastSummary: text('last_summary'),
+
   // AI Analysis & Repair
   wordpressConnection: jsonb('wordpress_connection'),
   aiRepairEnabled: pgBool('ai_repair_enabled').default(false),
