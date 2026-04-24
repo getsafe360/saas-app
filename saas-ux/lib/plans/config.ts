@@ -245,8 +245,9 @@ export function calculateUsagePercentage(
 export interface PlanFeatures {
   // Report generation
   reportGeneration: boolean;
+  reportsPerMonth: number;    // 0 = unlimited
   whiteLabel: boolean;
-  exportFormats: ('pdf' | 'csv' | 'html')[];
+  exportFormats: ('pdf' | 'markdown')[];
 
   // Advanced features
   priorityProcessing: boolean;
@@ -266,6 +267,7 @@ export interface PlanFeatures {
 export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
   free: {
     reportGeneration: false,
+    reportsPerMonth: 0,
     whiteLabel: false,
     exportFormats: [],
     priorityProcessing: false,
@@ -277,21 +279,23 @@ export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
     reportRetentionDays: 0,
   },
   pro: {
-    reportGeneration: false,    // Upsell opportunity to Agency
+    reportGeneration: true,
+    reportsPerMonth: 5,         // 5 reports / month
     whiteLabel: false,
-    exportFormats: [],
+    exportFormats: ['pdf', 'markdown'],
     priorityProcessing: true,
     teamCollaboration: false,
     customIntegrations: false,
     scheduledScans: true,
     maxSites: 25,
     maxTeamMembers: 3,
-    reportRetentionDays: 0,
+    reportRetentionDays: 90,
   },
   agent: {
     reportGeneration: true,
+    reportsPerMonth: 0,         // unlimited
     whiteLabel: true,
-    exportFormats: ['pdf', 'csv', 'html'],
+    exportFormats: ['pdf', 'markdown'],
     priorityProcessing: true,
     teamCollaboration: true,
     customIntegrations: true,
@@ -302,8 +306,9 @@ export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
   },
   agency: {
     reportGeneration: true,
+    reportsPerMonth: 0,         // unlimited
     whiteLabel: true,
-    exportFormats: ['pdf', 'csv', 'html'],
+    exportFormats: ['pdf', 'markdown'],
     priorityProcessing: true,
     teamCollaboration: true,
     customIntegrations: true,
@@ -314,8 +319,9 @@ export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
   },
   business: {
     reportGeneration: true,
+    reportsPerMonth: 0,         // unlimited
     whiteLabel: true,
-    exportFormats: ['pdf', 'csv', 'html'],
+    exportFormats: ['pdf', 'markdown'],
     priorityProcessing: true,
     teamCollaboration: true,
     customIntegrations: true,
@@ -353,15 +359,22 @@ export function canUseWhiteLabel(planName: PlanName): boolean {
 /**
  * Get available export formats for a plan
  */
-export function getAvailableExportFormats(planName: PlanName): ('pdf' | 'csv' | 'html')[] {
+export function getAvailableExportFormats(planName: PlanName): ('pdf' | 'markdown')[] {
   return PLAN_FEATURES[planName].exportFormats;
 }
 
 /**
  * Check if a specific export format is available
  */
-export function canExportFormat(planName: PlanName, format: 'pdf' | 'csv' | 'html'): boolean {
+export function canExportFormat(planName: PlanName, format: 'pdf' | 'markdown'): boolean {
   return PLAN_FEATURES[planName].exportFormats.includes(format);
+}
+
+/**
+ * Get monthly report limit (0 = unlimited)
+ */
+export function getReportsPerMonth(planName: PlanName): number {
+  return PLAN_FEATURES[planName].reportsPerMonth;
 }
 
 /**

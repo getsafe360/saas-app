@@ -29,6 +29,7 @@ import { SEOCard } from "./cards/SEOCard";
 import { AccessibilityCard } from "./cards/AccessibilityCard";
 import { ContentCard } from "./cards/ContentCard";
 import { SiteSummaryCard } from "./cards/SiteSummaryCard";
+import { ConnectionCard } from "./cards/ConnectionCard";
 import { OverallScoreHero } from "./OverallScoreHero";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type { ConnectionStatus } from "./cards/wordpress/types";
@@ -267,6 +268,19 @@ export function SiteCockpit({
         {siteSummary && (
           <div className="mb-6">
             <SiteSummaryCard summary={siteSummary} />
+          </div>
+        )}
+
+        {/* Connection Card — always visible, handles all connection methods */}
+        {siteId && (
+          <div className="mb-6">
+            <ConnectionCard
+              siteId={siteId}
+              siteUrl={data.finalUrl}
+              cmsType={data.cms.type}
+              connectionStatus={wordpressConnectionStatus}
+              lastConnected={wordpressLastConnected}
+            />
           </div>
         )}
 

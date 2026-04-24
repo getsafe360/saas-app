@@ -1,6 +1,6 @@
 // app/api/connect/handshake/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { list, put } from '@vercel/blob';
+import { Redis } from '@upstash/redis';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites';
 import { and, eq } from 'drizzle-orm';
@@ -10,6 +10,13 @@ import crypto from 'crypto';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const PAIRING_TTL_SEC = 10 * 60;
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 function normalizeInput(u: string): string {
   try {
@@ -47,7 +54,6 @@ function jsonNoStore(body: Record<string, unknown>, init?: ResponseInit) {
   return res;
 }
 
-// Keep POST only. /api/connect/check handles the GET polling.
 export async function GET() {
   return jsonNoStore({ error: 'method_not_allowed' }, { status: 405 });
 }
@@ -75,36 +81,28 @@ export async function POST(req: NextRequest) {
       return jsonNoStore({ error: 'siteUrl required', code: 'E_URL' }, { status: 400 });
     }
 
-    // Load pairing record created by /api/connect/start
-    let recBlobUrl: string | null = null;
-    try {
-      const { blobs } = await list({ prefix: `pairings/code-${pairCode}.json`, limit: 1 });
-      recBlobUrl = blobs[0]?.url ?? null;
-    } catch (e) {
-      console.error('[handshake] list error', e);
-      return jsonNoStore({ error: 'pairing_lookup_failed', code: 'E_LIST' }, { status: 500 });
-    }
-    if (!recBlobUrl) {
+    // Load pairing record from Redis
+    const raw = await redis.get<string>(`pairing:code:${pairCode}`);
+    if (!raw || raw === 'reserved') {
       return jsonNoStore({ error: 'invalid_or_expired_code', code: 'E_NOT_FOUND' }, { status: 404 });
     }
 
-    const recRes = await fetch(recBlobUrl, { cache: 'no-store' });
-    if (!recRes.ok) {
-      return jsonNoStore({ error: 'pairing_fetch_failed', code: 'E_FETCH' }, { status: 500 });
-    }
+    let record: {
+      id: string;
+      siteUrl: string;
+      pairCode: string;
+      createdAt: number;
+      expiresAt: number;
+      used: boolean;
+      userId?: number;
+      siteId?: string;
+    } | null = null;
 
-    const record = (await recRes.json().catch(() => null)) as
-      | {
-          id: string;
-          siteUrl: string;
-          pairCode: string;
-          createdAt: number;
-          expiresAt: number;
-          used: boolean;
-          userId?: number;
-          siteId?: string;
-        }
-      | null;
+    try {
+      record = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    } catch {
+      return jsonNoStore({ error: 'pairing_parse_failed', code: 'E_PARSE' }, { status: 500 });
+    }
 
     if (!record) {
       return jsonNoStore({ error: 'pairing_parse_failed', code: 'E_PARSE' }, { status: 500 });
@@ -116,7 +114,7 @@ export async function POST(req: NextRequest) {
         record.siteId
           ? { error: 'already_used', code: 'E_USED', siteId: record.siteId }
           : { error: 'already_used', code: 'E_USED' },
-        { status: 409 }
+        { status: 409 },
       );
     }
     if (record.expiresAt && now > record.expiresAt) {
@@ -139,14 +137,12 @@ export async function POST(req: NextRequest) {
 
     const db = getDrizzle();
 
-    // Primary lookup by unique key pair (user_id + canonical_host)
     const existingByHost = await db
       .select({ id: sites.id })
       .from(sites)
       .where(and(eq(sites.userId, record.userId), eq(sites.canonicalHost, canonicalHost)))
       .limit(1);
 
-    // Fallback lookup by explicit siteId in pairing record
     const existingByRecordId = !existingByHost[0] && record.siteId
       ? await db
           .select({ id: sites.id })
@@ -182,6 +178,13 @@ export async function POST(req: NextRequest) {
       updatedAt: new Date(),
     };
 
+    // Mark record as used in Redis immediately to prevent race conditions
+    const usedRecord = { ...record, used: true, usedAt: now, siteId };
+    await Promise.all([
+      redis.set(`pairing:code:${pairCode}`, JSON.stringify(usedRecord), { ex: PAIRING_TTL_SEC }),
+      redis.set(`pairing:id:${record.id}`, JSON.stringify(usedRecord), { ex: PAIRING_TTL_SEC }),
+    ]);
+
     if (!existingId) {
       try {
         await db.insert(sites).values({
@@ -191,30 +194,19 @@ export async function POST(req: NextRequest) {
         });
       } catch (e: any) {
         const pgCode = e?.cause?.code;
-
-        // Race-safe: if another request inserted same (user,host), switch to update path.
         if (pgCode === '23505') {
-          const conflict = await db
+          const [conflict] = await db
             .select({ id: sites.id })
             .from(sites)
             .where(and(eq(sites.userId, record.userId), eq(sites.canonicalHost, canonicalHost)))
             .limit(1);
 
-          const conflictId = conflict[0]?.id;
-          if (conflictId) {
-            await db.update(sites).set(updatePayload).where(eq(sites.id, conflictId));
-            await logPairingComplete(conflictId);
-
-            await put(
-              `pairings/code-${pairCode}.json`,
-              JSON.stringify({ ...record, used: true, usedAt: now, siteId: conflictId }),
-              { access: 'public', contentType: 'application/json' }
-            ).catch((err) => console.error('[handshake] mark used failed', err));
-
-            return jsonNoStore({ siteId: conflictId, siteToken });
+          if (conflict?.id) {
+            await db.update(sites).set(updatePayload).where(eq(sites.id, conflict.id));
+            await logPairingComplete(conflict.id);
+            return jsonNoStore({ siteId: conflict.id, siteToken });
           }
         }
-
         console.error('[handshake] insert sites failed', e);
         return jsonNoStore({ error: 'db_insert_failed', code: 'E_DB_INSERT' }, { status: 500 });
       }
@@ -229,35 +221,6 @@ export async function POST(req: NextRequest) {
     }
 
     await logPairingComplete(siteId);
-
-    try {
-      await put(
-        `pairings/code-${pairCode}.json`,
-        JSON.stringify({ ...record, used: true, usedAt: now, siteId }),
-        { access: 'public', contentType: 'application/json' }
-      );
-    } catch (e) {
-      console.error('[handshake] mark used failed', e);
-    }
-
-    try {
-      await put(
-        `sites/${siteId}.json`,
-        JSON.stringify({
-          siteId,
-          siteUrl: finalSiteUrl,
-          status: 'connected',
-          wpVersion: wpVersion || null,
-          pluginVersion: pluginVersion || null,
-          createdAt: now,
-          updatedAt: now,
-        }),
-        { access: 'public', contentType: 'application/json' }
-      );
-    } catch (e) {
-      console.error('[handshake] write site blob failed', e);
-    }
-
     return jsonNoStore({ siteId, siteToken });
   } catch (e: any) {
     console.error('[handshake] unhandled error', e);

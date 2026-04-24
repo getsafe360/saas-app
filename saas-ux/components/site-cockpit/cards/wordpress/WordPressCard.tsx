@@ -257,12 +257,6 @@ export function WordPressCard({
         }}
       />
 
-      {cockpit.state === "disconnected" && (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200">
-          Live stream disconnected. Reconnect to continue updates.
-        </div>
-      )}
-
       {/* WordPress Analysis Panels */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2">
@@ -279,39 +273,6 @@ export function WordPressCard({
               planName="agency"
             />
           ) : null}
-        </div>
-        <div
-          className="rounded-lg border p-3 text-xs"
-          style={{ borderColor: "var(--border-default)" }}
-        >
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            <div>
-              <div style={{ color: "var(--text-subtle)" }}>{t("wordpress.connection.status.title")}</div>
-              <div style={{ color: "var(--text-primary)" }}>
-                {wordpress.connection?.status ?? "connected"}
-              </div>
-            </div>
-            <div>
-              <div style={{ color: "var(--text-subtle)" }}>{t("wordpress.lastAudit")}</div>
-              <div style={{ color: "var(--text-primary)" }}>
-                {wordpress.connection?.lastAuditAt ?? "Just now"}
-              </div>
-            </div>
-            <div>
-              <div style={{ color: "var(--text-subtle)" }}>{t("wordpress.trend")}</div>
-              <div
-                className={
-                  wordpress.trend?.delta && wordpress.trend.delta >= 0
-                    ? "text-emerald-300"
-                    : "text-red-300"
-                }
-              >
-                {wordpress.trend
-                  ? `${wordpress.trend.delta >= 0 ? "+" : ""}${wordpress.trend.delta}`
-                  : "0"}
-              </div>
-            </div>
-          </div>
         </div>
 
         {wordpress.categoryScores && (

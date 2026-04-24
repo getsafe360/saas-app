@@ -11,8 +11,10 @@ import { teams } from '../auth/teams';
 /**
  * Report format enum
  */
+// NOTE: DB migration required to add 'markdown':
+// ALTER TYPE report_format ADD VALUE 'markdown';
 export const reportFormatEnum = pgEnum('report_format', [
-  'pdf', 'csv', 'html'
+  'pdf', 'csv', 'html', 'markdown'
 ]);
 
 /**
@@ -143,6 +145,6 @@ export const generatedReports = pgTable('generated_reports', {
 // Type exports
 export type GeneratedReport = typeof generatedReports.$inferSelect;
 export type NewGeneratedReport = typeof generatedReports.$inferInsert;
-export type ReportFormat = 'pdf' | 'csv' | 'html';
+export type ReportFormat = 'pdf' | 'csv' | 'html' | 'markdown';
 export type ReportScope = 'full' | 'performance' | 'security' | 'seo' | 'accessibility' | 'custom';
 export type ReportStatus = 'pending' | 'generating' | 'completed' | 'failed';

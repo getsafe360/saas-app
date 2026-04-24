@@ -6,7 +6,6 @@ import { FileText, Loader2, Crown } from "lucide-react";
 import { ReportOptionsModal } from "./ReportOptionsModal";
 import type { ReportFormat, ReportScope, ReportStatus } from "@/lib/db/schema/reports/generated";
 
-
 interface GeneratedReportListItem {
   id: string;
   format: ReportFormat;
@@ -22,7 +21,7 @@ interface GenerateReportButtonProps {
   siteId: string;
   siteName: string;
   disabled?: boolean;
-  planName?: "free" | "pro" | "agency";
+  planName?: "free" | "pro" | "agent" | "agency" | "business";
   onReportGenerated?: (report: {
     id: string;
     downloadUrl: string;
@@ -42,22 +41,34 @@ export function GenerateReportButton({
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<GeneratedReportListItem[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [proReportsUsed, setProReportsUsed] = useState(0);
 
-  const isAgencyPlan = planName === "agency";
+  const isAgencyPlan = planName === "agency" || planName === "agent" || planName === "business";
+  const isProPlan = planName === "pro";
+  const canAccessReports = isAgencyPlan || isProPlan;
+  const PRO_REPORTS_LIMIT = 5;
 
   const fetchReportHistory = async () => {
     setIsHistoryLoading(true);
-
     try {
       const response = await fetch(`/api/reports/${siteId}/generate`, { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
-
       if (!response.ok || !Array.isArray(data?.reports)) {
         setHistory([]);
         return;
       }
-
       setHistory(data.reports as GeneratedReportListItem[]);
+
+      // Compute Pro quota: count reports created this calendar month
+      if (isProPlan) {
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const usedThisMonth = (data.reports as GeneratedReportListItem[]).filter(
+          (r) => new Date(r.createdAt) >= startOfMonth,
+        ).length;
+        setProReportsUsed(usedThisMonth);
+      }
     } catch {
       setHistory([]);
     } finally {
@@ -66,10 +77,9 @@ export function GenerateReportButton({
   };
 
   useEffect(() => {
-    if (!isModalOpen || !isAgencyPlan) return;
+    if (!isModalOpen || !canAccessReports) return;
     void fetchReportHistory();
-  }, [isModalOpen, isAgencyPlan, siteId]);
-
+  }, [isModalOpen, canAccessReports, siteId]);
 
   const handleGenerateReport = async (options: {
     format: ReportFormat;
@@ -79,25 +89,20 @@ export function GenerateReportButton({
   }) => {
     setIsGenerating(true);
     setError(null);
-
     try {
       const response = await fetch(`/api/reports/${siteId}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...options, locale: "en" }),
       });
-
       const data = await response.json();
-
       if (!response.ok) {
-        if (data.upgradeRequired) {
-          setError("Report generation requires Agency plan");
+        if (data.upgradeRequired || data.quotaExhausted) {
+          setError(data.error || "Report limit reached");
           return;
         }
         throw new Error(data.error || "Failed to generate report");
       }
-
-      // Success - close modal and trigger callback
       setIsModalOpen(false);
       if (onReportGenerated && data.report) {
         onReportGenerated({
@@ -106,10 +111,7 @@ export function GenerateReportButton({
           format: data.report.format,
         });
       }
-
       await fetchReportHistory();
-
-      // Auto-download the report
       if (data.report?.downloadUrl) {
         const link = document.createElement("a");
         link.href = data.report.downloadUrl;
@@ -123,8 +125,8 @@ export function GenerateReportButton({
     }
   };
 
-  // Non-Agency users see upgrade CTA
-  if (!isAgencyPlan) {
+  // Free plan — show upgrade CTA
+  if (!canAccessReports) {
     return (
       <button
         onClick={() => setIsModalOpen(true)}
@@ -132,9 +134,7 @@ export function GenerateReportButton({
       >
         <Crown className="h-4 w-4" />
         <span className="text-sm font-medium">Generate Report</span>
-        <span className="text-xs bg-amber-500/20 px-2 py-0.5 rounded">
-          Agency
-        </span>
+        <span className="text-xs bg-amber-500/20 px-2 py-0.5 rounded">Pro</span>
       </button>
     );
   }
@@ -147,29 +147,23 @@ export function GenerateReportButton({
         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isGenerating ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Generating...</span>
-          </>
+          <><Loader2 className="h-4 w-4 animate-spin" /><span>Generating…</span></>
         ) : (
-          <>
-            <FileText className="h-4 w-4" />
-            <span>Generate Report</span>
-          </>
+          <><FileText className="h-4 w-4" /><span>Generate Report</span></>
         )}
       </button>
 
       <ReportOptionsModal
         isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setError(null);
-        }}
+        onClose={() => { setIsModalOpen(false); setError(null); }}
         siteName={siteName}
         isGenerating={isGenerating}
         error={error}
         onGenerate={handleGenerateReport}
         isAgencyPlan={isAgencyPlan}
+        isProPlan={isProPlan}
+        proReportsUsed={proReportsUsed}
+        proReportsLimit={PRO_REPORTS_LIMIT}
         reportHistory={history}
         isHistoryLoading={isHistoryLoading}
       />
