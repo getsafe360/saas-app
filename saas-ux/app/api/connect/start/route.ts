@@ -2,16 +2,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq, or } from "drizzle-orm";
-import { list, put } from "@vercel/blob";
+import { Redis } from "@upstash/redis";
 import crypto from "crypto";
 
 import { getDrizzle } from "@/lib/db/postgres";
 import { users } from '@/lib/db/schema/auth/users';
 import { sites } from "@/lib/db/schema/sites";
-import { rateLimit } from "@/lib/api/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const PAIRING_TTL_SEC = 10 * 60; // 10 minutes
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 // --- utils ---
 function normalizeInput(u: string): string {
@@ -48,13 +54,10 @@ async function probeOnce(siteUrl: string, path: string) {
 }
 
 async function probePlugin(siteUrl: string): Promise<boolean> {
-  // Try pretty + plain permalinks
   const paths = ["/wp-json/getsafe/v1/ping", "/?rest_route=/getsafe/v1/ping"];
   for (const p of paths) {
     if (await probeOnce(siteUrl, p)) return true;
   }
-
-  // If original was http, try https (and vice-versa)
   try {
     const u = new URL(siteUrl);
     const flipped = new URL(siteUrl);
@@ -72,20 +75,37 @@ function sixDigitCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-async function ensureUniquePairCode(): Promise<string> {
-  // Collision is super unlikely, but let’s be perfect: re-roll up to 5 times.
+// Atomically reserve a unique code with Redis SET NX (single round-trip per attempt)
+async function reserveUniquePairCode(): Promise<string> {
   for (let i = 0; i < 5; i++) {
     const code = sixDigitCode();
-    const { blobs } = await list({ prefix: `pairings/code-${code}.json` });
-    if (blobs.length === 0) return code;
+    // NX = only set if key does not already exist
+    const ok = await redis.set(`pairing:code:${code}`, "reserved", {
+      nx: true,
+      ex: PAIRING_TTL_SEC,
+    });
+    if (ok === "OK") return code;
   }
-  // Fallback to uuid segment if we somehow hit collisions repeatedly
-  return crypto.randomUUID().slice(0, 6);
+  // Fallback: UUID-derived code (collision probability negligible)
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 6);
+}
+
+// Redis-based rate limit: INCR + EXPIRE (replaces Blob-based approach)
+async function checkRateLimit(
+  key: string,
+  max: number,
+  windowSec: number,
+): Promise<{ ok: boolean; resetAt: number }> {
+  const rKey = `rl:${key}`;
+  const count = await redis.incr(rKey);
+  if (count === 1) await redis.expire(rKey, windowSec);
+  const ttl = await redis.ttl(rKey);
+  return { ok: count <= max, resetAt: Date.now() + Math.max(ttl, 0) * 1000 };
 }
 
 // --- handler ---
 export async function POST(req: NextRequest) {
-  // 1) Auth (Clerk) → DB user
+  // 1) Auth
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) {
     return NextResponse.json({ error: "auth required" }, { status: 401 });
@@ -97,7 +117,6 @@ export async function POST(req: NextRequest) {
     .from(users)
     .where(eq(users.clerkUserId, clerkUserId))
     .limit(1);
-
   if (!dbUser) {
     return NextResponse.json({ error: "user not found" }, { status: 401 });
   }
@@ -126,7 +145,7 @@ export async function POST(req: NextRequest) {
   const normalizedUrl = normalizeInput(parsed.toString());
   const host = new URL(normalizedUrl).hostname.replace(/^www\./, "").toLowerCase();
 
-  // 4) Optional allowlist (private beta)
+  // 4) Optional allowlist
   const allowRx = process.env.ALLOWED_SITE_HOST_REGEX
     ? new RegExp(process.env.ALLOWED_SITE_HOST_REGEX, "i")
     : null;
@@ -134,33 +153,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "domain not allowed (private beta)" }, { status: 403 });
   }
 
-  // 5) Rate limit (per user + IP)
+  // 5) Rate limit (10 attempts per 10 min per user+IP)
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  const rl = await rateLimit(`pair-start:${dbUser.id}:${ip}`, 10, 10 * 60 * 1000);
+  const rl = await checkRateLimit(`pair-start:${dbUser.id}:${ip}`, 10, 10 * 60);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "too many attempts, try again later", retryAt: rl.resetAt },
-      { status: 429 }
+      { status: 429 },
     );
   }
 
-  // 5.5) ✅ GUARD: determine the existing site this pairing should reuse.
-  // If caller passed a siteId from cockpit route and it belongs to this user, prefer that.
+  // 5.5) Resolve existing site to reuse
   let existingSiteId: string | null = null;
-
   if (requestedSiteId) {
-    const requested = await db
+    const [row] = await db
       .select({ id: sites.id })
       .from(sites)
       .where(and(eq(sites.id, requestedSiteId), eq(sites.userId, dbUser.id)))
       .limit(1);
-
-    existingSiteId = requested[0]?.id ?? null;
+    existingSiteId = row?.id ?? null;
   }
-
-  // Otherwise, fallback to canonical_host + URL variants.
   if (!existingSiteId) {
-    const existing = await db
+    const [row] = await db
       .select({ id: sites.id })
       .from(sites)
       .where(
@@ -171,49 +185,45 @@ export async function POST(req: NextRequest) {
             eq(sites.siteUrl, normalizedUrl),
             eq(sites.siteUrl, normalizedUrl.replace(/\/$/, "")),
             eq(sites.siteUrl, `${normalizedUrl.replace(/\/$/, "")}/`),
-          )
-        )
+          ),
+        ),
       )
       .limit(1);
-
-    existingSiteId = existing[0]?.id ?? null;
+    existingSiteId = row?.id ?? null;
   }
 
-  // 6) Generate unique code + write records
-  const pairCode = await ensureUniquePairCode();
+  // 6) Reserve code + probe plugin in parallel — both are now instant / async
   const id = crypto.randomUUID();
+  const now = Date.now();
+
+  const [pairCode, pluginDetected] = await Promise.all([
+    reserveUniquePairCode(),
+    probePlugin(normalizedUrl).catch(() => false),
+  ]);
+
+  // 7) Write full pairing record to Redis (two keys: by-code + by-id)
   const record = {
     id,
     siteUrl: normalizedUrl,
     pairCode,
-    createdAt: Date.now(),
-    expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+    createdAt: now,
+    expiresAt: now + PAIRING_TTL_SEC * 1000,
     used: false,
-    userId: dbUser.id,           // link to DB user; handshake will trust this
-    siteId: existingSiteId || undefined, // ✅ hint handshake to reuse this site
+    userId: dbUser.id,
+    siteId: existingSiteId ?? undefined,
   };
+  await Promise.all([
+    redis.set(`pairing:code:${pairCode}`, JSON.stringify(record), { ex: PAIRING_TTL_SEC }),
+    redis.set(`pairing:id:${id}`, JSON.stringify(record), { ex: PAIRING_TTL_SEC }),
+  ]);
 
-  await put(`pairings/code-${pairCode}.json`, JSON.stringify(record), {
-    access: "public",
-    contentType: "application/json",
-  });
-  await put(`pairings/id-${id}.json`, JSON.stringify(record), {
-    access: "public",
-    contentType: "application/json",
-  });
-
-  // 7) Probe plugin availability (nice-to-have UX)
-  const pluginDetected = await probePlugin(normalizedUrl);
-
-  // 8) Done
   return NextResponse.json(
     {
       pairCode,
       pluginDetected,
       recordedSiteUrl: normalizedUrl,
-      // optional: echo which site the handshake is likely to reuse
       existingSiteId: existingSiteId || null,
     },
-    { headers: { "cache-control": "no-store" } }
+    { headers: { "cache-control": "no-store" } },
   );
 }

@@ -237,10 +237,8 @@ export function OverallScoreHero({
 
   return (
     <div
-      className="border-b"
       style={{
         background: "var(--background-default)",
-        borderColor: "var(--border-default)",
       }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">

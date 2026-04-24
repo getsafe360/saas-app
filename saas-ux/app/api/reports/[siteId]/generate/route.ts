@@ -7,10 +7,10 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db/drizzle';
 import { sites, teams, teamMembers, users, generatedReports, reportBranding, aiAnalysisJobs, aiRepairActions } from '@/lib/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, count, and as drizzleAnd, gte } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
 import { currentUser } from '@clerk/nextjs/server';
-import { canGenerateReports, canExportFormat, type PlanName } from '@/lib/plans/config';
+import { canGenerateReports, canExportFormat, getReportsPerMonth, type PlanName } from '@/lib/plans/config';
 import { put } from '@vercel/blob';
 import type { ReportFormat, ReportScope, ReportMetadata } from '@/lib/db/schema/reports/generated';
 
@@ -97,18 +97,51 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: 'Report generation requires Agency plan',
+          error: 'Report generation requires Pro or Agency plan',
           upgradeRequired: true,
-          requiredPlan: 'agency',
+          requiredPlan: 'pro',
         },
         { status: 403 }
       );
     }
 
+    // Check Pro monthly quota (0 = unlimited)
+    const reportsPerMonth = getReportsPerMonth(planName);
+    if (reportsPerMonth > 0) {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const [usageRow] = await db
+        .select({ total: count() })
+        .from(generatedReports)
+        .where(
+          drizzleAnd(
+            eq(generatedReports.userId, userId),
+            gte(generatedReports.createdAt, startOfMonth),
+          ),
+        );
+
+      const usedThisMonth = usageRow?.total ?? 0;
+      if (usedThisMonth >= reportsPerMonth) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Monthly report limit reached (${usedThisMonth}/${reportsPerMonth}). Upgrade to Agency for unlimited reports.`,
+            quotaExhausted: true,
+            used: usedThisMonth,
+            limit: reportsPerMonth,
+          },
+          { status: 403 },
+        );
+      }
+    }
+
     // Parse request body
     const body = await request.json();
     const format = (body.format || 'pdf') as ReportFormat;
-    const scope = (body.scope || 'performance') as ReportScope;
+    // Scope is always 'full' — reports cover the complete current analysis
+    const scope: ReportScope = 'full';
     const customTitle = body.title as string | undefined;
     const categories = body.categories as string[] | undefined;
     const whiteLabel = body.whiteLabel !== false;
@@ -190,26 +223,35 @@ export async function POST(
       const cockpitData = await fetchCockpitData(siteId, locale);
 
       switch (format) {
-        case 'pdf':
+        case 'pdf': {
           const pdfResult = await generatePdfReport(site, cockpitData, scope, effectiveBranding, { whiteLabel, locale });
           blobUrl = pdfResult.url;
           blobKey = pdfResult.key;
           metadata = pdfResult.metadata;
           break;
-
-        case 'csv':
+        }
+        case 'markdown': {
+          const mdResult = await generateMarkdownReport(site, cockpitData, scope, effectiveBranding, { whiteLabel, locale });
+          blobUrl = mdResult.url;
+          blobKey = mdResult.key;
+          metadata = mdResult.metadata;
+          break;
+        }
+        // Legacy formats kept for backward compatibility with existing records
+        case 'csv': {
           const csvResult = await generateCsvReport(site, cockpitData, scope);
           blobUrl = csvResult.url;
           blobKey = csvResult.key;
           metadata = csvResult.metadata;
           break;
-
-        case 'html':
+        }
+        case 'html': {
           const htmlResult = await generateHtmlReport(site, cockpitData, scope, effectiveBranding, { whiteLabel, locale });
           blobUrl = htmlResult.url;
           blobKey = htmlResult.key;
           metadata = htmlResult.metadata;
           break;
+        }
       }
 
       metadata.generationTimeMs = Date.now() - startTime;
@@ -342,7 +384,8 @@ function generateReportTitle(siteHost: string, scope: ReportScope): string {
 function generateFilename(siteHost: string, scope: ReportScope, format: ReportFormat): string {
   const date = new Date().toISOString().split('T')[0];
   const safeHost = siteHost.replace(/[^a-zA-Z0-9]/g, '-');
-  return `${safeHost}-${scope}-report-${date}.${format}`;
+  const ext = format === 'markdown' ? 'md' : format;
+  return `${safeHost}-${scope}-report-${date}.${ext}`;
 }
 
 async function fetchCockpitData(siteId: string, locale: string): Promise<any> {
@@ -599,6 +642,71 @@ function buildReportHtml(
   </div>
 </body>
 </html>`;
+}
+
+async function generateMarkdownReport(
+  site: any,
+  cockpitData: any,
+  scope: ReportScope,
+  branding: any,
+  options: { whiteLabel: boolean; locale: string },
+): Promise<{ url: string; key: string; metadata: ReportMetadata }> {
+  const scores = cockpitData.scores || {};
+  const overallScore = scores.overall || scores.performance || 75;
+  const grade = getGrade(overallScore);
+  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const companyName = options.whiteLabel && branding?.companyName ? branding.companyName : 'GetSafe 360 AI';
+  const siteHost = site.canonicalHost || site.siteUrl;
+  const repairedItems = (cockpitData.repairs || []).filter((r: any) => r.status === 'completed').length;
+
+  const md = [
+    `# Site Analysis Report — ${siteHost}`,
+    ``,
+    `**Generated by:** ${companyName}  `,
+    `**Date:** ${date}  `,
+    `**Site:** ${site.siteUrl}`,
+    ``,
+    `---`,
+    ``,
+    `## Executive Summary`,
+    ``,
+    `| Metric | Value |`,
+    `|--------|-------|`,
+    `| Overall Score | **${overallScore} / 100** (${grade}) |`,
+    `| Issues Identified | ${cockpitData.findingCount || 0} |`,
+    `| Repairs Executed | ${repairedItems} |`,
+    ``,
+    `## Category Scores`,
+    ``,
+    `| Category | Score | Grade |`,
+    `|----------|-------|-------|`,
+    `| Performance | ${scores.performance ?? 'N/A'} | ${getGrade(scores.performance)} |`,
+    `| Security | ${scores.security ?? 'N/A'} | ${getGrade(scores.security)} |`,
+    `| SEO | ${scores.seo ?? 'N/A'} | ${getGrade(scores.seo)} |`,
+    `| Accessibility | ${scores.accessibility ?? 'N/A'} | ${getGrade(scores.accessibility)} |`,
+    ``,
+    `---`,
+    ``,
+    options.whiteLabel ? '' : `*Powered by GetSafe 360 AI*`,
+  ].join('\n');
+
+  const blob = await put(
+    `reports/${site.id}/${Date.now()}-full.md`,
+    md,
+    { contentType: 'text/markdown', access: 'public' },
+  );
+
+  return {
+    url: blob.url,
+    key: blob.pathname,
+    metadata: {
+      overallScore,
+      overallGrade: grade,
+      issuesFound: cockpitData.findingCount || 0,
+      issuesFixed: repairedItems,
+      pageCount: 1,
+    },
+  };
 }
 
 function getGrade(score: number | undefined): string {

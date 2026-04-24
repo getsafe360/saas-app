@@ -1,9 +1,14 @@
 // app/api/connect/check/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { list } from '@vercel/blob';
+import { Redis } from '@upstash/redis';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('pairCode')?.trim();
@@ -12,18 +17,24 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const { blobs } = await list({ prefix: `pairings/code-${code}.json`, limit: 1 });
-    if (!blobs.length) {
-      // Treat as invalid/expired code
+    const raw = await redis.get<string>(`pairing:code:${code}`);
+
+    // Key missing = expired or never existed
+    if (!raw) {
       return NextResponse.json({ used: false, expired: true }, { status: 200 });
     }
 
-    const res = await fetch(blobs[0].url, { cache: 'no-store' });
-    if (!res.ok) return NextResponse.json({ used: false }, { status: 200 });
+    // "reserved" is the placeholder written during atomic code reservation
+    if (raw === 'reserved') {
+      return NextResponse.json({ used: false }, { status: 200 });
+    }
 
-    const record = await res.json().catch(() => null) as
-      | { used?: boolean; siteId?: string; expiresAt?: number }
-      | null;
+    let record: { used?: boolean; siteId?: string; expiresAt?: number } | null = null;
+    try {
+      record = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    } catch {
+      return NextResponse.json({ used: false }, { status: 200 });
+    }
 
     if (!record) return NextResponse.json({ used: false }, { status: 200 });
 
@@ -34,7 +45,6 @@ export async function GET(req: NextRequest) {
     }
     return NextResponse.json({ used: false, expired }, { status: 200 });
   } catch {
-    // Don’t leak details
     return NextResponse.json({ used: false }, { status: 200 });
   }
 }
