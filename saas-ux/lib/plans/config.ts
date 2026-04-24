@@ -366,8 +366,8 @@ export function getAvailableExportFormats(planName: PlanName): ('pdf' | 'markdow
 /**
  * Check if a specific export format is available
  */
-export function canExportFormat(planName: PlanName, format: 'pdf' | 'markdown'): boolean {
-  return PLAN_FEATURES[planName].exportFormats.includes(format);
+export function canExportFormat(planName: PlanName, format: string): boolean {
+  return (PLAN_FEATURES[planName].exportFormats as string[]).includes(format);
 }
 
 /**

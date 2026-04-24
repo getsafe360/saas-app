@@ -6,12 +6,12 @@ import {
   Globe,
   Link as LinkIcon,
   Code2,
-  KeyRound,
+  Key,
   Check,
   Copy,
   ChevronRight,
-  Plug,
-  CheckCircle2,
+  Wifi,
+  CheckCircle,
   Clock,
   Lock,
   ExternalLink,
@@ -223,7 +223,7 @@ export function ConnectionCard({
                 color: "var(--category-performance)",
               }}
             >
-              <Plug className="h-4 w-4" />
+              <Wifi className="h-4 w-4" />
             </span>
             <div>
               <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-subtle)" }}>
@@ -288,7 +288,7 @@ export function ConnectionCard({
             border: "1px solid var(--border-default)",
           }}
         >
-          <Plug className="h-4 w-4" />
+          <Wifi className="h-4 w-4" />
         </span>
         <div className="flex-1">
           <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-subtle)" }}>
@@ -339,7 +339,7 @@ export function ConnectionCard({
                 </div>
                 <div className="text-xs truncate" style={{ color: "var(--text-subtle)" }}>{siteUrl}</div>
               </div>
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+              <CheckCircle className="h-4 w-4 shrink-0 text-emerald-400" />
             </div>
           </div>
 
@@ -399,7 +399,7 @@ export function ConnectionCard({
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
               style={{ background: "oklch(from var(--category-wordpress, #3b82f6) l c h / 0.12)", color: "var(--category-wordpress, #60a5fa)" }}
             >
-              <Plug className="h-4 w-4" />
+              <Wifi className="h-4 w-4" />
             </span>
             <div className="flex-1">
               <div className="text-sm font-semibold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
@@ -457,7 +457,7 @@ export function ConnectionCard({
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
               style={{ background: "oklch(from var(--category-security) l c h / 0.12)", color: "var(--category-security)" }}
             >
-              <KeyRound className="h-4 w-4" />
+              <Key className="h-4 w-4" />
             </span>
             <div className="flex-1">
               <div className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
@@ -670,7 +670,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
           className="flex items-center gap-2 rounded-lg p-3 text-xs"
           style={{ background: "oklch(from var(--category-performance) l c h / 0.1)", border: "1px solid oklch(from var(--category-performance) l c h / 0.25)", color: "var(--category-performance)" }}
         >
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <CheckCircle className="h-4 w-4 shrink-0" />
           Connection established — syncing dashboard…
         </div>
       )}
@@ -738,7 +738,7 @@ function SnippetSetup({
           Read-only monitoring — no server access required
         </div>
         <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+          <CheckCircle className="h-3 w-3 text-emerald-400" />
           Tracks performance, errors, and uptime
         </div>
       </div>
@@ -808,7 +808,7 @@ function ApiKeySetup({
         style={{ background: "var(--background-default)", border: "1px solid var(--border-default)", color: "var(--text-subtle)" }}
       >
         <div className="flex items-center gap-1.5">
-          <KeyRound className="h-3 w-3" />
+          <Key className="h-3 w-3" />
           Keep this key secret — treat it like a password
         </div>
         <div className="flex items-center gap-1.5">

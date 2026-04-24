@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import {
   X,
   FileText,
-  FileCode,
+  Code2,
   Loader2,
   AlertCircle,
   Crown,
@@ -13,7 +13,7 @@ import {
   Calendar,
   Share2,
   Lock,
-  CheckCircle2,
+  CheckCircle,
 } from "lucide-react";
 import type { ReportFormat, ReportScope, ReportStatus } from "@/lib/db/schema/reports/generated";
 
@@ -65,7 +65,7 @@ const FORMAT_OPTIONS: {
     value: "markdown",
     label: "Markdown",
     description: "Developer-friendly — paste into Notion, GitHub, Jira",
-    icon: FileCode,
+    icon: Code2,
   },
 ];
 
@@ -144,7 +144,7 @@ export function ReportOptionsModal({
                   <h3 className="text-xs font-semibold text-amber-400 mb-2 uppercase tracking-wider">Pro plan</h3>
                   <ul className="space-y-1.5 text-sm text-gray-300">
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                       5 reports / month — PDF &amp; Markdown
                     </li>
                   </ul>
@@ -153,11 +153,11 @@ export function ReportOptionsModal({
                   <h3 className="text-xs font-semibold text-amber-400 mb-2 uppercase tracking-wider">Agency plan</h3>
                   <ul className="space-y-1.5 text-sm text-gray-300">
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                       Unlimited reports
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                       White-label (your logo &amp; colors)
                     </li>
                   </ul>
