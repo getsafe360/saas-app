@@ -6,6 +6,7 @@ import { sites } from '@/lib/db/schema/sites';
 import { and, eq } from 'drizzle-orm';
 import { generateSiteToken, hashToken, createWordPressConnection } from '@/lib/wordpress/auth';
 import { logPairingComplete, logConnectionError } from '@/lib/wordpress/logger';
+import { put } from '@vercel/blob';
 import crypto from 'crypto';
 
 export const runtime = 'nodejs';
@@ -178,13 +179,6 @@ export async function POST(req: NextRequest) {
       updatedAt: new Date(),
     };
 
-    // Mark record as used in Redis immediately to prevent race conditions
-    const usedRecord = { ...record, used: true, usedAt: now, siteId };
-    await Promise.all([
-      redis.set(`pairing:code:${pairCode}`, JSON.stringify(usedRecord), { ex: PAIRING_TTL_SEC }),
-      redis.set(`pairing:id:${record.id}`, JSON.stringify(usedRecord), { ex: PAIRING_TTL_SEC }),
-    ]);
-
     if (!existingId) {
       try {
         await db.insert(sites).values({
@@ -203,6 +197,28 @@ export async function POST(req: NextRequest) {
 
           if (conflict?.id) {
             await db.update(sites).set(updatePayload).where(eq(sites.id, conflict.id));
+            const conflictUsedRecord = { ...record, used: true, usedAt: now, siteId: conflict.id };
+            await Promise.all([
+              redis.set(`pairing:code:${pairCode}`, JSON.stringify(conflictUsedRecord), { ex: PAIRING_TTL_SEC }),
+              redis.set(`pairing:id:${record.id}`, JSON.stringify(conflictUsedRecord), { ex: PAIRING_TTL_SEC }),
+            ]);
+            try {
+              await put(
+                `sites/${conflict.id}.json`,
+                JSON.stringify({
+                  siteId: conflict.id,
+                  siteUrl: finalSiteUrl,
+                  status: 'connected',
+                  wpVersion: wpVersion || null,
+                  pluginVersion: pluginVersion || null,
+                  createdAt: now,
+                  updatedAt: now,
+                }),
+                { access: 'public', contentType: 'application/json' }
+              );
+            } catch (e) {
+              console.error('[handshake] write site blob failed', e);
+            }
             await logPairingComplete(conflict.id);
             return jsonNoStore({ siteId: conflict.id, siteToken });
           }
@@ -220,6 +236,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const usedRecord = { ...record, used: true, usedAt: now, siteId };
+    await Promise.all([
+      redis.set(`pairing:code:${pairCode}`, JSON.stringify(usedRecord), { ex: PAIRING_TTL_SEC }),
+      redis.set(`pairing:id:${record.id}`, JSON.stringify(usedRecord), { ex: PAIRING_TTL_SEC }),
+    ]);
+    try {
+      await put(
+        `sites/${siteId}.json`,
+        JSON.stringify({
+          siteId,
+          siteUrl: finalSiteUrl,
+          status: 'connected',
+          wpVersion: wpVersion || null,
+          pluginVersion: pluginVersion || null,
+          createdAt: now,
+          updatedAt: now,
+        }),
+        { access: 'public', contentType: 'application/json' }
+      );
+    } catch (e) {
+      console.error('[handshake] write site blob failed', e);
+    }
     await logPairingComplete(siteId);
     return jsonNoStore({ siteId, siteToken });
   } catch (e: any) {

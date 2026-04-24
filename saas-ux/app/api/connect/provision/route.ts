@@ -18,18 +18,18 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
-const PROVISION_SECRET = process.env.PROVISION_SECRET || 'getsafe360-provision-secret-change-me';
+const PROVISION_SECRET = process.env.PROVISION_SECRET;
 
 function hmac(value: string, secret: string) {
   return crypto.createHmac('sha256', secret).update(value).digest('hex');
 }
 
-function snippetToken(siteId: string) {
-  return hmac(`snippet:${siteId}`, PROVISION_SECRET);
+function snippetToken(siteId: string, secret: string) {
+  return hmac(`snippet:${siteId}`, secret);
 }
 
-function apiKeyToken(siteId: string) {
-  return hmac(`apikey:${siteId}`, PROVISION_SECRET);
+function apiKeyToken(siteId: string, secret: string) {
+  return hmac(`apikey:${siteId}`, secret);
 }
 
 function buildSnippet(siteId: string, token: string): string {
@@ -63,8 +63,13 @@ export async function GET(req: NextRequest) {
     .limit(1);
   if (!site) return NextResponse.json({ error: 'site not found' }, { status: 404 });
 
-  const token = snippetToken(siteId);
-  const apiKey = apiKeyToken(siteId);
+  if (!PROVISION_SECRET) {
+    console.error('[provision] PROVISION_SECRET env var is not set');
+    return NextResponse.json({ error: 'server_misconfiguration' }, { status: 500 });
+  }
+
+  const token = snippetToken(siteId, PROVISION_SECRET);
+  const apiKey = apiKeyToken(siteId, PROVISION_SECRET);
 
   // 7-day uptime: read from Redis connection log
   const uptimeKey = `uptime:${siteId}`;
