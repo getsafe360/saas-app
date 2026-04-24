@@ -60,6 +60,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  let claimKey: string | undefined;
   try {
     let payload: unknown;
     try {
@@ -179,6 +180,18 @@ export async function POST(req: NextRequest) {
       updatedAt: new Date(),
     };
 
+    // Atomically claim the code — only one concurrent request can proceed past this point
+    claimKey = `pairing:claim:${pairCode}`;
+    const claimed = await redis.set(claimKey, '1', { nx: true, ex: 60 });
+    if (!claimed) {
+      return jsonNoStore(
+        record.siteId
+          ? { error: 'already_used', code: 'E_USED', siteId: record.siteId }
+          : { error: 'already_used', code: 'E_USED' },
+        { status: 409 },
+      );
+    }
+
     if (!existingId) {
       try {
         await db.insert(sites).values({
@@ -224,6 +237,7 @@ export async function POST(req: NextRequest) {
           }
         }
         console.error('[handshake] insert sites failed', e);
+        await redis.del(claimKey);
         return jsonNoStore({ error: 'db_insert_failed', code: 'E_DB_INSERT' }, { status: 500 });
       }
     } else {
@@ -232,6 +246,7 @@ export async function POST(req: NextRequest) {
       } catch (e: any) {
         console.error('[handshake] update sites failed', e);
         await logConnectionError(siteId, 'Database update failed', 'error');
+        await redis.del(claimKey);
         return jsonNoStore({ error: 'db_update_failed', code: 'E_DB_UPDATE' }, { status: 500 });
       }
     }
@@ -262,6 +277,7 @@ export async function POST(req: NextRequest) {
     return jsonNoStore({ siteId, siteToken });
   } catch (e: any) {
     console.error('[handshake] unhandled error', e);
+    if (claimKey) await redis.del(claimKey).catch(() => {});
     return jsonNoStore({ error: 'handshake_failed', code: 'E_UNCAUGHT' }, { status: 500 });
   }
 }
