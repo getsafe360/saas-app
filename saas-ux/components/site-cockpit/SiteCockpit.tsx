@@ -5,6 +5,7 @@ import {
   useState,
   useCallback,
   useTransition,
+  useEffect,
   type ComponentType,
 } from "react";
 import { useTranslations } from "next-intl";
@@ -31,6 +32,7 @@ import { ContentCard } from "./cards/ContentCard";
 import { SiteSummaryCard } from "./cards/SiteSummaryCard";
 import { ConnectionCard } from "./cards/ConnectionCard";
 import { OverallScoreHero } from "./OverallScoreHero";
+import { SEOAnalysisDrawer } from "./cards/seo/SEOAnalysisDrawer";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type { ConnectionStatus } from "./cards/wordpress/types";
 import type {
@@ -136,6 +138,29 @@ export function SiteCockpit({
     "idle" | "saving" | "saved" | "error"
   >("idle");
 
+  // SEO-GEO drawer state
+  const [seoDrawerOpen, setSeoDrawerOpen] = useState(false);
+
+  // Token balance fetched from /api/team/tokens
+  const [tokenBalance, setTokenBalance] = useState<{
+    tokensIncluded: number;
+    tokensUsedThisMonth: number;
+  }>({ tokensIncluded: 5000, tokensUsedThisMonth: 0 });
+
+  useEffect(() => {
+    fetch("/api/team/tokens")
+      .then((r) => r.json())
+      .then((d: { tokensRemaining?: number; tokensIncluded?: number }) => {
+        const included = (d.tokensIncluded ?? 5000);
+        const remaining = (d.tokensRemaining ?? included);
+        setTokenBalance({
+          tokensIncluded: included,
+          tokensUsedThisMonth: Math.max(0, included - remaining),
+        });
+      })
+      .catch(() => {/* keep defaults */});
+  }, []);
+
   const saveLayout = useCallback(
     async (newCards: CardConfig[]) => {
       if (!editable) return;
@@ -211,6 +236,12 @@ export function SiteCockpit({
 
   const handleOptimizeCategory = useCallback(
     async (category: OptimizeCategory) => {
+      // SEO-GEO → open the streaming analysis drawer instead of generic job
+      if (category === "seo") {
+        setSeoDrawerOpen(true);
+        return;
+      }
+
       setOptimizingCategory(category);
 
       if (siteId) {
@@ -443,6 +474,18 @@ export function SiteCockpit({
           </div>
         </SortableContext>
       </DndContext>
+
+      {/* SEO-GEO Analysis Drawer — mounts outside the grid so it overlays everything */}
+      {siteId && (
+        <SEOAnalysisDrawer
+          open={seoDrawerOpen}
+          onClose={() => setSeoDrawerOpen(false)}
+          siteId={siteId}
+          siteUrl={data.finalUrl}
+          tokensIncluded={tokenBalance.tokensIncluded}
+          tokensUsedThisMonth={tokenBalance.tokensUsedThisMonth}
+        />
+      )}
     </div>
   );
 }
