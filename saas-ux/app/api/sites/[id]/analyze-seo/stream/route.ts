@@ -7,7 +7,7 @@ import "server-only";
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { streamText } from "ai";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { getDrizzle } from "@/lib/db/postgres";
 import { sites } from "@/lib/db/schema/sites/sites";
 import { users } from "@/lib/db/schema/auth/users";
@@ -16,11 +16,12 @@ import { aiAnalysisJobs, aiRepairActions } from "@/lib/db/schema/ai/analysis";
 import type { SeoFinding, SeoMasterScore, SeoSection, AutomatedFix } from "@/lib/db/schema/ai/analysis";
 import {
   getUserTier,
+  isBSBTier,
   getSeoAnalysisModel,
-  getSeoProviderOptions,
   getModelLabel,
   ANALYSIS_TOKEN_COST,
   OPUS_MODEL_ID,
+  OPUS_THINKING_BUDGET,
   AGENT_NAME,
 } from "@/lib/ai/models";
 import { preScan } from "@/lib/analyzer/preScan";
@@ -248,7 +249,6 @@ export async function POST(
 
   // Resolve model for this tier
   const model = getSeoAnalysisModel(tier);
-  const providerOptions = getSeoProviderOptions(tier);
   const modelId = tier === "business" ? OPUS_MODEL_ID : (process.env.MODEL ?? "gpt-4o-mini");
   const provider = tier === "business" ? "anthropic" : "openai";
 
@@ -302,13 +302,21 @@ export async function POST(
       );
 
       try {
+        const extraOptions = isBSBTier(tier)
+          ? {
+              experimental_providerMetadata: {
+                anthropic: { thinking: { type: "enabled" as const, budgetTokens: OPUS_THINKING_BUDGET } },
+              },
+            }
+          : {};
+
         const result = streamText({
           model,
           system: buildSystemPrompt(AGENT_NAME),
           messages: [{ role: "user", content: buildUserPrompt(siteData, userName) }],
           temperature: 0.1,
-          maxTokens: 16_000,
-          ...(Object.keys(providerOptions).length > 0 ? { providerOptions } : {}),
+          maxOutputTokens: 16_000,
+          ...extraOptions,
         });
 
         let buffer = "";
@@ -405,13 +413,13 @@ export async function POST(
           })
           .where(eq(aiAnalysisJobs.id, jobId));
 
-        // Burn tokens from team balance (deducted on successful completion)
+        // Burn tokens atomically (SQL increments avoid race conditions with concurrent jobs)
         if (teamRow) {
           await db
             .update(teams)
             .set({
-              tokensUsedThisMonth: (teamRow.tokensUsedThisMonth ?? 0) + totalTokensUsed,
-              tokensRemaining: Math.max(0, (teamRow.tokensRemaining ?? 0) - totalTokensUsed),
+              tokensUsedThisMonth: sql`${teams.tokensUsedThisMonth} + ${totalTokensUsed}`,
+              tokensRemaining: sql`GREATEST(0, ${teams.tokensRemaining} - ${totalTokensUsed})`,
             })
             .where(eq(teams.id, teamRow.id));
         }

@@ -1,27 +1,27 @@
 // lib/ai/models.ts
-// Model registry — single source of truth for AI model selection per tier.
-// Business (BSB) tier → Claude Opus 4.7 with extended thinking
-// All other tiers   → existing Gemini / OpenAI paths
+// Server-only model registry — tier resolution and model selection.
+// Import AGENT_NAME and pure constants from ./constants instead.
+import "server-only";
 
 import { anthropic } from "@ai-sdk/anthropic";
 import { openai } from "@ai-sdk/openai";
-import type { LanguageModelV1 } from "ai";
+import type { LanguageModel } from "ai";
 import { auth } from "@clerk/nextjs/server";
 import { getDrizzle } from "@/lib/db/postgres";
 import { users } from "@/lib/db/schema/auth/users";
 import { teamMembers, teams } from "@/lib/db/schema/auth/teams";
 import { eq } from "drizzle-orm";
 import type { PlanName } from "@/lib/plans/config";
-
-export const AGENT_NAME = "Sparky";
-
-// Claude Opus 4.7 — used for BSB tier SEO-GEO deep audits
-export const OPUS_MODEL_ID = "claude-opus-4-7";
-
-// Extended thinking token budget for BSB audits (balanced depth vs. latency)
-export const OPUS_THINKING_BUDGET = 10_000;
+import {
+  OPUS_MODEL_ID,
+  OPUS_THINKING_BUDGET,
+  ANALYSIS_TOKEN_COST,
+} from "./constants";
 
 export type AITier = PlanName;
+
+// Re-export constants so existing imports from "@/lib/ai/models" keep working
+export { AGENT_NAME, OPUS_MODEL_ID, OPUS_THINKING_BUDGET, ANALYSIS_TOKEN_COST } from "./constants";
 
 /**
  * Resolve the calling user's plan tier from Clerk session → DB.
@@ -34,7 +34,6 @@ export async function getUserTier(): Promise<AITier> {
 
     const db = getDrizzle();
 
-    // Resolve internal user → team membership → team plan
     const [row] = await db
       .select({ planName: teams.planName })
       .from(users)
@@ -53,29 +52,18 @@ export async function getUserTier(): Promise<AITier> {
   }
 }
 
-/**
- * Returns true when the tier qualifies for Claude Opus (BSB/Business tier).
- */
 export function isBSBTier(tier: AITier): boolean {
   return tier === "business";
 }
 
-/**
- * Returns the SEO-GEO analysis model for the given tier.
- * Business → Claude Opus 4.7
- * Others   → GPT-4o-mini (fast, sufficient for standard analysis)
- */
-export function getSeoAnalysisModel(tier: AITier): LanguageModelV1 {
+export function getSeoAnalysisModel(tier: AITier): LanguageModel {
+  // Cast needed: @ai-sdk/anthropic@3.x returns LanguageModelV3 but ai@5 beta types declare LanguageModelV2
   if (isBSBTier(tier)) {
-    return anthropic(OPUS_MODEL_ID);
+    return anthropic(OPUS_MODEL_ID) as unknown as LanguageModel;
   }
-  return openai(process.env.MODEL ?? "gpt-4o-mini");
+  return openai(process.env.MODEL ?? "gpt-4o-mini") as unknown as LanguageModel;
 }
 
-/**
- * Provider options for streamText — injects extended thinking for BSB,
- * and standard options for other tiers.
- */
 export function getSeoProviderOptions(tier: AITier) {
   if (isBSBTier(tier)) {
     return {
@@ -87,21 +75,6 @@ export function getSeoProviderOptions(tier: AITier) {
   return {};
 }
 
-/**
- * Human-readable model label shown in the UI token counter / badges.
- */
 export function getModelLabel(tier: AITier): string {
   return isBSBTier(tier) ? `Claude Opus 4.7` : "Standard AI";
 }
-
-/**
- * Approximate token cost per SEO-GEO analysis by tier.
- * BSB uses Opus which is ~4× more expensive per token.
- */
-export const ANALYSIS_TOKEN_COST: Record<AITier, number> = {
-  free: 2_000,
-  pro: 2_000,
-  agent: 3_000,
-  agency: 3_000,
-  business: 8_000,
-};
