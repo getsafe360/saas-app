@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { X, Loader2, CheckCircle2, AlertTriangle, AlertCircle, Info, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TokenUsageBar } from "@/components/ui/TokenUsageBar";
-import { AGENT_NAME } from "@/lib/ai/models";
+import { AGENT_NAME } from "@/lib/ai/constants";
 import type { SeoFinding, SeoMasterScore, SeoSection } from "@/lib/db/schema/ai/analysis";
 
 // ---------------------------------------------------------------------------
