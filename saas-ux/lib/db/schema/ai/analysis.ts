@@ -108,17 +108,20 @@ export interface SeoFinding {
   impact: string;
   automatedFix: AutomatedFix;
   tokensUsed?: number;
+  /** True when this check passes — shown as ✓ Good, excluded from repair queue */
+  passed?: boolean;
 }
 
 // Section sub-scores for the master score gauge
 export interface SeoMasterScore {
   technicalSeo: number;   // 0–100
-  aiSeo: number;          // 0–30 (6 × 5)
+  contentEeat: number;    // 0–25
+  aiSeo: number;          // 0–30
   geo: number;            // 0–30
   aeo: number;            // 0–25
   authorSeo: number;      // 0–25
   aiAnalytics: number;    // 0–25
-  aiCitation: number;     // 0–25
+  aiCitation: number;     // 0–25 (same as aiAnalytics; kept for backward compat)
   llmsTxt: number;        // 0–25
   master: number;         // normalized 0–100
   totalTokensUsed: number;

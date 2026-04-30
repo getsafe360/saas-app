@@ -6,7 +6,7 @@
 // 8 section cards, severity badges, repair-queue checkboxes, master score gauge.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { X, Loader2, CheckCircle2, AlertTriangle, AlertCircle, Info, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Loader2, AlertTriangle, AlertCircle, Info, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TokenUsageBar } from "@/components/ui/TokenUsageBar";
 import { AGENT_NAME } from "@/lib/ai/constants";
@@ -125,7 +125,14 @@ const SEVERITY_CONFIG: Record<Severity, { label: string; color: string; bg: stri
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function SeverityBadge({ severity }: { severity: Severity }) {
+function SeverityBadge({ severity, passed }: { severity: Severity; passed?: boolean }) {
+  if (passed) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold border border-green-500/30 bg-green-500/10 text-green-400">
+        ✓ Good
+      </span>
+    );
+  }
   const cfg = SEVERITY_CONFIG[severity] ?? SEVERITY_CONFIG.low;
   const Icon = cfg.icon;
   return (
@@ -163,31 +170,37 @@ function FindingCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const severity = (finding.severity ?? "low") as Severity;
+  const isPassed = finding.passed === true;
 
   return (
     <div
       className={cn(
         "rounded-xl border p-4 space-y-3 transition-all duration-200",
-        checked
+        isPassed
+          ? "border-green-500/20 bg-green-500/5 opacity-80"
+          : checked
           ? "border-[var(--category-seo)]/50 bg-[var(--category-seo)]/5"
           : "border-white/8 bg-white/3",
       )}
     >
       {/* Header row */}
       <div className="flex items-start gap-3">
-        {/* Repair-queue checkbox */}
-        <button
-          onClick={onToggle}
-          className="mt-0.5 flex-shrink-0 h-4 w-4 rounded border border-white/20 flex items-center justify-center transition-colors"
-          style={checked ? { background: "var(--category-seo)", borderColor: "var(--category-seo)" } : {}}
-          aria-label={checked ? "Remove from repair queue" : "Add to repair queue"}
-        >
-          {checked && <CheckCircle2 className="h-3 w-3 text-white" />}
-        </button>
+        {/* Repair-queue checkbox — hidden for passing checks */}
+        {!isPassed && (
+          <button
+            onClick={onToggle}
+            className="mt-0.5 flex-shrink-0 h-4 w-4 rounded border border-white/20 flex items-center justify-center transition-colors"
+            style={checked ? { background: "var(--category-seo)", borderColor: "var(--category-seo)" } : {}}
+            aria-label={checked ? "Remove from repair queue" : "Add to repair queue"}
+          >
+            {checked && <span className="text-[10px] font-bold text-white leading-none">✓</span>}
+          </button>
+        )}
+        {isPassed && <div className="mt-0.5 flex-shrink-0 h-4 w-4" />}
 
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <SeverityBadge severity={severity} />
+            <SeverityBadge severity={severity} passed={isPassed} />
             <ScorePips score={finding.score ?? 0} />
           </div>
           <p className="text-sm font-semibold text-white leading-snug">{finding.title}</p>
