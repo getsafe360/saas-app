@@ -79,36 +79,39 @@ function computeMasterScore(
   function avg(section: SeoSection): number {
     const s = sectionScores[section];
     if (!s || s.count === 0) return 0;
-    const maxPerFinding = 5;
-    // Normalise: average finding score / max × section max score
-    return Math.round((s.total / s.count / maxPerFinding) * sectionMaxScore(section));
+    // Normalise: average finding score / 5 × section max score
+    return Math.round((s.total / s.count / 5) * sectionMaxScore(section));
   }
 
   const technicalSeo = avg("technical-seo");
+  const contentEeat = avg("content-eeat");
   const aiSeo = avg("ai-seo");
   const geo = avg("geo");
   const aeo = avg("aeo");
   const authorSeo = avg("author-seo");
   const aiAnalytics = avg("ai-analytics");
-  const aiCitation = avg("ai-analytics"); // shared section
   const llmsTxt = avg("llms-txt");
 
-  // AI Visibility sub-score (avg of 7 components, normalised to 0-100)
+  // Traditional SEO: 75% technical foundations + 25% content & E-E-A-T (normalised to 0-100)
+  const traditionalSeo = Math.round(0.75 * technicalSeo + 0.25 * ((contentEeat / 25) * 100));
+
+  // AI Visibility: 6 components averaged and normalised to 0-100
   const aiVisibility = Math.round(
-    ((aiSeo / 30 + geo / 30 + aeo / 25 + authorSeo / 25 + aiAnalytics / 25 + aiCitation / 25 + llmsTxt / 25) / 7) * 100,
+    ((aiSeo / 30 + geo / 30 + aeo / 25 + authorSeo / 25 + aiAnalytics / 25 + llmsTxt / 25) / 6) * 100,
   );
 
   // Master = 50% traditional SEO + 50% AI visibility
-  const master = Math.round(0.5 * (technicalSeo) + 0.5 * aiVisibility);
+  const master = Math.round(0.5 * traditionalSeo + 0.5 * aiVisibility);
 
   return {
     technicalSeo,
+    contentEeat,
     aiSeo,
     geo,
     aeo,
     authorSeo,
     aiAnalytics,
-    aiCitation,
+    aiCitation: aiAnalytics, // backward compat alias
     llmsTxt,
     master,
     totalTokensUsed: tokensUsed,
@@ -157,13 +160,19 @@ After ALL findings, emit ONE final line:
 - 4 = good implementation
 - 5 = excellent / fully optimized
 
+## Passing checks
+When something is correctly implemented (score 4 or 5, no fix needed), add "passed":true to the finding JSON and keep severity "low".
+Example: {"type":"finding","id":"https-ok","section":"technical-seo","title":"HTTPS correctly implemented","severity":"low","score":5,"passed":true,"impact":"Secure HTTPS protects user data...","automatedFix":{"type":"manual","description":"No action required.","effort":"low"}}
+Passing findings are shown with a green ✓ badge in the UI and excluded from the repair queue.
+
 ## Rules
 1. Generate 4-8 findings per section (32-64 findings total)
 2. Be specific — reference actual values from the site data provided
 3. Impact text must explain the BUSINESS consequence (rankings, AI citations, conversions)
 4. automatedFix.snippet must be ready-to-paste code when type is "code" (HTML, JSON-LD, etc.)
 5. Never emit anything except valid NDJSON lines — no prose, no markdown, no explanations outside the JSON
-6. Analyse ALL 8 sections even if data is sparse — use "low" severity and score 2-3 for unknowns`;
+6. Analyse ALL 8 sections even if data is sparse — use "low" severity and score 2-3 for unknowns
+7. For sparse/unknown data sections: emit 2-3 findings with score 2 rather than padding with invented details`;
 }
 
 function buildUserPrompt(siteData: Record<string, unknown>, userName?: string): string {
