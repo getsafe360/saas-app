@@ -346,25 +346,15 @@ export function SEOAnalysisPage({
   const [doneEvent, setDoneEvent] = useState<DoneEvent | null>(null);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [queueSaving, setQueueSaving] = useState(false);
-  const [tokenBalance, setTokenBalance] = useState({
+  // Token balance is always provided by the server page (pre-analysis snapshot),
+  // so there is no client-side fetch that could race with the stream.
+  const tokenBalance = {
     tokensIncluded: tokensIncludedProp ?? 5000,
     tokensUsedThisMonth: tokensUsedProp ?? 0,
-  });
+  };
 
   const abortRef = useRef<AbortController | null>(null);
   const hasStarted = useRef(false);
-
-  useEffect(() => {
-    if (tokensIncludedProp !== undefined) return;
-    fetch("/api/team/tokens")
-      .then(r => r.json())
-      .then((d: { tokensRemaining?: number; tokensIncluded?: number }) => {
-        const included = d.tokensIncluded ?? 5000;
-        const remaining = d.tokensRemaining ?? included;
-        setTokenBalance({ tokensIncluded: included, tokensUsedThisMonth: Math.max(0, included - remaining) });
-      })
-      .catch(() => {});
-  }, [tokensIncludedProp]);
 
   // Group findings by section
   const findingsBySection: Record<SeoSection, SeoFinding[]> = {
@@ -455,7 +445,11 @@ export function SEOAnalysisPage({
 
   const domain = (() => { try { return new URL(siteUrl).hostname.replace(/^www\./, ""); } catch { return siteUrl; } })();
   const totalTokensUsed = doneEvent?.totalTokensUsed ?? 0;
-  const liveTokensUsed = tokenBalance.tokensUsedThisMonth + totalTokensUsed;
+  // When done, derive usage from server-authoritative tokensRemaining to avoid
+  // double-counting if the token balance fetch resolved after the backend debit.
+  const liveTokensUsed = done && doneEvent
+    ? tokenBalance.tokensIncluded - doneEvent.tokensRemaining
+    : tokenBalance.tokensUsedThisMonth + totalTokensUsed;
   const checkedCount = checkedIds.size;
 
   // Per-tab finding aggregation for tab badges

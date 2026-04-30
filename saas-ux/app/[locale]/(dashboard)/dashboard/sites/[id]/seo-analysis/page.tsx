@@ -3,27 +3,14 @@
 
 import "server-only";
 import { notFound } from "next/navigation";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
-import { eq } from "drizzle-orm";
+import { getDbUserFromClerk, findCurrentUserTeam } from "@/lib/auth/current";
 import { SEOAnalysisPage } from "@/components/site-cockpit/cards/seo/SEOAnalysisPage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-async function getSite(id: string) {
-  try {
-    const db = getDb();
-    const [row] = await db
-      .select({ id: sites.id, siteUrl: sites.siteUrl })
-      .from(sites)
-      .where(eq(sites.id, id))
-      .limit(1);
-    return row ?? null;
-  } catch {
-    return null;
-  }
-}
 
 export default async function SeoAnalysisPageRoute({
   params,
@@ -35,8 +22,26 @@ export default async function SeoAnalysisPageRoute({
   const { locale, id } = await params;
   const { start } = await searchParams;
 
-  const site = await getSite(id);
+  // Resolve current user — gates the entire page
+  const dbUser = await getDbUserFromClerk();
+  if (!dbUser) return notFound();
+
+  // Fetch site scoped to this user to prevent cross-tenant data exposure
+  const db = getDb();
+  const [site] = await db
+    .select({ id: sites.id, siteUrl: sites.siteUrl })
+    .from(sites)
+    .where(and(eq(sites.id, id), eq(sites.userId, dbUser.id)))
+    .limit(1);
+
   if (!site) return notFound();
+
+  // Fetch token balance server-side so it always reflects pre-analysis state,
+  // avoiding a race condition when autoStart triggers the stream simultaneously.
+  const team = await findCurrentUserTeam();
+  const tokensIncluded = team?.tokensIncluded ?? 5000;
+  const tokensRemaining = team?.tokensRemaining ?? tokensIncluded;
+  const tokensUsedThisMonth = Math.max(0, tokensIncluded - tokensRemaining);
 
   return (
     <SEOAnalysisPage
@@ -44,6 +49,8 @@ export default async function SeoAnalysisPageRoute({
       siteUrl={site.siteUrl}
       locale={locale}
       autoStart={start === "true"}
+      tokensIncluded={tokensIncluded}
+      tokensUsedThisMonth={tokensUsedThisMonth}
     />
   );
 }
