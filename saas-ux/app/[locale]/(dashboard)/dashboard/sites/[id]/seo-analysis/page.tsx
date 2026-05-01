@@ -8,6 +8,8 @@ import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
 import { getDbUserFromClerk, findCurrentUserTeam } from "@/lib/auth/current";
 import { SEOAnalysisPage } from "@/components/site-cockpit/cards/seo/SEOAnalysisPage";
+import { PLAN_FEATURES } from "@/lib/plans/config";
+import type { PlanName } from "@/lib/plans/config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,6 +45,9 @@ export default async function SeoAnalysisPageRoute({
   const tokensRemaining = team?.tokensRemaining ?? tokensIncluded;
   const tokensUsedThisMonth = Math.max(0, tokensIncluded - tokensRemaining);
 
+  const planName = (team?.planName ?? "free") as PlanName;
+  const showTokenCost = PLAN_FEATURES[planName]?.showTokenCost ?? true;
+
   return (
     <SEOAnalysisPage
       siteId={id}
@@ -51,6 +56,7 @@ export default async function SeoAnalysisPageRoute({
       autoStart={start === "true"}
       tokensIncluded={tokensIncluded}
       tokensUsedThisMonth={tokensUsedThisMonth}
+      showTokenCost={showTokenCost}
     />
   );
 }

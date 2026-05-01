@@ -259,6 +259,12 @@ export interface PlanFeatures {
   maxSites: number;              // Max sites per account
   maxTeamMembers: number;        // Max team members
   reportRetentionDays: number;   // How long reports are stored
+
+  // UX: whether to show raw token/cost numbers in the analysis footer.
+  // Free & Pro users see the counter (signals value + upgrade path).
+  // Agent/Agency/Business users see only a minimal usage bar — power users
+  // shouldn't feel nickel-and-dimed by a running token counter.
+  showTokenCost: boolean;
 }
 
 /**
@@ -277,6 +283,7 @@ export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
     maxSites: 3,
     maxTeamMembers: 1,
     reportRetentionDays: 0,
+    showTokenCost: true,
   },
   pro: {
     reportGeneration: true,
@@ -290,6 +297,7 @@ export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
     maxSites: 25,
     maxTeamMembers: 3,
     reportRetentionDays: 90,
+    showTokenCost: true,
   },
   agent: {
     reportGeneration: true,
@@ -303,6 +311,7 @@ export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
     maxSites: 100,
     maxTeamMembers: 10,
     reportRetentionDays: 365,
+    showTokenCost: false,
   },
   agency: {
     reportGeneration: true,
@@ -316,6 +325,7 @@ export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
     maxSites: 100,
     maxTeamMembers: 10,
     reportRetentionDays: 365,
+    showTokenCost: false,
   },
   business: {
     reportGeneration: true,
@@ -329,6 +339,7 @@ export const PLAN_FEATURES: Record<PlanName, PlanFeatures> = {
     maxSites: 1000,
     maxTeamMembers: 100,
     reportRetentionDays: 3650,
+    showTokenCost: false,
   },
 };
 

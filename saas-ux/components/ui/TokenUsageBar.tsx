@@ -1,6 +1,7 @@
 // components/ui/TokenUsageBar.tsx
-// Live token usage indicator shown in the SEO analysis drawer footer.
-// Reflects monthly consumption with a soft-cap warning at 80%.
+// Live token usage indicator shown in the SEO analysis footer.
+// showCost=false (agent/agency/business plans) renders a minimal usage bar
+// without raw token numbers — power users shouldn't see a running cost counter.
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -10,6 +11,8 @@ interface TokenUsageBarProps {
   tokensTotal: number;
   tokensConsumedThisAnalysis: number;
   modelLabel: string;
+  /** When false, shows only the bar + model badge — no token counts or upgrade nudges. */
+  showCost?: boolean;
   className?: string;
 }
 
@@ -18,6 +21,7 @@ export function TokenUsageBar({
   tokensTotal,
   tokensConsumedThisAnalysis,
   modelLabel,
+  showCost = true,
   className,
 }: TokenUsageBarProps) {
   const pct = tokensTotal > 0 ? Math.min(1, tokensUsed / tokensTotal) : 0;
@@ -31,6 +35,21 @@ export function TokenUsageBar({
     : "var(--category-performance)"; // green
 
   const remaining = Math.max(0, tokensTotal - tokensUsed);
+
+  if (!showCost) {
+    // Minimal view: bar + "Powered by" only — no numbers, no nudge
+    return (
+      <div className={cn("space-y-1.5", className)}>
+        <div className="relative h-1 rounded-full overflow-hidden bg-white/10">
+          <div
+            className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+            style={{ width: `${pct * 100}%`, background: barColor }}
+          />
+        </div>
+        <p className="text-xs text-white/30">Powered by {modelLabel}</p>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("space-y-2", className)}>
