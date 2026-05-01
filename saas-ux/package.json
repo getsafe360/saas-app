@@ -14,6 +14,7 @@
     "db:drop": "drizzle-kit drop"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.71",
     "@ai-sdk/openai": "^2.0.53",
     "@clerk/clerk-react": "^5.32.4",
     "@clerk/localizations": "^4.5.1",
