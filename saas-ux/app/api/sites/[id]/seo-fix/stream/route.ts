@@ -193,11 +193,11 @@ export async function POST(
             const { text, usage } = await generateText({
               model: FIXER_MODEL,
               prompt: buildFixPrompt(action, site.siteUrl),
-              maxTokens: 800,
+              maxOutputTokens: 800,
             });
 
-            const inputTokens = usage?.promptTokens ?? 0;
-            const outputTokens = usage?.completionTokens ?? 0;
+            const inputTokens = usage?.inputTokens ?? 0;
+            const outputTokens = usage?.outputTokens ?? 0;
             totalTokensUsed += inputTokens + outputTokens;
 
             let elaborated: {
