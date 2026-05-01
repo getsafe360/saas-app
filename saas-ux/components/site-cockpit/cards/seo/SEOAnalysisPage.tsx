@@ -553,7 +553,7 @@ export function SEOAnalysisPage({
                 const high = tabHighCount(group.sections);
                 return (
                   <TabsTrigger key={group.id} value={group.id}
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--category-seo)] data-[state=active]:bg-transparent bg-transparent text-white/50 data-[state=active]:text-white px-4 py-3 h-auto gap-1.5 text-sm">
+                    className="cursor-pointer rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--category-seo)] data-[state=active]:bg-[oklch(from_var(--category-seo)_l_c_h_/_0.08)] bg-transparent text-white/50 data-[state=active]:text-white px-4 py-3 h-auto gap-1.5 text-sm transition-colors hover:text-white/80 hover:bg-white/4">
                     {group.label}
                     {tf.length > 0 && (
                       <span className="text-xs bg-white/10 rounded px-1.5 py-0.5 ml-1">{tf.length}</span>
