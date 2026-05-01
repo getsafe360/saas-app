@@ -17,6 +17,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq, sql } from "drizzle-orm";
 import { generateText } from "ai";
+import type { LanguageModel } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { getDrizzle } from "@/lib/db/postgres";
 import { sites } from "@/lib/db/schema/sites/sites";
@@ -28,8 +29,9 @@ import type { AiRepairAction } from "@/lib/db/schema/ai/analysis";
 export const runtime = "nodejs";
 export const maxDuration = 180;
 
-// Claude Haiku 4.5 — fast and cheap for elaborating fix instructions
-const FIXER_MODEL = anthropic("claude-haiku-4-5-20251001");
+// Cast needed: @ai-sdk/anthropic@3.x returns LanguageModelV3 but ai@5 beta
+// types declare LanguageModelV2 — same pattern used throughout this codebase.
+const FIXER_MODEL = anthropic("claude-haiku-4-5-20251001") as unknown as LanguageModel;
 const FIXER_MODEL_ID = "claude-haiku-4-5-20251001";
 
 function enc(obj: unknown): string {
