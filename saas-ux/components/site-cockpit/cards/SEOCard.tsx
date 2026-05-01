@@ -12,6 +12,7 @@ interface SEOCardProps {
     topIssues?: string[];
   };
   onOptimize?: () => void;
+  /** True while the SEO-GEO analysis drawer is open / streaming */
   optimizing?: boolean;
 }
 

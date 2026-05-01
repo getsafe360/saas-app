@@ -5,8 +5,10 @@ import {
   useState,
   useCallback,
   useTransition,
+  useEffect,
   type ComponentType,
 } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   DndContext,
@@ -125,6 +127,10 @@ export function SiteCockpit({
   wordpressLastConnected,
 }: SiteCockpitProps) {
   const t = useTranslations("SiteCockpit");
+  const router = useRouter();
+  const params = useParams();
+  const locale = (params.locale as string) || "en";
+
   const [cards, setCards] = useState<CardConfig[]>(() =>
     layoutToCards(initialLayout || DEFAULT_LAYOUT),
   );
@@ -135,6 +141,7 @@ export function SiteCockpit({
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
+
 
   const saveLayout = useCallback(
     async (newCards: CardConfig[]) => {
@@ -211,6 +218,12 @@ export function SiteCockpit({
 
   const handleOptimizeCategory = useCallback(
     async (category: OptimizeCategory) => {
+      // SEO-GEO → navigate to the full-page analysis report
+      if (category === "seo") {
+        router.push(`/${locale}/dashboard/sites/${siteId}/seo-analysis?start=true`);
+        return;
+      }
+
       setOptimizingCategory(category);
 
       if (siteId) {
@@ -443,6 +456,7 @@ export function SiteCockpit({
           </div>
         </SortableContext>
       </DndContext>
+
     </div>
   );
 }

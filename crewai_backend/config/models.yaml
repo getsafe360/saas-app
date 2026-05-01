@@ -2,9 +2,9 @@ default_model: claude_opus
 
 models:
   claude_opus:
-    provider_model: anthropic/claude-opus-4-6
+    provider_model: anthropic/claude-opus-4-7
     temperature: 0
-    max_iter: 1
+    max_iter: 2
     timeout_seconds: 60
     retry_limit: 2
     top_p: 1
