@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TokenUsageBar } from "@/components/ui/TokenUsageBar";
+import { SEOFixerPanel } from "./SEOFixerPanel";
 import { AGENT_NAME } from "@/lib/ai/constants";
 import type { SeoFinding, SeoMasterScore, SeoSection } from "@/lib/db/schema/ai/analysis";
 
@@ -33,6 +34,8 @@ export interface SEOAnalysisPageProps {
   autoStart?: boolean;
   tokensIncluded?: number;
   tokensUsedThisMonth?: number;
+  /** Controlled by plan: agent/agency/business users see only a minimal bar, no raw counts */
+  showTokenCost?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -336,6 +339,7 @@ export function SEOAnalysisPage({
   siteId, siteUrl, locale, autoStart = false,
   tokensIncluded: tokensIncludedProp,
   tokensUsedThisMonth: tokensUsedProp,
+  showTokenCost = true,
 }: SEOAnalysisPageProps) {
   const [streaming, setStreaming] = useState(false);
   const [done, setDone] = useState(false);
@@ -346,6 +350,7 @@ export function SEOAnalysisPage({
   const [doneEvent, setDoneEvent] = useState<DoneEvent | null>(null);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [queueSaving, setQueueSaving] = useState(false);
+  const [fixerOpen, setFixerOpen] = useState(false);
   // Token balance is always provided by the server page (pre-analysis snapshot),
   // so there is no client-side fetch that could race with the stream.
   const tokenBalance = {
@@ -440,6 +445,8 @@ export function SEOAnalysisPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobId: jobMeta.jobId, issueIds: Array.from(checkedIds) }),
       });
+      // Open the fixer panel immediately after queuing
+      setFixerOpen(true);
     } finally { setQueueSaving(false); }
   }, [siteId, jobMeta, checkedIds]);
 
@@ -464,6 +471,21 @@ export function SEOAnalysisPage({
   }
 
   return (
+    <>
+    {fixerOpen && jobMeta?.jobId && (
+      <SEOFixerPanel
+        siteId={siteId}
+        jobId={jobMeta.jobId}
+        showTokenCost={showTokenCost}
+        queuedItems={findings.filter(f => checkedIds.has(f.id)).map(f => ({
+          id: f.id,
+          title: f.title,
+          severity: f.severity,
+          section: f.section,
+        }))}
+        onClose={() => setFixerOpen(false)}
+      />
+    )}
     <div className="min-h-screen flex flex-col" style={{ background: "var(--background-default)" }}>
 
       {/* ── Sticky header ── */}
@@ -596,7 +618,8 @@ export function SEOAnalysisPage({
             tokensUsed={liveTokensUsed}
             tokensTotal={tokenBalance.tokensIncluded}
             tokensConsumedThisAnalysis={totalTokensUsed}
-            modelLabel={jobMeta?.modelLabel ?? "AI"} />
+            modelLabel={jobMeta?.modelLabel ?? "AI"}
+            showCost={showTokenCost} />
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-white/40">
               {checkedCount > 0
@@ -617,5 +640,6 @@ export function SEOAnalysisPage({
         </footer>
       )}
     </div>
+    </>
   );
 }
