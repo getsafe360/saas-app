@@ -210,35 +210,37 @@ export function SEOFixerPanel({
         for (const line of lines) {
           const t = line.trim();
           if (!t) continue;
+          let ev: Record<string, unknown>;
           try {
-            const ev = JSON.parse(t) as Record<string, unknown>;
-
-            if (ev.type === "started") {
-              // nothing extra needed — items already rendered
-            } else if (ev.type === "fix_item") {
-              const status = ev.status as FixStatus;
-              addOrUpdateItem({
-                id: ev.id as string,
-                title: ev.title as string,
-                severity: ev.severity as string | undefined,
-                section: ev.section as string | undefined,
-                status,
-                detail: ev.detail as string | undefined,
-                steps: ev.steps as string[] | undefined,
-                snippet: ev.snippet as string | undefined,
-                expectedImpact: ev.expectedImpact as string | undefined,
-                reason: ev.reason as string | undefined,
-              });
-            } else if (ev.type === "done") {
-              setDone({
-                applied: ev.applied as number,
-                skipped: ev.skipped as number,
-                totalTokensUsed: ev.totalTokensUsed as number,
-              });
-            } else if (ev.type === "error") {
-              throw new Error(ev.message as string);
-            }
-          } catch { /* skip malformed */ }
+            ev = JSON.parse(t) as Record<string, unknown>;
+          } catch {
+            continue; // skip malformed JSON lines only
+          }
+          // Handle error events outside the JSON parse try/catch so they
+          // propagate to the outer catch and surface to the user.
+          if (ev.type === "error") {
+            throw new Error(ev.message as string);
+          }
+          if (ev.type === "fix_item") {
+            addOrUpdateItem({
+              id: ev.id as string,
+              title: ev.title as string,
+              severity: ev.severity as string | undefined,
+              section: ev.section as string | undefined,
+              status: ev.status as FixStatus,
+              detail: ev.detail as string | undefined,
+              steps: ev.steps as string[] | undefined,
+              snippet: ev.snippet as string | undefined,
+              expectedImpact: ev.expectedImpact as string | undefined,
+              reason: ev.reason as string | undefined,
+            });
+          } else if (ev.type === "done") {
+            setDone({
+              applied: ev.applied as number,
+              skipped: ev.skipped as number,
+              totalTokensUsed: ev.totalTokensUsed as number,
+            });
+          }
         }
       }
     } catch (err: unknown) {
