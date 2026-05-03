@@ -196,9 +196,10 @@ export async function POST(
               maxOutputTokens: 800,
             });
 
-            const inputTokens = usage?.inputTokens ?? 0;
-            const outputTokens = usage?.outputTokens ?? 0;
-            totalTokensUsed += inputTokens + outputTokens;
+            // AI SDK v5 beta may return inputTokens/outputTokens as detail objects;
+            // totalTokens is always a plain integer — same pattern as analyze-seo stream.
+            const actionTokens = Number(usage?.totalTokens ?? 0);
+            totalTokensUsed += actionTokens;
 
             let elaborated: {
               summary?: string;
@@ -227,7 +228,7 @@ export async function POST(
               .set({
                 status: "completed",
                 automatedFix: enhancedFix,
-                tokensUsed: inputTokens + outputTokens,
+                tokensUsed: actionTokens,
                 modelId: FIXER_MODEL_ID,
                 provider: "anthropic",
                 executedAt: new Date(),

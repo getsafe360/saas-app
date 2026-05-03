@@ -31,7 +31,7 @@ export default async function SeoAnalysisPageRoute({
   // Fetch site scoped to this user to prevent cross-tenant data exposure
   const db = getDb();
   const [site] = await db
-    .select({ id: sites.id, siteUrl: sites.siteUrl })
+    .select({ id: sites.id, siteUrl: sites.siteUrl, connectionStatus: sites.connectionStatus, cms: sites.cms })
     .from(sites)
     .where(and(eq(sites.id, id), eq(sites.userId, dbUser.id)))
     .limit(1);
@@ -57,6 +57,8 @@ export default async function SeoAnalysisPageRoute({
       tokensIncluded={tokensIncluded}
       tokensUsedThisMonth={tokensUsedThisMonth}
       showTokenCost={showTokenCost}
+      connectionStatus={(site.connectionStatus ?? "disconnected") as "connected" | "disconnected"}
+      cmsType={site.cms ?? undefined}
     />
   );
 }

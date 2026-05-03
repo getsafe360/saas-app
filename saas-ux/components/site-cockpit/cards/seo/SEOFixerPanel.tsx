@@ -1,23 +1,29 @@
 "use client";
 
-// SEOFixerPanel — sliding overlay panel that streams AI fix elaborations for
-// queued repair actions. Opens when the user clicks "Fix with Sparky".
+// SEOFixerPanel — full-page 3-step repair flow.
+//
+// Step 1 · Pre-flight   — summary, connection status, token estimate, start/cancel
+// Step 2 · Running      — live NDJSON stream, per-fix status cards, progress bar
+// Step 3 · Results      — summary stats, stub diff/patch actions, restore section
 //
 // Stream events consumed: started | fix_item | done | error
-// Fix item statuses: processing | done | failed | skipped
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
-  X, Sparkles, Loader2, CheckCircle, XCircle,
+  ArrowLeft, Sparkles, Loader2, CheckCircle, XCircle,
   AlertTriangle, ChevronDown, ChevronUp, SkipForward,
+  Shield, Wifi, WifiOff, FileCode2, FileText, Settings2,
+  RotateCcw, Download, GitCompare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AGENT_NAME } from "@/lib/ai/constants";
+import type { ConnectionStatus } from "@/components/site-cockpit/cards/wordpress/types";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
+type Step = "preflight" | "running" | "results";
 type FixStatus = "queued" | "processing" | "done" | "failed" | "skipped";
 
 interface FixItem {
@@ -39,17 +45,40 @@ interface FixerDone {
   totalTokensUsed: number;
 }
 
-interface SEOFixerPanelProps {
+export interface QueuedItem {
+  id: string;
+  title: string;
+  severity?: string;
+  section?: string;
+  fixType?: string;
+  effort?: string;
+}
+
+export interface SEOFixerPanelProps {
   siteId: string;
   jobId: string;
-  /** Pre-seeded list of selected issue IDs & titles for instant rendering */
-  queuedItems: Array<{ id: string; title: string; severity?: string; section?: string }>;
+  queuedItems: QueuedItem[];
+  tokensRemaining: number;
   showTokenCost?: boolean;
+  connectionStatus?: ConnectionStatus;
+  cmsType?: string;
   onClose: () => void;
 }
 
 // ---------------------------------------------------------------------------
-// Sub-components
+// Token cost heuristic (pre-flight estimate)
+// ---------------------------------------------------------------------------
+
+const EFFORT_TOKENS: Record<string, number> = { low: 80, medium: 150, high: 250 };
+
+function estimateTokenCost(items: QueuedItem[]): number {
+  return items
+    .filter((i) => i.fixType !== "manual")
+    .reduce((sum, i) => sum + (EFFORT_TOKENS[i.effort ?? "medium"] ?? 150), 0);
+}
+
+// ---------------------------------------------------------------------------
+// Status icons / severity colours
 // ---------------------------------------------------------------------------
 
 const STATUS_ICON: Record<FixStatus, React.ReactNode> = {
@@ -66,6 +95,10 @@ const SEVERITY_COLOR: Record<string, string> = {
   medium:   "text-amber-400",
   low:      "text-blue-400",
 };
+
+// ---------------------------------------------------------------------------
+// FixCard
+// ---------------------------------------------------------------------------
 
 function FixCard({ item }: { item: FixItem }) {
   const [expanded, setExpanded] = useState(false);
@@ -109,7 +142,7 @@ function FixCard({ item }: { item: FixItem }) {
       {hasDetail && (
         <div className="pl-6">
           <button
-            onClick={() => setExpanded(v => !v)}
+            onClick={() => setExpanded((v) => !v)}
             className="flex items-center gap-1 text-xs text-[var(--category-seo)] hover:opacity-80 transition-opacity"
           >
             {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -141,42 +174,109 @@ function FixCard({ item }: { item: FixItem }) {
 }
 
 // ---------------------------------------------------------------------------
+// ConnectionBadge — compact inline status for pre-flight
+// ---------------------------------------------------------------------------
+
+function ConnectionBadge({
+  connectionStatus,
+  cmsType,
+  siteId,
+}: {
+  connectionStatus?: ConnectionStatus;
+  cmsType?: string;
+  siteId: string;
+}) {
+  const isConnected = connectionStatus === "connected";
+  const platform = cmsType
+    ? cmsType.charAt(0).toUpperCase() + cmsType.slice(1)
+    : "your site";
+
+  return (
+    <div className="rounded-xl border p-4 flex items-start gap-3"
+      style={{
+        borderColor: isConnected ? "rgba(52,211,153,0.2)" : "rgba(251,191,36,0.2)",
+        background:  isConnected ? "rgba(52,211,153,0.05)" : "rgba(251,191,36,0.05)",
+      }}>
+      <span className="mt-0.5 flex-shrink-0">
+        {isConnected
+          ? <Wifi className="h-4 w-4 text-emerald-400" />
+          : <WifiOff className="h-4 w-4 text-amber-400" />}
+      </span>
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <p className="text-sm font-semibold" style={{ color: isConnected ? "var(--category-performance)" : "#fbbf24" }}>
+          {isConnected ? `Connected — ${platform}` : "Site not connected"}
+        </p>
+        <p className="text-xs text-white/50 leading-relaxed">
+          {isConnected
+            ? "Fix instructions will be tailored for your platform."
+            : "Fixes will be code instructions only. "}
+          {!isConnected && (
+            <a
+              href={`../../cockpit`}
+              className="underline text-amber-400 hover:text-amber-300"
+            >
+              Connect your site
+            </a>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
 export function SEOFixerPanel({
-  siteId, jobId, queuedItems, showTokenCost = true, onClose,
+  siteId,
+  jobId,
+  queuedItems,
+  tokensRemaining,
+  showTokenCost = true,
+  connectionStatus,
+  cmsType,
+  onClose,
 }: SEOFixerPanelProps) {
+  const [step, setStep] = useState<Step>("preflight");
   const [items, setItems] = useState<FixItem[]>(
-    queuedItems.map(q => ({ ...q, status: "queued" as FixStatus })),
+    queuedItems.map((q) => ({ ...q, status: "queued" as FixStatus })),
   );
-  const [running, setRunning] = useState(false);
   const [done, setDone] = useState<FixerDone | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const hasStarted = useRef(false);
+  const [restoring, setRestoring] = useState(false);
+  const [restoreResult, setRestoreResult] = useState<"done" | "error" | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const startedAt = useRef<Date | null>(null);
 
-  const updateItem = useCallback((id: string, patch: Partial<FixItem>) => {
-    setItems(prev => prev.map(it => it.id === id ? { ...it, ...patch } : it));
-  }, []);
+  // Derived counts
+  const codeCount    = queuedItems.filter((i) => i.fixType === "code").length;
+  const contentCount = queuedItems.filter((i) => i.fixType === "content").length;
+  const configCount  = queuedItems.filter((i) => i.fixType === "config").length;
+  const manualCount  = queuedItems.filter((i) => i.fixType === "manual").length;
+  const actionable   = queuedItems.filter((i) => i.fixType !== "manual").length;
+  const estTokens    = estimateTokenCost(queuedItems);
+  const backupId     = `bkp_${jobId.slice(0, 8)}`;
+
+  const appliedCount = items.filter((it) => it.status === "done").length;
+  const failedCount  = items.filter((it) => it.status === "failed").length;
+  const doneCount    = items.filter((it) => it.status === "done" || it.status === "failed" || it.status === "skipped").length;
 
   const addOrUpdateItem = useCallback((patch: Partial<FixItem> & { id: string }) => {
-    setItems(prev => {
-      const idx = prev.findIndex(it => it.id === patch.id);
+    setItems((prev) => {
+      const idx = prev.findIndex((it) => it.id === patch.id);
       if (idx >= 0) {
         const updated = [...prev];
         updated[idx] = { ...updated[idx], ...patch };
         return updated;
       }
-      // New item (e.g. "skipped" manual items that weren't in the initial list)
       return [...prev, { title: patch.id, status: "skipped", ...patch } as FixItem];
     });
   }, []);
 
-  const run = useCallback(async () => {
-    if (hasStarted.current) return;
-    hasStarted.current = true;
-    setRunning(true);
+  const startRepair = useCallback(async () => {
+    startedAt.current = new Date();
+    setStep("running");
     setError(null);
 
     const controller = new AbortController();
@@ -211,140 +311,391 @@ export function SEOFixerPanel({
           const t = line.trim();
           if (!t) continue;
           let ev: Record<string, unknown>;
-          try {
-            ev = JSON.parse(t) as Record<string, unknown>;
-          } catch {
-            continue; // skip malformed JSON lines only
-          }
-          // Handle error events outside the JSON parse try/catch so they
-          // propagate to the outer catch and surface to the user.
-          if (ev.type === "error") {
-            throw new Error(ev.message as string);
-          }
+          try { ev = JSON.parse(t) as Record<string, unknown>; }
+          catch { continue; }
+
+          if (ev.type === "error") throw new Error(ev.message as string);
+
           if (ev.type === "fix_item") {
             addOrUpdateItem({
-              id: ev.id as string,
-              title: ev.title as string,
-              severity: ev.severity as string | undefined,
-              section: ev.section as string | undefined,
-              status: ev.status as FixStatus,
-              detail: ev.detail as string | undefined,
-              steps: ev.steps as string[] | undefined,
-              snippet: ev.snippet as string | undefined,
+              id:             ev.id as string,
+              title:          ev.title as string,
+              severity:       ev.severity as string | undefined,
+              section:        ev.section as string | undefined,
+              status:         ev.status as FixStatus,
+              detail:         ev.detail as string | undefined,
+              steps:          ev.steps as string[] | undefined,
+              snippet:        ev.snippet as string | undefined,
               expectedImpact: ev.expectedImpact as string | undefined,
-              reason: ev.reason as string | undefined,
+              reason:         ev.reason as string | undefined,
             });
           } else if (ev.type === "done") {
             setDone({
-              applied: ev.applied as number,
-              skipped: ev.skipped as number,
+              applied:         ev.applied as number,
+              skipped:         ev.skipped as number,
               totalTokensUsed: ev.totalTokensUsed as number,
             });
+            setStep("results");
           }
         }
       }
     } catch (err: unknown) {
       if ((err as Error).name !== "AbortError") {
         setError((err as Error).message ?? "Fixer failed");
+        setStep("results");
       }
-    } finally {
-      setRunning(false);
     }
   }, [siteId, jobId, addOrUpdateItem]);
 
-  // Auto-start on mount
-  useEffect(() => {
-    run();
-    return () => { abortRef.current?.abort(); };
-  }, [run]);
+  const handleRestore = useCallback(async () => {
+    setRestoring(true);
+    setRestoreResult(null);
+    try {
+      const res = await fetch(`/api/sites/${siteId}/repair-queue/restore`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setRestoreResult("done");
+    } catch {
+      setRestoreResult("error");
+    } finally {
+      setRestoring(false);
+    }
+  }, [siteId, jobId]);
 
-  const appliedCount = items.filter(it => it.status === "done").length;
-  const failedCount  = items.filter(it => it.status === "failed").length;
+  function savedAgo(): string {
+    if (!startedAt.current) return "just now";
+    const diffMs = Date.now() - startedAt.current.getTime();
+    const mins = Math.floor(diffMs / 60_000);
+    if (mins < 1) return "just now";
+    return `${mins}m ago`;
+  }
 
-  return (
-    // Backdrop
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-end"
-      style={{ background: "rgba(0,0,0,0.55)" }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+  // ── Shared sticky header ─────────────────────────────────────────────────
+
+  const header = (
+    <header
+      className="sticky top-0 z-20 flex items-center gap-3 px-4 sm:px-6 py-3 border-b flex-shrink-0"
+      style={{ borderColor: "var(--border-default)", background: "var(--background-default)" }}
     >
-      {/* Panel */}
-      <div
-        className="relative flex flex-col h-full sm:h-auto sm:max-h-[90vh] w-full sm:w-[520px] rounded-t-2xl sm:rounded-2xl overflow-hidden"
-        style={{ background: "var(--background-default)", borderColor: "var(--border-default)", border: "1px solid" }}
+      <button
+        onClick={onClose}
+        className="h-8 w-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/8 transition-colors flex-shrink-0"
+        aria-label="Back to report"
       >
-        {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b flex-shrink-0"
-          style={{ borderColor: "var(--border-default)" }}>
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl flex-shrink-0"
-            style={{ background: "oklch(from var(--category-seo) l c h / 0.12)", color: "var(--category-seo)" }}>
-            <Sparkles className="h-4 w-4" />
-          </span>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-bold text-white">{AGENT_NAME} SEO Fixer</h2>
-            <p className="text-xs text-white/40 truncate">
-              {running
-                ? `Elaborating ${items.length} fix${items.length === 1 ? "" : "es"}…`
-                : done
-                ? `${appliedCount} applied · ${done.skipped} manual · ${failedCount} failed`
-                : "Ready to apply fixes"}
-            </p>
-          </div>
-          <button onClick={onClose}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/8 transition-colors flex-shrink-0">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        <ArrowLeft className="h-4 w-4" />
+      </button>
+      <span
+        className="inline-flex h-7 w-7 items-center justify-center rounded-lg flex-shrink-0"
+        style={{ background: "oklch(from var(--category-seo) l c h / 0.12)", color: "var(--category-seo)" }}
+      >
+        <Sparkles className="h-3.5 w-3.5" />
+      </span>
+      <div className="flex-1 min-w-0">
+        <h1 className="text-sm font-bold text-white">{AGENT_NAME} SEO Fixer</h1>
+        <p className="text-xs text-white/40">
+          {step === "preflight" && `${queuedItems.length} issue${queuedItems.length === 1 ? "" : "s"} queued`}
+          {step === "running"   && `Elaborating ${items.length} fix${items.length === 1 ? "" : "es"}…`}
+          {step === "results"   && done && `${done.applied} applied · ${done.skipped} manual · ${failedCount} failed`}
+          {step === "results"   && !done && "Repair complete"}
+        </p>
+      </div>
+      {step === "running" && (
+        <span className="flex items-center gap-1.5 text-xs text-white/40 flex-shrink-0">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Working…
+        </span>
+      )}
+      {step === "results" && done && (
+        <span className="flex items-center gap-1.5 text-xs text-green-400 flex-shrink-0">
+          <CheckCircle className="h-3 w-3" /> Done
+        </span>
+      )}
+    </header>
+  );
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2.5 min-h-0">
-          {error && (
-            <div className="rounded-xl border border-red-400/30 bg-red-400/10 p-3 flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-red-400">Fixer error</p>
-                <p className="text-xs text-red-300/70">{error}</p>
-              </div>
-            </div>
-          )}
+  // ── Step 1: Pre-flight ───────────────────────────────────────────────────
 
-          {items.map(item => <FixCard key={item.id} item={item} />)}
+  if (step === "preflight") {
+    return (
+      <div className="min-h-screen flex flex-col" style={{ background: "var(--background-default)" }}>
+        {header}
+        <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-8 space-y-5 pb-10">
 
-          {running && (
-            <p className="text-xs text-white/30 flex items-center gap-1.5 py-1">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              {AGENT_NAME} is working through your queue…
-            </p>
-          )}
-        </div>
+          {/* Connection status */}
+          <ConnectionBadge
+            connectionStatus={connectionStatus}
+            cmsType={cmsType}
+            siteId={siteId}
+          />
 
-        {/* Footer */}
-        <div className="flex-shrink-0 px-5 py-3 border-t space-y-2"
-          style={{ borderColor: "var(--border-default)" }}>
-          {done && (
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0" />
-              <p className="text-sm font-semibold text-white">
-                {appliedCount} fix{appliedCount === 1 ? "" : "es"} elaborated
-                {done.skipped > 0 && <span className="font-normal text-white/40"> · {done.skipped} manual</span>}
-                {failedCount > 0 && <span className="font-normal text-red-400"> · {failedCount} failed</span>}
+          {/* Auto-backup notice */}
+          <div className="rounded-xl border p-4 flex items-start gap-3"
+            style={{ borderColor: "rgba(99,102,241,0.25)", background: "rgba(99,102,241,0.06)" }}>
+            <Shield className="h-4 w-4 text-indigo-400 flex-shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="text-sm font-semibold text-white">Auto-Backup</p>
+              <p className="text-xs text-white/50 leading-relaxed">
+                A snapshot of your current SEO config will be saved before any change.
+                Backup ID: <span className="font-mono text-white/70">{backupId}</span>
               </p>
             </div>
-          )}
-          {showTokenCost && done && done.totalTokensUsed > 0 && (
-            <p className="text-xs text-white/30">
-              {done.totalTokensUsed.toLocaleString()} tokens used by {AGENT_NAME} for this fix run.
+          </div>
+
+          {/* Issue breakdown */}
+          <div className="rounded-xl border p-5 space-y-4"
+            style={{ borderColor: "var(--border-default)", background: "var(--header-bg, var(--background-default))" }}>
+            <p className="text-sm font-semibold text-white">
+              {queuedItems.length} issue{queuedItems.length === 1 ? "" : "s"} selected
             </p>
-          )}
+            <div className="space-y-2">
+              {codeCount > 0 && (
+                <div className="flex items-center gap-2.5">
+                  <FileCode2 className="h-3.5 w-3.5 text-white/30 flex-shrink-0" />
+                  <span className="text-sm text-white/80">{codeCount} code fix{codeCount === 1 ? "" : "es"}</span>
+                </div>
+              )}
+              {contentCount > 0 && (
+                <div className="flex items-center gap-2.5">
+                  <FileText className="h-3.5 w-3.5 text-white/30 flex-shrink-0" />
+                  <span className="text-sm text-white/80">{contentCount} content fix{contentCount === 1 ? "" : "es"}</span>
+                </div>
+              )}
+              {configCount > 0 && (
+                <div className="flex items-center gap-2.5">
+                  <Settings2 className="h-3.5 w-3.5 text-white/30 flex-shrink-0" />
+                  <span className="text-sm text-white/80">{configCount} config fix{configCount === 1 ? "" : "es"}</span>
+                </div>
+              )}
+              {manualCount > 0 && (
+                <div className="flex items-center gap-2.5">
+                  <SkipForward className="h-3.5 w-3.5 text-white/30 flex-shrink-0" />
+                  <span className="text-sm text-white/50">{manualCount} manual (will be shown as instructions)</span>
+                </div>
+              )}
+            </div>
+
+            {showTokenCost && actionable > 0 && (
+              <div className="pt-3 border-t space-y-1.5" style={{ borderColor: "var(--border-default)" }}>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/40">Est. token cost</span>
+                  <span className="text-white/70 font-medium">~{estTokens.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/40">Tokens remaining</span>
+                  <span className={cn("font-medium", tokensRemaining < estTokens ? "text-red-400" : "text-white/70")}>
+                    {tokensRemaining.toLocaleString()}
+                  </span>
+                </div>
+                {tokensRemaining < estTokens && (
+                  <p className="text-xs text-red-400 pt-1">
+                    Estimated cost exceeds your remaining balance — some fixes may be skipped.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white/60 border transition-colors hover:text-white hover:bg-white/5"
+              style={{ borderColor: "var(--border-default)" }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => void startRepair()}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+              style={{
+                background: "var(--category-seo)",
+                boxShadow: "0 0 20px oklch(from var(--category-seo) l c h / 0.35)",
+              }}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Start Repair
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ── Step 2: Running ──────────────────────────────────────────────────────
+
+  if (step === "running") {
+    const progressPct = items.length > 0 ? Math.round((doneCount / items.length) * 100) : 0;
+
+    return (
+      <div className="min-h-screen flex flex-col" style={{ background: "var(--background-default)" }}>
+        {header}
+        <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-6 space-y-3 pb-32">
+
+          {/* Backup created */}
+          <div className="flex items-center gap-2 px-1 py-1">
+            <CheckCircle className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
+            <p className="text-xs text-white/50">
+              Backup saved — <span className="font-mono text-white/60">{backupId}</span>
+            </p>
+          </div>
+
+          {items.map((item) => <FixCard key={item.id} item={item} />)}
+
+          {/* Spinner while still streaming */}
+          <p className="text-xs text-white/30 flex items-center gap-1.5 py-1">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            {AGENT_NAME} is working through your queue…
+          </p>
+        </main>
+
+        {/* Sticky progress footer */}
+        <footer
+          className="fixed bottom-0 left-0 right-0 z-20 border-t px-4 sm:px-6 py-4 space-y-2"
+          style={{ borderColor: "var(--border-default)", background: "var(--background-default)" }}
+        >
+          <div className="flex items-center justify-between text-xs text-white/40 mb-1">
+            <span>Progress</span>
+            <span>{doneCount} / {items.length}</span>
+          </div>
+          <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "var(--border-default)" }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${progressPct}%`,
+                background: "var(--category-seo)",
+                boxShadow: progressPct > 0 ? "0 0 8px oklch(from var(--category-seo) l c h / 0.5)" : undefined,
+              }}
+            />
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // ── Step 3: Results ──────────────────────────────────────────────────────
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--background-default)" }}>
+      {header}
+      <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-6 space-y-5 pb-10">
+
+        {/* Error banner (if stream failed before done event) */}
+        {error && (
+          <div className="rounded-xl border border-red-400/30 bg-red-400/10 p-4 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-red-400">Fixer error</p>
+              <p className="text-xs text-red-300/70">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Summary stats */}
+        {done && (
+          <div className="rounded-xl border p-5 space-y-3"
+            style={{ borderColor: "rgba(52,211,153,0.2)", background: "rgba(52,211,153,0.04)" }}>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />
+              <p className="text-base font-bold text-white">
+                {done.applied} fix{done.applied === 1 ? "" : "es"} elaborated
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              {done.skipped > 0 && (
+                <span className="text-white/40">{done.skipped} manual (instructions provided)</span>
+              )}
+              {failedCount > 0 && (
+                <span className="text-red-400">{failedCount} failed</span>
+              )}
+            </div>
+            {showTokenCost && done.totalTokensUsed > 0 && (
+              <p className="text-xs text-white/30 pt-1 border-t" style={{ borderColor: "rgba(52,211,153,0.1)" }}>
+                {done.totalTokensUsed.toLocaleString()} tokens used by {AGENT_NAME}.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Fix items collapsed view */}
+        <div className="space-y-2.5">
+          {items.map((item) => <FixCard key={item.id} item={item} />)}
+        </div>
+
+        {/* Diff / patch stubs */}
+        <div className="flex gap-3">
           <button
-            onClick={onClose}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
-            style={{ background: done ? "var(--category-seo)" : "var(--border-default)" }}
+            disabled
+            title="Coming soon"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/30 border cursor-not-allowed"
+            style={{ borderColor: "var(--border-default)" }}
           >
-            {done ? "Close & return to report" : running ? "Working…" : "Close"}
+            <GitCompare className="h-3.5 w-3.5" />
+            View diff
+          </button>
+          <button
+            disabled
+            title="Coming soon"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/30 border cursor-not-allowed"
+            style={{ borderColor: "var(--border-default)" }}
+          >
+            <Download className="h-3.5 w-3.5" />
+            Download patch
           </button>
         </div>
-      </div>
+
+        {/* Restore section */}
+        <div className="rounded-xl border p-5 space-y-3"
+          style={{ borderColor: "var(--border-default)", background: "var(--header-bg, var(--background-default))" }}>
+          <div className="flex items-center gap-2">
+            <RotateCcw className="h-4 w-4 text-white/40 flex-shrink-0" />
+            <p className="text-sm font-semibold text-white/80">Restore backup if something broke</p>
+          </div>
+          <p className="text-xs text-white/40 leading-relaxed">
+            Backup: <span className="font-mono text-white/60">{backupId}</span>
+            {startedAt.current && (
+              <span className="ml-2">· saved {savedAgo()}</span>
+            )}
+          </p>
+
+          {restoreResult === "done" && (
+            <div className="flex items-center gap-1.5 text-xs text-green-400">
+              <CheckCircle className="h-3.5 w-3.5" />
+              Fixes reset — you can re-run {AGENT_NAME} on this job.
+            </div>
+          )}
+          {restoreResult === "error" && (
+            <p className="text-xs text-red-400">Restore failed — please try again.</p>
+          )}
+
+          <button
+            onClick={() => void handleRestore()}
+            disabled={restoring || restoreResult === "done"}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors border",
+              restoring || restoreResult === "done"
+                ? "text-white/30 cursor-not-allowed border-white/8"
+                : "text-white/70 hover:text-white hover:bg-white/5 border-white/15",
+            )}
+          >
+            {restoring
+              ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Restoring…</>
+              : <><RotateCcw className="h-3.5 w-3.5" /> Restore original</>}
+          </button>
+        </div>
+
+        {/* Return CTA */}
+        <button
+          onClick={onClose}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+          style={{ background: "var(--category-seo)", boxShadow: "0 0 20px oklch(from var(--category-seo) l c h / 0.35)" }}
+        >
+          Close &amp; return to report
+        </button>
+
+      </main>
     </div>
   );
 }

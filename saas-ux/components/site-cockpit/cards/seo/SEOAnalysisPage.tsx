@@ -12,6 +12,7 @@ import { TokenUsageBar } from "@/components/ui/TokenUsageBar";
 import { SEOFixerPanel } from "./SEOFixerPanel";
 import { AGENT_NAME } from "@/lib/ai/constants";
 import type { SeoFinding, SeoMasterScore, SeoSection } from "@/lib/db/schema/ai/analysis";
+import type { ConnectionStatus } from "@/components/site-cockpit/cards/wordpress/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,6 +37,8 @@ export interface SEOAnalysisPageProps {
   tokensUsedThisMonth?: number;
   /** Controlled by plan: agent/agency/business users see only a minimal bar, no raw counts */
   showTokenCost?: boolean;
+  connectionStatus?: ConnectionStatus;
+  cmsType?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -340,6 +343,8 @@ export function SEOAnalysisPage({
   tokensIncluded: tokensIncludedProp,
   tokensUsedThisMonth: tokensUsedProp,
   showTokenCost = true,
+  connectionStatus,
+  cmsType,
 }: SEOAnalysisPageProps) {
   const [streaming, setStreaming] = useState(false);
   const [done, setDone] = useState(false);
@@ -470,22 +475,33 @@ export function SEOAnalysisPage({
     return tabFindings(sections).filter(f => f.severity === "high" && !f.passed).length;
   }
 
-  return (
-    <>
-    {fixerOpen && jobMeta?.jobId && (
+  const fixerTokensRemaining = done && doneEvent
+    ? Math.max(0, doneEvent.tokensRemaining)
+    : Math.max(0, tokenBalance.tokensIncluded - liveTokensUsed);
+
+  if (fixerOpen && jobMeta?.jobId) {
+    return (
       <SEOFixerPanel
         siteId={siteId}
         jobId={jobMeta.jobId}
         showTokenCost={showTokenCost}
+        tokensRemaining={fixerTokensRemaining}
+        connectionStatus={connectionStatus}
+        cmsType={cmsType}
         queuedItems={findings.filter(f => checkedIds.has(f.id)).map(f => ({
           id: f.id,
           title: f.title,
           severity: f.severity,
           section: f.section,
+          fixType: (f.automatedFix as { type?: string } | null)?.type,
+          effort:  (f.automatedFix as { effort?: string } | null)?.effort,
         }))}
         onClose={() => setFixerOpen(false)}
       />
-    )}
+    );
+  }
+
+  return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--background-default)" }}>
 
       {/* ── Sticky header ── */}
@@ -640,6 +656,5 @@ export function SEOAnalysisPage({
         </footer>
       )}
     </div>
-    </>
   );
 }

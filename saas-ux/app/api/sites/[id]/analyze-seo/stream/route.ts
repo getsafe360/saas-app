@@ -401,8 +401,6 @@ export async function POST(
               automatedFix: f.automatedFix as AutomatedFix,
               repairMethod: f.automatedFix?.type ?? "manual",
               status: "pending" as const,
-              provider,
-              modelId,
               reportIncluded: true,
               addedToRepairQueue: false,
             })),
