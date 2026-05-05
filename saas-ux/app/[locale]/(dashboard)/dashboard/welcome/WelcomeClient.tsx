@@ -127,8 +127,8 @@ export function WelcomeClient({ stashUrl }: { stashUrl: string | null }) {
         }
 
         if (!payload?.url) {
-          // No test data at all — send to sites list
-          if (!cancelled) router.replace("/dashboard/sites?first=1");
+          // No test data — send to dashboard where the "Add new site" card is shown.
+          if (!cancelled) router.replace("/dashboard");
           return;
         }
 

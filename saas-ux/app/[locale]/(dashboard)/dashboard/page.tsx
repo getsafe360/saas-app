@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { redirect } from "@/navigation";
 import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
 import { users } from "@/lib/db/schema/auth/users";

@@ -1,22 +1,22 @@
 // app/[locale]/(dashboard)/dashboard/sites/page.tsx  (server component)
-import { redirect } from "next/navigation";
+import { redirect } from "@/navigation";
 import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
 import { eq, desc } from "drizzle-orm";
-import { getDbUserFromClerk } from "@/lib/auth/current";
+import { ensureAppUserId } from "@/lib/auth/ensure-app-user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export default async function SitesPage() {
-  const user = await getDbUserFromClerk();
-  if (!user) redirect("/sign-in");
+  const appUserId = await ensureAppUserId();
+  if (!appUserId) redirect("/sign-in");
 
   const db = getDb();
   const rows = await db
     .select()
     .from(sites)
-    .where(eq(sites.userId, user.id))
+    .where(eq(sites.userId, appUserId))
     .orderBy(desc(sites.updatedAt));
 
   return (

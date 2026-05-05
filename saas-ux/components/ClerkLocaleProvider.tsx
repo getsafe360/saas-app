@@ -21,6 +21,8 @@ export default function ClerkLocaleProvider({ children }: Props) {
   return (
     <ClerkProvider
       localization={localization}
+      signInUrl="/sign-in"
+      afterSignInUrl="/dashboard"
       signUpForceRedirectUrl="/dashboard/welcome"
       signUpFallbackRedirectUrl="/dashboard/welcome"
     >
