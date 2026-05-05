@@ -10,7 +10,7 @@ import { teams } from '@/lib/db/schema/auth';
 import { eq, and, desc } from 'drizzle-orm';
 import { list } from '@vercel/blob';
 import crypto from 'crypto';
-import { findCurrentUserTeam } from '@/lib/auth/current';
+import { findCurrentUserTeam, getDbUserFromClerk } from '@/lib/auth/current';
 import { publishEvent } from '@/lib/cockpit/event-bus';
 
 type StartBody = { siteId: string; issueIds: string[] };
@@ -58,12 +58,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'site_not_found' }, { status: 404 });
   }
 
-  // Current team (helper returns the team row or null)
-  const team = await findCurrentUserTeam();
+  // Current user + team
+  const [dbUser, team] = await Promise.all([getDbUserFromClerk(), findCurrentUserTeam()]);
   if (!team?.id) {
     return NextResponse.json({ ok: false, error: 'no_team' }, { status: 403 });
   }
   const teamId = team.id;
+  const isAdmin = dbUser?.role === 'admin' || dbUser?.role === 'staff';
 
   // Tailor fixes using latest scan report
   const report = await readLatestReportForSite(siteId);
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
   const [teamRow] = await db.select().from(teams).where(eq(teams.id, teamId)).limit(1);
   const have = teamRow?.tokensRemaining ?? 0;
 
-  if (have < estTokens) {
+  if (!isAdmin && have < estTokens) {
     return NextResponse.json(
       { ok: false, error: 'insufficient_tokens', have, need: estTokens },
       { status: 422 }

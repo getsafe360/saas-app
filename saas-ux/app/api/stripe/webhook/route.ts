@@ -113,9 +113,7 @@ export async function POST(req: Request) {
       }
 
       case 'customer.subscription.updated':
-      case 'customer.subscription.created':
-      case 'customer.subscription.deleted': {
-        // Widen type to include epoch fields that may be missing from TS defs
+      case 'customer.subscription.created': {
         const sub = event.data.object as Stripe.Subscription & {
           current_period_end?: number;
           cancel_at?: number;
@@ -130,6 +128,37 @@ export async function POST(req: Request) {
             updatedAt: new Date(),
           })
           .where(eq(teamSubscriptions.stripeSubscriptionId, sub.id));
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const sub = event.data.object as Stripe.Subscription & {
+          current_period_end?: number;
+          cancel_at?: number;
+        };
+
+        await Promise.all([
+          db
+            .update(teamSubscriptions)
+            .set({
+              status: 'canceled',
+              currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000) : null,
+              cancelAt: sub.cancel_at ? new Date(sub.cancel_at * 1000) : null,
+              updatedAt: new Date(),
+            })
+            .where(eq(teamSubscriptions.stripeSubscriptionId, sub.id)),
+
+          // Revert the team back to free — Stripe has confirmed the sub is gone
+          db
+            .update(teams)
+            .set({
+              planName: 'free',
+              subscriptionStatus: 'canceled',
+              stripeSubscriptionId: null,
+              updatedAt: new Date(),
+            })
+            .where(eq(teams.stripeSubscriptionId, sub.id)),
+        ]);
         break;
       }
 
