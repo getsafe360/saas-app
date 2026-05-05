@@ -3,6 +3,7 @@ import { preScan } from "@/lib/analyzer/preScan";
 import { buildPrompt } from "@/lib/analyzer/prompt";
 import { kvGet, kvSet } from "@/lib/kv";
 import { isPublicUrl } from "@/lib/net/isPublicUrl";
+import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { streamText } from "ai";
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     const locale = safeLocale(rawLocale);
 
-    if (ratelimit) {
+    if (ratelimit && !(await isAdminRequest())) {
       const ip = req.headers.get("x-forwarded-for") ?? "anon";
       const { success } = await ratelimit.limit(`analyze:${ip}`);
       if (!success) return new Response("Rate limit", { status: 429 });

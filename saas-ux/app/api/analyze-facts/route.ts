@@ -2,6 +2,7 @@
 import { NextRequest } from "next/server";
 import { preScan } from "@/lib/analyzer/preScan";
 import { isPublicUrl } from "@/lib/net/isPublicUrl";
+import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
@@ -357,7 +358,7 @@ export async function GET(req: NextRequest) {
     return new Response("Invalid URL", { status: 400 });
   }
 
-  if (ratelimit) {
+  if (ratelimit && !(await isAdminRequest())) {
     const ip = req.headers.get("x-forwarded-for") ?? "anon";
     const { success } = await ratelimit.limit(`facts:${ip}`);
     if (!success) return new Response("Rate limit", { status: 429 });

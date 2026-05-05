@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dns from "node:dns/promises";
 import net from "node:net";
 import { kvGet, kvIncr, kvSet } from "@/lib/kv";
+import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { PageSpeedSummary } from "@/lib/analyzer/pageSpeed";
 import { buildGeminiSnapshotPrompt } from "@/lib/agent/snapshotPrompt";
 import enMessages from "@/messages/en.json";
@@ -1215,7 +1216,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  if (!rateLimitOk(getClientId(req))) {
+  if (!(await isAdminRequest()) && !rateLimitOk(getClientId(req))) {
     return NextResponse.json(
       { error: "Rate limit exceeded." },
       { status: 429 },
