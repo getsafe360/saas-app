@@ -45,15 +45,14 @@ function SparkleIcon({ className }: { className?: string }) {
 
 // cx=60, cy=58, r=46 → arc from (14,58) to (106,58), top at (60,12)
 // pathLength = π*46 ≈ 144.5
-function ScoreGauge({ score, uid }: { score: number; uid: string }) {
-  const isNew = score === 0;
+function ScoreGauge({ score, isNew, uid }: { score: number; isNew: boolean; uid: string }) {
   const cx = 60, cy = 58, r = 46;
   const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
   const pathLength = Math.PI * r;
   const fillDash = (score / 100) * pathLength;
 
   // score=0 → needle left (π), score=100 → needle right (0)
-  const angle = Math.PI * (1 - (isNew ? 0 : score) / 100);
+  const angle = Math.PI * (1 - score / 100);
   const needleLen = 36;
   const needleX = cx + needleLen * Math.cos(angle);
   const needleY = cy - needleLen * Math.sin(angle);
@@ -197,7 +196,8 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [faviconError, setFaviconError] = useState(false);
 
-  const isAnalyzed = site.overallScore > 0;
+  // A site is analyzed when lastScores is present (scores != null), even if overall=0
+  const isAnalyzed = site.scores != null;
   const cmsIconData = getCMSIcon(site.cms);
 
   const faviconSrc = faviconError
@@ -270,7 +270,7 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
         <div className="h-px bg-[var(--border-default)] mb-4" />
 
         {/* ── Score gauge ── */}
-        <ScoreGauge score={site.overallScore} uid={site.id} />
+        <ScoreGauge score={site.overallScore} isNew={!isAnalyzed} uid={site.id} />
 
         {/* ── Pillar mini-score chips (analyzed only) ── */}
         {isAnalyzed && <PillarChips scores={site.scores} />}
