@@ -38,6 +38,7 @@ interface DashboardData {
     lastUpdated: string;
     faviconUrl: string | null;
     connectionStatus: string;
+    screenshotUrl: string | null;
   }>;
 }
 
