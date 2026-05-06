@@ -1,5 +1,5 @@
 import { currentUser } from '@clerk/nextjs/server';
-import { redirect } from '@/navigation';
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { WelcomeClient } from './WelcomeClient';
 import { ensureAppUserId } from '@/lib/auth/ensure-app-user';

@@ -1,5 +1,5 @@
 // app/[locale]/(dashboard)/dashboard/sites/page.tsx  (server component)
-import { redirect } from "@/navigation";
+import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
 import { eq, desc } from "drizzle-orm";
