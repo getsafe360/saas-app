@@ -2,6 +2,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { WelcomeClient } from './WelcomeClient';
+import { ensureAppUserId } from '@/lib/auth/ensure-app-user';
 
 export const runtime = 'nodejs';
 export const dynamic = "force-dynamic";
@@ -19,6 +20,9 @@ export default async function WelcomePage({
 }) {
   const user = await currentUser();
   if (!user) redirect('/sign-in');
+
+  // Provision DB user record for brand-new signups before any downstream page needs it.
+  await ensureAppUserId();
 
   const sp = await searchParams;
   const stashUrl = sp?.u?.trim();
