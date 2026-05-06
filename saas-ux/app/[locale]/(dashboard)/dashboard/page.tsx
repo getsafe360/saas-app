@@ -149,6 +149,7 @@ export default async function DashboardPage({
       lastUpdated: site.updatedAt?.toISOString() || site.createdAt.toISOString(),
       faviconUrl: site.lastFaviconUrl,
       connectionStatus: site.connectionStatus || "disconnected",
+      screenshotUrl: site.lastScreenshotUrl,
     })),
   };
 
