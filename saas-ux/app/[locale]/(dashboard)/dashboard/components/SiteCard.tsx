@@ -249,11 +249,7 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
 
   const handleAction = () => {
     setIsLoading(true);
-    router.push(
-      isAnalyzed
-        ? `/dashboard/sites/${site.id}/cockpit`
-        : `/dashboard/sites/${site.id}/analyze`,
-    );
+    router.push(`/dashboard/sites/${site.id}/cockpit`);
   };
 
   return (
