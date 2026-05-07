@@ -220,7 +220,7 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
   };
 
   return (
-    <Card className="group hover:shadow-[var(--shadow-md)] transition-shadow duration-200 border-[var(--border-default)] bg-[var(--card-bg)]">
+    <Card className="group border border-blue-200/70 dark:border-blue-800/50 hover:border-blue-400/80 dark:hover:border-blue-500/70 hover:shadow-[var(--shadow-md)] transition-all duration-200 bg-[var(--card-bg)]">
       <CardContent className="p-5">
 
         {/* ── Header: screenshot thumbnail + favicon + domain ── */}
@@ -325,7 +325,7 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
         <Button
           onClick={handleAction}
           disabled={isLoading}
-          className="w-full font-semibold bg-[var(--text-default)] text-[var(--background-default)] hover:opacity-90 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all disabled:opacity-60"
+          className="w-full font-semibold bg-[var(--text-default)] text-[var(--background-default)] hover:opacity-85 hover:scale-[1.015] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150 disabled:opacity-60"
         >
           {isLoading ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
