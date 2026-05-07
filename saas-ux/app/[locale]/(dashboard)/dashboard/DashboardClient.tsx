@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SiteCard } from "./components/SiteCard";
-import { AccountSummary } from "./components/AccountSummary";
 
 interface DashboardData {
   user: {
@@ -192,10 +191,6 @@ export function DashboardClient({ data }: DashboardClientProps) {
         )}
       </div>
 
-      {/* Account Summary - Full Width Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <AccountSummary team={data.team} />
-      </div>
     </div>
   );
 }
