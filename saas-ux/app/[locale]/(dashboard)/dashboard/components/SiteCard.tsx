@@ -257,7 +257,7 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
   };
 
   return (
-    <Card className="group border border-blue-200/70 dark:border-blue-800/50 hover:border-blue-400/80 dark:hover:border-blue-500/70 hover:shadow-[var(--shadow-md)] transition-all duration-200 bg-[var(--card-bg)]">
+    <Card className="group border border-blue-200/70 dark:border-blue-800/50 hover:border-blue-400/80 dark:hover:border-blue-500/70 transition-all duration-200 background: var(--header-bg)">
       <CardContent className="p-5">
         {/* ── Header: screenshot thumbnail + favicon + domain ── */}
         <div className="flex items-start gap-3 mb-4">
@@ -375,7 +375,7 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
         <Button
           onClick={handleAction}
           disabled={isLoading}
-          className="w-full font-semibold ring-1 ring-sky-600/30 dark:ring-sky-400/30 bg-sky-50 dark:bg-sky-400/10 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-400/20 transition transition-all duration-150 disabled:opacity-60"
+          className="w-full font-semibold ring-1 ring-sky-600/30 dark:ring-sky-400/30 bg-sky-50 dark:bg-sky-400/10 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-400/20 transition disabled:opacity-60"
         >
           {isLoading ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
