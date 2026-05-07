@@ -5,7 +5,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Globe, AlertCircle, CheckCircle, Clock, Loader2, Trash2 } from "lucide-react";
+import {
+  Globe,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Loader2,
+  Trash2,
+} from "lucide-react";
 import { CMSIcon } from "@/components/ui/cms-icon";
 import { getCMSIcon } from "@/lib/cms-icons";
 import { formatDistanceToNow } from "date-fns";
@@ -30,7 +37,12 @@ interface SiteCardProps {
 
 function SparkleIcon({ className }: { className?: string }) {
   return (
-    <svg aria-hidden="true" viewBox="0 0 18 18" fill="none" className={className}>
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 18 18"
+      fill="none"
+      className={className}
+    >
       <path
         d="M14.0914 0.721827C14.1534 0.535432 14.4171 0.535433 14.4791 0.721828L14.8291 1.77428C15.0324 2.38523 15.5117 2.8646 16.1227 3.06782L17.1751 3.41791C17.3615 3.47991 17.3615 3.74357 17.1751 3.80557L16.1227 4.15565C15.5117 4.35888 15.0324 4.83825 14.8291 5.4492L14.4791 6.50165C14.4171 6.68804 14.1534 6.68804 14.0914 6.50165L13.7413 5.4492C13.5381 4.83825 13.0587 4.35888 12.4478 4.15565L11.3953 3.80557C11.2089 3.74357 11.2089 3.47991 11.3953 3.41791L12.4478 3.06782C13.0587 2.8646 13.5381 2.38523 13.7413 1.77428L14.0914 0.721827Z"
         fill="currentColor"
@@ -45,8 +57,18 @@ function SparkleIcon({ className }: { className?: string }) {
 
 // cx=60, cy=58, r=46 → arc from (14,58) to (106,58), top at (60,12)
 // pathLength = π*46 ≈ 144.5
-function ScoreGauge({ score, isNew, uid }: { score: number; isNew: boolean; uid: string }) {
-  const cx = 60, cy = 58, r = 46;
+function ScoreGauge({
+  score,
+  isNew,
+  uid,
+}: {
+  score: number;
+  isNew: boolean;
+  uid: string;
+}) {
+  const cx = 60,
+    cy = 58,
+    r = 46;
   const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
   const pathLength = Math.PI * r;
   const fillDash = (score / 100) * pathLength;
@@ -93,8 +115,10 @@ function ScoreGauge({ score, isNew, uid }: { score: number; isNew: boolean; uid:
 
         {/* Needle */}
         <line
-          x1={cx} y1={cy}
-          x2={needleX} y2={needleY}
+          x1={cx}
+          y1={cy}
+          x2={needleX}
+          y2={needleY}
           stroke={isNew ? "var(--color-neutral-400)" : "var(--text-subtle)"}
           strokeWidth="2"
           strokeLinecap="round"
@@ -102,14 +126,17 @@ function ScoreGauge({ score, isNew, uid }: { score: number; isNew: boolean; uid:
 
         {/* Pivot dot */}
         <circle
-          cx={cx} cy={cy} r="3.5"
+          cx={cx}
+          cy={cy}
+          r="3.5"
           fill={isNew ? "var(--color-neutral-400)" : "var(--text-default)"}
         />
 
         {/* Score text (renders above needle) */}
         {isNew ? (
           <text
-            x={cx} y={cy - 16}
+            x={cx}
+            y={cy - 16}
             textAnchor="middle"
             fill="var(--color-neutral-400)"
             fontSize="8"
@@ -121,7 +148,8 @@ function ScoreGauge({ score, isNew, uid }: { score: number; isNew: boolean; uid:
         ) : (
           <>
             <text
-              x={cx} y={cy - 12}
+              x={cx}
+              y={cy - 12}
               textAnchor="middle"
               fill="var(--text-default)"
               fontSize="22"
@@ -130,7 +158,8 @@ function ScoreGauge({ score, isNew, uid }: { score: number; isNew: boolean; uid:
               {score}
             </text>
             <text
-              x={cx} y={cy - 1}
+              x={cx}
+              y={cy - 1}
               textAnchor="middle"
               fill="var(--text-subtle)"
               fontSize="9"
@@ -151,10 +180,14 @@ function ScoreGauge({ score, isNew, uid }: { score: number; isNew: boolean; uid:
 }
 
 const PILLARS = [
-  { key: "seo",           label: "SEO",  color: "var(--category-seo)" },
-  { key: "performance",   label: "Perf", color: "var(--category-performance)" },
-  { key: "security",      label: "Sec",  color: "var(--category-security)" },
-  { key: "accessibility", label: "A11y", color: "var(--category-accessibility)" },
+  { key: "seo", label: "SEO", color: "var(--category-seo)" },
+  { key: "performance", label: "Perf", color: "var(--category-performance)" },
+  { key: "security", label: "Sec", color: "var(--category-security)" },
+  {
+    key: "accessibility",
+    label: "A11y",
+    color: "var(--category-accessibility)",
+  },
 ] as const;
 
 function PillarChips({ scores }: { scores: any }) {
@@ -180,7 +213,9 @@ function PillarChips({ scores }: { scores: any }) {
               className="w-2 h-2 rounded-full flex-shrink-0"
               style={{ background: color }}
             />
-            <span className="text-[10px] text-[var(--text-subtle)]">{label}</span>
+            <span className="text-[10px] text-[var(--text-subtle)]">
+              {label}
+            </span>
             <span className="ml-auto text-[10px] font-semibold text-[var(--text-default)]">
               {val}
             </span>
@@ -207,7 +242,9 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
 
   let timeAgo = "Unknown";
   try {
-    timeAgo = formatDistanceToNow(new Date(site.lastUpdated), { addSuffix: true });
+    timeAgo = formatDistanceToNow(new Date(site.lastUpdated), {
+      addSuffix: true,
+    });
   } catch {}
 
   const handleAction = () => {
@@ -215,17 +252,15 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
     router.push(
       isAnalyzed
         ? `/dashboard/sites/${site.id}/cockpit`
-        : `/dashboard/sites/${site.id}/analyze`
+        : `/dashboard/sites/${site.id}/analyze`,
     );
   };
 
   return (
     <Card className="group border border-blue-200/70 dark:border-blue-800/50 hover:border-blue-400/80 dark:hover:border-blue-500/70 hover:shadow-[var(--shadow-md)] transition-all duration-200 bg-[var(--card-bg)]">
       <CardContent className="p-5">
-
         {/* ── Header: screenshot thumbnail + favicon + domain ── */}
         <div className="flex items-start gap-3 mb-4">
-
           {/* Screenshot thumbnail */}
           <div className="flex-shrink-0 w-[68px] h-12 rounded-[var(--radius-sm)] overflow-hidden border border-[var(--border-default)] bg-[var(--color-neutral-200)]">
             {site.screenshotUrl ? (
@@ -270,7 +305,11 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
         <div className="h-px bg-[var(--border-default)] mb-4" />
 
         {/* ── Score gauge ── */}
-        <ScoreGauge score={site.overallScore} isNew={!isAnalyzed} uid={site.id} />
+        <ScoreGauge
+          score={site.overallScore}
+          isNew={!isAnalyzed}
+          uid={site.id}
+        />
 
         {/* ── Pillar mini-score chips (analyzed only) ── */}
         {isAnalyzed && <PillarChips scores={site.scores} />}
@@ -282,15 +321,22 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
         <div className="space-y-1.5 mb-4">
           {isAnalyzed && site.findingCount > 0 && (
             <div className="flex items-center gap-1.5 text-xs text-[var(--text-subtle)]">
-              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--color-warning)" }} />
+              <AlertCircle
+                className="w-3.5 h-3.5 flex-shrink-0"
+                style={{ color: "var(--color-warning)" }}
+              />
               <span>
-                {site.findingCount} {site.findingCount === 1 ? "issue" : "issues"} found
+                {site.findingCount}{" "}
+                {site.findingCount === 1 ? "issue" : "issues"} found
               </span>
             </div>
           )}
           {isAnalyzed && site.findingCount === 0 && (
             <div className="flex items-center gap-1.5 text-xs text-[var(--text-subtle)]">
-              <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--color-success)" }} />
+              <CheckCircle
+                className="w-3.5 h-3.5 flex-shrink-0"
+                style={{ color: "var(--color-success)" }}
+              />
               <span>No issues found</span>
             </div>
           )}
@@ -313,9 +359,13 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
                 </span>
               )}
               {site.connectionStatus === "connected" ? (
-                <span style={{ color: "var(--color-success)" }}>● Connected</span>
+                <span style={{ color: "var(--color-success)" }}>
+                  ● Connected
+                </span>
               ) : (
-                <span className="text-[var(--text-subtle)]">○ Disconnected</span>
+                <span className="text-[var(--text-subtle)]">
+                  ○ Disconnected
+                </span>
               )}
             </div>
           </div>
@@ -325,7 +375,7 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
         <Button
           onClick={handleAction}
           disabled={isLoading}
-          className="w-full font-semibold bg-[var(--text-default)] text-[var(--background-default)] hover:opacity-85 hover:scale-[1.015] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-150 disabled:opacity-60"
+          className="w-full font-semibold ring-1 ring-sky-600/30 dark:ring-sky-400/30 bg-sky-50 dark:bg-sky-400/10 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-400/20 transition transition-all duration-150 disabled:opacity-60"
         >
           {isLoading ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -333,7 +383,9 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
             <SparkleIcon className="mr-2 h-4 w-4 opacity-90 flex-shrink-0" />
           )}
           {isLoading
-            ? isAnalyzed ? "Opening…" : "Starting…"
+            ? isAnalyzed
+              ? "Opening…"
+              : "Starting…"
             : "Auto-Optimize"}
         </Button>
 
