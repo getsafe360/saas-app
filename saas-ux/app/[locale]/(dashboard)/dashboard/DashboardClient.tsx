@@ -144,7 +144,7 @@ export function DashboardClient({ data, newSiteId }: DashboardClientProps) {
             onClick={handleAddWebsite}
             size="sm"
             variant="outline"
-            className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 font-medium"
+            className="w-fit shrink-0 border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 font-medium"
           >
             <Plus className="w-4 h-4 mr-1" />
             {t("add_website")}

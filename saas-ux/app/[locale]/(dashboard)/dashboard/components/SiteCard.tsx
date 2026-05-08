@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -229,6 +230,7 @@ function PillarChips({ scores }: { scores: any }) {
 
 export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
   const router = useRouter();
+  const locale = useLocale();
   const [isLoading, setIsLoading] = useState(false);
   const [faviconError, setFaviconError] = useState(false);
   const [highlight, setHighlight] = useState(isNew);
@@ -257,7 +259,7 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
 
   const handleAction = () => {
     setIsLoading(true);
-    router.push(`/dashboard/sites/${site.id}/cockpit`);
+    router.push(`/${locale}/dashboard/sites/${site.id}/cockpit`);
   };
 
   return (
@@ -387,7 +389,7 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
         <Button
           onClick={handleAction}
           disabled={isLoading}
-          className="w-full font-semibold ring-1 ring-sky-600/30 dark:ring-sky-400/30 bg-sky-50 dark:bg-sky-400/10 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-400/20 transition disabled:opacity-60"
+          className="w-full font-semibold ring-1 ring-sky-600/30 dark:ring-sky-400/30 bg-sky-50 dark:bg-sky-400/10 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-400/20 transition disabled:opacity-60 shadow-none hover:shadow-none"
         >
           {isLoading ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
