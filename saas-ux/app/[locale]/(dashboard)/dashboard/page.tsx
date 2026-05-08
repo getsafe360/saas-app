@@ -37,10 +37,11 @@ function normalizeSiteUrl(raw: string) {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ testedUrl?: string; testId?: string }>;
+  searchParams: Promise<{ testedUrl?: string; testId?: string; newSite?: string }>;
 }) {
   const params = await searchParams;
   const testedUrl = params.testedUrl?.trim();
+  const newSiteId = params.newSite?.trim() || null;
 
   // Get Clerk user
   const clerkUser = await currentUser();
@@ -153,5 +154,5 @@ export default async function DashboardPage({
     })),
   };
 
-  return <DashboardClient data={dashboardData} />;
+  return <DashboardClient data={dashboardData} newSiteId={newSiteId} />;
 }

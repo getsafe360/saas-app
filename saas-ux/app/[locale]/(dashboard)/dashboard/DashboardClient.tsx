@@ -1,7 +1,7 @@
 // app/[locale]/(dashboard)/dashboard/DashboardClient.tsx (CLIENT)
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Plus, Globe, TrendingUp, ArrowRight, Zap } from "lucide-react";
@@ -43,13 +43,23 @@ interface DashboardData {
 
 interface DashboardClientProps {
   data: DashboardData;
+  newSiteId?: string | null;
 }
 
-export function DashboardClient({ data }: DashboardClientProps) {
+export function DashboardClient({ data, newSiteId }: DashboardClientProps) {
   const t = useTranslations("dashboard");
   const router = useRouter();
   const [sites, setSites] = useState(data.sites);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  // Scroll new card into view and clean up the URL param
+  useEffect(() => {
+    if (!newSiteId) return;
+    const el = document.getElementById(`site-card-${newSiteId}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    const t = setTimeout(() => router.replace("/dashboard", { scroll: false }), 3500);
+    return () => clearTimeout(t);
+  }, [newSiteId, router]);
 
   const handleAddWebsite = () => {
     router.push("/dashboard/sites/add");
@@ -145,7 +155,12 @@ export function DashboardClient({ data }: DashboardClientProps) {
         {sites.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sites.map((site) => (
-              <SiteCard key={site.id} site={site} onRemove={handleRemoveSite} />
+              <SiteCard
+                key={site.id}
+                site={site}
+                onRemove={handleRemoveSite}
+                isNew={site.id === newSiteId}
+              />
             ))}
 
             {/* Add Website Card - Empty State */}
