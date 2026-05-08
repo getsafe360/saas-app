@@ -62,11 +62,15 @@ async function probePlugin(siteUrl: string): Promise<boolean> {
     flipped.protocol = u.protocol === "http:" ? "https:" : "http:";
     urls.push(flipped.toString());
   } catch { /* ignore */ }
-  // Run all probes concurrently — max 4 s instead of up to 16 s sequential
-  const results = await Promise.all(
-    urls.flatMap((u) => paths.map((p) => probeOnce(u, p).catch(() => false))),
+  // Short-circuit: resolve true on first success, false only after all miss
+  const probes = urls.flatMap((u) =>
+    paths.map((p) =>
+      probeOnce(u, p)
+        .catch(() => false)
+        .then((ok) => { if (!ok) throw new Error("miss"); return true; }),
+    ),
   );
-  return results.some(Boolean);
+  return Promise.any(probes).catch(() => false);
 }
 
 function sixDigitCode() {
