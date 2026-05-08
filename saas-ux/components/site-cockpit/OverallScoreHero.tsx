@@ -371,7 +371,7 @@ export function OverallScoreHero({
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <div
                     className="text-xl font-bold transition-opacity duration-500"
-                    style={{ opacity: displayScore > 0 ? 1 : 0 }}
+                    style={{ opacity: summary.overallScore === 0 || displayScore > 0 ? 1 : 0 }}
                   >
                     {summary.overallScore}
                   </div>

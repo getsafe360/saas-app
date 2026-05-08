@@ -81,17 +81,13 @@ export async function generateMetadata({
 // ============================================
 
 async function getSiteFromDB(id: string) {
-  try {
-    const db = getDb();
-    const [row] = await db
-      .select()
-      .from(sites)
-      .where(eq(sites.id, id))
-      .limit(1);
-    return row ?? null;
-  } catch {
-    return null;
-  }
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(sites)
+    .where(eq(sites.id, id))
+    .limit(1);
+  return row ?? null;
 }
 
 
