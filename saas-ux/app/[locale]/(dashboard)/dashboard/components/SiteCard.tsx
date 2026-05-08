@@ -1,7 +1,7 @@
 // app/[locale]/(dashboard)/dashboard/components/SiteCard.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ interface SiteCardProps {
     screenshotUrl: string | null;
   };
   onRemove?: (siteId: string) => void;
+  isNew?: boolean;
 }
 
 function SparkleIcon({ className }: { className?: string }) {
@@ -226,10 +227,17 @@ function PillarChips({ scores }: { scores: any }) {
   );
 }
 
-export function SiteCard({ site, onRemove }: SiteCardProps) {
+export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [faviconError, setFaviconError] = useState(false);
+  const [highlight, setHighlight] = useState(isNew);
+
+  useEffect(() => {
+    if (!isNew) return;
+    const t = setTimeout(() => setHighlight(false), 3000);
+    return () => clearTimeout(t);
+  }, [isNew]);
 
   // A site is analyzed when lastScores is present (scores != null), even if overall=0
   const isAnalyzed = site.scores != null;
@@ -253,7 +261,15 @@ export function SiteCard({ site, onRemove }: SiteCardProps) {
   };
 
   return (
-    <Card className="group border border-blue-200/70 dark:border-blue-800/50 hover:border-blue-400/80 dark:hover:border-blue-500/70 transition-all duration-200 background: var(--header-bg)">
+    <Card
+      id={`site-card-${site.id}`}
+      className={[
+        "group border transition-all duration-200",
+        highlight
+          ? "border-sky-400 dark:border-sky-400 ring-2 ring-sky-400/40 dark:ring-sky-400/40"
+          : "border-blue-200/70 dark:border-blue-800/50 hover:border-blue-400/80 dark:hover:border-blue-500/70",
+      ].join(" ")}
+    >
       <CardContent className="p-5">
         {/* ── Header: screenshot thumbnail + favicon + domain ── */}
         <div className="flex items-start gap-3 mb-4">

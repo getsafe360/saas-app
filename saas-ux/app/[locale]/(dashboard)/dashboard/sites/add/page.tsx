@@ -82,11 +82,11 @@ export default function AddSitePage() {
       setSiteId(addData.siteId);
       setStatus("success");
 
-      // Redirect to dashboard after short delay
+      // Return to dashboard with the new card highlighted; user decides when to open cockpit
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push(`/dashboard?newSite=${addData.siteId}`);
         router.refresh();
-      }, 1500);
+      }, 900);
     } catch (err: any) {
       setStatus("error");
       setError(err?.message || "Something went wrong");
@@ -128,7 +128,7 @@ export default function AddSitePage() {
                 Website Added Successfully
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Redirecting to your dashboard...
+                Taking you back to your dashboard…
               </p>
             </div>
           ) : (

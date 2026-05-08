@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ComponentType } from "react";
+import { useMemo, useState, useEffect, type ComponentType } from "react";
 import { useTranslations } from "next-intl";
 import {
   AlertCircle,
@@ -159,6 +159,13 @@ export function OverallScoreHero({
 }: OverallScoreHeroProps) {
   const t = useTranslations("SiteCockpit");
   const [imageError, setImageError] = useState(false);
+
+  // Animate the overall arc from 0 → real score on mount
+  const [displayScore, setDisplayScore] = useState(0);
+  useEffect(() => {
+    const timer = setTimeout(() => setDisplayScore(summary.overallScore), 80);
+    return () => clearTimeout(timer);
+  }, [summary.overallScore]);
 
   const screenshotUrl = useMemo(
     () => `/api/screenshot?w=360&q=55&url=${encodeURIComponent(finalUrl)}`,
@@ -357,11 +364,15 @@ export function OverallScoreHero({
                     strokeWidth="10"
                     fill="none"
                     strokeLinecap="round"
-                    strokeDasharray={`${(summary.overallScore / 100) * 264} 264`}
+                    strokeDasharray={`${(displayScore / 100) * 264} 264`}
+                    style={{ transition: "stroke-dasharray 0.8s ease-out" }}
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <div className="text-xl font-bold">
+                  <div
+                    className="text-xl font-bold transition-opacity duration-500"
+                    style={{ opacity: displayScore > 0 ? 1 : 0 }}
+                  >
                     {summary.overallScore}
                   </div>
                   <div className="text-[10px]">{summary.grade}</div>

@@ -5,10 +5,7 @@ import { eq } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { SiteCockpit } from "@/components/site-cockpit/SiteCockpit";
-import { transformToSiteCockpitResponse } from "@/lib/cockpit/transform-api-data";
-import type { SiteCockpitResponse } from "@/types/site-cockpit";
+import { SiteCockpitLoader } from "@/components/site-cockpit/SiteCockpitLoader";
 import type { ConnectionStatus } from "@/components/site-cockpit/cards/wordpress/types";
 
 export const runtime = "nodejs";
@@ -97,61 +94,6 @@ async function getSiteFromDB(id: string) {
   }
 }
 
-async function getSiteAnalysis(
-  siteUrl: string,
-  siteId: string
-): Promise<SiteCockpitResponse | null> {
-  try {
-    // Dynamically construct the base URL from request headers
-    const headersList = await headers();
-    const host = headersList.get("host") || "localhost:3000";
-    const forwardedProto = headersList.get("x-forwarded-proto");
-    const protocol = forwardedProto || (host.includes("localhost") ? "http" : "https");
-    const baseUrl = `${protocol}://${host}`;
-
-    const response = await fetch(
-      `${baseUrl}/api/analyze-facts?url=${encodeURIComponent(siteUrl)}&forceWordPress=1&siteId=${encodeURIComponent(siteId)}`,
-      {
-        cache: "no-store",
-        headers: {
-          "User-Agent": "SiteCockpit/1.0",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      console.error("Failed to fetch site analysis:", response.status);
-      return null;
-    }
-
-    const data = await response.json();
-
-    // 🐛 DEBUG: Log the raw API data
-    console.log("🔍 Raw API data keys:", Object.keys(data));
-    console.log(
-      "🔍 API data sample:",
-      JSON.stringify(data, null, 2).slice(0, 500)
-    );
-
-    const transformed = transformToSiteCockpitResponse(data);
-
-    // 🐛 DEBUG: Log the transformed data structure
-    console.log("🔍 Transformed data keys:", Object.keys(transformed));
-    console.log(
-      "🔍 Performance data:",
-      JSON.stringify(transformed.performance, null, 2)
-    );
-    console.log(
-      "🔍 Security data:",
-      JSON.stringify(transformed.security, null, 2)
-    );
-
-    return transformed;
-  } catch (error) {
-    console.error("Error fetching site analysis:", error);
-    return null;
-  }
-}
 
 // ============================================
 // Main Page Component
@@ -162,41 +104,18 @@ export default async function SiteCockpitPage({
 }: {
   params: Promise<{ locale: string; id: string }>;
 }) {
-  const { id, locale } = await params;
-  const t = await getTranslations({ locale, namespace: "SiteCockpit" });
+  const { id } = await params;
 
-  // Get site from database
+  // Validate the site exists; all analysis happens client-side via SiteCockpitLoader
   const site = await getSiteFromDB(id);
   if (!site) {
     return notFound();
   }
 
-  // Fetch analysis data
-  const analysisData = await getSiteAnalysis(site.siteUrl, id);
-  if (!analysisData) {
-    return (
-      <div className="p-6">
-        <div className="rounded-lg border p-6 bg-yellow-50 text-yellow-800">
-          <h2 className="text-lg font-semibold mb-2">
-            {t("analysisUnavailable")}
-          </h2>
-          <p className="text-sm">{t("analysisUnavailableDescription")}</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 🐛 DEBUG: Log right before rendering
-  console.log(
-    "🎯 About to render SiteCockpit with data keys:",
-    Object.keys(analysisData)
-  );
-
   return (
-    <SiteCockpit
-      data={analysisData}
+    <SiteCockpitLoader
       siteId={id}
-      editable={false}
+      siteUrl={site.siteUrl}
       siteSummary={site.lastSummary ?? undefined}
       wordpressConnectionStatus={toConnectionStatus(site.connectionStatus)}
       wordpressLastConnected={site.lastConnectedAt?.toISOString()}
