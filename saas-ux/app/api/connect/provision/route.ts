@@ -110,6 +110,12 @@ export async function POST(req: NextRequest) {
     .limit(1);
   if (!site) return NextResponse.json({ error: 'site not found' }, { status: 404 });
 
-  await redis.set(`provision:method:${siteId}`, method, { ex: 365 * 24 * 3600 });
+  await Promise.all([
+    redis.set(`provision:method:${siteId}`, method, { ex: 365 * 24 * 3600 }),
+    db
+      .update(sites)
+      .set({ connectionStatus: "connected", lastConnectedAt: new Date() })
+      .where(and(eq(sites.id, siteId), eq(sites.userId, dbUser.id))),
+  ]);
   return NextResponse.json({ ok: true });
 }

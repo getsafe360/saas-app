@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Globe,
   Link as LinkIcon,
@@ -174,6 +175,7 @@ export function ConnectionCard({
   const [isLoadingProvision, setIsLoadingProvision] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
+  const router = useRouter();
   const pairing = useWordPressPairing(siteUrl, siteId);
 
   const fetchProvision = useCallback(async () => {
@@ -517,6 +519,8 @@ export function ConnectionCard({
               isLoading={isLoadingProvision}
               copiedKey={copiedKey}
               onCopy={handleCopy}
+              siteId={siteId}
+              onConfirmed={() => router.refresh()}
             />
           )}
 
@@ -685,12 +689,40 @@ function SnippetSetup({
   isLoading,
   copiedKey,
   onCopy,
+  siteId,
+  onConfirmed,
 }: {
   provision: ProvisionData | null;
   isLoading: boolean;
   copiedKey: string | null;
   onCopy: (text: string, key: string) => void;
+  siteId?: string;
+  onConfirmed?: () => void;
 }) {
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+
+  const handleConfirm = async () => {
+    if (!siteId) return;
+    setIsConfirming(true);
+    setConfirmError(null);
+    try {
+      const res = await fetch("/api/connect/provision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId, method: "snippet" }),
+      });
+      let data: Record<string, any> = {};
+      try { data = await res.json(); } catch { /* ignore */ }
+      if (!res.ok) throw new Error(data.error || `Error ${res.status} → try again`);
+      onConfirmed?.();
+    } catch (e: any) {
+      setConfirmError(e.message || "Confirmation failed → try again");
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   if (isLoading || !provision) {
     return (
       <div className="flex items-center justify-center py-8 gap-2" style={{ color: "var(--text-subtle)" }}>
@@ -725,7 +757,32 @@ function SnippetSetup({
         <li className="flex gap-3">
           <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold mt-0.5"
             style={{ background: "var(--border-default)", color: "var(--text-subtle)" }}>3</span>
-          <div style={{ color: "var(--text-primary)" }}>Return here — connection will confirm automatically</div>
+          <div className="flex-1 space-y-2">
+            <div style={{ color: "var(--text-primary)" }}>Confirm installation</div>
+            {siteId && (
+              <button
+                onClick={handleConfirm}
+                disabled={isConfirming}
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-white transition-colors disabled:opacity-50"
+                style={{ background: "var(--color-primary-500, #3b82f6)" }}
+              >
+                {isConfirming ? (
+                  <><Loader2 className="h-3 w-3 animate-spin" />Confirming…</>
+                ) : (
+                  <><CheckCircle className="h-3 w-3" />I&apos;ve added the snippet</>
+                )}
+              </button>
+            )}
+            {confirmError && (
+              <div
+                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs"
+                style={{ background: "oklch(from #ef4444 l c h / 0.1)", border: "1px solid oklch(from #ef4444 l c h / 0.25)", color: "#fca5a5" }}
+              >
+                <AlertCircle className="h-3 w-3 shrink-0" />
+                {confirmError}
+              </div>
+            )}
+          </div>
         </li>
       </ol>
 

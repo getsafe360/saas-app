@@ -38,10 +38,15 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
         body: JSON.stringify({ siteUrl, siteId }),
       });
 
-      const responseData = await res.json();
+      let responseData: Record<string, any> = {};
+      try {
+        responseData = await res.json();
+      } catch {
+        throw new Error("Server returned an invalid response → try again");
+      }
 
       if (!res.ok) {
-        throw new Error(responseData.error || "Failed to generate pairing code");
+        throw new Error(responseData.error || `Connection failed (${res.status}) → try again`);
       }
 
       setPairCode(responseData.pairCode);

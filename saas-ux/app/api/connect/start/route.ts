@@ -55,20 +55,18 @@ async function probeOnce(siteUrl: string, path: string) {
 
 async function probePlugin(siteUrl: string): Promise<boolean> {
   const paths = ["/wp-json/getsafe/v1/ping", "/?rest_route=/getsafe/v1/ping"];
-  for (const p of paths) {
-    if (await probeOnce(siteUrl, p)) return true;
-  }
+  const urls = [siteUrl];
   try {
     const u = new URL(siteUrl);
     const flipped = new URL(siteUrl);
     flipped.protocol = u.protocol === "http:" ? "https:" : "http:";
-    for (const p of paths) {
-      if (await probeOnce(flipped.toString(), p)) return true;
-    }
-  } catch {
-    /* ignore */
-  }
-  return false;
+    urls.push(flipped.toString());
+  } catch { /* ignore */ }
+  // Run all probes concurrently — max 4 s instead of up to 16 s sequential
+  const results = await Promise.all(
+    urls.flatMap((u) => paths.map((p) => probeOnce(u, p).catch(() => false))),
+  );
+  return results.some(Boolean);
 }
 
 function sixDigitCode() {
@@ -105,6 +103,15 @@ async function checkRateLimit(
 
 // --- handler ---
 export async function POST(req: NextRequest) {
+  try {
+    return await postHandler(req);
+  } catch (err) {
+    console.error("[connect/start] Unhandled error:", err);
+    return NextResponse.json({ error: "Internal error → try again" }, { status: 500 });
+  }
+}
+
+async function postHandler(req: NextRequest) {
   // 1) Auth
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) {
@@ -227,3 +234,4 @@ export async function POST(req: NextRequest) {
     { headers: { "cache-control": "no-store" } },
   );
 }
+
