@@ -56,7 +56,7 @@ async function probeOnce(siteUrl: string, path: string, signal: AbortSignal) {
   }
 }
 
-async function probePlugin(siteUrl: string): Promise<boolean> {
+async function probePlugin(siteUrl: string, externalSignal?: AbortSignal): Promise<boolean> {
   const paths = ["/wp-json/getsafe/v1/ping", "/?rest_route=/getsafe/v1/ping"];
   const urls = [siteUrl];
   try {
@@ -68,6 +68,7 @@ async function probePlugin(siteUrl: string): Promise<boolean> {
 
   // Shared controller: aborted as soon as any probe succeeds so losers stop immediately
   const shared = new AbortController();
+  externalSignal?.addEventListener("abort", () => shared.abort(), { once: true });
   const probes = urls.flatMap((u) =>
     paths.map((p) =>
       probeOnce(u, p, shared.signal)
@@ -80,13 +81,16 @@ async function probePlugin(siteUrl: string): Promise<boolean> {
 
 
 async function probePluginWithDeadline(siteUrl: string, deadlineMs: number): Promise<boolean> {
+  const deadline = new AbortController();
+  const timer = setTimeout(() => deadline.abort(), deadlineMs);
+
   try {
-    return await Promise.race([
-      probePlugin(siteUrl),
-      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), deadlineMs)),
-    ]);
+    return await probePlugin(siteUrl, deadline.signal);
   } catch {
     return false;
+  } finally {
+    clearTimeout(timer);
+    deadline.abort();
   }
 }
 function sixDigitCode() {
