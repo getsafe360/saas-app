@@ -11,6 +11,7 @@ import { sites } from "@/lib/db/schema/sites";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const PAIRING_TTL_SEC = 10 * 60; // 10 minutes
 
@@ -55,7 +56,7 @@ async function probeOnce(siteUrl: string, path: string, signal: AbortSignal) {
   }
 }
 
-async function probePlugin(siteUrl: string): Promise<boolean> {
+async function probePlugin(siteUrl: string, externalSignal?: AbortSignal): Promise<boolean> {
   const paths = ["/wp-json/getsafe/v1/ping", "/?rest_route=/getsafe/v1/ping"];
   const urls = [siteUrl];
   try {
@@ -67,6 +68,7 @@ async function probePlugin(siteUrl: string): Promise<boolean> {
 
   // Shared controller: aborted as soon as any probe succeeds so losers stop immediately
   const shared = new AbortController();
+  externalSignal?.addEventListener("abort", () => shared.abort(), { once: true });
   const probes = urls.flatMap((u) =>
     paths.map((p) =>
       probeOnce(u, p, shared.signal)
@@ -77,6 +79,20 @@ async function probePlugin(siteUrl: string): Promise<boolean> {
   return Promise.any(probes).catch(() => false);
 }
 
+
+async function probePluginWithDeadline(siteUrl: string, deadlineMs: number): Promise<boolean> {
+  const deadline = new AbortController();
+  const timer = setTimeout(() => deadline.abort(), deadlineMs);
+
+  try {
+    return await probePlugin(siteUrl, deadline.signal);
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+    deadline.abort();
+  }
+}
 function sixDigitCode() {
   return crypto.randomInt(0, 1_000_000).toString().padStart(6, "0");
 }
@@ -220,10 +236,11 @@ async function postHandler(req: NextRequest) {
   const id = crypto.randomUUID();
   const now = Date.now();
 
-  const [pairCode, pluginDetected] = await Promise.all([
-    reserveUniquePairCode(),
-    probePlugin(normalizedUrl).catch(() => false),
-  ]);
+  const pairCode = await reserveUniquePairCode();
+
+  // Keep pairing-code generation fast and deterministic.
+  // Plugin probe is best-effort UX signal and must never block pairing.
+  const pluginDetected = await probePluginWithDeadline(normalizedUrl, 1200);
 
   // 7) Write full pairing record to Redis (two keys: by-code + by-id)
   const record = {
