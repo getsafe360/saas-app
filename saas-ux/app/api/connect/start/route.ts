@@ -11,6 +11,7 @@ import { sites } from "@/lib/db/schema/sites";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const PAIRING_TTL_SEC = 10 * 60; // 10 minutes
 
@@ -77,13 +78,24 @@ async function probePlugin(siteUrl: string): Promise<boolean> {
   return Promise.any(probes).catch(() => false);
 }
 
+
+async function probePluginWithDeadline(siteUrl: string, deadlineMs: number): Promise<boolean> {
+  try {
+    return await Promise.race([
+      probePlugin(siteUrl),
+      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), deadlineMs)),
+    ]);
+  } catch {
+    return false;
+  }
+}
 function sixDigitCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return crypto.randomInt(0, 1_000_000).toString().padStart(6, "0");
 }
 
-// Atomically reserve a unique code with Redis SET NX (single round-trip per attempt)
+// Atomically reserve a unique numeric code with Redis SET NX (single round-trip per attempt)
 async function reserveUniquePairCode(): Promise<string> {
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 24; i++) {
     const code = sixDigitCode();
     // NX = only set if key does not already exist
     const ok = await redis.set(`pairing:code:${code}`, "reserved", {
@@ -92,8 +104,8 @@ async function reserveUniquePairCode(): Promise<string> {
     });
     if (ok === "OK") return code;
   }
-  // Fallback: UUID-derived code (collision probability negligible)
-  return crypto.randomUUID().replace(/-/g, "").slice(0, 6);
+
+  throw new Error("pairing code pool temporarily exhausted");
 }
 
 // Redis-based rate limit: INCR + EXPIRE (replaces Blob-based approach)
@@ -114,7 +126,16 @@ export async function POST(req: NextRequest) {
   try {
     return await postHandler(req);
   } catch (err) {
+    const message = err instanceof Error ? err.message : "unknown error";
     console.error("[connect/start] Unhandled error:", err);
+
+    if (message.includes("pairing code pool temporarily exhausted")) {
+      return NextResponse.json(
+        { error: "Pairing service busy. Please retry in a few seconds." },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json({ error: "Internal error → try again" }, { status: 500 });
   }
 }
@@ -211,10 +232,11 @@ async function postHandler(req: NextRequest) {
   const id = crypto.randomUUID();
   const now = Date.now();
 
-  const [pairCode, pluginDetected] = await Promise.all([
-    reserveUniquePairCode(),
-    probePlugin(normalizedUrl).catch(() => false),
-  ]);
+  const pairCode = await reserveUniquePairCode();
+
+  // Keep pairing-code generation fast and deterministic.
+  // Plugin probe is best-effort UX signal and must never block pairing.
+  const pluginDetected = await probePluginWithDeadline(normalizedUrl, 1200);
 
   // 7) Write full pairing record to Redis (two keys: by-code + by-id)
   const record = {
