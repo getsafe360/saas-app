@@ -78,12 +78,12 @@ async function probePlugin(siteUrl: string): Promise<boolean> {
 }
 
 function sixDigitCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return crypto.randomInt(0, 1_000_000).toString().padStart(6, "0");
 }
 
-// Atomically reserve a unique code with Redis SET NX (single round-trip per attempt)
+// Atomically reserve a unique numeric code with Redis SET NX (single round-trip per attempt)
 async function reserveUniquePairCode(): Promise<string> {
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 24; i++) {
     const code = sixDigitCode();
     // NX = only set if key does not already exist
     const ok = await redis.set(`pairing:code:${code}`, "reserved", {
@@ -92,8 +92,8 @@ async function reserveUniquePairCode(): Promise<string> {
     });
     if (ok === "OK") return code;
   }
-  // Fallback: UUID-derived code (collision probability negligible)
-  return crypto.randomUUID().replace(/-/g, "").slice(0, 6);
+
+  throw new Error("pairing code pool temporarily exhausted");
 }
 
 // Redis-based rate limit: INCR + EXPIRE (replaces Blob-based approach)
@@ -114,7 +114,16 @@ export async function POST(req: NextRequest) {
   try {
     return await postHandler(req);
   } catch (err) {
+    const message = err instanceof Error ? err.message : "unknown error";
     console.error("[connect/start] Unhandled error:", err);
+
+    if (message.includes("pairing code pool temporarily exhausted")) {
+      return NextResponse.json(
+        { error: "Pairing service busy. Please retry in a few seconds." },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json({ error: "Internal error → try again" }, { status: 500 });
   }
 }
