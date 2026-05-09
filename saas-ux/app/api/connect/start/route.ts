@@ -33,15 +33,17 @@ function normalizeInput(u: string): string {
   }
 }
 
-async function probeOnce(siteUrl: string, path: string) {
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), 4000);
+async function probeOnce(siteUrl: string, path: string, signal: AbortSignal) {
+  const timer = new AbortController();
+  const t = setTimeout(() => timer.abort(), 1500);
+  // Link shared cancellation signal so a win by a sibling probe cancels this fetch
+  signal.addEventListener("abort", () => { clearTimeout(t); timer.abort(); }, { once: true });
   try {
     const res = await fetch(new URL(path, siteUrl).toString(), {
       method: "GET",
       headers: { "user-agent": "GetSafe360/0.1 (+connect-probe)" },
       cache: "no-store",
-      signal: controller.signal,
+      signal: timer.signal,
     });
     clearTimeout(t);
     if (!res.ok) return false;
@@ -62,12 +64,14 @@ async function probePlugin(siteUrl: string): Promise<boolean> {
     flipped.protocol = u.protocol === "http:" ? "https:" : "http:";
     urls.push(flipped.toString());
   } catch { /* ignore */ }
-  // Short-circuit: resolve true on first success, false only after all miss
+
+  // Shared controller: aborted as soon as any probe succeeds so losers stop immediately
+  const shared = new AbortController();
   const probes = urls.flatMap((u) =>
     paths.map((p) =>
-      probeOnce(u, p)
+      probeOnce(u, p, shared.signal)
         .catch(() => false)
-        .then((ok) => { if (!ok) throw new Error("miss"); return true; }),
+        .then((ok) => { if (!ok) throw new Error("miss"); shared.abort(); return true; }),
     ),
   );
   return Promise.any(probes).catch(() => false);
