@@ -232,15 +232,15 @@ async function postHandler(req: NextRequest) {
     existingSiteId = row?.id ?? null;
   }
 
-  // 6) Reserve code + probe plugin in parallel — both are now instant / async
+  // 6) Reserve code + probe plugin in parallel so neither blocks the other.
+  //    Probe is a best-effort UX signal; 800 ms deadline keeps latency tight.
   const id = crypto.randomUUID();
   const now = Date.now();
 
-  const pairCode = await reserveUniquePairCode();
-
-  // Keep pairing-code generation fast and deterministic.
-  // Plugin probe is best-effort UX signal and must never block pairing.
-  const pluginDetected = await probePluginWithDeadline(normalizedUrl, 1200);
+  const [pairCode, pluginDetected] = await Promise.all([
+    reserveUniquePairCode(),
+    probePluginWithDeadline(normalizedUrl, 800),
+  ]);
 
   // 7) Write full pairing record to Redis (two keys: by-code + by-id)
   const record = {

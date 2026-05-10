@@ -56,6 +56,7 @@ export interface UseWordPressPairingReturn {
   pairingStatus: PairingStatus;
   pairCode: string | null;
   pairingMessage: string;
+  pluginDetected: boolean | null;
   copied: boolean;
   copyToClipboard: () => Promise<void>;
   startPairing: () => Promise<void>;

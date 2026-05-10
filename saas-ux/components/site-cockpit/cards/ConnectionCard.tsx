@@ -145,6 +145,8 @@ interface ConnectionCardProps {
   cmsType?: string;
   connectionStatus?: ConnectionStatus;
   lastConnected?: string;
+  wpVersion?: string;
+  pluginVersion?: string;
 }
 
 type WizardStep = "detect" | "method" | "setup";
@@ -163,6 +165,8 @@ export function ConnectionCard({
   cmsType = "unknown",
   connectionStatus = "disconnected",
   lastConnected,
+  wpVersion,
+  pluginVersion,
 }: ConnectionCardProps) {
   const platform = detectPlatform(cmsType);
   const isConnected = connectionStatus === "connected";
@@ -263,9 +267,35 @@ export function ConnectionCard({
               </div>
             </div>
           )}
+          {wpVersion && (
+            <div>
+              <div style={{ color: "var(--text-subtle)" }}>WordPress</div>
+              <div style={{ color: "var(--text-primary)" }}>v{wpVersion}</div>
+            </div>
+          )}
+          {pluginVersion && (
+            <div>
+              <div style={{ color: "var(--text-subtle)" }}>Plugin</div>
+              <div style={{ color: "var(--text-primary)" }}>v{pluginVersion}</div>
+            </div>
+          )}
         </div>
 
         <UptimeSparkline data={uptime7d} />
+
+        {/* Re-pair link */}
+        <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-default)" }}>
+          <button
+            onClick={() => {
+              void fetchProvision();
+              setStep("method");
+            }}
+            className="text-xs underline opacity-50 hover:opacity-90 transition-opacity"
+            style={{ color: "var(--text-subtle)" }}
+          >
+            Reconnect or change connection method
+          </button>
+        </div>
       </div>
     );
   }
@@ -549,6 +579,27 @@ export function ConnectionCard({
 
 // ─── WordPress pairing setup ──────────────────────────────────────────────────
 
+function PluginDetectedBadge({ detected }: { detected: boolean | null }) {
+  if (detected === null) return null;
+  return detected ? (
+    <div
+      className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium"
+      style={{ background: "oklch(from var(--category-performance) l c h / 0.1)", border: "1px solid oklch(from var(--category-performance) l c h / 0.25)", color: "var(--category-performance)" }}
+    >
+      <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+      Plugin detected on your site
+    </div>
+  ) : (
+    <div
+      className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium"
+      style={{ background: "oklch(from #f59e0b l c h / 0.1)", border: "1px solid oklch(from #f59e0b l c h / 0.25)", color: "#fbbf24" }}
+    >
+      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+      Plugin not detected — install it before pasting the code
+    </div>
+  );
+}
+
 function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPairing> }) {
   const isGenerating = pairing.pairingStatus === "generating";
   const hasCode = !!pairing.pairCode;
@@ -589,7 +640,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
             title: "Generate your pairing code",
             action: !hasCode ? (
               <button
-                onClick={() => pairing.setShowPairingFlow(true)}
+                onClick={() => pairing.startPairing()}
                 disabled={isGenerating}
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-white transition-colors disabled:opacity-50"
                 style={{ background: "var(--color-primary-500, #3b82f6)" }}
@@ -648,6 +699,9 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
         ))}
       </ol>
 
+      {/* Plugin detection badge — shown once code is ready */}
+      {hasCode && <PluginDetectedBadge detected={pairing.pluginDetected} />}
+
       {/* Status messages */}
       {isWaiting && (
         <div
@@ -660,12 +714,22 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
       )}
 
       {isError && (
-        <div
-          className="flex items-center gap-2 rounded-lg p-3 text-xs"
-          style={{ background: "oklch(from #ef4444 l c h / 0.1)", border: "1px solid oklch(from #ef4444 l c h / 0.25)", color: "#fca5a5" }}
-        >
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          {pairing.pairingMessage}
+        <div className="space-y-2">
+          <div
+            className="flex items-center gap-2 rounded-lg p-3 text-xs"
+            style={{ background: "oklch(from #ef4444 l c h / 0.1)", border: "1px solid oklch(from #ef4444 l c h / 0.25)", color: "#fca5a5" }}
+          >
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {pairing.pairingMessage}
+          </div>
+          <button
+            onClick={() => pairing.startPairing()}
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-white transition-colors"
+            style={{ background: "var(--color-primary-500, #3b82f6)" }}
+          >
+            <RefreshCw className="h-3 w-3" />
+            Generate new code
+          </button>
         </div>
       )}
 

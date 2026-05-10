@@ -1,15 +1,31 @@
 // components/site-cockpit/cards/wordpress/hooks/useWordPressPairing.ts
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { PairingStatus, UseWordPressPairingReturn } from '../types';
 
+const POLL_INTERVAL_MS = 2500;
+const MAX_POLL_ATTEMPTS = 120; // 5 minutes at 2.5 s/poll
+
+function mapErrorMessage(raw: string): string {
+  if (raw.includes('429') || raw.toLowerCase().includes('too many'))
+    return 'Too many attempts → wait 10 minutes and try again';
+  if (raw.includes('503') || raw.toLowerCase().includes('busy'))
+    return 'Service temporarily unavailable → retry in a moment';
+  if (raw.toLowerCase().includes('domain not allowed'))
+    return 'Domain not allowed in this environment';
+  if (raw.toLowerCase().includes('enter a valid'))
+    return 'Enter a valid site URL (include https://)';
+  return raw || 'Error generating code → try again';
+}
+
 export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPressPairingReturn {
   const router = useRouter();
-  
+
   const [showPairingFlow, setShowPairingFlow] = useState(false);
-  const [pairingStatus, setPairingStatus] = useState<PairingStatus>("idle");
+  const [pairingStatus, setPairingStatus] = useState<PairingStatus>('idle');
   const [pairCode, setPairCode] = useState<string | null>(null);
-  const [pairingMessage, setPairingMessage] = useState("");
+  const [pairingMessage, setPairingMessage] = useState('');
+  const [pluginDetected, setPluginDetected] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
   const pollRef = useRef<number | null>(null);
   const pollAttemptsRef = useRef(0);
@@ -21,20 +37,18 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
     }
   }
 
-  async function startPairing() {
-    // Guard clause
-    if (pairingStatus === "generating" || pairingStatus === "waiting") {
-      console.log("⚠️ Pairing already in progress, skipping");
-      return;
-    }
+  const startPairing = useCallback(async () => {
+    if (pairingStatus === 'generating' || pairingStatus === 'waiting') return;
 
     try {
-      console.log("🚀 Starting pairing process");
-      setPairingStatus("generating");
+      stopPolling();
+      setPairingStatus('generating');
+      setPairCode(null);
+      setPluginDetected(null);
 
-      const res = await fetch("/api/connect/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/connect/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ siteUrl, siteId }),
       });
 
@@ -42,49 +56,46 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
       try {
         responseData = await res.json();
       } catch {
-        throw new Error("Server returned an invalid response → try again");
+        throw new Error('Server returned an invalid response → try again');
       }
 
       if (!res.ok) {
         throw new Error(responseData.error || `Connection failed (${res.status}) → try again`);
       }
 
+      const detected: boolean | null =
+        typeof responseData.pluginDetected === 'boolean' ? responseData.pluginDetected : null;
+      setPluginDetected(detected);
       setPairCode(responseData.pairCode);
       setPairingMessage(
-        responseData.pluginDetected
-          ? "Open WordPress Admin → GetSafe 360 → paste the code"
-          : "Install GetSafe 360 plugin, then paste the code"
+        detected === true
+          ? 'Plugin detected — open WordPress Admin → GetSafe 360 → paste the code'
+          : detected === false
+          ? 'Plugin not detected — install the GetSafe 360 plugin first, then paste the code'
+          : 'Open WordPress Admin → GetSafe 360 → paste the code',
       );
-      setPairingStatus("ready");
-      console.log("✅ Pairing code generated successfully");
+      setPairingStatus('ready');
     } catch (e: any) {
-      console.error("❌ Pairing error:", e);
-      setPairingMessage(e.message || "Error generating code");
-      setPairingStatus("error");
+      setPairingMessage(mapErrorMessage(e.message || ''));
+      setPairingStatus('error');
     }
-  }
+  }, [siteUrl, siteId, pairingStatus]);
 
   async function checkPairingOnce(code: string): Promise<{ used: boolean; siteId?: string; expired?: boolean }> {
     const res = await fetch(`/api/connect/check?pairCode=${encodeURIComponent(code)}`, {
-      method: "GET",
-      cache: "no-store",
+      method: 'GET',
+      cache: 'no-store',
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Check failed");
+    if (!res.ok) throw new Error(data.error || 'Check failed');
     return data;
   }
 
-
   async function checkConnectionStatusOnce(id: string): Promise<boolean> {
-    const res = await fetch(`/api/sites/${id}/reconnect`, {
-      method: "GET",
-      cache: "no-store",
-    });
-
+    const res = await fetch(`/api/sites/${id}/reconnect`, { method: 'GET', cache: 'no-store' });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return false;
-
-    return data?.data?.status === "connected";
+    return data?.data?.status === 'connected';
   }
 
   const copyToClipboard = async () => {
@@ -94,21 +105,20 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Trigger pairing when flow is shown
+  // Start pairing as soon as the flow is opened
   useEffect(() => {
-    if (showPairingFlow && pairingStatus === "idle") {
-      console.log("📍 Triggering startPairing from useEffect");
+    if (showPairingFlow && pairingStatus === 'idle') {
       startPairing();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPairingFlow, pairingStatus]);
 
-  // Poll for pairing completion
+  // Poll for handshake completion once code is ready
   useEffect(() => {
-    if (pairingStatus !== "ready" || !pairCode) return;
+    if (pairingStatus !== 'ready' || !pairCode) return;
 
-    setPairingStatus("waiting");
-    setPairingMessage("Waiting for plugin confirmation...");
+    setPairingStatus('waiting');
+    setPairingMessage('Waiting for plugin confirmation…');
     pollAttemptsRef.current = 0;
 
     pollRef.current = window.setInterval(async () => {
@@ -116,41 +126,41 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
 
       try {
         const data = await checkPairingOnce(pairCode);
+
         if (data.used) {
           stopPolling();
-          setPairingStatus("connected");
-          setPairingMessage("Connection established. Syncing dashboard...");
+          setPairingStatus('connected');
+          setPairingMessage('Connection established — syncing dashboard…');
           router.refresh();
           return;
         }
 
         if (data.expired) {
           stopPolling();
-          setPairingStatus("error");
-          setPairingMessage("Pairing code expired. Generate a new code and try again.");
+          setPairingStatus('error');
+          setPairingMessage('Code expired (10 min limit) → generate a new one');
           return;
         }
 
-        if (pollAttemptsRef.current >= 48) {
+        if (pollAttemptsRef.current >= MAX_POLL_ATTEMPTS) {
           if (siteId) {
             const isConnected = await checkConnectionStatusOnce(siteId).catch(() => false);
             if (isConnected) {
               stopPolling();
-              setPairingStatus("connected");
-              setPairingMessage("Connection established. Syncing dashboard...");
+              setPairingStatus('connected');
+              setPairingMessage('Connection established — syncing dashboard…');
               router.refresh();
               return;
             }
           }
-
           stopPolling();
-          setPairingStatus("error");
-          setPairingMessage("No confirmation received yet. Please retry or generate a new pairing code.");
+          setPairingStatus('error');
+          setPairingMessage('No confirmation received — paste the code in WordPress and try again');
         }
       } catch {
         // ignore transient errors
       }
-    }, 2500);
+    }, POLL_INTERVAL_MS);
 
     return stopPolling;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -162,6 +172,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
     pairingStatus,
     pairCode,
     pairingMessage,
+    pluginDetected,
     copied,
     copyToClipboard,
     startPairing,

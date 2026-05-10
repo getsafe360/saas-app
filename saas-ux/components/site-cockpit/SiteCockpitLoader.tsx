@@ -14,6 +14,8 @@ interface SiteCockpitLoaderProps {
   siteSummary?: string;
   wordpressConnectionStatus?: ConnectionStatus;
   wordpressLastConnected?: string;
+  wpVersion?: string;
+  pluginVersion?: string;
 }
 
 function SkeletonBox({ className }: { className?: string }) {
@@ -131,6 +133,8 @@ export function SiteCockpitLoader({
   siteSummary,
   wordpressConnectionStatus = "disconnected",
   wordpressLastConnected,
+  wpVersion,
+  pluginVersion,
 }: SiteCockpitLoaderProps) {
   const [data, setData] = useState<SiteCockpitResponse | null>(null);
   const [failed, setFailed] = useState(false);
@@ -183,6 +187,8 @@ export function SiteCockpitLoader({
       siteSummary={siteSummary}
       wordpressConnectionStatus={wordpressConnectionStatus}
       wordpressLastConnected={wordpressLastConnected}
+      wpVersion={wpVersion}
+      pluginVersion={pluginVersion}
     />
   );
 }
