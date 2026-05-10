@@ -57,6 +57,8 @@ interface SiteCockpitProps {
   wordpressConnectionStatus?: ConnectionStatus;
   wordpressLastConnected?: string;
   wordpressOnly?: boolean;
+  wpVersion?: string;
+  pluginVersion?: string;
 }
 
 interface CardConfig {
@@ -125,6 +127,8 @@ export function SiteCockpit({
   siteSummary,
   wordpressConnectionStatus = "disconnected",
   wordpressLastConnected,
+  wpVersion,
+  pluginVersion,
 }: SiteCockpitProps) {
   const t = useTranslations("SiteCockpit");
   const router = useRouter();
@@ -293,6 +297,8 @@ export function SiteCockpit({
               cmsType={data.cms.type}
               connectionStatus={wordpressConnectionStatus}
               lastConnected={wordpressLastConnected}
+              wpVersion={wpVersion}
+              pluginVersion={pluginVersion}
             />
           </div>
         )}

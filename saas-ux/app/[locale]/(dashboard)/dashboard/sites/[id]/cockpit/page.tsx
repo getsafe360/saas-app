@@ -115,6 +115,8 @@ export default async function SiteCockpitPage({
       siteSummary={site.lastSummary ?? undefined}
       wordpressConnectionStatus={toConnectionStatus(site.connectionStatus)}
       wordpressLastConnected={site.lastConnectedAt?.toISOString()}
+      wpVersion={site.wpVersion ?? undefined}
+      pluginVersion={site.pluginVersion ?? undefined}
     />
   );
 }
