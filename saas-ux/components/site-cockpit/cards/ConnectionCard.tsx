@@ -169,7 +169,8 @@ export function ConnectionCard({
   pluginVersion,
 }: ConnectionCardProps) {
   const platform = detectPlatform(cmsType);
-  const isConnected = connectionStatus === "connected";
+  const [forceWizard, setForceWizard] = useState(false);
+  const isConnected = connectionStatus === "connected" && !forceWizard;
 
   const [step, setStep] = useState<WizardStep>("detect");
   const [selectedMethod, setSelectedMethod] = useState<ConnectionMethod>(
@@ -287,7 +288,7 @@ export function ConnectionCard({
         <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-default)" }}>
           <button
             onClick={() => {
-              void fetchProvision();
+              setForceWizard(true);
               setStep("method");
             }}
             className="text-xs underline opacity-50 hover:opacity-90 transition-opacity"
