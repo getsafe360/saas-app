@@ -8,8 +8,6 @@ import { WordPressAIIcon } from "@/components/icons/WordPressAI";
 import { useTranslations } from "next-intl";
 import { useWordPressConnection } from "./hooks/useWordPressConnection";
 import { useWordPressPairing } from "./hooks/useWordPressPairing";
-import { ConnectionBanner } from "./components/ConnectionStatus/ConnectionBanner";
-import { ReconnectionModal } from "./components/ConnectionStatus/ReconnectionModal";
 import { NotConnected } from "./components/EmptyStates/NotConnected";
 import { NoWordPress } from "./components/EmptyStates/NoWordPress";
 import { VersionStatus } from "./components/Analysis/VersionStatus";
@@ -221,33 +219,6 @@ export function WordPressCard({
       onToggleMinimize={onToggleMinimize}
       editable={editable}
     >
-      {/* Connection Status Banner */}
-      <ConnectionBanner
-        connectionState={connection.connectionState}
-        onReconnect={() => connection.setShowReconnectFlow(true)}
-        onPairingSite={() => {
-          pairing.setShowPairingFlow(true);
-        }}
-        onDisconnect={() => {
-          void connection.handleDisconnect();
-        }}
-        isReconnecting={connection.isReconnecting}
-        hasWordPressData={!!wordpress}
-        hasSiteId={!!siteId}
-      />
-
-      {/* Reconnection Modal */}
-      {connection.showReconnectFlow && (
-        <ReconnectionModal
-          connectionState={connection.connectionState}
-          onReconnect={connection.handleReconnect}
-          onClose={() => connection.setShowReconnectFlow(false)}
-          isReconnecting={connection.isReconnecting}
-          siteUrl={data.finalUrl}
-          pairing={pairing}
-        />
-      )}
-
       <WordPressConnectionModal
         open={cockpit.connectionModalOpen}
         onClose={cockpit.actions.closeConnectionModal}

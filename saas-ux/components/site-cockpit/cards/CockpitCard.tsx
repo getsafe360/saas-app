@@ -282,7 +282,7 @@ export function CockpitCard({
             {onOptimize && (
               <div className="px-6 pb-6 pt-2">
                 <button
-                  className="group/btn w-full rounded-xl px-3 py-2.5 text-sm font-semibold border transition-all duration-200"
+                  className="group/btn w-full rounded-xl px-3 py-2.5 text-sm font-semibold border transition-all duration-200 cursor-pointer"
                   style={{
                     borderColor: `oklch(from ${styles.color} l c h / 0.45)`,
                     background: `oklch(from ${styles.color} l c h / 0.10)`,

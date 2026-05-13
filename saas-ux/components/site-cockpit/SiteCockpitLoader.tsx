@@ -150,7 +150,22 @@ export function SiteCockpitLoader({
         );
         if (!res.ok) throw new Error(`${res.status}`);
         const raw = await res.json();
-        if (!cancelled) setData(transformToSiteCockpitResponse(raw));
+        if (cancelled) return;
+        const cockpitData = transformToSiteCockpitResponse(raw);
+        setData(cockpitData);
+
+        // Persist screenshot, favicon, and page title back to the site record
+        // so the dashboard card reflects the latest cockpit analysis.
+        const screenshotUrl = `/api/screenshot?w=360&q=55&url=${encodeURIComponent(cockpitData.finalUrl)}`;
+        void fetch(`/api/sites/${siteId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            screenshotUrl,
+            faviconUrl: cockpitData.faviconUrl || undefined,
+            pageTitle: cockpitData.meta?.title || "",
+          }),
+        });
       } catch {
         if (!cancelled) setFailed(true);
       }
