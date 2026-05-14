@@ -308,9 +308,15 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
               <h3 className="font-semibold text-sm text-[var(--text-default)] truncate leading-tight">
                 {site.domain}
               </h3>
-              <p className="text-[11px] text-[var(--text-subtle)] truncate mt-0.5">
-                {site.url.replace(/^https?:\/\//, "")}
-              </p>
+              {(site.scores as any)?.pageTitle ? (
+                <p className="text-[11px] text-[var(--text-subtle)] truncate mt-0.5">
+                  {(site.scores as any).pageTitle}
+                </p>
+              ) : (
+                <p className="text-[11px] text-[var(--text-subtle)] truncate mt-0.5">
+                  {site.url.replace(/^https?:\/\//, "")}
+                </p>
+              )}
             </div>
           </div>
         </div>

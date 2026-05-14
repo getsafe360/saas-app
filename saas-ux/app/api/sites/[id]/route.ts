@@ -37,6 +37,51 @@ async function getAppUserId(db: ReturnType<typeof getDb>): Promise<number | null
   return row?.id ?? null;
 }
 
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const db = getDb();
+  const { id: siteId } = await params;
+
+  if (!siteId) {
+    return NextResponse.json({ ok: false, error: 'SITE_ID_REQUIRED' }, { status: 400 });
+  }
+
+  const userId = await getAppUserId(db);
+  if (!userId) {
+    return NextResponse.json({ ok: false, error: 'SIGN_IN_REQUIRED' }, { status: 401 });
+  }
+
+  const body = await req.json().catch(() => ({})) as {
+    screenshotUrl?: string;
+    faviconUrl?: string;
+    pageTitle?: string;
+  };
+
+  const [existing] = await db
+    .select({ id: sites.id, userId: sites.userId, lastScores: sites.lastScores })
+    .from(sites)
+    .where(eq(sites.id, siteId))
+    .limit(1);
+
+  if (!existing || existing.userId !== userId) {
+    return NextResponse.json({ ok: false, error: 'NOT_FOUND' }, { status: 404 });
+  }
+
+  const updates: Record<string, unknown> = { updatedAt: new Date() };
+  if (body.screenshotUrl) updates.lastScreenshotUrl = body.screenshotUrl;
+  if (body.faviconUrl) updates.lastFaviconUrl = body.faviconUrl;
+  if (body.pageTitle !== undefined) {
+    const currentScores = (existing.lastScores as Record<string, unknown>) ?? {};
+    updates.lastScores = { ...currentScores, pageTitle: body.pageTitle };
+  }
+
+  await db.update(sites).set(updates as any).where(and(eq(sites.id, siteId), eq(sites.userId, userId)));
+
+  return NextResponse.json({ ok: true });
+}
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
