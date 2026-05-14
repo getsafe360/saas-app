@@ -22,6 +22,8 @@ import { useCockpitState } from "@/lib/cockpit/useCockpitState";
 import FindingsFeed from "@/components/analyzer/findings/FindingsFeed";
 import { SavingsCard } from "@/components/site-cockpit/cockpit/SavingsCard";
 import { WordPressConnectionModal } from "@/components/site-cockpit/cockpit/WordPressConnectionModal";
+import { ConnectionBanner } from "./components/ConnectionStatus/ConnectionBanner";
+import { ReconnectionModal } from "./components/ConnectionStatus/ReconnectionModal";
 export function WordPressCard({
   id,
   data,
@@ -219,6 +221,31 @@ export function WordPressCard({
       onToggleMinimize={onToggleMinimize}
       editable={editable}
     >
+      <ConnectionBanner
+        connectionState={connection.connectionState}
+        onReconnect={() => connection.setShowReconnectFlow(true)}
+        onPairingSite={() => {
+          pairing.setShowPairingFlow(true);
+        }}
+        onDisconnect={() => {
+          void connection.handleDisconnect();
+        }}
+        isReconnecting={connection.isReconnecting}
+        hasWordPressData={!!wordpress}
+        hasSiteId={!!siteId}
+      />
+
+      {connection.showReconnectFlow && (
+        <ReconnectionModal
+          connectionState={connection.connectionState}
+          onReconnect={connection.handleReconnect}
+          onClose={() => connection.setShowReconnectFlow(false)}
+          isReconnecting={connection.isReconnecting}
+          siteUrl={data.finalUrl}
+          pairing={pairing}
+        />
+      )}
+
       <WordPressConnectionModal
         open={cockpit.connectionModalOpen}
         onClose={cockpit.actions.closeConnectionModal}
