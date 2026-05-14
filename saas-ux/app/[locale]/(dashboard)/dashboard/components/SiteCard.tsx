@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { CMSIcon } from "@/components/ui/cms-icon";
 import { getCMSIcon } from "@/lib/cms-icons";
+import { DashboardIcon } from "@/components/icons/DashboardIcon";
 import { formatDistanceToNow } from "date-fns";
 import { de, es, fr, it, ptBR, enUS } from "date-fns/locale";
 import type { Locale as DateFnsLocale } from "date-fns";
@@ -48,34 +49,18 @@ interface SiteCardProps {
   isNew?: boolean;
 }
 
-function DashboardIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 -960 960 960"
-      fill="currentColor"
-      aria-hidden="true"
-      className={className}
-    >
-      <path d="M408-516v-252h456v252H408ZM96-192v-252h384v252H96Zm0-324v-252h240v252H96Zm384-72h312v-108H480v108ZM168-264h240v-108H168v108Zm0-324h96v-108h-96v108Zm312 0Zm-72 216ZM264-588ZM687-96l-12-56q-14-5-26.5-11.5T625-180l-55 17-32-55 41-40q-3-14-3-29t3-29l-41-39 32-56 54 16q11-11 24-18t27-11l13-56h64l13 56q14 5 27.5 11.5T816-395l54-15 32 55-40 38q3 14 2.5 29.5T861-258l41 39-32 55-55-16q-11 10-23.5 16.5T765-152l-14 56h-64Zm84-141q21-21 21-51t-21-51q-21-21-51-21t-51 21q-21 21-21 51t21 51q21 21 51 21t51-21Z" />
-    </svg>
-  );
-}
-
 // cx=60, cy=58, r=46 → arc from (14,58) to (106,58), top at (60,12)
 // pathLength = π*46 ≈ 144.5
 function ScoreGauge({
   score,
   isNew,
   uid,
-  noIssues,
   newSiteLabel,
   newSitePrompt,
 }: {
   score: number;
   isNew: boolean;
   uid: string;
-  noIssues?: boolean;
   newSiteLabel: string;
   newSitePrompt: string;
 }) {
@@ -94,9 +79,14 @@ function ScoreGauge({
 
   const gradId = `gg-${uid}`;
 
-  // When no issues, use success green for needle + pivot
-  const accentColor = noIssues ? "var(--color-success)" : "var(--text-subtle)";
-  const pivotColor = noIssues ? "var(--color-success)" : "var(--text-default)";
+  // Needle + pivot reflect score health when analyzed
+  const gaugeColor = isNew
+    ? "var(--color-neutral-400)"
+    : score >= 70
+    ? "var(--color-success)"
+    : score >= 40
+    ? "var(--color-warning)"
+    : "var(--color-danger)";
 
   return (
     <div>
@@ -136,7 +126,7 @@ function ScoreGauge({
           y1={cy}
           x2={needleX}
           y2={needleY}
-          stroke={isNew ? "var(--color-neutral-400)" : accentColor}
+          stroke={gaugeColor}
           strokeWidth="2"
           strokeLinecap="round"
         />
@@ -146,7 +136,7 @@ function ScoreGauge({
           cx={cx}
           cy={cy}
           r="3.5"
-          fill={isNew ? "var(--color-neutral-400)" : pivotColor}
+          fill={gaugeColor}
         />
 
         {/* Score text (renders above needle) */}
@@ -284,7 +274,7 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
     <Card
       id={`site-card-${site.id}`}
       className={[
-        "group border transition-all duration-200",
+        "group border transition-all duration-200 bg-[#0a0a0a]",
         highlight
           ? "border-sky-400 dark:border-sky-400 ring-2 ring-sky-400/40 dark:ring-sky-400/40"
           : "border-blue-200/70 dark:border-blue-800/50 hover:border-blue-400/80 dark:hover:border-blue-500/70",
@@ -348,7 +338,6 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
           score={site.overallScore}
           isNew={!isAnalyzed}
           uid={site.id}
-          noIssues={noIssues}
           newSiteLabel={t("new_site_label")}
           newSitePrompt={t("new_site_prompt")}
         />
@@ -416,7 +405,7 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
           disabled={isLoading}
           variant="site-action"
           size="sm"
-          className="w-full justify-center"
+          className="w-full max-w-full flex items-center justify-center"
         >
           {isLoading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
