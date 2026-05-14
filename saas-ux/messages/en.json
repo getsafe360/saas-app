@@ -70,7 +70,7 @@
     "security": "Security",
     "settings": "Settings",
     "loading": "Loading user profile…",
-    "welcome_headline": "Welcome to your control panel.",
+    "welcome_headline": "Welcome to your Site Dashboard.",
     "welcome_text": "Here you can manage your websites, analytics, and optimizations. Add your website first or start an analysis right away.",
     "add_website": "Add website",
     "run_analysis": "Start analysis",
@@ -79,7 +79,26 @@
     "feature_2_headline": "Automatic optimizations",
     "feature_2_desc": "Use one-click, AI-powered fixes and improvements.",
     "current_plan": "Current plan",
-    "token_balance": "Token balance"
+    "token_balance": "Token balance",
+    "websites_count": "{count, plural, one {# Website} other {# Websites}}",
+    "add_new_website": "Add New Website",
+    "analyze_another": "Analyze another site",
+    "no_websites_yet": "No websites yet",
+    "free_plan": "Free Plan",
+    "remove_confirm": "Are you sure you want to remove \"{domain}\"? This action cannot be undone."
+  },
+  "siteCard": {
+    "new_site_label": "NEW SITE",
+    "new_site_prompt": "Run your first analysis and auto-optimize",
+    "no_issues": "No issues found",
+    "issues_found": "{count, plural, one {# issue found} other {# issues found}}",
+    "updated": "Updated {timeAgo}",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "opening": "Opening…",
+    "starting": "Starting…",
+    "site_cockpit": "Site-Cockpit",
+    "remove_site": "Remove site"
   },
   "Sites": {
     "detailTitle": "Site · {url}",

@@ -70,7 +70,7 @@
     "security": "Seguridad",
     "settings": "Ajustes",
     "loading": "Cargando perfil…",
-    "welcome_headline": "Bienvenido/a a tu centro de control.",
+    "welcome_headline": "Bienvenido/a a tu Site Dashboard.",
     "welcome_text": "Aquí gestionas sitios, analíticas y optimizaciones. Añade primero un sitio o comienza un análisis ahora.",
     "add_website": "Añadir sitio",
     "run_analysis": "Iniciar análisis",
@@ -79,7 +79,26 @@
     "feature_2_headline": "Optimizaciones automáticas",
     "feature_2_desc": "Correcciones e mejoras con IA en un solo clic.",
     "current_plan": "Plan actual",
-    "token_balance": "Saldo de tokens"
+    "token_balance": "Saldo de tokens",
+    "websites_count": "{count, plural, one {# sitio web} other {# sitios web}}",
+    "add_new_website": "Añadir nuevo sitio",
+    "analyze_another": "Analizar otro sitio",
+    "no_websites_yet": "Sin sitios aún",
+    "free_plan": "Plan gratuito",
+    "remove_confirm": "¿Estás seguro/a de querer eliminar \"{domain}\"? Esta acción no se puede deshacer."
+  },
+  "siteCard": {
+    "new_site_label": "NUEVO SITIO",
+    "new_site_prompt": "Ejecuta tu primer análisis y auto-optimiza",
+    "no_issues": "Sin problemas encontrados",
+    "issues_found": "{count, plural, one {# problema encontrado} other {# problemas encontrados}}",
+    "updated": "Actualizado {timeAgo}",
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "opening": "Abriendo…",
+    "starting": "Iniciando…",
+    "site_cockpit": "Site-Cockpit",
+    "remove_site": "Eliminar sitio"
   },
   "Sites": {
     "detailTitle": "Sitio · {url}",

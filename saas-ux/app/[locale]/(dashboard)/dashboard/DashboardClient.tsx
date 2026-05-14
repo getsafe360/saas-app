@@ -1,11 +1,11 @@
 // app/[locale]/(dashboard)/dashboard/DashboardClient.tsx (CLIENT)
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Plus, Globe, TrendingUp, ArrowRight, Zap } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Globe, Zap } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SiteCard } from "./components/SiteCard";
@@ -57,8 +57,8 @@ export function DashboardClient({ data, newSiteId }: DashboardClientProps) {
     if (!newSiteId) return;
     const el = document.getElementById(`site-card-${newSiteId}`);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-    const t = setTimeout(() => router.replace("/dashboard", { scroll: false }), 3500);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => router.replace("/dashboard", { scroll: false }), 3500);
+    return () => clearTimeout(timer);
   }, [newSiteId, router]);
 
   const handleAddWebsite = () => {
@@ -69,9 +69,7 @@ export function DashboardClient({ data, newSiteId }: DashboardClientProps) {
     const site = sites.find((s) => s.id === siteId);
     if (!site) return;
 
-    const confirmed = window.confirm(
-      `Are you sure you want to remove "${site.domain}"? This action cannot be undone.`
-    );
+    const confirmed = window.confirm(t("remove_confirm", { domain: site.domain }));
     if (!confirmed) return;
 
     setRemovingId(siteId);
@@ -86,16 +84,12 @@ export function DashboardClient({ data, newSiteId }: DashboardClientProps) {
       } else {
         alert(result.error || "Failed to remove site");
       }
-    } catch (err) {
+    } catch {
       alert("Failed to remove site. Please try again.");
     } finally {
       setRemovingId(null);
     }
   };
-
-  const tokensPercentage = data.team
-    ? Math.round((data.team.tokensRemaining / data.team.tokensIncluded) * 100)
-    : 0;
 
   return (
     <div className="flex-1 p-4 lg:p-8">
@@ -115,7 +109,7 @@ export function DashboardClient({ data, newSiteId }: DashboardClientProps) {
               className="px-3 py-1 text-sm font-medium border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
             >
               {data.team.planName === "free"
-                ? "Free Plan"
+                ? t("free_plan")
                 : data.team.planName.toUpperCase()}
             </Badge>
           )}
@@ -138,15 +132,15 @@ export function DashboardClient({ data, newSiteId }: DashboardClientProps) {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <h2 className="text-nowrap text-xl font-semibold text-slate-900 dark:text-slate-100">
-            {sites.length} {sites.length === 1 ? "Website" : "Websites"}
+            {t("websites_count", { count: sites.length })}
           </h2>
           <Button
             onClick={handleAddWebsite}
             size="sm"
-            variant="outline"
-            className="w-fit shrink-0 border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 font-medium"
+            variant="site-action"
+            className="w-fit shrink-0 font-medium"
           >
-            <Plus className="w-4 h-4 mr-1" />
+            <Plus className="w-4 h-4" />
             {t("add_website")}
           </Button>
         </div>
@@ -163,7 +157,7 @@ export function DashboardClient({ data, newSiteId }: DashboardClientProps) {
               />
             ))}
 
-            {/* Add Website Card - Empty State */}
+            {/* Add Website Card */}
             <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors cursor-pointer group">
               <CardContent
                 className="flex flex-col items-center justify-center h-full min-h-[200px] p-6"
@@ -173,40 +167,40 @@ export function DashboardClient({ data, newSiteId }: DashboardClientProps) {
                   <Plus className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Add New Website
+                  {t("add_new_website")}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Analyze another site
+                  {t("analyze_another")}
                 </p>
               </CardContent>
             </Card>
           </div>
         ) : (
-          /* Empty State - No Sites Yet */
+          /* Empty State */
           <Card className="border-2 border-dashed border-slate-300 dark:border-slate-700">
             <CardContent className="flex flex-col items-center justify-center py-12 px-6">
               <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4">
                 <Globe className="w-8 h-8 text-blue-600 dark:text-blue-400" />
               </div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                No websites yet
+                {t("no_websites_yet")}
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400 text-center max-w-sm mb-6">
                 {t("welcome_text")}
               </p>
               <Button
                 onClick={handleAddWebsite}
-                variant="outline"
-                className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 font-medium"
+                variant="site-action"
+                size="sm"
+                className="font-medium"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4" />
                 {t("add_website")}
               </Button>
             </CardContent>
           </Card>
         )}
       </div>
-
     </div>
   );
 }
