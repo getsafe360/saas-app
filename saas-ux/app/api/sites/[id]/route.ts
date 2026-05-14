@@ -72,8 +72,8 @@ export async function PATCH(
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (body.screenshotUrl) updates.lastScreenshotUrl = body.screenshotUrl;
   if (body.faviconUrl) updates.lastFaviconUrl = body.faviconUrl;
-  if (body.pageTitle !== undefined && existing.lastScores !== null) {
-    const currentScores = existing.lastScores as Record<string, unknown>;
+  if (body.pageTitle !== undefined) {
+    const currentScores = (existing.lastScores as Record<string, unknown>) ?? {};
     updates.lastScores = { ...currentScores, pageTitle: body.pageTitle };
   }
 

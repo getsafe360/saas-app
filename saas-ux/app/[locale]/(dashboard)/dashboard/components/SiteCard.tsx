@@ -241,8 +241,10 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
     return () => clearTimeout(t);
   }, [isNew]);
 
-  // A site is analyzed when lastScores is present (scores != null), even if overall=0
-  const isAnalyzed = site.scores != null;
+  // A site is analyzed only when real scores exist (overall != null).
+  // pageTitle may be written into scores as display metadata before analysis runs,
+  // so checking scores != null alone would falsely mark new sites as analyzed.
+  const isAnalyzed = (site.scores as any)?.overall != null;
   const cmsIconData = getCMSIcon(site.cms);
 
   const faviconSrc = faviconError
