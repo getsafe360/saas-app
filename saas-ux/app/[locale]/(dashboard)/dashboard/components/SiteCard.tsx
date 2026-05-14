@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,17 @@ import {
 import { CMSIcon } from "@/components/ui/cms-icon";
 import { getCMSIcon } from "@/lib/cms-icons";
 import { formatDistanceToNow } from "date-fns";
+import { de, es, fr, it, ptBR, enUS } from "date-fns/locale";
+import type { Locale as DateFnsLocale } from "date-fns";
+
+const dateFnsLocales: Record<string, DateFnsLocale> = {
+  en: enUS,
+  de,
+  es,
+  fr,
+  it,
+  pt: ptBR,
+};
 
 interface SiteCardProps {
   site: {
@@ -37,22 +48,16 @@ interface SiteCardProps {
   isNew?: boolean;
 }
 
-function SparkleIcon({ className }: { className?: string }) {
+function DashboardIcon({ className }: { className?: string }) {
   return (
     <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 -960 960 960"
+      fill="currentColor"
       aria-hidden="true"
-      viewBox="0 0 18 18"
-      fill="none"
       className={className}
     >
-      <path
-        d="M14.0914 0.721827C14.1534 0.535432 14.4171 0.535433 14.4791 0.721828L14.8291 1.77428C15.0324 2.38523 15.5117 2.8646 16.1227 3.06782L17.1751 3.41791C17.3615 3.47991 17.3615 3.74357 17.1751 3.80557L16.1227 4.15565C15.5117 4.35888 15.0324 4.83825 14.8291 5.4492L14.4791 6.50165C14.4171 6.68804 14.1534 6.68804 14.0914 6.50165L13.7413 5.4492C13.5381 4.83825 13.0587 4.35888 12.4478 4.15565L11.3953 3.80557C11.2089 3.74357 11.2089 3.47991 11.3953 3.41791L12.4478 3.06782C13.0587 2.8646 13.5381 2.38523 13.7413 1.77428L14.0914 0.721827Z"
-        fill="currentColor"
-      />
-      <path
-        d="M7.775 2.61733C7.93004 2.15141 8.58899 2.15137 8.74399 2.61733L9.68369 5.44228C10.1511 6.84743 11.2537 7.94995 12.6588 8.41738L15.4837 9.35781C15.9497 9.51282 15.9497 10.1718 15.4837 10.3268L15.1212 10.4469L12.6588 11.2665L12.3988 11.3617C11.1182 11.8732 10.1219 12.9243 9.68369 14.2416L8.86411 16.704L8.74399 17.0666L8.70883 17.1486C8.5215 17.5054 7.99668 17.5055 7.80942 17.1486L7.775 17.0666L6.83457 14.2416C6.39635 12.9243 5.40012 11.8731 4.11948 11.3617L3.85947 11.2665L1.03452 10.3268C0.568551 10.1718 0.568594 9.51286 1.03452 9.35781L1.39633 9.23696L3.85947 8.41738C5.17688 7.97916 6.22869 6.98304 6.74008 5.70229L6.83457 5.44228L7.775 2.61733ZM8.25839 5.91616C7.68028 7.65406 6.36564 9.04128 4.67612 9.71596L4.33335 9.84121L4.32968 9.84194L4.33335 9.84341L4.67612 9.96865C6.36559 10.6434 7.68031 12.0306 8.25839 13.7685L8.25913 13.7714L8.26059 13.7685L8.38584 13.4257C9.06049 11.736 10.4476 10.4215 12.1856 9.84341L12.1886 9.84194L12.1856 9.84121C10.4478 9.26312 9.06055 7.9484 8.38584 6.25893L8.26059 5.91616L8.25913 5.9125L8.25839 5.91616Z"
-        fill="currentColor"
-      />
+      <path d="M408-516v-252h456v252H408ZM96-192v-252h384v252H96Zm0-324v-252h240v252H96Zm384-72h312v-108H480v108ZM168-264h240v-108H168v108Zm0-324h96v-108h-96v108Zm312 0Zm-72 216ZM264-588ZM687-96l-12-56q-14-5-26.5-11.5T625-180l-55 17-32-55 41-40q-3-14-3-29t3-29l-41-39 32-56 54 16q11-11 24-18t27-11l13-56h64l13 56q14 5 27.5 11.5T816-395l54-15 32 55-40 38q3 14 2.5 29.5T861-258l41 39-32 55-55-16q-11 10-23.5 16.5T765-152l-14 56h-64Zm84-141q21-21 21-51t-21-51q-21-21-51-21t-51 21q-21 21-21 51t21 51q21 21 51 21t51-21Z" />
     </svg>
   );
 }
@@ -63,10 +68,16 @@ function ScoreGauge({
   score,
   isNew,
   uid,
+  noIssues,
+  newSiteLabel,
+  newSitePrompt,
 }: {
   score: number;
   isNew: boolean;
   uid: string;
+  noIssues?: boolean;
+  newSiteLabel: string;
+  newSitePrompt: string;
 }) {
   const cx = 60,
     cy = 58,
@@ -82,6 +93,10 @@ function ScoreGauge({
   const needleY = cy - needleLen * Math.sin(angle);
 
   const gradId = `gg-${uid}`;
+
+  // When no issues, use success green for needle + pivot
+  const accentColor = noIssues ? "var(--color-success)" : "var(--text-subtle)";
+  const pivotColor = noIssues ? "var(--color-success)" : "var(--text-default)";
 
   return (
     <div>
@@ -103,8 +118,8 @@ function ScoreGauge({
           strokeLinecap="round"
         />
 
-        {/* Colored fill up to score position */}
-        {!isNew && (
+        {/* Colored fill — only rendered when score > 0 to avoid red dot artifact at 0 */}
+        {!isNew && score > 0 && (
           <path
             d={arcPath}
             fill="none"
@@ -121,7 +136,7 @@ function ScoreGauge({
           y1={cy}
           x2={needleX}
           y2={needleY}
-          stroke={isNew ? "var(--color-neutral-400)" : "var(--text-subtle)"}
+          stroke={isNew ? "var(--color-neutral-400)" : accentColor}
           strokeWidth="2"
           strokeLinecap="round"
         />
@@ -131,7 +146,7 @@ function ScoreGauge({
           cx={cx}
           cy={cy}
           r="3.5"
-          fill={isNew ? "var(--color-neutral-400)" : "var(--text-default)"}
+          fill={isNew ? "var(--color-neutral-400)" : pivotColor}
         />
 
         {/* Score text (renders above needle) */}
@@ -145,7 +160,7 @@ function ScoreGauge({
             fontWeight="500"
             letterSpacing="1.5"
           >
-            NEW SITE
+            {newSiteLabel}
           </text>
         ) : (
           <>
@@ -154,7 +169,7 @@ function ScoreGauge({
               y={cy - 12}
               textAnchor="middle"
               fill="var(--text-default)"
-              fontSize="22"
+              fontSize="18"
               fontWeight="700"
             >
               {score}
@@ -174,7 +189,7 @@ function ScoreGauge({
 
       {isNew && (
         <p className="text-[11px] leading-snug text-[var(--text-subtle)] text-center mt-1 px-3">
-          Run your first analysis and auto-optimize
+          {newSitePrompt}
         </p>
       )}
     </div>
@@ -229,6 +244,7 @@ function PillarChips({ scores }: { scores: any }) {
 }
 
 export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
+  const t = useTranslations("siteCard");
   const router = useRouter();
   const locale = useLocale();
   const [isLoading, setIsLoading] = useState(false);
@@ -237,14 +253,13 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
 
   useEffect(() => {
     if (!isNew) return;
-    const t = setTimeout(() => setHighlight(false), 3000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setHighlight(false), 3000);
+    return () => clearTimeout(timer);
   }, [isNew]);
 
   // A site is analyzed only when real scores exist (overall != null).
-  // pageTitle may be written into scores as display metadata before analysis runs,
-  // so checking scores != null alone would falsely mark new sites as analyzed.
   const isAnalyzed = (site.scores as any)?.overall != null;
+  const noIssues = isAnalyzed && site.findingCount === 0;
   const cmsIconData = getCMSIcon(site.cms);
 
   const faviconSrc = faviconError
@@ -252,10 +267,11 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
     : site.faviconUrl ||
       `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(site.url)}&size=32`;
 
-  let timeAgo = "Unknown";
+  let timeAgo = "";
   try {
     timeAgo = formatDistanceToNow(new Date(site.lastUpdated), {
       addSuffix: true,
+      locale: dateFnsLocales[locale] ?? enUS,
     });
   } catch {}
 
@@ -294,7 +310,8 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
 
           {/* Favicon + domain + URL */}
           <div className="flex-1 min-w-0 flex items-start gap-2">
-            <div className="flex-shrink-0 w-8 h-8 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--color-neutral-200)] flex items-center justify-center p-1 mt-0.5 overflow-hidden">
+            {/* Favicon tile — minimal padding so icon fills the space */}
+            <div className="flex-shrink-0 w-8 h-8 rounded-[var(--radius-sm)] border border-[var(--border-default)] bg-[var(--color-neutral-200)] flex items-center justify-center p-0.5 mt-0.5 overflow-hidden">
               {faviconSrc ? (
                 <img
                   src={faviconSrc}
@@ -311,11 +328,11 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
                 {site.domain}
               </h3>
               {(site.scores as any)?.pageTitle ? (
-                <p className="text-[11px] text-[var(--text-subtle)] truncate mt-0.5">
+                <p className="text-[11px] text-[var(--text-subtle)] mt-0.5 leading-snug">
                   {(site.scores as any).pageTitle}
                 </p>
               ) : (
-                <p className="text-[11px] text-[var(--text-subtle)] truncate mt-0.5">
+                <p className="text-[11px] text-[var(--text-subtle)] mt-0.5 leading-snug">
                   {site.url.replace(/^https?:\/\//, "")}
                 </p>
               )}
@@ -331,6 +348,9 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
           score={site.overallScore}
           isNew={!isAnalyzed}
           uid={site.id}
+          noIssues={noIssues}
+          newSiteLabel={t("new_site_label")}
+          newSitePrompt={t("new_site_prompt")}
         />
 
         {/* ── Pillar mini-score chips (analyzed only) ── */}
@@ -339,7 +359,7 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
         {/* ── Hairline divider ── */}
         <div className="h-px bg-[var(--border-default)] my-4" />
 
-        {/* ── Meta row: issues · timestamp · CMS · connection ── */}
+        {/* ── Meta rows: issues · timestamp · CMS · connection ── */}
         <div className="space-y-1.5 mb-4">
           {isAnalyzed && site.findingCount > 0 && (
             <div className="flex items-center gap-1.5 text-xs text-[var(--text-subtle)]">
@@ -348,78 +368,77 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
                 style={{ color: "var(--color-warning)" }}
               />
               <span>
-                {site.findingCount}{" "}
-                {site.findingCount === 1 ? "issue" : "issues"} found
+                {t("issues_found", { count: site.findingCount })}
               </span>
             </div>
           )}
-          {isAnalyzed && site.findingCount === 0 && (
+          {isAnalyzed && noIssues && (
             <div className="flex items-center gap-1.5 text-xs text-[var(--text-subtle)]">
               <CheckCircle
                 className="w-3.5 h-3.5 flex-shrink-0"
                 style={{ color: "var(--color-success)" }}
               />
-              <span>No issues found</span>
+              <span>{t("no_issues")}</span>
             </div>
           )}
 
-          <div className="flex items-center justify-between text-xs text-[var(--text-subtle)]">
-            {/* Timestamp */}
-            <div className="flex items-center gap-1 min-w-0">
-              <Clock className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">Updated {timeAgo}</span>
-            </div>
+          {/* Timestamp row — no truncation */}
+          <div className="flex items-center gap-1 text-xs text-[var(--text-subtle)]">
+            <Clock className="w-3 h-3 flex-shrink-0" />
+            <span>{t("updated", { timeAgo })}</span>
+          </div>
 
-            {/* CMS + connection */}
-            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-              {site.cms && (
-                <span className="flex items-center gap-1">
-                  <CMSIcon cms={site.cms} size={12} showFallback={false} />
-                  <span className="text-[10px]">
-                    {cmsIconData?.name || site.cms}
-                  </span>
+          {/* CMS + connection on its own line */}
+          <div className="flex items-center gap-2 text-xs text-[var(--text-subtle)]">
+            {site.cms && (
+              <span className="flex items-center gap-1">
+                <CMSIcon cms={site.cms} size={12} showFallback={false} />
+                <span className="text-[10px]">
+                  {cmsIconData?.name || site.cms}
                 </span>
-              )}
-              {site.connectionStatus === "connected" ? (
-                <span style={{ color: "var(--color-success)" }}>
-                  ● Connected
-                </span>
-              ) : (
-                <span className="text-[var(--text-subtle)]">
-                  ○ Disconnected
-                </span>
-              )}
-            </div>
+              </span>
+            )}
+            {site.connectionStatus === "connected" ? (
+              <span style={{ color: "var(--color-success)" }}>
+                ● {t("connected")}
+              </span>
+            ) : (
+              <span className="text-[var(--text-subtle)]">
+                ○ {t("disconnected")}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* ── Primary CTA: ✨ Auto-Optimize ── */}
+        {/* ── Primary CTA: Site-Cockpit ── */}
         <Button
           onClick={handleAction}
           disabled={isLoading}
-          className="w-full font-semibold ring-1 ring-sky-600/30 dark:ring-sky-400/30 bg-sky-50 dark:bg-sky-400/10 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-400/20 transition disabled:opacity-60 shadow-none hover:shadow-none"
+          variant="site-action"
+          size="sm"
+          className="w-full justify-center"
         >
           {isLoading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <SparkleIcon className="mr-2 h-4 w-4 opacity-90 flex-shrink-0" />
+            <DashboardIcon className="w-4 h-4 flex-shrink-0" />
           )}
           {isLoading
             ? isAnalyzed
-              ? "Opening…"
-              : "Starting…"
-            : "Auto-Optimize"}
+              ? t("opening")
+              : t("starting")
+            : t("site_cockpit")}
         </Button>
 
         {/* ── Remove link ── */}
         {onRemove && (
           <button
             onClick={() => onRemove(site.id)}
-            title="Remove this site from your dashboard"
+            title={t("remove_site")}
             className="mt-3 flex items-center justify-center gap-1 text-xs text-[var(--text-subtle)] hover:text-[var(--color-danger)] transition-colors w-full cursor-pointer"
           >
             <Trash2 className="w-3 h-3" />
-            Remove site
+            {t("remove_site")}
           </button>
         )}
       </CardContent>

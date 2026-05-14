@@ -11,9 +11,9 @@
   --card-shadow: var(--shadow-sm);
 }
 
-/* Dark Mode */
+/* Dark Mode — cards darker than page bg (neutral-100 = oklch 0.20) with subtle azure tint */
 .dark {
-  --card-bg: var(--color-neutral-200);
+  --card-bg: oklch(0.17 0.015 235);
 }
 
 /* Buttons */

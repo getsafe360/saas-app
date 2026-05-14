@@ -9,6 +9,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        "site-action":
+          "border border-[var(--color-primary-400)] bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)] dark:border-[var(--color-primary-400)] dark:bg-[var(--color-primary-200)] dark:text-[var(--color-primary-900)] dark:hover:bg-[var(--color-primary-300)] shadow-none hover:shadow-none transition-all duration-200",
         agent:
           "bg-gradient-to-r from-blue-600 via-purple-500 to-sky-500 text-white border border-blue-300/50 shadow-xl hover:shadow-blue-400/30 hover:from-blue-700 hover:to-purple-600 hover:border-blue-200 focus-visible:ring-blue-400/60 transition-all duration-200",
         green:
