@@ -274,7 +274,7 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
     <Card
       id={`site-card-${site.id}`}
       className={[
-        "group border transition-all duration-200 bg-[#0a0a0a]",
+        "group border transition-all duration-200",
         highlight
           ? "border-sky-400 dark:border-sky-400 ring-2 ring-sky-400/40 dark:ring-sky-400/40"
           : "border-blue-200/70 dark:border-blue-800/50 hover:border-blue-400/80 dark:hover:border-blue-500/70",
