@@ -154,9 +154,10 @@ export function SiteCockpitLoader({
         const cockpitData = transformToSiteCockpitResponse(raw);
         setData(cockpitData);
 
-        // Persist screenshot, favicon, and page title back to the site record
+        // Persist screenshot, favicon, page title, and scores back to the site record
         // so the dashboard card reflects the latest cockpit analysis.
         const screenshotUrl = `/api/screenshot?w=360&q=55&url=${encodeURIComponent(cockpitData.finalUrl)}`;
+        const { overallScore, categoryScores } = cockpitData.summary;
         void fetch(`/api/sites/${siteId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -164,6 +165,13 @@ export function SiteCockpitLoader({
             screenshotUrl,
             faviconUrl: cockpitData.faviconUrl || undefined,
             pageTitle: cockpitData.meta?.title || "",
+            scores: {
+              overall: overallScore,
+              seo: categoryScores.seo,
+              performance: categoryScores.performance,
+              security: categoryScores.security,
+              accessibility: categoryScores.accessibility,
+            },
           }),
         });
       } catch {

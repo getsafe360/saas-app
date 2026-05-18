@@ -57,6 +57,13 @@ export async function PATCH(
     screenshotUrl?: string;
     faviconUrl?: string;
     pageTitle?: string;
+    scores?: {
+      overall?: number;
+      seo?: number;
+      performance?: number;
+      security?: number;
+      accessibility?: number;
+    };
   };
 
   const [existing] = await db
@@ -72,9 +79,13 @@ export async function PATCH(
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (body.screenshotUrl) updates.lastScreenshotUrl = body.screenshotUrl;
   if (body.faviconUrl) updates.lastFaviconUrl = body.faviconUrl;
-  if (body.pageTitle !== undefined) {
+  if (body.pageTitle !== undefined || body.scores !== undefined) {
     const currentScores = (existing.lastScores as Record<string, unknown>) ?? {};
-    updates.lastScores = { ...currentScores, pageTitle: body.pageTitle };
+    updates.lastScores = {
+      ...currentScores,
+      ...(body.scores !== undefined ? body.scores : {}),
+      ...(body.pageTitle !== undefined ? { pageTitle: body.pageTitle } : {}),
+    };
   }
 
   await db.update(sites).set(updates as any).where(and(eq(sites.id, siteId), eq(sites.userId, userId)));
