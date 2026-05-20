@@ -17,6 +17,7 @@ import type { SeoFinding, SeoMasterScore, SeoSection, AutomatedFix } from "@/lib
 import {
   getUserTier,
   isBSBTier,
+  usesClaudeModel,
   getSeoAnalysisModel,
   getModelLabel,
   ANALYSIS_TOKEN_COST,
@@ -258,8 +259,8 @@ export async function POST(
 
   // Resolve model for this tier
   const model = getSeoAnalysisModel(tier);
-  const modelId = tier === "business" ? OPUS_MODEL_ID : (process.env.MODEL ?? "gpt-4o-mini");
-  const provider = tier === "business" ? "anthropic" : "openai";
+  const modelId = usesClaudeModel(tier) ? OPUS_MODEL_ID : (process.env.MODEL ?? "gpt-4o");
+  const provider = usesClaudeModel(tier) ? "anthropic" : "openai";
 
   // Create DB job record (status: running)
   const [analysisJob] = await db
