@@ -423,18 +423,18 @@ function IntroText({
         {greeting}{" "}
         {streaming ? (
           <span className="text-white/60">
-            {agentName} is analysing <span className="text-white">{domain}</span>…
+            {agentName} is auditing <span className="text-white">{domain}</span> across 8 dimensions…
           </span>
         ) : (
           <span className="text-white/60">
-            here's your SEO-GEO audit for <span className="text-white">{domain}</span>
+            full-spectrum SEO audit for <span className="text-white">{domain}</span> complete.
           </span>
         )}
       </p>
       <p className="text-xs text-white/40 leading-relaxed max-w-lg">
         {streaming
-          ? "Findings are appearing live as the AI analyses each section. Check the items you want to add to your repair queue."
-          : "Review the findings below. Check each issue you want to fix, then launch Sparky to apply them automatically."}
+          ? "Findings are streaming live across Technical SEO, AI SEO, GEO, AEO, Author SEO, and more. Tick issues as they surface to build your repair queue."
+          : "Eight dimensions audited — from crawl fundamentals to AI citation tracking. Tick the issues you want Sparky to fix automatically."}
       </p>
     </div>
   );

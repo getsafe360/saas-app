@@ -56,6 +56,17 @@ const SECTIONS: Record<SeoSection, { label: string; description: string; maxScor
   "llms-txt": { label: "llms.txt", description: "LLM crawler permissions — presence, model-specific rules, attribution requirements", maxScore: 25 },
 };
 
+const CATEGORY_BENEFITS: Record<SeoSection, string> = {
+  "technical-seo": "The crawl, speed & mobile foundation that every other ranking signal depends on",
+  "content-eeat":  "Prove expertise, authority & trust to algorithms — and to readers",
+  "ai-seo":        "Structure content so AI models can read, summarise, and cite it accurately",
+  geo:             "Get surfaced in ChatGPT, Gemini & Perplexity where your audience already searches",
+  aeo:             "Win the answer box and voice results for your most valuable queries",
+  "author-seo":    "Attach verifiable human expertise to your content — a growing ranking signal",
+  "ai-analytics":  "Track your brand's mention share and citation frequency across AI search engines",
+  "llms-txt":      "Control what LLM crawlers can access, cite, and attribute on your behalf",
+};
+
 const TAB_GROUPS = [
   { id: "technical",     label: "Technical & Content", sections: ["technical-seo", "content-eeat"] as SeoSection[] },
   { id: "ai-visibility", label: "AI Visibility",        sections: ["ai-seo", "geo", "aeo"] as SeoSection[] },
@@ -116,6 +127,51 @@ function CircularScore({ score }: { score: number }) {
         transform="rotate(-90 60 60)" style={{ transition: "stroke-dasharray 0.8s ease" }} />
       <text x="60" y="60" textAnchor="middle" dy="0.35em" fontSize="26" fontWeight="700" fill="white">{score}</text>
     </svg>
+  );
+}
+
+function IntroBlock({
+  userName,
+  domain,
+  streaming,
+}: {
+  userName?: string;
+  domain: string;
+  streaming: boolean;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <p className="text-sm font-semibold text-white">
+          {userName ? `${userName},` : "Your audit is ready —"}{" "}
+          {streaming ? (
+            <span className="text-white/60">
+              Sparky is auditing <span className="text-white">{domain}</span> across 8 dimensions…
+            </span>
+          ) : (
+            <span className="text-white/60">
+              full-spectrum SEO audit for <span className="text-white">{domain}</span> complete.
+            </span>
+          )}
+        </p>
+        <p className="text-xs text-white/40 leading-relaxed max-w-2xl">
+          {streaming
+            ? "Findings are streaming live across Technical SEO, Content & E-E-A-T, AI SEO, GEO, AEO, Author SEO, AI Analytics, and llms.txt. Tick issues as they surface to build your repair queue."
+            : "Eight dimensions audited — from crawl fundamentals to AI citation tracking. Tick the issues you want Sparky to fix, then let the AI do the rest."}
+        </p>
+      </div>
+
+      {!streaming && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {(Object.entries(SECTIONS) as [SeoSection, { label: string }][]).map(([key, { label }]) => (
+            <div key={key} className="rounded-lg border border-white/6 bg-white/[0.03] px-3 py-2.5 space-y-0.5">
+              <p className="text-[11px] font-semibold text-white/80">{label}</p>
+              <p className="text-[10px] text-white/35 leading-snug">{CATEGORY_BENEFITS[key]}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -553,22 +609,9 @@ export function SEOAnalysisPage({
           </div>
         )}
 
-        {/* Intro text */}
+        {/* Intro block */}
         {(streaming || done) && (
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-white">
-              {jobMeta?.userName ? `Hi ${jobMeta.userName},` : "Hi there,"}{" "}
-              {streaming
-                ? <span className="text-white/60">{AGENT_NAME} is analysing <span className="text-white">{domain}</span>…</span>
-                : <span className="text-white/60">here's your SEO-GEO audit for <span className="text-white">{domain}</span></span>
-              }
-            </p>
-            <p className="text-xs text-white/40 leading-relaxed max-w-xl">
-              {streaming
-                ? "Findings are appearing live as the AI analyses each section. Check issues you want to add to your repair queue."
-                : "Review the findings below. Check each issue you want to fix, then launch Sparky to apply them automatically."}
-            </p>
-          </div>
+          <IntroBlock userName={jobMeta?.userName} domain={domain} streaming={streaming} />
         )}
 
         {/* Error banner */}
