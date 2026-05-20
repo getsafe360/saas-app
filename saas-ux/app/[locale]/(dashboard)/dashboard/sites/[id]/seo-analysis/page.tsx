@@ -41,9 +41,13 @@ export default async function SeoAnalysisPageRoute({
   // Fetch token balance server-side so it always reflects pre-analysis state,
   // avoiding a race condition when autoStart triggers the stream simultaneously.
   const team = await findCurrentUserTeam();
-  const tokensIncluded = team?.tokensIncluded ?? 5000;
-  const tokensRemaining = team?.tokensRemaining ?? tokensIncluded;
-  const tokensUsedThisMonth = Math.max(0, tokensIncluded - tokensRemaining);
+  // Read all three fields directly from DB — never derive tokensUsedThisMonth from
+  // tokensIncluded - tokensRemaining because tokensRemaining can exceed tokensIncluded
+  // when admin bonuses or purchased packs have been applied.
+  const tokensUsedThisMonth = team?.tokensUsedThisMonth ?? 0;
+  const tokensAvailable = team?.tokensRemaining ?? (team?.tokensIncluded ?? 5000);
+  // Total budget = what's been used + what's still available (the bar denominator)
+  const tokensTotal = tokensAvailable + tokensUsedThisMonth;
 
   const planName = (team?.planName ?? "free") as PlanName;
   const showTokenCost = PLAN_FEATURES[planName]?.showTokenCost ?? true;
@@ -54,7 +58,7 @@ export default async function SeoAnalysisPageRoute({
       siteUrl={site.siteUrl}
       locale={locale}
       autoStart={start === "true"}
-      tokensIncluded={tokensIncluded}
+      tokensIncluded={tokensTotal}
       tokensUsedThisMonth={tokensUsedThisMonth}
       showTokenCost={showTokenCost}
       connectionStatus={(site.connectionStatus ?? "disconnected") as "connected" | "disconnected"}

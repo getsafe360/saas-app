@@ -41,6 +41,7 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sites, setSites] = useState<SiteData[]>([]);
   const [isLoadingSites, setIsLoadingSites] = useState(true);
+  const [planName, setPlanName] = useState<string | undefined>();
   const t = useTranslations("DashboardNav");
   const ts = useTranslations("Nav");
 
@@ -64,6 +65,14 @@ export default function DashboardLayout({
     }
     fetchSites();
   }, [pathname]);
+
+  // Fetch plan once on mount
+  useEffect(() => {
+    fetch('/api/team/tokens')
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { planName?: string } | null) => { if (data?.planName) setPlanName(data.planName); })
+      .catch(() => {});
+  }, []);
 
   // Handle site change from dropdown
   const handleSiteChange = (siteId: string) => {
@@ -106,7 +115,7 @@ export default function DashboardLayout({
         >
           {/* User info / branding */}
           <div className="flex items-center gap-3 mb-4 px-3 pt-3">
-            <UserGreeting />
+            <UserGreeting planName={planName} />
           </div>
 
           {/* Site Selector Dropdown with Category Links */}

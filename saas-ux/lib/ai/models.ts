@@ -56,12 +56,17 @@ export function isBSBTier(tier: AITier): boolean {
   return tier === "business";
 }
 
+/** agent + agency + business all run Claude Opus 4.7; only business gets the thinking budget */
+export function usesClaudeModel(tier: AITier): boolean {
+  return tier === "business" || tier === "agent" || tier === "agency";
+}
+
 export function getSeoAnalysisModel(tier: AITier): LanguageModel {
   // Cast needed: @ai-sdk/anthropic@3.x returns LanguageModelV3 but ai@5 beta types declare LanguageModelV2
-  if (isBSBTier(tier)) {
+  if (usesClaudeModel(tier)) {
     return anthropic(OPUS_MODEL_ID) as unknown as LanguageModel;
   }
-  return openai(process.env.MODEL ?? "gpt-4o-mini") as unknown as LanguageModel;
+  return openai(process.env.MODEL ?? "gpt-4o") as unknown as LanguageModel;
 }
 
 export function getSeoProviderOptions(tier: AITier) {
@@ -76,5 +81,5 @@ export function getSeoProviderOptions(tier: AITier) {
 }
 
 export function getModelLabel(tier: AITier): string {
-  return isBSBTier(tier) ? `Claude Opus 4.7` : "Standard AI";
+  return usesClaudeModel(tier) ? `Claude Opus 4.7` : "GetSafe360 AI";
 }

@@ -534,11 +534,10 @@ export function SEOAnalysisPage({
 
   const domain = (() => { try { return new URL(siteUrl).hostname.replace(/^www\./, ""); } catch { return siteUrl; } })();
   const totalTokensUsed = doneEvent?.totalTokensUsed ?? 0;
-  // When done, derive usage from server-authoritative tokensRemaining to avoid
-  // double-counting if the token balance fetch resolved after the backend debit.
-  const liveTokensUsed = done && doneEvent
-    ? tokenBalance.tokensIncluded - doneEvent.tokensRemaining
-    : tokenBalance.tokensUsedThisMonth + totalTokensUsed;
+  // Consistent formula pre- and post-done: prior usage + this analysis.
+  // tokensIncluded already represents the full budget (included + purchased + bonuses)
+  // so we never need to subtract from a server-side tokensRemaining snapshot.
+  const liveTokensUsed = tokenBalance.tokensUsedThisMonth + totalTokensUsed;
   const checkedCount = checkedIds.size;
 
   // Per-tab finding aggregation for tab badges
