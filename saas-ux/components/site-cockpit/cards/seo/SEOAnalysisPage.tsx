@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TokenUsageBar } from "@/components/ui/TokenUsageBar";
 import { SEOFixerPanel } from "./SEOFixerPanel";
 import { AGENT_NAME } from "@/lib/ai/constants";
+import { AnalysisWaitingRotator } from "@/components/ui/AnalysisWaitingRotator";
 import type { SeoFinding, SeoMasterScore, SeoSection } from "@/lib/db/schema/ai/analysis";
 import type { ConnectionStatus } from "@/components/site-cockpit/cards/wordpress/types";
 
@@ -86,6 +87,11 @@ const SEVERITY_CONFIG: Record<Severity, { label: string; color: string; bg: stri
 // Sub-components
 // ---------------------------------------------------------------------------
 
+function fmtTokens(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  return `${n}`;
+}
+
 function SeverityBadge({ severity, passed }: { severity: Severity; passed?: boolean }) {
   if (passed) {
     return (
@@ -159,6 +165,11 @@ function IntroBlock({
             ? "Findings are streaming live across Technical SEO, Content & E-E-A-T, AI SEO, GEO, AEO, Author SEO, AI Analytics, and llms.txt. Tick issues as they surface to build your repair queue."
             : "Eight dimensions audited — from crawl fundamentals to AI citation tracking. Tick the issues you want Sparky to fix, then let the AI do the rest."}
         </p>
+        {streaming && (
+          <p className="text-xs text-white/25 italic">
+            <AnalysisWaitingRotator />
+          </p>
+        )}
       </div>
 
       {!streaming && (
@@ -188,8 +199,15 @@ function MasterScoreHero({ score, streaming }: { score: SeoMasterScore | null; s
   ];
 
   return (
-    <div className="rounded-2xl border p-5 space-y-4"
+    <div className="rounded-2xl border p-5 space-y-4 relative overflow-hidden"
       style={{ borderColor: "oklch(from var(--category-seo) l c h / 0.2)", background: "oklch(from var(--category-seo) l c h / 0.06)" }}>
+
+      {/* Pulsing glow overlay while streaming */}
+      {streaming && (
+        <div className="absolute inset-0 rounded-2xl animate-pulse pointer-events-none -z-10"
+          style={{ background: "oklch(from var(--category-seo) l c h / 0.07)" }} />
+      )}
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
         {score ? <CircularScore score={score.master} /> : (
           <div className="h-[120px] w-[120px] rounded-full bg-white/5 animate-pulse flex-shrink-0" />
@@ -199,7 +217,7 @@ function MasterScoreHero({ score, streaming }: { score: SeoMasterScore | null; s
           {score ? (
             <>
               <p className="text-3xl font-bold text-white">{score.master}<span className="text-base text-white/40 font-normal"> / 100</span></p>
-              <p className="text-xs text-white/40">{score.modelId} · {score.totalTokensUsed.toLocaleString()} tokens used</p>
+              <p className="text-xs text-white/40">{fmtTokens(score.totalTokensUsed)} tokens used</p>
             </>
           ) : (
             <div className="space-y-2">
@@ -230,9 +248,12 @@ function MasterScoreHero({ score, streaming }: { score: SeoMasterScore | null; s
           );
         })}
       </div>
+
       {streaming && (
         <p className="text-xs text-white/30 flex items-center gap-1.5">
-          <Loader2 className="h-3 w-3 animate-spin" /> Score will update when analysis completes…
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Score will update when analysis completes —{" "}
+          <AnalysisWaitingRotator className="italic" />
         </p>
       )}
     </div>
