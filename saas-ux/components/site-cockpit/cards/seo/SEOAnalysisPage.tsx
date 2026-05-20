@@ -143,7 +143,7 @@ function IntroBlock({
     <div className="space-y-4">
       <div className="space-y-1">
         <p className="text-sm font-semibold text-white">
-          {userName ? `${userName},` : "Your audit is ready —"}{" "}
+          {userName ? `${userName},` : streaming ? "Hang tight —" : "Your audit is ready —"}{" "}
           {streaming ? (
             <span className="text-white/60">
               Sparky is auditing <span className="text-white">{domain}</span> across 8 dimensions…
