@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Link, useRouter } from "@/navigation";
 import { usePathname, useParams } from "next/navigation";
-import { Settings, Activity, Menu, LayoutDashboard } from "lucide-react";
+import { Settings, Menu, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { UserGreeting } from "@/components/ui/user-greeting";
@@ -66,12 +66,16 @@ export default function DashboardLayout({
     fetchSites();
   }, [pathname]);
 
-  // Fetch plan once on mount
+  // Provision user in DB on first load (idempotent), then fetch plan
   useEffect(() => {
-    fetch('/api/team/tokens')
-      .then(r => r.ok ? r.json() : null)
-      .then((data: { planName?: string } | null) => { if (data?.planName) setPlanName(data.planName); })
-      .catch(() => {});
+    fetch('/api/auth/sync', { method: 'POST' })
+      .catch(() => {})
+      .finally(() => {
+        fetch('/api/team/tokens')
+          .then(r => r.ok ? r.json() : null)
+          .then((data: { planName?: string } | null) => { if (data?.planName) setPlanName(data.planName); })
+          .catch(() => {});
+      });
   }, []);
 
   // Handle site change from dropdown
@@ -82,7 +86,6 @@ export default function DashboardLayout({
   // Static nav items (always visible)
   const staticNavItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "overview" },
-    { href: "/dashboard/activity", icon: Activity, label: "activity" },
     { href: "/dashboard/settings", icon: Settings, label: "settings" },
   ];
 
