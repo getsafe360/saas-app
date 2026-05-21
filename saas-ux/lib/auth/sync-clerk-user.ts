@@ -7,6 +7,34 @@ import { users, type NewUser } from '@/lib/db/schema/auth/users';
 import { teams, teamMembers, type NewTeam, type NewTeamMember } from '@/lib/db/schema/auth';
 import { eq } from 'drizzle-orm';
 
+async function createTeamForUser(userId: number, displayName: string): Promise<number | null> {
+  const db = getDb();
+  const [createdTeam] = await db
+    .insert(teams)
+    .values({
+      name: `${displayName}'s Team`,
+      planName: 'free',
+      subscriptionStatus: 'active',
+      tokensIncluded: 5000,
+      tokensUsedThisMonth: 0,
+      tokensPurchased: 0,
+      billingCycleStart: new Date(),
+      notifiedAt80Percent: false,
+      notifiedAt100Percent: false,
+    } satisfies NewTeam)
+    .returning();
+
+  if (!createdTeam) return null;
+
+  await db.insert(teamMembers).values({
+    userId,
+    teamId: createdTeam.id,
+    role: 'owner',
+  } satisfies NewTeamMember);
+
+  return createdTeam.id;
+}
+
 /**
  * Syncs a Clerk user to the local database.
  * Creates user + team if they don't exist.
@@ -35,8 +63,24 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
       .limit(1);
 
     if (existingUser) {
-      // User already synced
-      console.log('[syncClerkUser] User already exists:', existingUser.id);
+      // User exists — ensure they also have a team (guards against missing team_member rows)
+      const [existingMember] = await db
+        .select({ id: teamMembers.id })
+        .from(teamMembers)
+        .where(eq(teamMembers.userId, existingUser.id))
+        .limit(1);
+
+      if (!existingMember) {
+        console.log('[syncClerkUser] User exists but has no team, creating one:', existingUser.id);
+        const displayName =
+          (clerkUser.firstName && clerkUser.lastName
+            ? `${clerkUser.firstName} ${clerkUser.lastName}`.trim()
+            : clerkUser.firstName) ||
+          clerkUser.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ||
+          String(existingUser.id);
+        await createTeamForUser(existingUser.id, displayName);
+      }
+
       return existingUser.id;
     }
 
@@ -59,15 +103,28 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
       .limit(1);
 
     if (existingByEmail) {
+      const resolvedId = existingByEmail.id;
       if (!existingByEmail.clerkUserId || existingByEmail.clerkUserId !== clerkUser.id) {
-        const [updatedByEmail] = await db
+        await db
           .update(users)
           .set({ clerkUserId: clerkUser.id })
-          .where(eq(users.id, existingByEmail.id))
-          .returning({ id: users.id });
-        return updatedByEmail?.id ?? existingByEmail.id;
+          .where(eq(users.id, resolvedId));
       }
-      return existingByEmail.id;
+      // Ensure this user has a team too
+      const [existingMember2] = await db
+        .select({ id: teamMembers.id })
+        .from(teamMembers)
+        .where(eq(teamMembers.userId, resolvedId))
+        .limit(1);
+      if (!existingMember2) {
+        const displayName =
+          (clerkUser.firstName && clerkUser.lastName
+            ? `${clerkUser.firstName} ${clerkUser.lastName}`.trim()
+            : clerkUser.firstName) ||
+          primaryEmail.emailAddress;
+        await createTeamForUser(resolvedId, displayName);
+      }
+      return resolvedId;
     }
 
     // Create user in our database
@@ -94,44 +151,20 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
 
     console.log('[syncClerkUser] User created:', createdUser.id);
 
-    // Create default team for user with free plan (5K tokens)
-    const [createdTeam] = await db
-      .insert(teams)
-      .values({
-        name: `${createdUser.name || createdUser.email}'s Team`,
-        planName: 'free',
-        subscriptionStatus: 'active',
-        tokensIncluded: 5000,
-        tokensUsedThisMonth: 0,
-        tokensPurchased: 0,
-        billingCycleStart: new Date(),
-        notifiedAt80Percent: false,
-        notifiedAt100Percent: false,
-      } satisfies NewTeam)
-      .returning();
+    const teamId = await createTeamForUser(
+      createdUser.id,
+      createdUser.name || createdUser.email,
+    );
 
-    if (!createdTeam) {
+    if (!teamId) {
       console.error('[syncClerkUser] Failed to create team');
-      // User exists but no team - still return user ID
-      return createdUser.id;
+    } else {
+      console.log('[syncClerkUser] User synced successfully:', {
+        userId: createdUser.id,
+        teamId,
+        clerkId: clerkUser.id,
+      });
     }
-
-    console.log('[syncClerkUser] Team created:', createdTeam.id);
-
-    // Add user to team
-    const newTeamMember: NewTeamMember = {
-      userId: createdUser.id,
-      teamId: createdTeam.id,
-      role: 'owner',
-    };
-
-    await db.insert(teamMembers).values(newTeamMember);
-
-    console.log('[syncClerkUser] User synced successfully:', {
-      userId: createdUser.id,
-      teamId: createdTeam.id,
-      clerkId: clerkUser.id,
-    });
 
     return createdUser.id;
   } catch (error) {
