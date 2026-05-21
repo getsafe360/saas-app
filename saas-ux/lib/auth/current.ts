@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
 import { users } from '@/lib/db/schema/auth/users';
 import { teams, teamMembers } from '@/lib/db/schema/auth';
+import { syncClerkUserToDatabase } from '@/lib/auth/sync-clerk-user';
 
 export async function clerkUserId(): Promise<string | null> {
   const { userId } = await auth();              // Clerk server-side
@@ -21,7 +22,19 @@ export async function getDbUserFromClerk() {
     .where(eq(users.clerkUserId, clerkId))
     .limit(1);
 
-  return u ?? null; // { id, email, clerkUserId, ... } or null
+  if (u) return u;
+
+  // First time seeing this Clerk user — create their DB record, team, and team_member
+  const newUserId = await syncClerkUserToDatabase();
+  if (!newUserId) return null;
+
+  const [newUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, newUserId))
+    .limit(1);
+
+  return newUser ?? null;
 }
 
 export async function findCurrentUserTeam() {
