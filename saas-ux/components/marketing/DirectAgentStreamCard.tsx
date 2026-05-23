@@ -186,6 +186,12 @@ export default function DirectAgentStreamCard() {
         const nextUrl = data.stashUrl ?? data.url;
         if (!nextUrl) throw new Error("missing stash url");
 
+        try {
+          sessionStorage.setItem("getsafe360_stash_url", nextUrl);
+        } catch {
+          // sessionStorage unavailable (e.g., private browsing)
+        }
+
         setStashUrl(nextUrl);
         stashedRef.current = true;
       } catch {
@@ -391,7 +397,7 @@ export default function DirectAgentStreamCard() {
               {signupRedirect && (
                 <div className="mt-4 flex flex-col items-center gap-2">
                   <SignedOut>
-                    <SignUpButton mode="modal">
+                    <SignUpButton mode="modal" forceRedirectUrl={signupRedirect}>
                       <Button className="inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-base font-semibold ring ring-sky-600/30 bg-sky-50 text-sky-700 transition hover:bg-sky-100 hover:shadow-none dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/30 dark:hover:bg-sky-400/20">
                         {t("cta_create_account")}
                         <ArrowRightIcon className="size-4" aria-hidden="true" />
