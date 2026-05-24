@@ -4,13 +4,15 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
 import { users } from '@/lib/db/schema/auth/users';
 import { teams, teamMembers } from '@/lib/db/schema/auth';
+import { syncClerkUserToDatabase } from '@/lib/auth/sync-clerk-user';
 
 export async function clerkUserId(): Promise<string | null> {
   const { userId } = await auth();              // Clerk server-side
   return userId ?? null;
 }
 
-// Pure read — never writes. Call POST /api/auth/sync to provision a new user.
+// Reads the DB user for the current Clerk session, provisioning on first login
+// so server-rendered paths work without requiring a prior /api/auth/sync call.
 export async function getDbUserFromClerk() {
   const clerkId = await clerkUserId();
   if (!clerkId) return null;
@@ -22,7 +24,20 @@ export async function getDbUserFromClerk() {
     .where(eq(users.clerkUserId, clerkId))
     .limit(1);
 
-  return u ?? null;
+  if (u) return u;
+
+  // No DB row yet — provision on the spot for first-login users who land
+  // directly on a server-rendered route before /api/auth/sync runs.
+  const newId = await syncClerkUserToDatabase();
+  if (!newId) return null;
+
+  const [newUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.clerkUserId, clerkId))
+    .limit(1);
+
+  return newUser ?? null;
 }
 
 export async function findCurrentUserTeam() {
