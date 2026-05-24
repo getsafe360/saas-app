@@ -478,8 +478,8 @@ export function ConnectionCard({
             </span>
             <button
               onClick={() => setShowInfoModal(true)}
-              className="inline-flex items-center gap-1 text-xs transition-opacity hover:opacity-100 opacity-60 shrink-0"
-              style={{ color: "var(--color-primary-400, #60a5fa)" }}
+              className="inline-flex items-center gap-1 text-xs transition-colors cursor-pointer hover:opacity-70 shrink-0"
+              style={{ color: "var(--text-primary)" }}
               aria-label="Why connect?"
             >
               <Info className="h-3.5 w-3.5" />
@@ -557,8 +557,7 @@ export function ConnectionCard({
 
           <button
             onClick={() => setStep("method")}
-            className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110 active:brightness-95"
-            style={{ background: "var(--color-primary-500, #3b82f6)" }}
+            className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 bg-gradient-to-r from-blue-600 via-purple-500 to-sky-500 border border-blue-300/50 shadow-lg hover:from-blue-700 hover:to-purple-600 hover:shadow-blue-400/30 active:brightness-95"
           >
             Continue
             <ChevronRight className="h-4 w-4" />

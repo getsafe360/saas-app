@@ -32,6 +32,7 @@ import { AccessibilityCard } from "./cards/AccessibilityCard";
 import { ContentCard } from "./cards/ContentCard";
 import { SiteSummaryCard } from "./cards/SiteSummaryCard";
 import { ConnectionCard } from "./cards/ConnectionCard";
+import { ReportCard } from "./cards/ReportCard";
 import { OverallScoreHero } from "./OverallScoreHero";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type { ConnectionStatus } from "./cards/wordpress/types";
@@ -299,6 +300,17 @@ export function SiteCockpit({
               lastConnected={wordpressLastConnected}
               wpVersion={wpVersion}
               pluginVersion={pluginVersion}
+            />
+          </div>
+        )}
+
+        {/* Report Card — always visible after connection card */}
+        {siteId && (
+          <div className="mb-6">
+            <ReportCard
+              siteId={siteId}
+              siteName={data.domain}
+              planName="agency"
             />
           </div>
         )}
