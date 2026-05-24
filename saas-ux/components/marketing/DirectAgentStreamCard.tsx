@@ -47,7 +47,7 @@ function hostnameFromUrl(input: string): string {
 }
 
 const GUEST_SCAN_KEY = "gs360_guest_scans";
-const GUEST_SCAN_LIMIT = 3;
+const GUEST_SCAN_LIMIT = 100;
 
 export default function DirectAgentStreamCard() {
   const t = useTranslations("analysis");
