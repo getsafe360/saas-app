@@ -15,7 +15,6 @@ import { SecurityOverview } from "./components/Analysis/SecurityOverview";
 import { PluginsPanel } from "./components/Analysis/PluginsPanel";
 import { HealthFindingsPanel } from "./components/Analysis/HealthFindingsPanel";
 import { ImplementationPlanPanel } from "./components/Analysis/ImplementationPlanPanel";
-import { GenerateReportButton } from "@/components/reports/GenerateReportButton";
 import type { WordPressCardProps } from "./types";
 import type { WordPressHealthFinding } from "@/types/site-cockpit";
 import { useCockpitState } from "@/lib/cockpit/useCockpitState";
@@ -264,13 +263,6 @@ export function WordPressCard({
           >
             {t("wordpress.title")}
           </h4>
-          {siteId ? (
-            <GenerateReportButton
-              siteId={siteId}
-              siteName={data.domain}
-              planName="agency"
-            />
-          ) : null}
         </div>
 
         {wordpress.categoryScores && (
