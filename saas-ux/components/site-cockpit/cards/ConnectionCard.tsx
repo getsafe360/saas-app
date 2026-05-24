@@ -19,6 +19,11 @@ import {
   AlertCircle,
   Loader2,
   RefreshCw,
+  Info,
+  X,
+  ShieldCheck,
+  Wrench,
+  Activity,
 } from "lucide-react";
 import { useWordPressPairing } from "./wordpress/hooks/useWordPressPairing";
 import type { ConnectionStatus } from "./wordpress/types";
@@ -137,6 +142,145 @@ function SoonBadge() {
   );
 }
 
+// ─── Why connect? info modal ──────────────────────────────────────────────────
+
+function MiniBenefit({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
+  return (
+    <div
+      className="flex flex-col gap-1.5 rounded-xl p-3"
+      style={{ background: "var(--background-default)", border: "1px solid var(--border-default)" }}
+    >
+      <div className="flex items-center gap-2" style={{ color: "var(--color-primary-400, #60a5fa)" }}>
+        {icon}
+        <span className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>{title}</span>
+      </div>
+      <p className="text-xs leading-relaxed" style={{ color: "var(--text-subtle)" }}>{text}</p>
+    </div>
+  );
+}
+
+function SiteConnectionInfoModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="relative w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl"
+        style={{ background: "var(--header-bg)", border: "1px solid var(--border-default)" }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-5 py-4"
+          style={{ borderBottom: "1px solid var(--border-default)" }}
+        >
+          <div className="flex items-center gap-2.5">
+            <span
+              className="inline-flex h-7 w-7 items-center justify-center rounded-lg"
+              style={{ background: "oklch(from var(--color-primary-500) l c h / 0.12)", color: "var(--color-primary-400, #60a5fa)" }}
+            >
+              <Info className="h-3.5 w-3.5" />
+            </span>
+            <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+              Why connect?
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg transition-colors hover:opacity-70"
+            style={{ color: "var(--text-subtle)" }}
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+          <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+            Analysis works without a connection. Optimization needs trusted access.
+          </p>
+          <p className="text-sm leading-relaxed" style={{ color: "var(--text-subtle)" }}>
+            GetSafe 360 AI can already inspect your public website from the outside — including
+            performance, SEO, accessibility, security headers, content quality, structured data,
+            and CMS signals. Connecting your site adds the secure layer required to diagnose
+            internal WordPress details and safely apply AI-assisted fixes.
+          </p>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {/* Without connection */}
+            <div
+              className="rounded-xl p-3 space-y-2"
+              style={{ background: "var(--background-default)", border: "1px solid var(--border-default)" }}
+            >
+              <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-subtle)" }}>
+                Available without connection
+              </div>
+              <ul className="space-y-1.5">
+                {[
+                  "External website analysis",
+                  "Performance and SEO checks",
+                  "Accessibility and content review",
+                  "Security header inspection",
+                  "Structured data validation",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-primary)" }}>
+                    <Check className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: "var(--text-subtle)" }} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* With connection */}
+            <div
+              className="rounded-xl p-3 space-y-2"
+              style={{ background: "oklch(from var(--color-primary-500) l c h / 0.06)", border: "1px solid oklch(from var(--color-primary-500) l c h / 0.2)" }}
+            >
+              <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--color-primary-400, #60a5fa)" }}>
+                Unlocked after connection
+              </div>
+              <ul className="space-y-1.5">
+                {[
+                  "AI-powered optimization workflows",
+                  "Automated WordPress fixes",
+                  "CMS/plugin-level diagnostics",
+                  "Continuous monitoring",
+                  "Safe repair actions with audit history",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-primary)" }}>
+                    <CheckCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: "var(--color-primary-400, #60a5fa)" }} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <MiniBenefit
+              icon={<ShieldCheck className="h-4 w-4" />}
+              title="Secure"
+              text="Uses a trusted connector — never guesses from public HTML."
+            />
+            <MiniBenefit
+              icon={<Wrench className="h-4 w-4" />}
+              title="Actionable"
+              text="Turns findings into fixes, not just recommendations."
+            />
+            <MiniBenefit
+              icon={<Activity className="h-4 w-4" />}
+              title="Ongoing"
+              text="Keeps your site monitored after the first scan."
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface ConnectionCardProps {
@@ -170,6 +314,7 @@ export function ConnectionCard({
 }: ConnectionCardProps) {
   const platform = detectPlatform(cmsType);
   const [forceWizard, setForceWizard] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const isConnected = connectionStatus === "connected" && !forceWizard;
 
   const [step, setStep] = useState<WizardStep>("detect");
@@ -327,8 +472,19 @@ export function ConnectionCard({
           <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-subtle)" }}>
             Site Connection
           </div>
-          <div className="text-sm font-medium mt-0.5" style={{ color: "var(--text-primary)" }}>
-            Connect to enable deep analysis & repair
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              Connect to enable AI optimization &amp; automated fixes.
+            </span>
+            <button
+              onClick={() => setShowInfoModal(true)}
+              className="inline-flex items-center gap-1 text-xs transition-opacity hover:opacity-100 opacity-60 shrink-0"
+              style={{ color: "var(--color-primary-400, #60a5fa)" }}
+              aria-label="Why connect?"
+            >
+              <Info className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Why connect?</span>
+            </button>
           </div>
         </div>
 
@@ -401,7 +557,7 @@ export function ConnectionCard({
 
           <button
             onClick={() => setStep("method")}
-            className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all"
+            className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110 active:brightness-95"
             style={{ background: "var(--color-primary-500, #3b82f6)" }}
           >
             Continue
@@ -534,6 +690,8 @@ export function ConnectionCard({
           </button>
         </div>
       )}
+
+      {showInfoModal && <SiteConnectionInfoModal onClose={() => setShowInfoModal(false)} />}
 
       {/* Step 3: Setup */}
       {step === "setup" && (
