@@ -23,7 +23,6 @@ export default function ClerkLocaleProvider({ children }: Props) {
       localization={localization}
       signInUrl="/sign-in"
       signInFallbackRedirectUrl="/dashboard"
-      signUpForceRedirectUrl="/dashboard/welcome"
       signUpFallbackRedirectUrl="/dashboard/welcome"
     >
       {children}

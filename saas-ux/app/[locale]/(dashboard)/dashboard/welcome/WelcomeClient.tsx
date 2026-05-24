@@ -159,7 +159,7 @@ export function WelcomeClient({ stashUrl }: { stashUrl: string | null }) {
         await new Promise((resolve) => setTimeout(resolve, 800));
 
         if (!cancelled) {
-          router.replace("/dashboard");
+          router.replace(`/dashboard?newSite=${encodeURIComponent(created.siteId)}`);
         }
       } catch (e: any) {
         if (!cancelled) {
