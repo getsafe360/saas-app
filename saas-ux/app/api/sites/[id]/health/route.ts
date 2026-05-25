@@ -66,14 +66,23 @@ export async function GET(
 
       const healthy = response.ok;
 
-      // Optional: Update last_connected_at if healthy
       if (healthy) {
         await db
           .update(sites)
-          .set({ 
+          .set({
             lastConnectedAt: new Date(),
             connectionStatus: 'connected',
             connectionError: null,
+          })
+          .where(eq(sites.id, id));
+      } else {
+        // Plugin unreachable — persist disconnected so page refresh reflects reality
+        await db
+          .update(sites)
+          .set({
+            connectionStatus: 'disconnected',
+            isConnected: false,
+            connectionError: 'Plugin unreachable',
           })
           .where(eq(sites.id, id));
       }
