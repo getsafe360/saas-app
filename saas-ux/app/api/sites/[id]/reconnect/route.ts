@@ -194,6 +194,7 @@ export async function POST(
       .update(sites)
       .set({
         connectionStatus: 'connected',
+        isConnected: true,
         lastConnectedAt: new Date(),
         connectionError: null,
         retryCount: 0,

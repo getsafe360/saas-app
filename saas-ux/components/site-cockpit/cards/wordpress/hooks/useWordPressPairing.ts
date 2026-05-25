@@ -121,6 +121,9 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
     setPairingMessage('Waiting for plugin confirmation…');
     pollAttemptsRef.current = 0;
 
+    // Check every ~25 seconds (every 10 polls) whether DB already shows connected
+    const DB_FALLBACK_EVERY = 10;
+
     pollRef.current = window.setInterval(async () => {
       pollAttemptsRef.current += 1;
 
@@ -129,6 +132,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
 
         if (data.used) {
           stopPolling();
+          setPluginDetected(true);
           setPairingStatus('connected');
           setPairingMessage('Connection established — syncing dashboard…');
           router.refresh();
@@ -142,17 +146,21 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
           return;
         }
 
-        if (pollAttemptsRef.current >= MAX_POLL_ATTEMPTS) {
-          if (siteId) {
-            const isConnected = await checkConnectionStatusOnce(siteId).catch(() => false);
-            if (isConnected) {
-              stopPolling();
-              setPairingStatus('connected');
-              setPairingMessage('Connection established — syncing dashboard…');
-              router.refresh();
-              return;
-            }
+        // Fallback: check DB connection status periodically in case the
+        // plugin already connected via a previous session's pairing code
+        if (siteId && pollAttemptsRef.current % DB_FALLBACK_EVERY === 0) {
+          const isDbConnected = await checkConnectionStatusOnce(siteId).catch(() => false);
+          if (isDbConnected) {
+            stopPolling();
+            setPluginDetected(true);
+            setPairingStatus('connected');
+            setPairingMessage('Connection established — syncing dashboard…');
+            router.refresh();
+            return;
           }
+        }
+
+        if (pollAttemptsRef.current >= MAX_POLL_ATTEMPTS) {
           stopPolling();
           setPairingStatus('error');
           setPairingMessage('No confirmation received — paste the code in WordPress and try again');
