@@ -315,7 +315,17 @@ export function ConnectionCard({
   const platform = detectPlatform(cmsType);
   const [forceWizard, setForceWizard] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const isConnected = connectionStatus === "connected" && !forceWizard;
+
+  // Live status can diverge from the server prop when a health check detects a change
+  const [liveStatus, setLiveStatus] = useState<ConnectionStatus>(connectionStatus);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+
+  // Keep live status in sync when server-side props update (e.g. after router.refresh)
+  useEffect(() => {
+    setLiveStatus(connectionStatus);
+  }, [connectionStatus]);
+
+  const isConnected = liveStatus === "connected" && !forceWizard;
 
   const [step, setStep] = useState<WizardStep>("detect");
   const [selectedMethod, setSelectedMethod] = useState<ConnectionMethod>(
@@ -391,12 +401,32 @@ export function ConnectionCard({
           </div>
 
           <button
-            onClick={() => void fetchProvision()}
+            onClick={async () => {
+              if (!siteId) { void fetchProvision(); return; }
+              setIsCheckingHealth(true);
+              try {
+                const res = await fetch(`/api/sites/${siteId}/health`, { cache: "no-store" });
+                if (res.ok) {
+                  const data = await res.json() as { healthy?: boolean };
+                  if (data.healthy === false) {
+                    setLiveStatus("disconnected");
+                    setForceWizard(false);
+                  }
+                }
+              } catch {
+                /* ignore transient failures */
+              } finally {
+                setIsCheckingHealth(false);
+              }
+              void fetchProvision();
+              router.refresh();
+            }}
             className="p-1.5 rounded-lg transition-colors hover:opacity-70"
             style={{ color: "var(--text-subtle)" }}
-            title="Refresh"
+            title="Refresh connection status"
+            disabled={isCheckingHealth}
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className={`h-4 w-4 ${isCheckingHealth ? "animate-spin" : ""}`} />
           </button>
         </div>
 

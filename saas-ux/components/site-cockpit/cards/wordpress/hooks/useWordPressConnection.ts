@@ -178,7 +178,8 @@ export function useWordPressConnection(
             status: 'disconnected',
             errorMessage: 'Connection lost. Please reconnect your plugin.',
           }));
-          setShowReconnectFlow(true);
+          // Do not auto-open the reconnect modal — ConnectionCard at the top handles this.
+          // Just refresh so the server-rendered status matches.
           router.refresh();
         }
       } catch {

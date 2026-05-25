@@ -20,7 +20,6 @@ import type { WordPressHealthFinding } from "@/types/site-cockpit";
 import { useCockpitState } from "@/lib/cockpit/useCockpitState";
 import FindingsFeed from "@/components/analyzer/findings/FindingsFeed";
 import { SavingsCard } from "@/components/site-cockpit/cockpit/SavingsCard";
-import { WordPressConnectionModal } from "@/components/site-cockpit/cockpit/WordPressConnectionModal";
 import { ConnectionBanner } from "./components/ConnectionStatus/ConnectionBanner";
 import { ReconnectionModal } from "./components/ConnectionStatus/ReconnectionModal";
 export function WordPressCard({
@@ -244,15 +243,6 @@ export function WordPressCard({
           pairing={pairing}
         />
       )}
-
-      <WordPressConnectionModal
-        open={cockpit.connectionModalOpen}
-        onClose={cockpit.actions.closeConnectionModal}
-        onConnected={() => {
-          cockpit.actions.closeConnectionModal();
-          void cockpit.actions.startAnalysis();
-        }}
-      />
 
       {/* WordPress Analysis Panels */}
       <div className="space-y-3">
