@@ -98,6 +98,7 @@ export async function POST(
       .update(sites)
       .set({
         connectionStatus: 'disconnected',
+        isConnected: false,
         tokenHash: null,
         wordpressConnection: null,
         connectionError: null,

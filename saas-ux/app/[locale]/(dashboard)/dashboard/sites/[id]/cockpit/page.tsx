@@ -15,12 +15,16 @@ const DEFAULT_LOCALE = "en";
 
 function toConnectionStatus(site: Awaited<ReturnType<typeof getSiteFromDB>>): ConnectionStatus {
   if (!site) return "disconnected";
-  // isConnected flag or new connectionStatus field both indicate an active connection
-  if (site.isConnected || site.connectionStatus === "connected" || site.status === "connected") {
-    return "connected";
-  }
-  const v = site.connectionStatus;
-  if (v === "reconnecting" || v === "error" || v === "pending") return v;
+  // connectionStatus is authoritative when the column has been written by any write path
+  const cs = site.connectionStatus;
+  if (cs === "connected") return "connected";
+  if (cs === "reconnecting") return "reconnecting";
+  if (cs === "error") return "error";
+  if (cs === "pending") return "pending";
+  if (cs === "disconnected") return "disconnected";
+  // cs is NULL: pre-migration row — fall back to isConnected flag then legacy status enum
+  if (site.isConnected) return "connected";
+  if (site.status === "connected") return "connected";
   return "disconnected";
 }
 
