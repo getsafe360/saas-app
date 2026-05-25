@@ -13,17 +13,14 @@ export const dynamic = "force-dynamic";
 
 const DEFAULT_LOCALE = "en";
 
-function toConnectionStatus(value: unknown): ConnectionStatus {
-  if (
-    value === "connected" ||
-    value === "disconnected" ||
-    value === "reconnecting" ||
-    value === "error" ||
-    value === "pending"
-  ) {
-    return value;
+function toConnectionStatus(site: Awaited<ReturnType<typeof getSiteFromDB>>): ConnectionStatus {
+  if (!site) return "disconnected";
+  // isConnected flag or new connectionStatus field both indicate an active connection
+  if (site.isConnected || site.connectionStatus === "connected" || site.status === "connected") {
+    return "connected";
   }
-
+  const v = site.connectionStatus;
+  if (v === "reconnecting" || v === "error" || v === "pending") return v;
   return "disconnected";
 }
 
@@ -113,7 +110,7 @@ export default async function SiteCockpitPage({
       siteId={id}
       siteUrl={site.siteUrl}
       siteSummary={site.lastSummary ?? undefined}
-      wordpressConnectionStatus={toConnectionStatus(site.connectionStatus)}
+      wordpressConnectionStatus={toConnectionStatus(site)}
       wordpressLastConnected={site.lastConnectedAt?.toISOString()}
       wpVersion={site.wpVersion ?? undefined}
       pluginVersion={site.pluginVersion ?? undefined}

@@ -555,13 +555,15 @@ export function ConnectionCard({
             </select>
           </div>
 
-          <button
-            onClick={() => setStep("method")}
-            className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 bg-gradient-to-r from-blue-600 via-purple-500 to-sky-500 border border-blue-300/50 shadow-lg hover:from-blue-700 hover:to-purple-600 hover:shadow-blue-400/30 active:brightness-95"
-          >
-            Continue
-            <ChevronRight className="h-4 w-4" />
-          </button>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setStep("method")}
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all duration-200 bg-blue-600 hover:bg-blue-700 active:brightness-95"
+            >
+              Continue
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -857,8 +859,8 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
         ))}
       </ol>
 
-      {/* Plugin detection badge — shown once code is ready */}
-      {hasCode && <PluginDetectedBadge detected={pairing.pluginDetected} />}
+      {/* Plugin detection badge — once connected treat plugin as detected; hide warning when connected */}
+      {hasCode && !isConnected && <PluginDetectedBadge detected={isConnected ? true : pairing.pluginDetected} />}
 
       {/* Status messages */}
       {isWaiting && (

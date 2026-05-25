@@ -171,6 +171,7 @@ export async function POST(req: NextRequest) {
       canonicalHost,
       canonicalRoot,
       connectionStatus: 'connected' as const,
+      isConnected: true,
       cms: 'wordpress',
       wpVersion: wpVersion || null,
       pluginVersion: pluginVersion || null,

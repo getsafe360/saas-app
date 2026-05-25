@@ -291,7 +291,7 @@ export function SiteCockpit({
 
         {/* Connection Card — always visible, handles all connection methods */}
         {siteId && (
-          <div className="mb-6">
+          <div id="connection-card" className="mb-6">
             <ConnectionCard
               siteId={siteId}
               siteUrl={data.finalUrl}
