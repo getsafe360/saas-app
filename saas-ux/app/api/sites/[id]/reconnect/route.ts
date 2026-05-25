@@ -234,6 +234,7 @@ export async function POST(
           .update(sites)
           .set({
             connectionStatus: 'error',
+            isConnected: false,
             connectionError: `${wpError.code}: ${wpError.message}`,
             retryCount: sql`COALESCE(${sites.retryCount}, 0) + 1`,
           })
