@@ -25,6 +25,7 @@ class GetSafe360_Connector {
     add_action('admin_menu', [$this, 'menu']);
     add_action('rest_api_init', [$this, 'routes']);
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+    add_action('wp_head', [$this, 'output_seo_injections'], 5);
   }
 
   // ---------- helpers ----------
@@ -422,11 +423,108 @@ class GetSafe360_Connector {
     ];
   }
 
+  /**
+   * Receive elaborated SEO fixes from the GetSafe 360 platform and apply them.
+   *
+   * Each fix has:
+   *   id        – UUID of the aiRepairAction row
+   *   title     – human-readable issue title
+   *   section   – SEO section slug (technical-seo, llms-txt, …)
+   *   fixType   – code | config | content | manual
+   *   snippet   – ready-to-paste HTML/JSON-LD (present when fixType is code/config)
+   *   summary   – one-sentence description
+   *   steps     – array of implementation steps
+   *
+   * For fixType=code/config fixes that have a snippet the plugin injects the
+   * snippet into <head> via the getsafe360_seo_injections option (keyed by fix id).
+   * Manual and content fixes are stored for review only.
+   */
   public function route_push(\WP_REST_Request $req) {
-    $payload = $req->get_json_params();
-    // Handle incoming data from SaaS platform
-    // This could be configuration updates, repair instructions, etc.
-    return ['success' => true, 'received' => true];
+    $payload   = $req->get_json_params();
+    $fixes     = isset($payload['fixes']) && is_array($payload['fixes']) ? $payload['fixes'] : [];
+
+    $applied   = [];
+    $skipped   = [];
+
+    // Load existing injections so we can merge without wiping earlier fixes
+    $injections = get_option('getsafe360_seo_injections', []);
+    // Log of all received fixes (for admin review / rollback)
+    $fix_log = get_option('getsafe360_fix_log', []);
+
+    foreach ($fixes as $fix) {
+      if (!is_array($fix) || empty($fix['id'])) continue;
+
+      $fix_id   = sanitize_text_field($fix['id']);
+      $fix_type = isset($fix['fixType']) ? sanitize_text_field($fix['fixType']) : 'manual';
+      $snippet  = isset($fix['snippet']) ? $fix['snippet'] : '';
+
+      // Record every received fix for review
+      $fix_log[$fix_id] = [
+        'title'    => isset($fix['title'])   ? sanitize_text_field($fix['title'])   : '',
+        'section'  => isset($fix['section']) ? sanitize_text_field($fix['section']) : '',
+        'fixType'  => $fix_type,
+        'summary'  => isset($fix['summary']) ? sanitize_text_field($fix['summary']) : '',
+        'appliedAt'=> current_time('mysql'),
+        'status'   => 'skipped',
+      ];
+
+      if (($fix_type === 'code' || $fix_type === 'config') && !empty($snippet)) {
+        // Strip any PHP tags and only allow HTML / JSON-LD content for safety
+        $safe_snippet = wp_kses($snippet, [
+          'script' => ['type' => []],
+          'meta'   => ['name' => [], 'property' => [], 'content' => [], 'charset' => [], 'http-equiv' => []],
+          'link'   => ['rel' => [], 'href' => [], 'type' => [], 'sizes' => []],
+        ]);
+
+        // Fallback: if wp_kses stripped everything (e.g. JSON-LD inside script),
+        // store the snippet as-is but only when it's a recognized structured-data
+        // or meta pattern, never executable JavaScript.
+        if (empty(trim($safe_snippet))) {
+          $trimmed = trim($snippet);
+          $is_jsonld = (strpos($trimmed, 'application/ld+json') !== false);
+          $is_meta   = (strpos($trimmed, '<meta ') === 0 || strpos($trimmed, '<link ') === 0);
+          if ($is_jsonld || $is_meta) {
+            $safe_snippet = $trimmed;
+          }
+        }
+
+        if (!empty(trim($safe_snippet))) {
+          $injections[$fix_id]  = $safe_snippet;
+          $fix_log[$fix_id]['status'] = 'applied';
+          $applied[] = $fix_id;
+        } else {
+          $skipped[] = $fix_id;
+        }
+      } else {
+        $skipped[] = $fix_id;
+      }
+    }
+
+    update_option('getsafe360_seo_injections', $injections);
+    update_option('getsafe360_fix_log', $fix_log);
+
+    return [
+      'success'    => true,
+      'applied'    => count($applied),
+      'skipped'    => count($skipped),
+      'appliedIds' => $applied,
+    ];
+  }
+
+  /**
+   * Output all stored SEO injections inside <head>.
+   * Hooked to wp_head with priority 5 so they appear early.
+   */
+  public function output_seo_injections() {
+    $injections = get_option('getsafe360_seo_injections', []);
+    if (empty($injections)) return;
+
+    echo "\n<!-- GetSafe360 SEO fixes -->\n";
+    foreach ($injections as $id => $snippet) {
+      $safe_id = esc_attr($id);
+      echo "<!-- fix:{$safe_id} -->\n" . $snippet . "\n";
+    }
+    echo "<!-- /GetSafe360 SEO fixes -->\n";
   }
 
   public function route_pull(\WP_REST_Request $req) {
