@@ -25,6 +25,7 @@ import { users } from "@/lib/db/schema/auth/users";
 import { teams, teamMembers } from "@/lib/db/schema/auth/teams";
 import { aiAnalysisJobs, aiRepairActions } from "@/lib/db/schema/ai/analysis";
 import type { AiRepairAction } from "@/lib/db/schema/ai/analysis";
+import { WordPressClient } from "@/lib/wordpress/client";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -105,7 +106,7 @@ export async function POST(
   }
 
   const [site] = await db
-    .select({ id: sites.id, siteUrl: sites.siteUrl })
+    .select({ id: sites.id, siteUrl: sites.siteUrl, tokenHash: sites.tokenHash, connectionStatus: sites.connectionStatus })
     .from(sites)
     .where(and(eq(sites.id, siteId), eq(sites.userId, dbUser.id)))
     .limit(1);
@@ -165,6 +166,11 @@ export async function POST(
   const encoder = new TextEncoder();
   let totalTokensUsed = 0;
   let applied = 0;
+  // Track elaborated fixes for WordPress push
+  const completedFixes: Array<{
+    id: string; title: string | null; section: string | null; severity: string | null;
+    fixType: string; snippet: string | null; summary: string | undefined; steps: string[] | undefined;
+  }> = [];
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -237,6 +243,17 @@ export async function POST(
 
             applied++;
 
+            completedFixes.push({
+              id: action.id,
+              title: action.title,
+              section: action.seoSection,
+              severity: action.severity,
+              fixType: (action.automatedFix as { type?: string } | null)?.type ?? "manual",
+              snippet: elaborated?.snippet ?? (existingFix.snippet as string | null | undefined) ?? null,
+              summary: elaborated?.summary,
+              steps: elaborated?.steps,
+            });
+
             emit({
               type: "fix_item",
               id: action.id, title: action.title, severity: action.severity, section: action.seoSection,
@@ -270,6 +287,34 @@ export async function POST(
               tokensRemaining: sql`GREATEST(0, ${teams.tokensRemaining} - ${totalTokensUsed})`,
             })
             .where(eq(teams.id, teamRow.id));
+        }
+
+        // Push completed fixes to the WordPress plugin when the site is connected
+        const pushableFixes = completedFixes.filter((f) => f.fixType !== "manual" && f.snippet);
+        if (site.connectionStatus === "connected" && site.tokenHash && pushableFixes.length > 0) {
+          try {
+            const wpClient = new WordPressClient({
+              siteUrl: site.siteUrl,
+              tokenHash: site.tokenHash,
+              timeout: 15000,
+            });
+            const pushResult = await wpClient.pushFixes(
+              pushableFixes.map((f) => ({
+                id: f.id,
+                title: f.title ?? "",
+                section: f.section ?? "",
+                severity: f.severity ?? "medium",
+                fixType: f.fixType,
+                snippet: f.snippet,
+                summary: f.summary,
+                steps: f.steps,
+              })),
+            );
+            emit({ type: "wp_push", status: "success", applied: pushResult.applied, skipped: pushResult.skipped });
+          } catch (wpErr) {
+            // Non-fatal: log the push failure but continue so the user still gets their elaborated fixes
+            emit({ type: "wp_push", status: "failed", reason: (wpErr as Error).message });
+          }
         }
 
         emit({

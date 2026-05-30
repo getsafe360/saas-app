@@ -433,6 +433,8 @@ export function SEOAnalysisPage({
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [queueSaving, setQueueSaving] = useState(false);
   const [fixerOpen, setFixerOpen] = useState(false);
+  // Whether the initial "load existing analysis" fetch is still in flight.
+  const [loadingExisting, setLoadingExisting] = useState(true);
   // Token balance is always provided by the server page (pre-analysis snapshot),
   // so there is no client-side fetch that could race with the stream.
   const tokenBalance = {
@@ -442,6 +444,53 @@ export function SEOAnalysisPage({
 
   const abortRef = useRef<AbortController | null>(null);
   const hasStarted = useRef(false);
+
+  // On mount: fetch the latest completed analysis so the user sees persisted
+  // results immediately rather than triggering an expensive re-run.
+  useEffect(() => {
+    async function loadExisting() {
+      try {
+        const res = await fetch(`/api/sites/${siteId}/seo-analysis/latest`);
+        if (!res.ok) return;
+        const data = await res.json() as {
+          found: boolean;
+          jobId?: string;
+          siteUrl?: string;
+          masterScore?: SeoMasterScore;
+          findings?: SeoFinding[];
+          totalFindings?: number;
+          totalTokensUsed?: number;
+          modelLabel?: string;
+        };
+        if (data.found && data.jobId) {
+          setFindings(data.findings ?? []);
+          if (data.masterScore) setMasterScore(data.masterScore);
+          setJobMeta({
+            type: "job_started",
+            jobId: data.jobId,
+            siteUrl: data.siteUrl ?? siteUrl,
+            tier: "saved",
+            modelLabel: data.modelLabel ?? "AI",
+            estimatedTokenCost: 0,
+          });
+          setDoneEvent({
+            type: "done",
+            jobId: data.jobId,
+            totalFindings: data.totalFindings ?? 0,
+            totalTokensUsed: data.totalTokensUsed ?? 0,
+            tokensRemaining: 0,
+          });
+          setDone(true);
+          hasStarted.current = true; // prevent auto-start over saved results
+        }
+      } catch {
+        // silently ignore; the page will fall through to autoStart or start button
+      } finally {
+        setLoadingExisting(false);
+      }
+    }
+    loadExisting();
+  }, [siteId, siteUrl]);
 
   // Group findings by section
   const findingsBySection: Record<SeoSection, SeoFinding[]> = {
@@ -501,9 +550,9 @@ export function SEOAnalysisPage({
   }, [siteId]);
 
   useEffect(() => {
-    if (autoStart && !hasStarted.current) startStream();
+    if (!loadingExisting && autoStart && !hasStarted.current) startStream();
     return () => { abortRef.current?.abort(); };
-  }, [autoStart, startStream]);
+  }, [autoStart, startStream, loadingExisting]);
 
   const toggleChecked = useCallback((id: string) => {
     setCheckedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -603,7 +652,7 @@ export function SEOAnalysisPage({
               <Loader2 className="h-3 w-3 animate-spin" /> Analysing…
             </span>
           )}
-          {done && (
+          {done && !streaming && (
             <span className="flex items-center gap-1.5 text-xs text-green-400">
               <CheckCircle className="h-3 w-3" /> {findings.length} findings
             </span>
@@ -611,14 +660,22 @@ export function SEOAnalysisPage({
           {jobMeta && (
             <span className="text-xs text-white/30 hidden sm:inline">{jobMeta.modelLabel}</span>
           )}
+          {done && !streaming && (
+            <button
+              onClick={() => { hasStarted.current = false; setDone(false); setFindings([]); setMasterScore(null); setDoneEvent(null); setJobMeta(null); setCheckedIds(new Set()); startStream(); }}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/50 hover:text-white hover:border-white/20 hover:bg-white/5 transition-colors"
+            >
+              <Sparkles className="h-3 w-3" /> New Analysis
+            </button>
+          )}
         </div>
       </header>
 
       {/* ── Main content ── */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6 pb-32">
 
-        {/* Start button — shown when not yet started and autoStart is false */}
-        {!autoStart && !hasStarted.current && !streaming && !done && !error && (
+        {/* Start button — shown when initial load finished and no results exist */}
+        {!loadingExisting && !hasStarted.current && !streaming && !done && !error && (
           <div className="flex flex-col items-center justify-center py-16 space-y-4">
             <p className="text-white/50 text-sm">Ready to analyse <strong className="text-white">{domain}</strong></p>
             <button onClick={startStream}
@@ -630,7 +687,7 @@ export function SEOAnalysisPage({
         )}
 
         {/* Intro block */}
-        {(streaming || done) && (
+        {(streaming || done || findings.length > 0) && (
           <IntroBlock userName={jobMeta?.userName} domain={domain} streaming={streaming} />
         )}
 
@@ -642,10 +699,10 @@ export function SEOAnalysisPage({
         )}
 
         {/* Master score hero */}
-        {(streaming || done) && <MasterScoreHero score={masterScore} streaming={streaming} />}
+        {(streaming || done || findings.length > 0) && <MasterScoreHero score={masterScore} streaming={streaming} />}
 
         {/* 3 tabs */}
-        {(streaming || done) && (
+        {(streaming || done || findings.length > 0) && (
           <Tabs defaultValue="technical">
             <TabsList className="h-auto bg-transparent p-0 w-full justify-start rounded-none border-b border-white/8 gap-0">
               {TAB_GROUPS.map(group => {
@@ -683,14 +740,14 @@ export function SEOAnalysisPage({
         )}
 
         {/* llms.txt pinned card */}
-        {(streaming || done) && (
+        {(streaming || done || findings.length > 0) && (
           <LlmsTxtCard findings={findingsBySection[PINNED_SECTION]}
             checkedIds={checkedIds} onToggle={toggleChecked} loading={streaming} />
         )}
       </main>
 
       {/* ── Sticky footer ── */}
-      {(streaming || done) && (
+      {(streaming || done || findings.length > 0) && (
         <footer className="fixed bottom-0 left-0 right-0 z-20 border-t px-4 sm:px-6 py-3 space-y-2"
           style={{ borderColor: "var(--border-default)", background: "var(--background-default)" }}>
           <TokenUsageBar

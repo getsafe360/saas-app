@@ -96,6 +96,30 @@ export interface WordPressStatusResponse {
 }
 
 /**
+ * A single elaborated SEO fix to push to WordPress
+ */
+export interface WordPressSeoFix {
+  id: string;
+  title: string;
+  section: string;
+  severity: string;
+  fixType: string;
+  snippet?: string | null;
+  summary?: string;
+  steps?: string[];
+}
+
+/**
+ * Response from the WordPress /push endpoint
+ */
+export interface WordPressPushResponse {
+  success: boolean;
+  applied: number;
+  skipped: number;
+  appliedIds: string[];
+}
+
+/**
  * WordPress REST API Client
  *
  * Handles communication with WordPress sites via the GetSafe 360 plugin endpoints
@@ -236,6 +260,17 @@ export class WordPressClient {
    */
   async getStatus(): Promise<WordPressStatusResponse> {
     return this.request<WordPressStatusResponse>('status');
+  }
+
+  /**
+   * Push elaborated SEO fixes to the WordPress plugin for automatic application.
+   * The plugin stores injected snippets in an option and outputs them via wp_head.
+   */
+  async pushFixes(fixes: WordPressSeoFix[]): Promise<WordPressPushResponse> {
+    return this.request<WordPressPushResponse>('push', {
+      method: 'POST',
+      body: JSON.stringify({ fixes }),
+    });
   }
 
   /**

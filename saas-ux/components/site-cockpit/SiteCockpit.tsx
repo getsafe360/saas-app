@@ -223,9 +223,10 @@ export function SiteCockpit({
 
   const handleOptimizeCategory = useCallback(
     async (category: OptimizeCategory) => {
-      // SEO-GEO → navigate to the full-page analysis report
+      // SEO-GEO → navigate to the full-page analysis report (loads saved results;
+      // user can trigger a new run from the "New Analysis" button inside the page)
       if (category === "seo") {
-        router.push(`/${locale}/dashboard/sites/${siteId}/seo-analysis?start=true`);
+        router.push(`/${locale}/dashboard/sites/${siteId}/seo-analysis`);
         return;
       }
 
