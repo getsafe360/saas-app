@@ -470,22 +470,23 @@ class GetSafe360_Connector {
 
       if (($fix_type === 'code' || $fix_type === 'config') && !empty($snippet)) {
         // Strip any PHP tags and only allow HTML / JSON-LD content for safety
+        // wp_kses strips <script> entirely; JSON-LD is handled in the fallback below.
         $safe_snippet = wp_kses($snippet, [
-          'script' => ['type' => []],
-          'meta'   => ['name' => [], 'property' => [], 'content' => [], 'charset' => [], 'http-equiv' => []],
-          'link'   => ['rel' => [], 'href' => [], 'type' => [], 'sizes' => []],
+          'meta' => ['name' => [], 'property' => [], 'content' => [], 'charset' => [], 'http-equiv' => []],
+          'link' => ['rel' => [], 'href' => [], 'type' => [], 'sizes' => []],
         ]);
 
-        // Fallback: if wp_kses stripped everything (e.g. JSON-LD inside script),
-        // store the snippet as-is but only when it's a recognized structured-data
-        // or meta pattern, never executable JavaScript.
-        if (empty(trim($safe_snippet))) {
-          $trimmed = trim($snippet);
-          $is_jsonld = (strpos($trimmed, 'application/ld+json') !== false);
-          $is_meta   = (strpos($trimmed, '<meta ') === 0 || strpos($trimmed, '<link ') === 0);
-          if ($is_jsonld || $is_meta) {
-            $safe_snippet = $trimmed;
-          }
+        // Always extract JSON-LD blocks from the original snippet and append them.
+        // wp_kses strips <script> entirely, so this runs regardless of whether
+        // wp_kses already preserved <meta>/<link> tags from a mixed snippet.
+        $jsonld_blocks = [];
+        preg_match_all(
+          '/<script\s[^>]*type\s*=\s*["\']application\/ld\+json["\'][^>]*>.*?<\/script>/is',
+          $snippet,
+          $jsonld_blocks
+        );
+        if (!empty($jsonld_blocks[0])) {
+          $safe_snippet = trim($safe_snippet . "\n" . implode("\n", $jsonld_blocks[0]));
         }
 
         if (!empty(trim($safe_snippet))) {
