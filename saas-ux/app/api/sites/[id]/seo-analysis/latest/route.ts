@@ -71,7 +71,7 @@ export async function GET(
     score: r.score ?? 0,
     impact: r.impact ?? "",
     automatedFix: r.automatedFix as SeoFinding["automatedFix"],
-    passed: (r.automatedFix as { passed?: boolean } | null)?.passed,
+    passed: r.score != null && r.score >= 4 ? true : undefined,
   }));
 
   return new Response(
