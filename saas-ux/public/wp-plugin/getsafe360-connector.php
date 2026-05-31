@@ -476,14 +476,17 @@ class GetSafe360_Connector {
           'link' => ['rel' => [], 'href' => [], 'type' => [], 'sizes' => []],
         ]);
 
-        // Fallback: restore JSON-LD blocks only — strictly type="application/ld+json", no other script types.
-        if (empty(trim($safe_snippet))) {
-          $trimmed = trim($snippet);
-          $is_jsonld = (bool) preg_match('/<script\s[^>]*type\s*=\s*["\']application\/ld\+json["\'][^>]*>/i', $trimmed);
-          $is_meta   = (strpos($trimmed, '<meta ') === 0 || strpos($trimmed, '<link ') === 0);
-          if ($is_jsonld || $is_meta) {
-            $safe_snippet = $trimmed;
-          }
+        // Always extract JSON-LD blocks from the original snippet and append them.
+        // wp_kses strips <script> entirely, so this runs regardless of whether
+        // wp_kses already preserved <meta>/<link> tags from a mixed snippet.
+        $jsonld_blocks = [];
+        preg_match_all(
+          '/<script\s[^>]*type\s*=\s*["\']application\/ld\+json["\'][^>]*>.*?<\/script>/is',
+          $snippet,
+          $jsonld_blocks
+        );
+        if (!empty($jsonld_blocks[0])) {
+          $safe_snippet = trim($safe_snippet . "\n" . implode("\n", $jsonld_blocks[0]));
         }
 
         if (!empty(trim($safe_snippet))) {
