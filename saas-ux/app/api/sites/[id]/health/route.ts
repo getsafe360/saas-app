@@ -32,6 +32,7 @@ export async function GET(
         tokenHash: sites.tokenHash,
         connectionStatus: sites.connectionStatus,
         lastConnectedAt: sites.lastConnectedAt,
+        cms: sites.cms,
       })
       .from(sites)
       .where(eq(sites.id, id))
@@ -46,6 +47,18 @@ export async function GET(
         },
         { status: 404 }
       );
+    }
+
+    // This endpoint only validates WordPress plugin connectivity
+    if (site.cms !== 'wordpress') {
+      return NextResponse.json({
+        success: true,
+        healthy: null,
+        lastChecked: new Date().toISOString(),
+        status: 'skipped',
+        reason: 'Not a WordPress site',
+        lastConnected: site.lastConnectedAt?.toISOString(),
+      });
     }
 
     // Quick ping to WordPress plugin
