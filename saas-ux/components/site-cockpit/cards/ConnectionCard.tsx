@@ -405,12 +405,14 @@ export function ConnectionCard({
               if (!siteId) { void fetchProvision(); return; }
               setIsCheckingHealth(true);
               try {
-                const res = await fetch(`/api/sites/${siteId}/health`, { cache: "no-store" });
-                if (res.ok) {
-                  const data = await res.json() as { healthy?: boolean };
-                  if (data.healthy === false) {
-                    setLiveStatus("disconnected");
-                    setForceWizard(false);
+                if (platform.id === "wordpress") {
+                  const res = await fetch(`/api/sites/${siteId}/health`, { cache: "no-store" });
+                  if (res.ok) {
+                    const data = await res.json() as { healthy?: boolean };
+                    if (data.healthy === false) {
+                      setLiveStatus("disconnected");
+                      setForceWizard(false);
+                    }
                   }
                 }
               } catch {

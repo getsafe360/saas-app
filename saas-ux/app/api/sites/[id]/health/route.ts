@@ -97,7 +97,16 @@ export async function GET(
       });
 
     } catch (fetchError: any) {
-      // Health check failed
+      // Network failure (timeout, DNS, refused) — persist so server-rendered state reflects reality
+      await db
+        .update(sites)
+        .set({
+          connectionStatus: 'disconnected',
+          isConnected: false,
+          connectionError: fetchError.name === 'AbortError' ? 'Timeout' : 'Connection failed',
+        })
+        .where(eq(sites.id, id));
+
       return NextResponse.json({
         success: true, // Request succeeded, but site is unhealthy
         healthy: false,
