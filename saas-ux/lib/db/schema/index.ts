@@ -21,6 +21,8 @@ export type { Team, NewTeam, TeamMember, NewTeamMember } from './auth/teams';
 // Sites
 export { sites, connectionLogs } from './sites/sites';
 export type { Site, NewSite, ConnectionLog, NewConnectionLog } from './sites/sites';
+export { siteBackups, backupMethodEnum, backupStatusEnum } from './sites/backups';
+export type { SiteBackup, NewSiteBackup } from './sites/backups';
 
 // Billing
 export { plans, planPrices, planTranslations } from './billing/plans';

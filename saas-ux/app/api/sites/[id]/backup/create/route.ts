@@ -2,103 +2,107 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import * as schema from '@/lib/db/schema';
-import { sites } from '@/lib/db/schema/sites/sites';
 import { eq } from 'drizzle-orm';
+import { put } from '@vercel/blob';
+import * as schema from '@/lib/db/schema';
+import { sites, siteBackups } from '@/lib/db/schema';
 
 const queryClient = postgres(process.env.DATABASE_URL!);
 const db = drizzle(queryClient, { schema });
 
-/**
- * POST /api/sites/[id]/backup/create
- * 
- * Create a backup of the WordPress site
- */
 export async function POST(
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
 ) {
-  const params = await props.params;
-  const { id } = params;
+  const { id } = await props.params;
 
   try {
     const body = await request.json();
-    const { method = 'wordpress-plugin', includes = [] } = body;
+    const includes: string[] = body.includes ?? ['database', 'files', 'plugins', 'themes'];
 
-    // Get site details
     const [site] = await db
-      .select({
-        id: sites.id,
-        siteUrl: sites.siteUrl,
-        tokenHash: sites.tokenHash,
-      })
+      .select()
       .from(sites)
       .where(eq(sites.id, id))
       .limit(1);
 
     if (!site) {
-      return NextResponse.json(
-        { success: false, error: 'Site not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Site not found' }, { status: 404 });
     }
 
-    console.log(`[Backup Create] Creating ${method} backup for ${site.siteUrl}`);
+    // Insert row immediately so we have the UUID
+    const [record] = await db
+      .insert(siteBackups)
+      .values({
+        siteId: id,
+        method: 'checkpoint',
+        status: 'creating',
+        blobKey: 'pending',
+        includes,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      })
+      .returning();
 
-    // TODO: Implement actual backup creation based on method
-    // 
-    // WordPress Plugin Method:
-    // - Call UpdraftPlus API: POST wp-json/updraftplus/v1/backup/create
-    // 
-    // Checkpoint Method (for FTP):
-    // - Create snapshot of specific files/settings
-    // - Store in database or file system
-    // 
-    // SSH Method:
-    // - Run backup commands via SSH
-    // - mysqldump for database
-    // - tar for files
+    // Checkpoint payload — everything we track about the site in our DB
+    const checkpoint = {
+      backupId: record.id,
+      capturedAt: new Date().toISOString(),
+      site: {
+        id: site.id,
+        siteUrl: site.siteUrl,
+        canonicalHost: site.canonicalHost,
+        canonicalRoot: site.canonicalRoot,
+        status: site.status,
+        cms: site.cms,
+        wpVersion: site.wpVersion,
+        pluginVersion: site.pluginVersion,
+        isConnected: site.isConnected,
+        connectionStatus: site.connectionStatus,
+        wordpressConnection: site.wordpressConnection,
+        aiRepairEnabled: site.aiRepairEnabled,
+        lastScores: site.lastScores,
+        lastSummary: site.lastSummary,
+        lastFindingCount: site.lastFindingCount,
+        lastScreenshotUrl: site.lastScreenshotUrl,
+        lastFaviconUrl: site.lastFaviconUrl,
+      },
+    };
 
-    // Mock backup creation
-    const backupId = `backup_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const timestamp = new Date();
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const payload = JSON.stringify(checkpoint);
+    const blobKey = `backups/${id}/${record.id}.json`;
 
-    // TODO: Store backup metadata in database
-    // You might want a 'backups' table:
-    // await db.insert(backups).values({
-    //   id: backupId,
-    //   siteId: id,
-    //   method,
-    //   includes,
-    //   createdAt: timestamp,
-    //   expiresAt,
-    //   size: 0, // Will be updated after backup completes
-    //   status: 'creating',
-    // });
+    const blob = await put(blobKey, payload, {
+      access: 'public',
+      contentType: 'application/json',
+      addRandomSuffix: false,
+      allowOverwrite: false,
+    });
 
-    // Simulate backup creation time
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Mark ready and store blob URL
+    await db
+      .update(siteBackups)
+      .set({
+        status: 'ready',
+        blobKey: blob.url,
+        sizeBytes: Buffer.byteLength(payload, 'utf8'),
+      })
+      .where(eq(siteBackups.id, record.id));
 
     return NextResponse.json({
       success: true,
-      backupId,
-      timestamp: timestamp.toISOString(),
-      size: 15728640, // Mock: 15 MB
-      includes: includes.length > 0 ? includes : ['database', 'files', 'plugins', 'themes'],
-      downloadUrl: null, // Will be available after backup completes
-      expiresAt: expiresAt.toISOString(),
-      message: "Backup created successfully",
+      backupId: record.id,
+      timestamp: record.createdAt.toISOString(),
+      method: 'checkpoint',
+      size: Buffer.byteLength(payload, 'utf8'),
+      includes,
+      downloadUrl: blob.url,
+      expiresAt: record.expiresAt?.toISOString(),
     });
 
   } catch (error: any) {
     console.error(`[Backup Create] Error for site ${id}:`, error);
-    
     return NextResponse.json(
-      {
-        success: false,
-        error: error.message,
-      },
+      { success: false, error: error.message },
       { status: 500 }
     );
   }
