@@ -8,12 +8,12 @@
 //
 // Stream events consumed: started | fix_item | done | error
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Sparkles, Loader2, CheckCircle, XCircle,
   AlertTriangle, ChevronDown, ChevronUp, SkipForward,
   Shield, Wifi, WifiOff, FileCode2, FileText, Settings2,
-  RotateCcw, Download, GitCompare,
+  RotateCcw, Download, GitCompare, FileDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AGENT_NAME } from "@/lib/ai/constants";
@@ -246,6 +246,8 @@ export function SEOFixerPanel({
   const [error, setError] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [restoreResult, setRestoreResult] = useState<"done" | "error" | null>(null);
+  const [devReport, setDevReport] = useState<{ url: string; filename: string } | null>(null);
+  const [devReportState, setDevReportState] = useState<"idle" | "generating" | "ready" | "error">("idle");
   const abortRef = useRef<AbortController | null>(null);
   const startedAt = useRef<Date | null>(null);
 
@@ -261,6 +263,24 @@ export function SEOFixerPanel({
   const appliedCount = items.filter((it) => it.status === "done").length;
   const failedCount  = items.filter((it) => it.status === "failed").length;
   const doneCount    = items.filter((it) => it.status === "done" || it.status === "failed" || it.status === "skipped").length;
+
+  // Auto-generate developer report as soon as repair completes
+  useEffect(() => {
+    if (!done) return;
+    setDevReportState("generating");
+    fetch(`/api/sites/${siteId}/dev-report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobId }),
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json() as { url: string; filename: string };
+        setDevReport(data);
+        setDevReportState("ready");
+      })
+      .catch(() => setDevReportState("error"));
+  }, [done, siteId, jobId]);
 
   const addOrUpdateItem = useCallback((patch: Partial<FixItem> & { id: string }) => {
     setItems((prev) => {
@@ -618,6 +638,51 @@ export function SEOFixerPanel({
             )}
           </div>
         )}
+
+        {/* Developer report — auto-generated on completion */}
+        <div className={cn(
+          "rounded-xl border p-4 flex items-start gap-3 transition-all",
+          devReportState === "ready"      && "border-indigo-500/30 bg-indigo-500/6",
+          devReportState === "generating" && "border-white/10 bg-white/3",
+          devReportState === "error"      && "border-red-400/20 bg-red-400/5",
+        )}>
+          <FileDown className={cn(
+            "h-4 w-4 flex-shrink-0 mt-0.5",
+            devReportState === "ready"      && "text-indigo-400",
+            devReportState === "generating" && "text-white/30",
+            devReportState === "error"      && "text-red-400",
+          )} />
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <p className="text-sm font-semibold text-white">Developer Report</p>
+            {devReportState === "generating" && (
+              <p className="text-xs text-white/40 flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Building your markdown report…
+              </p>
+            )}
+            {devReportState === "ready" && devReport && (
+              <>
+                <p className="text-xs text-white/50">
+                  All fixes, snippets, and manual instructions in one file.
+                </p>
+                <a
+                  href={devReport.url}
+                  download={devReport.filename}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 mt-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-colors"
+                  style={{ background: "rgba(99,102,241,0.85)" }}
+                >
+                  <Download className="h-3 w-3" />
+                  Download {devReport.filename}
+                </a>
+              </>
+            )}
+            {devReportState === "error" && (
+              <p className="text-xs text-red-400">Report generation failed — you can retry from the Reports tab.</p>
+            )}
+          </div>
+        </div>
 
         {/* Fix items collapsed view */}
         <div className="space-y-2.5">
