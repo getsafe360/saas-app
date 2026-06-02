@@ -194,7 +194,12 @@ export async function POST(
   const actions = await db
     .select()
     .from(aiRepairActions)
-    .where(eq(aiRepairActions.analysisJobId, body.jobId));
+    .where(
+      and(
+        eq(aiRepairActions.analysisJobId, body.jobId),
+        eq(aiRepairActions.addedToRepairQueue, true),
+      ),
+    );
 
   const markdown = buildMarkdown(site, job, actions);
 
