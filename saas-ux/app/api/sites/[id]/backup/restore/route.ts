@@ -5,9 +5,28 @@ import postgres from 'postgres';
 import { eq, and } from 'drizzle-orm';
 import * as schema from '@/lib/db/schema';
 import { sites, siteBackups } from '@/lib/db/schema';
+import { getUser } from '@/lib/db/queries';
+import { currentUser } from '@clerk/nextjs/server';
 
 const queryClient = postgres(process.env.DATABASE_URL!);
 const db = drizzle(queryClient, { schema });
+
+async function getAppUserId(): Promise<number | null> {
+  try {
+    const u = await getUser();
+    if (u?.id) return u.id;
+  } catch {
+    // ignore
+  }
+  const cu = await currentUser().catch(() => null);
+  if (!cu) return null;
+  const [row] = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.clerkUserId, cu.id))
+    .limit(1);
+  return row?.id ?? null;
+}
 
 export async function POST(
   req: NextRequest,
@@ -16,11 +35,27 @@ export async function POST(
   const { id } = await props.params;
 
   try {
+    const userId = await getAppUserId();
+    if (!userId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { backupId } = body;
 
     if (!backupId) {
       return NextResponse.json({ success: false, error: 'Backup ID required' }, { status: 400 });
+    }
+
+    // Verify ownership before loading the backup
+    const [siteOwnership] = await db
+      .select({ id: sites.id })
+      .from(sites)
+      .where(and(eq(sites.id, id), eq(sites.userId, userId)))
+      .limit(1);
+
+    if (!siteOwnership) {
+      return NextResponse.json({ success: false, error: 'Site not found' }, { status: 404 });
     }
 
     // Load backup record — must belong to this site and be ready
@@ -85,7 +120,7 @@ export async function POST(
         lastFaviconUrl: snap.lastFaviconUrl,
         updatedAt: new Date(),
       })
-      .where(eq(sites.id, id));
+      .where(and(eq(sites.id, id), eq(sites.userId, userId)));
 
     // Mark backup ready again (can be reused)
     await db
