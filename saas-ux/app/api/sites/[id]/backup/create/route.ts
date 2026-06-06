@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { put } from '@vercel/blob';
 import * as schema from '@/lib/db/schema';
 import { sites, siteBackups } from '@/lib/db/schema';
@@ -24,7 +24,7 @@ async function getAppUserId(): Promise<number | null> {
   const [row] = await db
     .select({ id: schema.users.id })
     .from(schema.users)
-    .where(eq(schema.users.clerkUserId, cu.id))
+    .where(and(eq(schema.users.clerkUserId, cu.id), isNull(schema.users.deletedAt)))
     .limit(1);
   return row?.id ?? null;
 }
