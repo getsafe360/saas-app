@@ -31,6 +31,7 @@ export function WordPressCard({
   siteId,
   connectionStatus: initialStatus = "disconnected",
   lastConnected,
+  pluginVersion,
 }: WordPressCardProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -105,7 +106,7 @@ export function WordPressCard({
         onToggleMinimize={onToggleMinimize}
         editable={editable}
       >
-        <NotConnected pairing={pairing} version={cms.wp?.version} />
+        <NotConnected pairing={pairing} version={cms.wp?.version} pluginVersion={pluginVersion} />
       </CockpitCard>
     );
   }

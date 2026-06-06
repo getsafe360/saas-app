@@ -403,7 +403,9 @@ export async function POST(
               repairMethod: f.automatedFix?.type ?? "manual",
               status: "pending" as const,
               reportIncluded: true,
-              addedToRepairQueue: false,
+              // Auto-queue all actionable (non-passed, non-manual) findings so the
+              // fixer can run immediately without a separate manual selection step.
+              addedToRepairQueue: !f.passed && (f.automatedFix?.type ?? "manual") !== "manual",
             })),
           );
         }

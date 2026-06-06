@@ -248,6 +248,7 @@ export function SEOFixerPanel({
   const [restoreResult, setRestoreResult] = useState<"done" | "error" | null>(null);
   const [devReport, setDevReport] = useState<{ url: string; filename: string } | null>(null);
   const [devReportState, setDevReportState] = useState<"idle" | "generating" | "ready" | "error">("idle");
+  const [fixPackDownloading, setFixPackDownloading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const startedAt = useRef<Date | null>(null);
 
@@ -366,6 +367,37 @@ export function SEOFixerPanel({
       }
     }
   }, [siteId, jobId, addOrUpdateItem]);
+
+  const handleDownloadFixPack = useCallback(async () => {
+    setFixPackDownloading(true);
+    try {
+      const res = await fetch(`/api/sites/${siteId}/fix-pack`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json() as { files: Array<{ name: string; content: string; mimeType: string; description: string }> };
+      // Trigger individual file downloads via Blob URLs
+      for (const file of data.files) {
+        const blob = new Blob([file.content], { type: file.mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        // Stagger downloads slightly so browsers don't block them
+        await new Promise((r) => setTimeout(r, 150));
+      }
+    } catch {
+      // silently fail — user can retry from the Reports tab
+    } finally {
+      setFixPackDownloading(false);
+    }
+  }, [siteId, jobId]);
 
   const handleRestore = useCallback(async () => {
     setRestoring(true);
@@ -701,13 +733,15 @@ export function SEOFixerPanel({
             View diff
           </button>
           <button
-            disabled
-            title="Coming soon"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white/30 border cursor-not-allowed"
-            style={{ borderColor: "var(--border-default)" }}
+            onClick={() => void handleDownloadFixPack()}
+            disabled={fixPackDownloading || !done}
+            title="Download ready-to-deploy fix files"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-colors cursor-pointer hover:bg-white/5 hover:text-white disabled:text-white/30 disabled:cursor-not-allowed"
+            style={{ borderColor: "var(--border-default)", color: fixPackDownloading ? undefined : "var(--text-subtle)" }}
           >
-            <Download className="h-3.5 w-3.5" />
-            Download patch
+            {fixPackDownloading
+              ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Preparing…</>
+              : <><Download className="h-3.5 w-3.5" /> Download fix files</>}
           </button>
         </div>
 
