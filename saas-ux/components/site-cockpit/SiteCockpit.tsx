@@ -441,6 +441,7 @@ export function SiteCockpit({
                       editable={editable}
                       connectionStatus={wordpressConnectionStatus}
                       lastConnected={wordpressLastConnected}
+                      pluginVersion={pluginVersion}
                     />
                   );
                 }
