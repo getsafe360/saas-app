@@ -403,9 +403,10 @@ export async function POST(
               repairMethod: f.automatedFix?.type ?? "manual",
               status: "pending" as const,
               reportIncluded: true,
-              // Auto-queue all actionable (non-passed, non-manual) findings so the
-              // fixer can run immediately without a separate manual selection step.
-              addedToRepairQueue: !f.passed && (f.automatedFix?.type ?? "manual") !== "manual",
+              // Intentionally false: the user's repair selection (via /repair-queue)
+              // is the authoritative gate. The UI pre-checks critical/high findings as a
+              // convenience, but only items the user confirms get queued for elaboration.
+              addedToRepairQueue: false,
             })),
           );
         }
