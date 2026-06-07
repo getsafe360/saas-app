@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: GetSafe 360 Connector
- * Description: Secure connector between your WordPress site and GetSafe 360 for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 0.2.0
- * Author: GetSafe 360
- * Author URI: https://getsafe360.com
+ * Plugin Name: GetSafe 360 AI Connector
+ * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
+ * Version: 0.2.1
+ * Author: GetSafe 360 AI
+ * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
  * Requires at least: 5.0
  * Requires PHP: 7.2
@@ -17,7 +17,7 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '0.2.0';
+  const VERSION = '0.2.1';
   const OPTION = 'getsafe360_connector';
   const API_BASE = 'https://saasfly-one-psi.vercel.app';
 
@@ -78,8 +78,8 @@ class GetSafe360_Connector {
 
   public function menu() {
     add_menu_page(
-      'GetSafe 360',
-      'GetSafe 360',
+      'GetSafe 360 AI',
+      'GetSafe 360 AI',
       'manage_options',
       'getsafe360',
       [$this, 'admin_page'],
@@ -326,7 +326,7 @@ class GetSafe360_Connector {
           <div class="getsafe360-help" style="margin-top: 20px;">
             <strong>✨ What's Next?</strong>
             <ul style="margin: 8px 0 0 20px;">
-              <li>Visit your <strong>GetSafe 360 dashboard</strong> to run security scans</li>
+              <li>Visit your <strong>GetSafe 360 AI dashboard</strong> to run security scans</li>
               <li>Enable <strong>AI-powered automatic repairs</strong> for common issues</li>
               <li>Set up <strong>scheduled scans</strong> to monitor your site 24/7</li>
               <li>View detailed <strong>performance reports</strong> and recommendations</li>
@@ -337,8 +337,8 @@ class GetSafe360_Connector {
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
           <p>
             <strong>Need Help?</strong>
-            Visit our <a href="https://getsafe360.com/docs" target="_blank">documentation</a> or
-            <a href="https://getsafe360.com/support" target="_blank">contact support</a>.
+            Visit our <a href="https://www.getsafe360.ai/docs" target="_blank">documentation</a> or
+            <a href="https://www.getsafe360.ai/support" target="_blank">contact support</a>.
           </p>
         </div>
       </div>
@@ -424,7 +424,7 @@ class GetSafe360_Connector {
   }
 
   /**
-   * Receive elaborated SEO fixes from the GetSafe 360 platform and apply them.
+   * Receive elaborated SEO fixes from the GetSafe 360 AI platform and apply them.
    *
    * Each fix has:
    *   id        – UUID of the aiRepairAction row
