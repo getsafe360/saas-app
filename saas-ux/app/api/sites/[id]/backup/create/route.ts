@@ -2,13 +2,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { eq } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { put } from '@vercel/blob';
 import * as schema from '@/lib/db/schema';
 import { sites, siteBackups } from '@/lib/db/schema';
+import { getUser } from '@/lib/db/queries';
+import { currentUser } from '@clerk/nextjs/server';
 
 const queryClient = postgres(process.env.DATABASE_URL!);
 const db = drizzle(queryClient, { schema });
+
+async function getAppUserId(): Promise<number | null> {
+  try {
+    const u = await getUser();
+    if (u?.id) return u.id;
+  } catch {
+    // ignore
+  }
+  const cu = await currentUser().catch(() => null);
+  if (!cu) return null;
+  const [row] = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(and(eq(schema.users.clerkUserId, cu.id), isNull(schema.users.deletedAt)))
+    .limit(1);
+  return row?.id ?? null;
+}
 
 export async function POST(
   request: NextRequest,
@@ -17,13 +36,18 @@ export async function POST(
   const { id } = await props.params;
 
   try {
+    const userId = await getAppUserId();
+    if (!userId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const includes: string[] = body.includes ?? ['database', 'files', 'plugins', 'themes'];
 
     const [site] = await db
       .select()
       .from(sites)
-      .where(eq(sites.id, id))
+      .where(and(eq(sites.id, id), eq(sites.userId, userId)))
       .limit(1);
 
     if (!site) {

@@ -13,6 +13,7 @@ import {
   Clock,
   Loader2,
   Trash2,
+  FileText,
 } from "lucide-react";
 import { CMSIcon } from "@/components/ui/cms-icon";
 import { getCMSIcon } from "@/lib/cms-icons";
@@ -328,6 +329,19 @@ export function SiteCard({ site, onRemove, isNew = false }: SiteCardProps) {
               )}
             </div>
           </div>
+
+          {/* Report icon — shown when site has been analysed; navigates to cockpit reports */}
+          {isAnalyzed && (
+            <a
+              href={`/${locale}/dashboard/sites/${site.id}/cockpit`}
+              title="View Reports"
+              onClick={(e) => e.stopPropagation()}
+              className="flex-shrink-0 self-start w-7 h-7 rounded-lg flex items-center justify-center border border-transparent text-[var(--text-subtle)] hover:text-[var(--color-primary-400,#60a5fa)] hover:border-[var(--border-default)] hover:bg-[var(--color-neutral-200)] transition-all duration-150"
+              aria-label="View site reports"
+            >
+              <FileText className="w-3.5 h-3.5" />
+            </a>
+          )}
         </div>
 
         {/* ── Hairline divider ── */}

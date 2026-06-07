@@ -537,7 +537,24 @@ export function SEOAnalysisPage({
             if (event.type === "job_started") setJobMeta(event as unknown as JobStarted);
             else if (event.type === "finding") setFindings(prev => [...prev, event as unknown as SeoFinding]);
             else if (event.type === "master_score") setMasterScore(event as unknown as SeoMasterScore);
-            else if (event.type === "done") { setDoneEvent(event as unknown as DoneEvent); setDone(true); }
+            else if (event.type === "done") {
+              setDoneEvent(event as unknown as DoneEvent);
+              setDone(true);
+              // Auto-select all critical+high actionable findings so the repair
+              // queue is pre-filled — the user just needs to click "Fix with Sparky".
+              setFindings(current => {
+                setCheckedIds(prev => {
+                  const next = new Set(prev);
+                  for (const f of current) {
+                    if (!f.passed && (f.severity === "critical" || f.severity === "high") && (f.automatedFix as { type?: string } | null)?.type !== "manual") {
+                      next.add(f.id);
+                    }
+                  }
+                  return next;
+                });
+                return current;
+              });
+            }
             else if (event.type === "error") throw new Error((event as unknown as { message: string }).message);
           } catch { /* skip malformed lines */ }
         }
@@ -765,7 +782,9 @@ export function SEOAnalysisPage({
             <button onClick={addToRepairQueue}
               disabled={checkedCount === 0 || queueSaving || !done}
               className={cn("flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all",
-                checkedCount > 0 && done ? "text-white" : "text-white/30 cursor-not-allowed")}
+                checkedCount > 0 && done
+                  ? "text-white cursor-pointer hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]"
+                  : "text-white/30 cursor-not-allowed")}
               style={checkedCount > 0 && done
                 ? { background: "var(--category-seo)", boxShadow: "0 0 20px oklch(from var(--category-seo) l c h / 0.35)" }
                 : { background: "var(--border-default)" }}>

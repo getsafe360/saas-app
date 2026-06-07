@@ -1,6 +1,9 @@
 // lib/wordpress/client.ts
 // WordPress REST API client with error handling and retries
 
+/** Latest published version of the GetSafe360 Connector plugin. */
+export const CURRENT_PLUGIN_VERSION = "1.2.0";
+
 /**
  * WordPress API error codes
  */
