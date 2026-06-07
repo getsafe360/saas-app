@@ -8,6 +8,15 @@ const PLUGIN_VERSION = '0.3.0';
 export async function GET() {
     const downloadUrl = process.env.WP_PLUGIN_DOWNLOAD_URL ?? '';
 
+    // Don't advertise an update if the ZIP URL hasn't been configured — WordPress
+    // would try to install an empty package URL and fail on every connected site.
+    if (!downloadUrl) {
+        return NextResponse.json(
+            { error: 'Plugin download URL not configured.' },
+            { status: 503 }
+        );
+    }
+
     return NextResponse.json(
         {
             version: PLUGIN_VERSION,
