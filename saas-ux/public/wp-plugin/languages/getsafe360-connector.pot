@@ -1,0 +1,140 @@
+# GetSafe 360 AI Connector – Translation Template
+# Copyright (C) 2026 GetSafe 360 AI
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: GetSafe 360 AI Connector 0.3.0\n"
+"Report-Msgid-Bugs-To: https://www.getsafe360.ai/support\n"
+"POT-Creation-Date: 2026-06-07T00:00:00+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+"X-Domain: getsafe360-connector\n"
+
+msgid "Debug Information"
+msgstr ""
+
+msgid "Disconnected"
+msgstr ""
+
+msgid "Your site is no longer linked to GetSafe 360. You can reconnect anytime."
+msgstr ""
+
+msgid "Connection Failed"
+msgstr ""
+
+msgid "Connection timed out. Please check your internet connection and try again."
+msgstr ""
+
+msgid "SSL certificate verification failed. Your site may need updated SSL certificates."
+msgstr ""
+
+msgid "Successfully Connected!"
+msgstr ""
+
+msgid "Your WordPress site is now linked to GetSafe 360. You can now run security scans and performance checks from your dashboard."
+msgstr ""
+
+msgid "This pairing code has expired. Please generate a new code from your GetSafe 360 dashboard."
+msgstr ""
+
+msgid "This pairing code has already been used. Please generate a new code from your GetSafe 360 dashboard."
+msgstr ""
+
+msgid "GetSafe 360 Connector"
+msgstr ""
+
+msgid "Version %s"
+msgstr ""
+
+msgid "Connect Your WordPress Site"
+msgstr ""
+
+msgid "Link this WordPress site to your GetSafe 360 dashboard for automated security scanning, performance monitoring, and AI-powered site repairs."
+msgstr ""
+
+msgid "How to connect:"
+msgstr ""
+
+msgid "Log in to your %1$sGetSafe 360 dashboard%2$s"
+msgstr ""
+
+msgid "Click %1$s\"Add Site\"%2$s or %3$s\"Generate Pairing Code\"%4$s"
+msgstr ""
+
+msgid "Copy the %1$s6-digit code%2$s"
+msgstr ""
+
+msgid "Paste it below and click %1$s\"Connect\"%2$s"
+msgstr ""
+
+msgid "Enter Pairing Code:"
+msgstr ""
+
+msgid "Connect to GetSafe 360"
+msgstr ""
+
+msgid "Note: The pairing code expires in 10 minutes. Make sure you generated the code for this exact site URL: %s"
+msgstr ""
+
+msgid "Connection Status"
+msgstr ""
+
+msgid "Connected"
+msgstr ""
+
+msgid "Site ID"
+msgstr ""
+
+msgid "Connected Since"
+msgstr ""
+
+#. translators: PHP date format. See https://www.php.net/date
+msgid "F j, Y \\a\\t g:i a"
+msgstr ""
+
+msgid "WordPress Version"
+msgstr ""
+
+msgid "Plugin Version"
+msgstr ""
+
+msgid "Site URL"
+msgstr ""
+
+msgid "Disconnect Site"
+msgstr ""
+
+msgid "Are you sure?"
+msgstr ""
+
+msgid "Disconnecting will stop all automated scans and monitoring for this site. You can reconnect anytime using a new pairing code."
+msgstr ""
+
+msgid "Yes, Disconnect"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "What's Next?"
+msgstr ""
+
+msgid "Visit your %1$sGetSafe 360 AI dashboard%2$s to run security scans"
+msgstr ""
+
+msgid "Enable %1$sAI-powered automatic repairs%2$s for common issues"
+msgstr ""
+
+msgid "Set up %1$sscheduled scans%2$s to monitor your site 24/7"
+msgstr ""
+
+msgid "View detailed %1$sperformance reports%2$s and recommendations"
+msgstr ""
+
+msgid "Need Help?"
+msgstr ""
+
+msgid "Visit our %1$sdocumentation%2$s or %3$scontact support%4$s."
+msgstr ""
