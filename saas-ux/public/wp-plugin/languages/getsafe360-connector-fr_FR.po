@@ -1,0 +1,138 @@
+# GetSafe 360 AI Connector – French (France)
+# Copyright (C) 2026 GetSafe 360 AI
+msgid ""
+msgstr ""
+"Project-Id-Version: GetSafe 360 AI Connector 0.3.0\n"
+"PO-Revision-Date: 2026-06-07T00:00:00+00:00\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Domain: getsafe360-connector\n"
+
+msgid "Debug Information"
+msgstr "Informations de débogage"
+
+msgid "Disconnected"
+msgstr "Déconnecté"
+
+msgid "Your site is no longer linked to GetSafe 360. You can reconnect anytime."
+msgstr "Votre site n'est plus lié à GetSafe 360. Vous pouvez vous reconnecter à tout moment."
+
+msgid "Connection Failed"
+msgstr "Échec de la connexion"
+
+msgid "Connection timed out. Please check your internet connection and try again."
+msgstr "La connexion a expiré. Veuillez vérifier votre connexion Internet et réessayer."
+
+msgid "SSL certificate verification failed. Your site may need updated SSL certificates."
+msgstr "La vérification du certificat SSL a échoué. Votre site peut avoir besoin de certificats SSL mis à jour."
+
+msgid "Successfully Connected!"
+msgstr "Connexion réussie !"
+
+msgid "Your WordPress site is now linked to GetSafe 360. You can now run security scans and performance checks from your dashboard."
+msgstr "Votre site WordPress est maintenant lié à GetSafe 360. Vous pouvez maintenant effectuer des analyses de sécurité et des vérifications de performances depuis votre tableau de bord."
+
+msgid "This pairing code has expired. Please generate a new code from your GetSafe 360 dashboard."
+msgstr "Ce code d'appairage a expiré. Veuillez générer un nouveau code depuis votre tableau de bord GetSafe 360."
+
+msgid "This pairing code has already been used. Please generate a new code from your GetSafe 360 dashboard."
+msgstr "Ce code d'appairage a déjà été utilisé. Veuillez générer un nouveau code depuis votre tableau de bord GetSafe 360."
+
+msgid "GetSafe 360 Connector"
+msgstr "GetSafe 360 Connector"
+
+msgid "Version %s"
+msgstr "Version %s"
+
+msgid "Connect Your WordPress Site"
+msgstr "Connecter votre site WordPress"
+
+msgid "Link this WordPress site to your GetSafe 360 dashboard for automated security scanning, performance monitoring, and AI-powered site repairs."
+msgstr "Liez ce site WordPress à votre tableau de bord GetSafe 360 pour l'analyse de sécurité automatisée, la surveillance des performances et les réparations alimentées par l'IA."
+
+msgid "How to connect:"
+msgstr "Comment se connecter :"
+
+msgid "Log in to your %1$sGetSafe 360 dashboard%2$s"
+msgstr "Connectez-vous à votre %1$stableau de bord GetSafe 360%2$s"
+
+msgid "Click %1$s\"Add Site\"%2$s or %3$s\"Generate Pairing Code\"%4$s"
+msgstr "Cliquez sur %1$s« Ajouter un site »%2$s ou %3$s« Générer un code d'appairage »%4$s"
+
+msgid "Copy the %1$s6-digit code%2$s"
+msgstr "Copiez le %1$scode à 6 chiffres%2$s"
+
+msgid "Paste it below and click %1$s\"Connect\"%2$s"
+msgstr "Collez-le ci-dessous et cliquez sur %1$s« Connecter »%2$s"
+
+msgid "Enter Pairing Code:"
+msgstr "Saisir le code d'appairage :"
+
+msgid "Connect to GetSafe 360"
+msgstr "Connecter à GetSafe 360"
+
+msgid "Note: The pairing code expires in 10 minutes. Make sure you generated the code for this exact site URL: %s"
+msgstr "Remarque : Le code d'appairage expire dans 10 minutes. Assurez-vous d'avoir généré le code pour cette URL exacte du site : %s"
+
+msgid "Connection Status"
+msgstr "État de la connexion"
+
+msgid "Connected"
+msgstr "Connecté"
+
+msgid "Site ID"
+msgstr "ID du site"
+
+msgid "Connected Since"
+msgstr "Connecté depuis"
+
+msgid "F j, Y \\a\\t g:i a"
+msgstr "j F Y \\à g\\h i"
+
+msgid "WordPress Version"
+msgstr "Version de WordPress"
+
+msgid "Plugin Version"
+msgstr "Version du plugin"
+
+msgid "Site URL"
+msgstr "URL du site"
+
+msgid "Disconnect Site"
+msgstr "Déconnecter le site"
+
+msgid "Are you sure?"
+msgstr "Êtes-vous sûr ?"
+
+msgid "Disconnecting will stop all automated scans and monitoring for this site. You can reconnect anytime using a new pairing code."
+msgstr "La déconnexion arrêtera toutes les analyses et la surveillance automatisées pour ce site. Vous pouvez vous reconnecter à tout moment avec un nouveau code d'appairage."
+
+msgid "Yes, Disconnect"
+msgstr "Oui, déconnecter"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "What's Next?"
+msgstr "Et maintenant ?"
+
+msgid "Visit your %1$sGetSafe 360 AI dashboard%2$s to run security scans"
+msgstr "Visitez votre %1$stableau de bord IA GetSafe 360%2$s pour effectuer des analyses de sécurité"
+
+msgid "Enable %1$sAI-powered automatic repairs%2$s for common issues"
+msgstr "Activez les %1$sréparations automatiques alimentées par l'IA%2$s pour les problèmes courants"
+
+msgid "Set up %1$sscheduled scans%2$s to monitor your site 24/7"
+msgstr "Configurez des %1$sanalyses programmées%2$s pour surveiller votre site 24h/24 et 7j/7"
+
+msgid "View detailed %1$sperformance reports%2$s and recommendations"
+msgstr "Consultez des %1$srapports de performance%2$s détaillés et des recommandations"
+
+msgid "Need Help?"
+msgstr "Besoin d'aide ?"
+
+msgid "Visit our %1$sdocumentation%2$s or %3$scontact support%4$s."
+msgstr "Visitez notre %1$sdocumentation%2$s ou %3$scontactez le support%4$s."

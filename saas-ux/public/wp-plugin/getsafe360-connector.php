@@ -2,12 +2,15 @@
 /**
  * Plugin Name: GetSafe 360 AI Connector
  * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 0.2.1
+ * Version: 0.3.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
  * Requires at least: 5.0
  * Requires PHP: 7.2
+ * Text Domain: getsafe360-connector
+ * Domain Path: /languages
+ * Update URI: https://www.getsafe360.ai
  */
 /*
 // saas-ux/public/wp-plugin/getsafe360-connector.php
@@ -17,15 +20,18 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '0.2.1';
+  const VERSION = '0.3.0';
   const OPTION = 'getsafe360_connector';
   const API_BASE = 'https://saasfly-one-psi.vercel.app';
 
   public function __construct() {
+    load_plugin_textdomain('getsafe360-connector', false, dirname(plugin_basename(__FILE__)) . '/languages');
     add_action('admin_menu', [$this, 'menu']);
     add_action('rest_api_init', [$this, 'routes']);
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('wp_head', [$this, 'output_seo_injections'], 5);
+    add_filter('update_plugins_www.getsafe360.ai', [$this, 'check_for_update'], 10, 4);
+    add_filter('plugins_api', [$this, 'plugin_api_info'], 10, 3);
   }
 
   // ---------- helpers ----------
@@ -66,7 +72,7 @@ class GetSafe360_Connector {
     echo '</p>';
 
     if ($debug && (defined('WP_DEBUG') && WP_DEBUG)) {
-      echo '<details style="margin: 8px 0;"><summary>Debug Information</summary>';
+      echo '<details style="margin: 8px 0;"><summary>' . esc_html__('Debug Information', 'getsafe360-connector') . '</summary>';
       echo '<pre style="white-space: pre-wrap; font-size: 11px; background:#f6f7f7; padding:8px; border:1px solid #ccd0d4; overflow:auto;">';
       echo esc_html(wp_json_encode($debug, JSON_PRETTY_PRINT));
       echo '</pre></details>';
@@ -114,7 +120,7 @@ class GetSafe360_Connector {
     // Handle disconnect
     if (isset($_POST['disconnect']) && check_admin_referer('getsafe360_disconnect')) {
       delete_option(self::OPTION);
-      $this->render_notice('success', 'Disconnected', 'Your site is no longer linked to GetSafe 360. You can reconnect anytime.');
+      $this->render_notice('success', __('Disconnected', 'getsafe360-connector'), __('Your site is no longer linked to GetSafe 360. You can reconnect anytime.', 'getsafe360-connector'));
     }
 
     // Handle connect
@@ -151,14 +157,14 @@ class GetSafe360_Connector {
 
         // User-friendly error messages
         if (strpos($error_message, 'timed out') !== false) {
-          $user_message = 'Connection timed out. Please check your internet connection and try again.';
+          $user_message = __('Connection timed out. Please check your internet connection and try again.', 'getsafe360-connector');
         } else if (strpos($error_message, 'SSL') !== false) {
-          $user_message = 'SSL certificate verification failed. Your site may need updated SSL certificates.';
+          $user_message = __('SSL certificate verification failed. Your site may need updated SSL certificates.', 'getsafe360-connector');
         } else {
           $user_message = $error_message;
         }
 
-        $this->render_notice('error', 'Connection Failed', $user_message, array_merge($debug, ['wp_error' => $resp->get_error_data()]));
+        $this->render_notice('error', __('Connection Failed', 'getsafe360-connector'), $user_message, array_merge($debug, ['wp_error' => $resp->get_error_data()]));
       } else {
         $code      = wp_remote_retrieve_response_code($resp);
         $body_raw  = wp_remote_retrieve_body($resp);
@@ -178,21 +184,21 @@ class GetSafe360_Connector {
             'plugin_version' => self::VERSION,
           ], false);
 
-          $this->render_notice('success', 'Successfully Connected!', 'Your WordPress site is now linked to GetSafe 360. You can now run security scans and performance checks from your dashboard.', $debug);
+          $this->render_notice('success', __('Successfully Connected!', 'getsafe360-connector'), __('Your WordPress site is now linked to GetSafe 360. You can now run security scans and performance checks from your dashboard.', 'getsafe360-connector'), $debug);
         } else {
           // User-friendly error messages based on server response
           $server_error = is_array($body_json) && isset($body_json['error']) ? $body_json['error'] : 'Handshake error';
 
           $user_message = '';
           if (strpos($server_error, 'invalid_or_expired') !== false || strpos($server_error, 'code_expired') !== false) {
-            $user_message = 'This pairing code has expired. Please generate a new code from your GetSafe 360 dashboard.';
+            $user_message = __('This pairing code has expired. Please generate a new code from your GetSafe 360 dashboard.', 'getsafe360-connector');
           } else if (strpos($server_error, 'already_used') !== false) {
-            $user_message = 'This pairing code has already been used. Please generate a new code from your GetSafe 360 dashboard.';
+            $user_message = __('This pairing code has already been used. Please generate a new code from your GetSafe 360 dashboard.', 'getsafe360-connector');
           } else {
             $user_message = $server_error;
           }
 
-          $this->render_notice('error', 'Connection Failed', $user_message, $debug);
+          $this->render_notice('error', __('Connection Failed', 'getsafe360-connector'), $user_message, $debug);
         }
       }
     }
@@ -203,29 +209,41 @@ class GetSafe360_Connector {
       <div class="wrap getsafe360-container">
         <h1 style="display: flex; align-items: center; gap: 12px;">
           <span class="dashicons dashicons-shield-alt" style="font-size: 32px; color: #0073aa;"></span>
-          GetSafe 360 Connector
+          <?php esc_html_e('GetSafe 360 Connector', 'getsafe360-connector'); ?>
         </h1>
-        <p>Version <?php echo esc_html(self::VERSION); ?></p>
+        <p><?php printf(esc_html__('Version %s', 'getsafe360-connector'), esc_html(self::VERSION)); ?></p>
 
         <?php if (!$is_connected): ?>
           <!-- NOT CONNECTED STATE -->
           <div class="getsafe360-card">
-            <h2>Connect Your WordPress Site</h2>
-            <p>Link this WordPress site to your GetSafe 360 dashboard for automated security scanning, performance monitoring, and AI-powered site repairs.</p>
+            <h2><?php esc_html_e('Connect Your WordPress Site', 'getsafe360-connector'); ?></h2>
+            <p><?php esc_html_e('Link this WordPress site to your GetSafe 360 dashboard for automated security scanning, performance monitoring, and AI-powered site repairs.', 'getsafe360-connector'); ?></p>
 
             <div class="getsafe360-help">
-              <strong>How to connect:</strong>
+              <strong><?php esc_html_e('How to connect:', 'getsafe360-connector'); ?></strong>
               <ol style="margin: 8px 0 0 20px;">
-                <li>Log in to your <strong>GetSafe 360 dashboard</strong></li>
-                <li>Click <strong>"Add Site"</strong> or <strong>"Generate Pairing Code"</strong></li>
-                <li>Copy the <strong>6-digit code</strong></li>
-                <li>Paste it below and click <strong>"Connect"</strong></li>
+                <li><?php printf(
+                  __('Log in to your %1$sGetSafe 360 dashboard%2$s', 'getsafe360-connector'),
+                  '<strong>', '</strong>'
+                ); ?></li>
+                <li><?php printf(
+                  __('Click %1$s"Add Site"%2$s or %3$s"Generate Pairing Code"%4$s', 'getsafe360-connector'),
+                  '<strong>', '</strong>', '<strong>', '</strong>'
+                ); ?></li>
+                <li><?php printf(
+                  __('Copy the %1$s6-digit code%2$s', 'getsafe360-connector'),
+                  '<strong>', '</strong>'
+                ); ?></li>
+                <li><?php printf(
+                  __('Paste it below and click %1$s"Connect"%2$s', 'getsafe360-connector'),
+                  '<strong>', '</strong>'
+                ); ?></li>
               </ol>
             </div>
 
             <form method="post" style="margin-top: 20px;">
               <?php wp_nonce_field('getsafe360_connect'); ?>
-              <p><label for="pair_code"><strong>Enter Pairing Code:</strong></label></p>
+              <p><label for="pair_code"><strong><?php esc_html_e('Enter Pairing Code:', 'getsafe360-connector'); ?></strong></label></p>
               <p>
                 <input
                   type="text"
@@ -242,13 +260,16 @@ class GetSafe360_Connector {
               <p>
                 <button type="submit" class="getsafe360-btn-primary">
                   <span class="dashicons dashicons-admin-links" style="margin-top: 4px;"></span>
-                  Connect to GetSafe 360
+                  <?php esc_html_e('Connect to GetSafe 360', 'getsafe360-connector'); ?>
                 </button>
               </p>
             </form>
 
             <p style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #ddd; color: #666; font-size: 13px;">
-              <strong>Note:</strong> The pairing code expires in 10 minutes. Make sure you generated the code for this exact site URL: <code><?php echo esc_html(get_site_url()); ?></code>
+              <?php printf(
+                esc_html__('Note: The pairing code expires in 10 minutes. Make sure you generated the code for this exact site URL: %s', 'getsafe360-connector'),
+                '<code>' . esc_html(get_site_url()) . '</code>'
+              ); ?>
             </p>
           </div>
 
@@ -257,11 +278,11 @@ class GetSafe360_Connector {
           <div class="getsafe360-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
               <div>
-                <h2 style="margin: 0;">Connection Status</h2>
+                <h2 style="margin: 0;"><?php esc_html_e('Connection Status', 'getsafe360-connector'); ?></h2>
                 <p style="margin: 8px 0 0 0;">
                   <span class="getsafe360-status connected">
                     <span class="dashicons dashicons-yes-alt" style="margin-top: 2px;"></span>
-                    Connected
+                    <?php esc_html_e('Connected', 'getsafe360-connector'); ?>
                   </span>
                 </p>
               </div>
@@ -270,23 +291,26 @@ class GetSafe360_Connector {
             <table class="form-table" role="presentation">
               <tbody>
                 <tr>
-                  <th scope="row">Site ID</th>
+                  <th scope="row"><?php esc_html_e('Site ID', 'getsafe360-connector'); ?></th>
                   <td><code><?php echo esc_html($opt['site_id']); ?></code></td>
                 </tr>
                 <tr>
-                  <th scope="row">Connected Since</th>
-                  <td><?php echo esc_html(date('F j, Y \a\t g:i a', $opt['connected_at'])); ?></td>
+                  <th scope="row"><?php esc_html_e('Connected Since', 'getsafe360-connector'); ?></th>
+                  <td><?php
+                    /* translators: PHP date format for "connected since" display. See https://www.php.net/date */
+                    echo esc_html(wp_date(__('F j, Y \a\t g:i a', 'getsafe360-connector'), $opt['connected_at']));
+                  ?></td>
                 </tr>
                 <tr>
-                  <th scope="row">WordPress Version</th>
+                  <th scope="row"><?php esc_html_e('WordPress Version', 'getsafe360-connector'); ?></th>
                   <td><?php echo esc_html(get_bloginfo('version')); ?></td>
                 </tr>
                 <tr>
-                  <th scope="row">Plugin Version</th>
+                  <th scope="row"><?php esc_html_e('Plugin Version', 'getsafe360-connector'); ?></th>
                   <td><?php echo esc_html(self::VERSION); ?></td>
                 </tr>
                 <tr>
-                  <th scope="row">Site URL</th>
+                  <th scope="row"><?php esc_html_e('Site URL', 'getsafe360-connector'); ?></th>
                   <td><code><?php echo esc_html(get_site_url()); ?></code></td>
                 </tr>
               </tbody>
@@ -299,17 +323,17 @@ class GetSafe360_Connector {
                 onclick="document.getElementById('disconnect-confirm').style.display='block'; this.style.display='none';"
               >
                 <span class="dashicons dashicons-dismiss" style="margin-top: 2px;"></span>
-                Disconnect Site
+                <?php esc_html_e('Disconnect Site', 'getsafe360-connector'); ?>
               </button>
 
               <div id="disconnect-confirm" class="getsafe360-disconnect-confirm">
-                <p><strong>⚠️ Are you sure?</strong></p>
-                <p>Disconnecting will stop all automated scans and monitoring for this site. You can reconnect anytime using a new pairing code.</p>
+                <p><strong>⚠️ <?php esc_html_e('Are you sure?', 'getsafe360-connector'); ?></strong></p>
+                <p><?php esc_html_e('Disconnecting will stop all automated scans and monitoring for this site. You can reconnect anytime using a new pairing code.', 'getsafe360-connector'); ?></p>
                 <form method="post" style="display: inline-block; margin-right: 8px;">
                   <?php wp_nonce_field('getsafe360_disconnect'); ?>
                   <input type="hidden" name="disconnect" value="1" />
                   <button type="submit" class="getsafe360-btn-danger">
-                    Yes, Disconnect
+                    <?php esc_html_e('Yes, Disconnect', 'getsafe360-connector'); ?>
                   </button>
                 </form>
                 <button
@@ -317,28 +341,45 @@ class GetSafe360_Connector {
                   class="button"
                   onclick="document.getElementById('disconnect-confirm').style.display='none'; document.querySelector('.getsafe360-btn-danger').style.display='inline-block';"
                 >
-                  Cancel
+                  <?php esc_html_e('Cancel', 'getsafe360-connector'); ?>
                 </button>
               </div>
             </div>
           </div>
 
           <div class="getsafe360-help" style="margin-top: 20px;">
-            <strong>✨ What's Next?</strong>
+            <strong>✨ <?php esc_html_e("What's Next?", 'getsafe360-connector'); ?></strong>
             <ul style="margin: 8px 0 0 20px;">
-              <li>Visit your <strong>GetSafe 360 AI dashboard</strong> to run security scans</li>
-              <li>Enable <strong>AI-powered automatic repairs</strong> for common issues</li>
-              <li>Set up <strong>scheduled scans</strong> to monitor your site 24/7</li>
-              <li>View detailed <strong>performance reports</strong> and recommendations</li>
+              <li><?php printf(
+                __('Visit your %1$sGetSafe 360 AI dashboard%2$s to run security scans', 'getsafe360-connector'),
+                '<strong>', '</strong>'
+              ); ?></li>
+              <li><?php printf(
+                __('Enable %1$sAI-powered automatic repairs%2$s for common issues', 'getsafe360-connector'),
+                '<strong>', '</strong>'
+              ); ?></li>
+              <li><?php printf(
+                __('Set up %1$sscheduled scans%2$s to monitor your site 24/7', 'getsafe360-connector'),
+                '<strong>', '</strong>'
+              ); ?></li>
+              <li><?php printf(
+                __('View detailed %1$sperformance reports%2$s and recommendations', 'getsafe360-connector'),
+                '<strong>', '</strong>'
+              ); ?></li>
             </ul>
           </div>
         <?php endif; ?>
 
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
           <p>
-            <strong>Need Help?</strong>
-            Visit our <a href="https://www.getsafe360.ai/docs" target="_blank">documentation</a> or
-            <a href="https://www.getsafe360.ai/support" target="_blank">contact support</a>.
+            <strong><?php esc_html_e('Need Help?', 'getsafe360-connector'); ?></strong>
+            <?php printf(
+              __('Visit our %1$sdocumentation%2$s or %3$scontact support%4$s.', 'getsafe360-connector'),
+              '<a href="https://www.getsafe360.ai/docs" target="_blank">',
+              '</a>',
+              '<a href="https://www.getsafe360.ai/support" target="_blank">',
+              '</a>'
+            ); ?>
           </p>
         </div>
       </div>
@@ -540,6 +581,76 @@ class GetSafe360_Connector {
       'mysqlVersion' => $GLOBALS['wpdb']->db_version(),
       'siteUrl' => get_site_url(),
       'timestamp' => current_time('mysql'),
+    ];
+  }
+
+  /**
+   * Inject update info into the WP update transient.
+   * Fires via filter: update_plugins_www.getsafe360.ai
+   */
+  public function check_for_update($update, $plugin_data, $plugin_file, $locales) {
+    if (plugin_basename(__FILE__) !== $plugin_file) return $update;
+
+    $remote = wp_remote_get(trailingslashit(self::API_BASE) . 'api/wp-plugin/info', [
+      'timeout' => 10,
+      'headers' => ['Accept' => 'application/json'],
+    ]);
+
+    if (is_wp_error($remote) || wp_remote_retrieve_response_code($remote) !== 200) {
+      return $update;
+    }
+
+    $data = json_decode(wp_remote_retrieve_body($remote), true);
+    if (!is_array($data) || empty($data['version'])) return $update;
+
+    if (!version_compare($data['version'], self::VERSION, '>')) return $update;
+
+    return (object) [
+      'slug'         => 'getsafe360-connector',
+      'plugin'       => $plugin_file,
+      'new_version'  => sanitize_text_field($data['version']),
+      'url'          => 'https://www.getsafe360.ai',
+      'package'      => esc_url_raw($data['download_url'] ?? ''),
+      'icons'        => [],
+      'banners'      => [],
+      'tested'       => sanitize_text_field($data['tested'] ?? ''),
+      'requires_php' => '7.2',
+    ];
+  }
+
+  /**
+   * Provide plugin details for the "View version X details" popup in WP admin.
+   */
+  public function plugin_api_info($result, $action, $args) {
+    if ($action !== 'plugin_information') return $result;
+    if (empty($args->slug) || $args->slug !== 'getsafe360-connector') return $result;
+
+    $remote = wp_remote_get(trailingslashit(self::API_BASE) . 'api/wp-plugin/info', [
+      'timeout' => 10,
+      'headers' => ['Accept' => 'application/json'],
+    ]);
+
+    if (is_wp_error($remote) || wp_remote_retrieve_response_code($remote) !== 200) {
+      return $result;
+    }
+
+    $data = json_decode(wp_remote_retrieve_body($remote), true);
+    if (!is_array($data)) return $result;
+
+    return (object) [
+      'name'          => 'GetSafe 360 AI Connector',
+      'slug'          => 'getsafe360-connector',
+      'version'       => sanitize_text_field($data['version'] ?? self::VERSION),
+      'author'        => '<a href="https://www.getsafe360.ai">GetSafe 360 AI</a>',
+      'homepage'      => 'https://www.getsafe360.ai',
+      'requires'      => '5.0',
+      'tested'        => sanitize_text_field($data['tested'] ?? ''),
+      'requires_php'  => '7.2',
+      'download_link' => esc_url_raw($data['download_url'] ?? ''),
+      'sections'      => [
+        'description' => wp_kses_post($data['description'] ?? ''),
+        'changelog'   => wp_kses_post($data['changelog'] ?? ''),
+      ],
     ];
   }
 }
