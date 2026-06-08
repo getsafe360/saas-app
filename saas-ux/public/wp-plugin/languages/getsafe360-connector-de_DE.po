@@ -3,7 +3,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: GetSafe 360 AI Connector 0.3.0\n"
-"PO-Revision-Date: 2026-06-07T00:00:00+00:00\n"
+"PO-Revision-Date: 2026-06-08T00:00:00+00:00\n"
 "Language: de_DE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -32,17 +32,17 @@ msgstr "SSL-Zertifikat-Überprüfung fehlgeschlagen. Ihre Website benötigt mög
 msgid "Successfully Connected!"
 msgstr "Erfolgreich verbunden!"
 
-msgid "Your WordPress site is now linked to GetSafe 360. You can now run security scans and performance checks from your dashboard."
-msgstr "Ihre WordPress-Website ist jetzt mit GetSafe 360 verknüpft. Sie können jetzt Sicherheitsscans und Performance-Überprüfungen von Ihrem Dashboard aus starten."
+msgid "Your WordPress site is now linked to GetSafe 360 AI. You can now run security scans and performance checks from your dashboard."
+msgstr "Ihre WordPress-Website ist jetzt mit GetSafe 360 AI verknüpft. Sie können jetzt Sicherheitsscans und Performance-Überprüfungen von Ihrem Dashboard aus starten."
 
-msgid "This pairing code has expired. Please generate a new code from your GetSafe 360 dashboard."
-msgstr "Dieser Kopplungscode ist abgelaufen. Bitte generieren Sie einen neuen Code in Ihrem GetSafe 360-Dashboard."
+msgid "This pairing code has expired. Please generate a new code from your GetSafe 360 AI dashboard."
+msgstr "Dieser Kopplungscode ist abgelaufen. Bitte generieren Sie einen neuen Code in Ihrem GetSafe 360 AI-Dashboard."
 
-msgid "This pairing code has already been used. Please generate a new code from your GetSafe 360 dashboard."
-msgstr "Dieser Kopplungscode wurde bereits verwendet. Bitte generieren Sie einen neuen Code in Ihrem GetSafe 360-Dashboard."
+msgid "This pairing code has already been used. Please generate a new code from your GetSafe 360 AI dashboard."
+msgstr "Dieser Kopplungscode wurde bereits verwendet. Bitte generieren Sie einen neuen Code in Ihrem GetSafe 360 AI-Dashboard."
 
-msgid "GetSafe 360 Connector"
-msgstr "GetSafe 360 Connector"
+msgid "GetSafe 360 AI Connector"
+msgstr "GetSafe 360 AI Connector"
 
 msgid "Version %s"
 msgstr "Version %s"
@@ -50,29 +50,29 @@ msgstr "Version %s"
 msgid "Connect Your WordPress Site"
 msgstr "Ihre WordPress-Website verbinden"
 
-msgid "Link this WordPress site to your GetSafe 360 dashboard for automated security scanning, performance monitoring, and AI-powered site repairs."
-msgstr "Verknüpfen Sie diese WordPress-Website mit Ihrem GetSafe 360-Dashboard für automatisiertes Sicherheits-Scanning, Performance-Monitoring und KI-gestützte Website-Reparaturen."
+msgid "Link this WordPress site to your GetSafe 360 AI dashboard for automated security scanning, performance monitoring, and AI-powered site repairs."
+msgstr "Verknüpfen Sie diese WordPress-Website mit Ihrem GetSafe 360 AI-Dashboard für automatisiertes Sicherheits-Scanning, Performance-Monitoring und KI-gestützte Website-Reparaturen."
 
 msgid "How to connect:"
 msgstr "So verbinden Sie sich:"
 
-msgid "Log in to your %1$sGetSafe 360 dashboard%2$s"
-msgstr "Melden Sie sich in Ihrem %1$sGetSafe 360-Dashboard%2$s an"
+msgid "Log in to your %1$sGetSafe 360 AI dashboard%2$s"
+msgstr "Melden Sie sich in Ihrem %1$sGetSafe 360 AI-Dashboard%2$s an"
 
 msgid "Click %1$s\"Add Site\"%2$s or %3$s\"Generate Pairing Code\"%4$s"
-msgstr "Klicken Sie auf %1$s„Website hinzufügen“%2$s oder %3$s„Kopplungscode generieren“%4$s"
+msgstr "Klicken Sie auf %1$s\"Website hinzufügen\"%2$s oder %3$s\"Kopplungscode generieren\"%4$s"
 
 msgid "Copy the %1$s6-digit code%2$s"
 msgstr "Kopieren Sie den %1$s6-stelligen Code%2$s"
 
 msgid "Paste it below and click %1$s\"Connect\"%2$s"
-msgstr "Fügen Sie ihn unten ein und klicken Sie auf %1$s„Verbinden\"%2$s"
+msgstr "Fügen Sie ihn unten ein und klicken Sie auf %1$s\"Verbinden\"%2$s"
 
 msgid "Enter Pairing Code:"
 msgstr "Kopplungscode eingeben:"
 
-msgid "Connect to GetSafe 360"
-msgstr "Mit GetSafe 360 verbinden"
+msgid "Connect to GetSafe 360 AI"
+msgstr "Mit GetSafe 360 AI verbinden"
 
 msgid "Note: The pairing code expires in 10 minutes. Make sure you generated the code for this exact site URL: %s"
 msgstr "Hinweis: Der Kopplungscode läuft in 10 Minuten ab. Stellen Sie sicher, dass Sie den Code für genau diese Website-URL generiert haben: %s"
@@ -120,7 +120,7 @@ msgid "What's Next?"
 msgstr "Was kommt als Nächstes?"
 
 msgid "Visit your %1$sGetSafe 360 AI dashboard%2$s to run security scans"
-msgstr "Besuchen Sie Ihr %1$sGetSafe 360 KI-Dashboard%2$s, um Sicherheitsscans durchzuführen"
+msgstr "Besuchen Sie Ihr %1$sGetSafe 360 AI-Dashboard%2$s, um Sicherheitsscans durchzuführen"
 
 msgid "Enable %1$sAI-powered automatic repairs%2$s for common issues"
 msgstr "Aktivieren Sie %1$sKI-gestützte automatische Reparaturen%2$s für häufige Probleme"
@@ -136,3 +136,12 @@ msgstr "Brauchen Sie Hilfe?"
 
 msgid "Visit our %1$sdocumentation%2$s or %3$scontact support%4$s."
 msgstr "Besuchen Sie unsere %1$sDokumentation%2$s oder %3$skontaktieren Sie den Support%4$s."
+
+msgid "View details"
+msgstr "Details anzeigen"
+
+msgid "Settings"
+msgstr "Einstellungen"
+
+msgid "Pairing code filled in from GetSafe 360 AI — just click Connect."
+msgstr "Kopplungscode von GetSafe 360 AI ausgefüllt — klicken Sie einfach auf Verbinden."
