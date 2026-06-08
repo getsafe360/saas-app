@@ -188,7 +188,7 @@ function SiteConnectionInfoModal({ onClose }: { onClose: () => void }) {
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg transition-colors hover:opacity-70"
+            className="p-1.5 rounded-lg transition-colors hover:opacity-70 cursor-pointer"
             style={{ color: "var(--text-subtle)" }}
             aria-label="Close"
           >

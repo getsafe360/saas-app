@@ -3,7 +3,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: GetSafe 360 AI Connector 0.3.0\n"
-"PO-Revision-Date: 2026-06-07T00:00:00+00:00\n"
+"PO-Revision-Date: 2026-06-08T00:00:00+00:00\n"
 "Language: es_ES\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -32,17 +32,17 @@ msgstr "La verificación del certificado SSL ha fallado. Es posible que tu sitio
 msgid "Successfully Connected!"
 msgstr "¡Conectado correctamente!"
 
-msgid "Your WordPress site is now linked to GetSafe 360. You can now run security scans and performance checks from your dashboard."
-msgstr "Tu sitio de WordPress ahora está vinculado a GetSafe 360. Ahora puedes ejecutar análisis de seguridad y comprobaciones de rendimiento desde tu panel."
+msgid "Your WordPress site is now linked to GetSafe 360 AI. You can now run security scans and performance checks from your dashboard."
+msgstr "Tu sitio de WordPress ahora está vinculado a GetSafe 360 AI. Ahora puedes ejecutar análisis de seguridad y comprobaciones de rendimiento desde tu panel."
 
-msgid "This pairing code has expired. Please generate a new code from your GetSafe 360 dashboard."
-msgstr "Este código de emparejamiento ha caducado. Por favor, genera un nuevo código desde tu panel de GetSafe 360."
+msgid "This pairing code has expired. Please generate a new code from your GetSafe 360 AI dashboard."
+msgstr "Este código de emparejamiento ha caducado. Por favor, genera un nuevo código desde tu panel de GetSafe 360 AI."
 
-msgid "This pairing code has already been used. Please generate a new code from your GetSafe 360 dashboard."
-msgstr "Este código de emparejamiento ya ha sido utilizado. Por favor, genera un nuevo código desde tu panel de GetSafe 360."
+msgid "This pairing code has already been used. Please generate a new code from your GetSafe 360 AI dashboard."
+msgstr "Este código de emparejamiento ya ha sido utilizado. Por favor, genera un nuevo código desde tu panel de GetSafe 360 AI."
 
-msgid "GetSafe 360 Connector"
-msgstr "GetSafe 360 Connector"
+msgid "GetSafe 360 AI Connector"
+msgstr "GetSafe 360 AI Connector"
 
 msgid "Version %s"
 msgstr "Versión %s"
@@ -50,14 +50,14 @@ msgstr "Versión %s"
 msgid "Connect Your WordPress Site"
 msgstr "Conectar tu sitio WordPress"
 
-msgid "Link this WordPress site to your GetSafe 360 dashboard for automated security scanning, performance monitoring, and AI-powered site repairs."
-msgstr "Vincula este sitio de WordPress con tu panel de GetSafe 360 para el análisis de seguridad automatizado, el monitoreo de rendimiento y las reparaciones potenciadas por IA."
+msgid "Link this WordPress site to your GetSafe 360 AI dashboard for automated security scanning, performance monitoring, and AI-powered site repairs."
+msgstr "Vincula este sitio de WordPress con tu panel de GetSafe 360 AI para el análisis de seguridad automatizado, el monitoreo de rendimiento y las reparaciones potenciadas por IA."
 
 msgid "How to connect:"
 msgstr "Cómo conectarse:"
 
-msgid "Log in to your %1$sGetSafe 360 dashboard%2$s"
-msgstr "Inicia sesión en tu %1$spanel de GetSafe 360%2$s"
+msgid "Log in to your %1$sGetSafe 360 AI dashboard%2$s"
+msgstr "Inicia sesión en tu %1$spanel de GetSafe 360 AI%2$s"
 
 msgid "Click %1$s\"Add Site\"%2$s or %3$s\"Generate Pairing Code\"%4$s"
 msgstr "Haz clic en %1$s«Añadir sitio»%2$s o %3$s«Generar código de emparejamiento»%4$s"
@@ -71,8 +71,8 @@ msgstr "Pégalo a continuación y haz clic en %1$s«Conectar»%2$s"
 msgid "Enter Pairing Code:"
 msgstr "Introducir código de emparejamiento:"
 
-msgid "Connect to GetSafe 360"
-msgstr "Conectar a GetSafe 360"
+msgid "Connect to GetSafe 360 AI"
+msgstr "Conectar a GetSafe 360 AI"
 
 msgid "Note: The pairing code expires in 10 minutes. Make sure you generated the code for this exact site URL: %s"
 msgstr "Nota: El código de emparejamiento caduca en 10 minutos. Asegúrate de haber generado el código para esta URL exacta del sitio: %s"
@@ -136,3 +136,12 @@ msgstr "¿Necesitas ayuda?"
 
 msgid "Visit our %1$sdocumentation%2$s or %3$scontact support%4$s."
 msgstr "Visita nuestra %1$sdocumentación%2$s o %3$scontacta con soporte%4$s."
+
+msgid "View details"
+msgstr "Ver detalles"
+
+msgid "Settings"
+msgstr "Ajustes"
+
+msgid "Pairing code filled in from GetSafe 360 AI — just click Connect."
+msgstr "Código de emparejamiento completado desde GetSafe 360 AI — solo haz clic en Conectar."

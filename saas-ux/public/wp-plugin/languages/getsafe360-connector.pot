@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GetSafe 360 AI Connector 0.3.0\n"
 "Report-Msgid-Bugs-To: https://www.getsafe360.ai/support\n"
-"POT-Creation-Date: 2026-06-07T00:00:00+00:00\n"
+"POT-Creation-Date: 2026-06-08T00:00:00+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -33,16 +33,16 @@ msgstr ""
 msgid "Successfully Connected!"
 msgstr ""
 
-msgid "Your WordPress site is now linked to GetSafe 360. You can now run security scans and performance checks from your dashboard."
+msgid "Your WordPress site is now linked to GetSafe 360 AI. You can now run security scans and performance checks from your dashboard."
 msgstr ""
 
-msgid "This pairing code has expired. Please generate a new code from your GetSafe 360 dashboard."
+msgid "This pairing code has expired. Please generate a new code from your GetSafe 360 AI dashboard."
 msgstr ""
 
-msgid "This pairing code has already been used. Please generate a new code from your GetSafe 360 dashboard."
+msgid "This pairing code has already been used. Please generate a new code from your GetSafe 360 AI dashboard."
 msgstr ""
 
-msgid "GetSafe 360 Connector"
+msgid "GetSafe 360 AI Connector"
 msgstr ""
 
 msgid "Version %s"
@@ -51,13 +51,13 @@ msgstr ""
 msgid "Connect Your WordPress Site"
 msgstr ""
 
-msgid "Link this WordPress site to your GetSafe 360 dashboard for automated security scanning, performance monitoring, and AI-powered site repairs."
+msgid "Link this WordPress site to your GetSafe 360 AI dashboard for automated security scanning, performance monitoring, and AI-powered site repairs."
 msgstr ""
 
 msgid "How to connect:"
 msgstr ""
 
-msgid "Log in to your %1$sGetSafe 360 dashboard%2$s"
+msgid "Log in to your %1$sGetSafe 360 AI dashboard%2$s"
 msgstr ""
 
 msgid "Click %1$s\"Add Site\"%2$s or %3$s\"Generate Pairing Code\"%4$s"
@@ -72,7 +72,7 @@ msgstr ""
 msgid "Enter Pairing Code:"
 msgstr ""
 
-msgid "Connect to GetSafe 360"
+msgid "Connect to GetSafe 360 AI"
 msgstr ""
 
 msgid "Note: The pairing code expires in 10 minutes. Make sure you generated the code for this exact site URL: %s"
@@ -137,4 +137,13 @@ msgid "Need Help?"
 msgstr ""
 
 msgid "Visit our %1$sdocumentation%2$s or %3$scontact support%4$s."
+msgstr ""
+
+msgid "View details"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Pairing code filled in from GetSafe 360 AI — just click Connect."
 msgstr ""
