@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GetSafe 360 AI Connector
  * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 0.3.0
+ * Version: 0.3.1
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
@@ -20,7 +20,7 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '0.3.0';
+  const VERSION = '0.3.1';
   const OPTION = 'getsafe360_connector';
   const API_BASE = 'https://saasfly-one-psi.vercel.app';
 
@@ -114,14 +114,35 @@ class GetSafe360_Connector {
   /**
    * Ensure this plugin appears in the update_plugins transient so WordPress
    * always shows the auto-update toggle, even when no update is pending.
+   *
+   * WordPress requires both $transient->checked (version map) AND an entry in
+   * $transient->no_update (or ->response) for the Enable/Disable auto-updates
+   * link to render in the plugins list for externally hosted plugins.
    */
   public function register_for_updates($transient) {
     if (!is_object($transient)) $transient = new \stdClass();
     $plugin_file = plugin_basename(__FILE__);
+
     if (!isset($transient->checked)) $transient->checked = [];
-    if (!isset($transient->checked[$plugin_file])) {
-      $transient->checked[$plugin_file] = self::VERSION;
+    $transient->checked[$plugin_file] = self::VERSION;
+
+    // Populate no_update when no newer version is pending — required for the
+    // auto-update toggle to appear even when the plugin is already up to date.
+    if (empty($transient->response[$plugin_file]) && empty($transient->no_update[$plugin_file])) {
+      if (!isset($transient->no_update)) $transient->no_update = [];
+      $transient->no_update[$plugin_file] = (object) [
+        'slug'         => 'getsafe360-connector',
+        'plugin'       => $plugin_file,
+        'new_version'  => self::VERSION,
+        'url'          => 'https://www.getsafe360.ai',
+        'package'      => '',
+        'icons'        => ['svg' => 'https://www.getsafe360.ai/icons/360.svg'],
+        'banners'      => [],
+        'tested'       => '6.7',
+        'requires_php' => '7.2',
+      ];
     }
+
     return $transient;
   }
 
