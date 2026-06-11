@@ -25,6 +25,7 @@ import {
 } from "@dnd-kit/sortable";
 import { WordPressCard } from "./cards/wordpress/WordPressCard";
 import { OptimizationCard } from "./cards/optimization";
+import { LoopProgressPanel } from "@/components/optimization/LoopProgressPanel";
 import { PerformanceCard } from "./cards/PerformanceCard";
 import { SecurityCard } from "./cards/SecurityCard";
 import { SEOCard } from "./cards/SEOCard";
@@ -142,6 +143,10 @@ export function SiteCockpit({
   const [optimizingCategory, setOptimizingCategory] =
     useState<OptimizeCategory | null>(null);
 
+  // Autonomous loop state
+  const [activeLoopId, setActiveLoopId] = useState<string | null>(null);
+  const [activeLoopCategory, setActiveLoopCategory] = useState<string | null>(null);
+
   const [, startTransition] = useTransition();
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
@@ -223,28 +228,47 @@ export function SiteCockpit({
 
   const handleOptimizeCategory = useCallback(
     async (category: OptimizeCategory) => {
-      // SEO-GEO → navigate to the full-page analysis report (loads saved results;
-      // user can trigger a new run from the "New Analysis" button inside the page)
-      if (category === "seo") {
-        router.push(`/${locale}/dashboard/sites/${siteId}/seo-analysis`);
-        return;
-      }
+      if (!siteId) return;
 
+      // Start autonomous optimization loop for all categories
       setOptimizingCategory(category);
+      setActiveLoopId(null);
+      setActiveLoopCategory(category);
 
-      if (siteId) {
-        try {
-          await fetch(`/api/sites/${siteId}/ai-optimize`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ category }),
-          });
-        } catch (err) {
-          console.error("[SiteCockpit] Failed to create optimization job", err);
+      try {
+        const res = await fetch(`/api/sites/${siteId}/optimization-loops`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ category }),
+        });
+
+        if (res.ok) {
+          const { loopId } = await res.json();
+          setActiveLoopId(loopId);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          // Connector unavailable — fall back for SEO to the analysis page
+          if (err?.code === "connector_unavailable" && category === "seo") {
+            setOptimizingCategory(null);
+            setActiveLoopCategory(null);
+            router.push(`/${locale}/dashboard/sites/${siteId}/seo-analysis`);
+          } else if (err?.code === "no_scan_data" && category === "seo") {
+            setOptimizingCategory(null);
+            setActiveLoopCategory(null);
+            router.push(`/${locale}/dashboard/sites/${siteId}/seo-analysis`);
+          } else {
+            console.error("[SiteCockpit] Loop start error:", err);
+            setOptimizingCategory(null);
+            setActiveLoopCategory(null);
+          }
         }
+      } catch (err) {
+        console.error("[SiteCockpit] Failed to start optimization loop", err);
+        setOptimizingCategory(null);
+        setActiveLoopCategory(null);
       }
     },
-    [siteId],
+    [siteId, locale, router],
   );
 
   const isWordPress = data.cms.type === "wordpress";
@@ -343,6 +367,24 @@ export function SiteCockpit({
           strategy={rectSortingStrategy}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+            {/* Autonomous loop progress panel */}
+            {activeLoopId && activeLoopCategory && (
+              <div className="mb-6">
+                <LoopProgressPanel
+                  loopId={activeLoopId}
+                  category={activeLoopCategory}
+                  onClose={() => {
+                    setActiveLoopId(null);
+                    setActiveLoopCategory(null);
+                    setOptimizingCategory(null);
+                  }}
+                  onComplete={() => {
+                    setOptimizingCategory(null);
+                  }}
+                />
+              </div>
+            )}
+
             {/* WordPress AI banner — only when WordPress optimization is active */}
             {isWordPressOptimizing && (
               <div
