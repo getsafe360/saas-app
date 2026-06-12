@@ -54,7 +54,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     .orderBy(desc(optimizationLoops.createdAt))
     .limit(1);
 
-  if (existing && (existing.status === 'running' || existing.status === 'queued' || existing.status === 'applying_fix')) {
+  const TERMINAL_STATUSES = new Set(['completed', 'stopped', 'failed', 'rolled_back']);
+  if (existing && !TERMINAL_STATUSES.has(existing.status)) {
     return NextResponse.json(
       { error: 'A loop is already running for this site.', loopId: existing.id },
       { status: 409 },

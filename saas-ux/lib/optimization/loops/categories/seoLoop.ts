@@ -40,6 +40,7 @@ const SEO_ISSUES: SeoIssue[] = [
       const snippet = `<meta name="description" content="${escapeAttr(description.slice(0, 160))}">`;
       if (!validateSnippet(snippet).valid) return null;
 
+      const connectorId = `seo-meta-description-${randomUUID().slice(0, 8)}`;
       return {
         fixId: 'seo-meta-description',
         fixType: 'meta_tag',
@@ -49,14 +50,14 @@ const SEO_ISSUES: SeoIssue[] = [
         issueTitle: 'Missing meta description',
         issueSeverity: 'high',
         connectorFix: {
-          id: `seo-meta-description-${randomUUID().slice(0, 8)}`,
+          id: connectorId,
           fixType: 'code',
           title: 'Add meta description',
           section: 'seo',
           summary: 'Adds a meta description to improve search result appearance.',
           snippet,
         },
-        rollbackPayload: { action: 'delete_fix', fixId: 'seo-meta-description' },
+        rollbackPayload: { action: 'delete_fix', fixId: connectorId },
       };
     },
   },
@@ -71,6 +72,7 @@ const SEO_ISSUES: SeoIssue[] = [
       const snippet = `<link rel="canonical" href="${escapeAttr(url)}">`;
       if (!validateSnippet(snippet).valid) return null;
 
+      const connectorId = `seo-canonical-${randomUUID().slice(0, 8)}`;
       return {
         fixId: 'seo-canonical',
         fixType: 'link_tag',
@@ -80,14 +82,14 @@ const SEO_ISSUES: SeoIssue[] = [
         issueTitle: 'Missing canonical URL',
         issueSeverity: 'high',
         connectorFix: {
-          id: `seo-canonical-${randomUUID().slice(0, 8)}`,
+          id: connectorId,
           fixType: 'code',
           title: 'Add canonical URL',
           section: 'seo',
           summary: 'Adds a canonical link tag to clarify the preferred page URL.',
           snippet,
         },
-        rollbackPayload: { action: 'delete_fix', fixId: 'seo-canonical' },
+        rollbackPayload: { action: 'delete_fix', fixId: connectorId },
       };
     },
   },
@@ -104,6 +106,7 @@ const SEO_ISSUES: SeoIssue[] = [
       const snippet = `<meta property="og:title" content="${escapeAttr(title)}">`;
       if (!validateSnippet(snippet).valid) return null;
 
+      const connectorId = `seo-og-title-${randomUUID().slice(0, 8)}`;
       return {
         fixId: 'seo-og-title',
         fixType: 'meta_tag',
@@ -113,14 +116,14 @@ const SEO_ISSUES: SeoIssue[] = [
         issueTitle: 'Missing Open Graph title',
         issueSeverity: 'medium',
         connectorFix: {
-          id: `seo-og-title-${randomUUID().slice(0, 8)}`,
+          id: connectorId,
           fixType: 'code',
           title: 'Add Open Graph title',
           section: 'seo',
           summary: 'Adds og:title for social sharing.',
           snippet,
         },
-        rollbackPayload: { action: 'delete_fix', fixId: 'seo-og-title' },
+        rollbackPayload: { action: 'delete_fix', fixId: connectorId },
       };
     },
   },
@@ -137,6 +140,7 @@ const SEO_ISSUES: SeoIssue[] = [
       const snippet = `<meta property="og:description" content="${escapeAttr(desc)}">`;
       if (!validateSnippet(snippet).valid) return null;
 
+      const connectorId = `seo-og-description-${randomUUID().slice(0, 8)}`;
       return {
         fixId: 'seo-og-description',
         fixType: 'meta_tag',
@@ -146,14 +150,14 @@ const SEO_ISSUES: SeoIssue[] = [
         issueTitle: 'Missing Open Graph description',
         issueSeverity: 'medium',
         connectorFix: {
-          id: `seo-og-description-${randomUUID().slice(0, 8)}`,
+          id: connectorId,
           fixType: 'code',
           title: 'Add Open Graph description',
           section: 'seo',
           summary: 'Adds og:description for social sharing.',
           snippet,
         },
-        rollbackPayload: { action: 'delete_fix', fixId: 'seo-og-description' },
+        rollbackPayload: { action: 'delete_fix', fixId: connectorId },
       };
     },
   },
@@ -168,6 +172,7 @@ const SEO_ISSUES: SeoIssue[] = [
       const snippet = `<meta property="og:url" content="${escapeAttr(url)}">`;
       if (!validateSnippet(snippet).valid) return null;
 
+      const connectorId = `seo-og-url-${randomUUID().slice(0, 8)}`;
       return {
         fixId: 'seo-og-url',
         fixType: 'meta_tag',
@@ -177,14 +182,14 @@ const SEO_ISSUES: SeoIssue[] = [
         issueTitle: 'Missing Open Graph URL',
         issueSeverity: 'low',
         connectorFix: {
-          id: `seo-og-url-${randomUUID().slice(0, 8)}`,
+          id: connectorId,
           fixType: 'code',
           title: 'Add Open Graph URL',
           section: 'seo',
           summary: 'Adds og:url for social sharing.',
           snippet,
         },
-        rollbackPayload: { action: 'delete_fix', fixId: 'seo-og-url' },
+        rollbackPayload: { action: 'delete_fix', fixId: connectorId },
       };
     },
   },
@@ -198,6 +203,7 @@ const SEO_ISSUES: SeoIssue[] = [
       const snippet = `<meta property="og:type" content="website">`;
       if (!validateSnippet(snippet).valid) return null;
 
+      const connectorId = `seo-og-type-${randomUUID().slice(0, 8)}`;
       return {
         fixId: 'seo-og-type',
         fixType: 'meta_tag',
@@ -207,14 +213,14 @@ const SEO_ISSUES: SeoIssue[] = [
         issueTitle: 'Missing Open Graph type',
         issueSeverity: 'low',
         connectorFix: {
-          id: `seo-og-type-${randomUUID().slice(0, 8)}`,
+          id: connectorId,
           fixType: 'code',
           title: 'Add Open Graph type',
           section: 'seo',
           summary: 'Adds og:type for social sharing.',
           snippet,
         },
-        rollbackPayload: { action: 'delete_fix', fixId: 'seo-og-type' },
+        rollbackPayload: { action: 'delete_fix', fixId: connectorId },
       };
     },
   },
@@ -236,6 +242,7 @@ const SEO_ISSUES: SeoIssue[] = [
 
       const snippet = parts.join('\n');
 
+      const connectorId = `seo-twitter-card-${randomUUID().slice(0, 8)}`;
       return {
         fixId: 'seo-twitter-card',
         fixType: 'head_snippet',
@@ -245,14 +252,14 @@ const SEO_ISSUES: SeoIssue[] = [
         issueTitle: 'Missing Twitter/X card tags',
         issueSeverity: 'medium',
         connectorFix: {
-          id: `seo-twitter-card-${randomUUID().slice(0, 8)}`,
+          id: connectorId,
           fixType: 'code',
           title: 'Add Twitter/X card tags',
           section: 'seo',
           summary: 'Adds twitter:card and related meta tags.',
           snippet,
         },
-        rollbackPayload: { action: 'delete_fix', fixId: 'seo-twitter-card' },
+        rollbackPayload: { action: 'delete_fix', fixId: connectorId },
       };
     },
   },
@@ -274,6 +281,7 @@ const SEO_ISSUES: SeoIssue[] = [
       const snippet = `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
       if (!validateSnippet(snippet).valid) return null;
 
+      const connectorId = `seo-website-schema-${randomUUID().slice(0, 8)}`;
       return {
         fixId: 'seo-website-schema',
         fixType: 'json_ld',
@@ -283,14 +291,14 @@ const SEO_ISSUES: SeoIssue[] = [
         issueTitle: 'Missing WebSite structured data',
         issueSeverity: 'medium',
         connectorFix: {
-          id: `seo-website-schema-${randomUUID().slice(0, 8)}`,
+          id: connectorId,
           fixType: 'code',
           title: 'Add WebSite schema',
           section: 'seo',
           summary: 'Adds JSON-LD WebSite schema for search engines.',
           snippet,
         },
-        rollbackPayload: { action: 'delete_fix', fixId: 'seo-website-schema' },
+        rollbackPayload: { action: 'delete_fix', fixId: connectorId },
       };
     },
   },
@@ -315,6 +323,7 @@ const SEO_ISSUES: SeoIssue[] = [
       const snippet = `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
       if (!validateSnippet(snippet).valid) return null;
 
+      const connectorId = `seo-organization-schema-${randomUUID().slice(0, 8)}`;
       return {
         fixId: 'seo-organization-schema',
         fixType: 'json_ld',
@@ -324,14 +333,14 @@ const SEO_ISSUES: SeoIssue[] = [
         issueTitle: 'Missing Organization structured data',
         issueSeverity: 'medium',
         connectorFix: {
-          id: `seo-organization-schema-${randomUUID().slice(0, 8)}`,
+          id: connectorId,
           fixType: 'code',
           title: 'Add Organization schema',
           section: 'seo',
           summary: 'Adds JSON-LD Organization schema for search engines and AI answer systems.',
           snippet,
         },
-        rollbackPayload: { action: 'delete_fix', fixId: 'seo-organization-schema' },
+        rollbackPayload: { action: 'delete_fix', fixId: connectorId },
       };
     },
   },
