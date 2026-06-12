@@ -4,7 +4,7 @@
 //   Tier 2 (every iteration): lightweight category-only rescore from fetched HTML
 //   Tier 3 (end of loop): enqueue full site scan to refresh all cockpit scores
 
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { getDb } from '@/lib/db/drizzle';
 import {
@@ -166,6 +166,16 @@ export async function runCategoryLoop(input: RunLoopInput): Promise<{ stopReason
   }
 
   while (iteration < maxIterations) {
+    // Check for external cancellation before each iteration
+    const [current] = await getDb()
+      .select({ status: optimizationLoops.status })
+      .from(optimizationLoops)
+      .where(eq(optimizationLoops.id, loopId))
+      .limit(1);
+    if (current?.status === 'stopped') {
+      return { stopReason: 'user_cancelled' };
+    }
+
     await setLoopStatus(loopId, 'analyzing');
 
     const next = selectNextIssue(category, snapshot, attemptedIssueIds);
@@ -346,7 +356,7 @@ export async function buildSnapshotForSite(siteId: string, siteUrl: string): Pro
     .select()
     .from(scanSummaries)
     .where(eq(scanSummaries.siteId, siteId))
-    .orderBy(scanSummaries.createdAt)
+    .orderBy(desc(scanSummaries.createdAt))
     .limit(1);
 
   if (!summary) return null;
