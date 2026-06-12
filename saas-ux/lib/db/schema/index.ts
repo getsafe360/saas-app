@@ -127,3 +127,26 @@ export type {
   PriorityAction,
   CriterionScore
 } from './reports/performance-scorecard';
+
+// Optimization loops
+export {
+  optimizationLoops,
+  optimizationLoopIterations,
+  appliedFixes,
+  loopStatusEnum,
+  loopStopReasonEnum,
+  optimizationModeEnum,
+  iterationStatusEnum,
+} from './optimization/loops';
+export type {
+  OptimizationLoop,
+  NewOptimizationLoop,
+  OptimizationLoopIteration,
+  NewOptimizationLoopIteration,
+  AppliedFix,
+  NewAppliedFix,
+  LoopStatus,
+  LoopStopReason,
+  OptimizationMode,
+  IterationStatus,
+} from './optimization/loops';

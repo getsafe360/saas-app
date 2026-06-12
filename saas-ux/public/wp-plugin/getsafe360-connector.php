@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GetSafe 360 AI Connector
  * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 0.3.0
+ * Version: 1.3.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
@@ -20,7 +20,7 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '0.3.0';
+  const VERSION = '1.3.0';
   const OPTION = 'getsafe360_connector';
   const API_BASE = 'https://saasfly-one-psi.vercel.app';
 
@@ -472,6 +472,33 @@ class GetSafe360_Connector {
       'callback' => [$this, 'route_pull'],
       'permission_callback' => [$this, 'auth_api_key']
     ]);
+
+    // Fixes list endpoint - list all applied fixes
+    register_rest_route('getsafe360/v1', '/fixes', [
+      'methods' => 'GET',
+      'callback' => [$this, 'route_list_fixes'],
+      'permission_callback' => [$this, 'auth_api_key']
+    ]);
+
+    // Fix delete endpoint - remove a specific fix by ID (rollback support)
+    register_rest_route('getsafe360/v1', '/fixes/(?P<id>[a-zA-Z0-9_\-]+)', [
+      'methods' => 'DELETE',
+      'callback' => [$this, 'route_delete_fix'],
+      'permission_callback' => [$this, 'auth_api_key'],
+      'args' => [
+        'id' => [
+          'required'          => true,
+          'sanitize_callback' => 'sanitize_text_field',
+        ],
+      ],
+    ]);
+
+    // Capabilities endpoint - report what this plugin version can do
+    register_rest_route('getsafe360/v1', '/capabilities', [
+      'methods' => 'GET',
+      'callback' => [$this, 'route_capabilities'],
+      'permission_callback' => [$this, 'auth_api_key']
+    ]);
   }
 
   // Updated authentication to use X-API-Key header (matches new WordPress client)
@@ -631,6 +658,93 @@ class GetSafe360_Connector {
       'mysqlVersion' => $GLOBALS['wpdb']->db_version(),
       'siteUrl' => get_site_url(),
       'timestamp' => current_time('mysql'),
+    ];
+  }
+
+  /**
+   * GET /wp-json/getsafe360/v1/fixes
+   * Lists all applied fix IDs with their snippets and metadata.
+   */
+  public function route_list_fixes(\WP_REST_Request $req) {
+    $injections = get_option('getsafe360_seo_injections', []);
+    $fix_log    = get_option('getsafe360_fix_log', []);
+
+    $fixes = [];
+    foreach ($injections as $id => $snippet) {
+      $log_entry = isset($fix_log[$id]) ? $fix_log[$id] : [];
+      $fixes[] = [
+        'id'        => $id,
+        'snippet'   => $snippet,
+        'title'     => isset($log_entry['title']) ? $log_entry['title'] : '',
+        'section'   => isset($log_entry['section']) ? $log_entry['section'] : '',
+        'appliedAt' => isset($log_entry['appliedAt']) ? $log_entry['appliedAt'] : '',
+        'status'    => 'applied',
+      ];
+    }
+
+    return [
+      'success' => true,
+      'count'   => count($fixes),
+      'fixes'   => $fixes,
+    ];
+  }
+
+  /**
+   * DELETE /wp-json/getsafe360/v1/fixes/:id
+   * Removes a specific fix snippet from wp_head output.
+   * Used by the SaaS rollback system.
+   */
+  public function route_delete_fix(\WP_REST_Request $req) {
+    $fix_id = $req->get_param('id');
+
+    $injections = get_option('getsafe360_seo_injections', []);
+    $fix_log    = get_option('getsafe360_fix_log', []);
+
+    if (!isset($injections[$fix_id])) {
+      return new \WP_Error(
+        'fix_not_found',
+        'Fix not found: ' . $fix_id,
+        ['status' => 404]
+      );
+    }
+
+    // Remove from injections (stops it from being output in wp_head)
+    unset($injections[$fix_id]);
+    update_option('getsafe360_seo_injections', $injections);
+
+    // Mark as rolled back in the fix log
+    if (isset($fix_log[$fix_id])) {
+      $fix_log[$fix_id]['status']    = 'rolled_back';
+      $fix_log[$fix_id]['rolledBackAt'] = current_time('mysql');
+      update_option('getsafe360_fix_log', $fix_log);
+    }
+
+    return [
+      'success'   => true,
+      'deletedId' => $fix_id,
+      'message'   => 'Fix removed from wp_head output.',
+    ];
+  }
+
+  /**
+   * GET /wp-json/getsafe360/v1/capabilities
+   * Reports what this plugin version can do, used by the SaaS loop runner.
+   */
+  public function route_capabilities(\WP_REST_Request $req) {
+    return [
+      'connectorVersion'   => self::VERSION,
+      'siteUrl'            => get_site_url(),
+      'capabilities'       => [
+        'headSnippetInjection' => true,
+        'jsonLdInjection'      => true,
+        'metaTagInjection'     => true,
+        'snippetDelete'        => true,
+        'snippetList'          => true,
+        'postRevisionCreate'   => false,
+        'mediaAltUpdate'       => false,
+        'optionUpdate'         => false,
+        'rollback'             => true,
+      ],
     ];
   }
 
