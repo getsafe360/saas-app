@@ -2,7 +2,7 @@
 // Client-safe AI constants — no server imports, safe to use in Client Components.
 
 export const AGENT_NAME = "Sparky";
-export const OPUS_MODEL_ID = "claude-opus-4-7";
+export const OPUS_MODEL_ID = "claude-opus-4-8";
 export const OPUS_THINKING_BUDGET = 10_000;
 
 export const ANALYSIS_TOKEN_COST = {

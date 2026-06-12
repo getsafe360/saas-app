@@ -1,7 +1,7 @@
 "use client";
 
 // SEOAnalysisDrawer.tsx
-// Slide-over drawer that streams the live SEO-GEO audit from Claude Opus 4.7.
+// Slide-over drawer that streams the live SEO-GEO audit from Claude Opus 4.8.
 // Opens immediately with a skeleton, findings stream in card by card.
 // 8 section cards, severity badges, repair-queue checkboxes, master score gauge.
 
