@@ -1,5 +1,10 @@
 -- Migration: 0007_add_optimization_loops
 -- Adds autonomous optimization loop tables
+-- Run this entire script as one transaction in Drizzle Studio or psql.
+
+BEGIN;
+
+-- ── Enums ────────────────────────────────────────────────────────────────────
 
 DO $$ BEGIN
   CREATE TYPE "loop_status" AS ENUM (
@@ -28,6 +33,8 @@ DO $$ BEGIN
   );
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
+-- ── Table 1: optimization_loops ───────────────────────────────────────────────
+
 CREATE TABLE IF NOT EXISTS "optimization_loops" (
   "id"                uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "site_id"           uuid NOT NULL REFERENCES "sites"("id") ON DELETE CASCADE,
@@ -45,6 +52,12 @@ CREATE TABLE IF NOT EXISTS "optimization_loops" (
   "updated_at"        timestamp NOT NULL DEFAULT now(),
   "completed_at"      timestamp
 );
+
+CREATE INDEX IF NOT EXISTS "opt_loops_site_idx"     ON "optimization_loops" ("site_id");
+CREATE INDEX IF NOT EXISTS "opt_loops_status_idx"   ON "optimization_loops" ("status");
+CREATE INDEX IF NOT EXISTS "opt_loops_site_cat_idx" ON "optimization_loops" ("site_id", "category");
+
+-- ── Table 2: optimization_loop_iterations ─────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS "optimization_loop_iterations" (
   "id"                  uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -64,6 +77,10 @@ CREATE TABLE IF NOT EXISTS "optimization_loop_iterations" (
   "completed_at"        timestamp
 );
 
+CREATE INDEX IF NOT EXISTS "opt_loop_iter_loop_idx" ON "optimization_loop_iterations" ("loop_id");
+
+-- ── Table 3: applied_fixes ────────────────────────────────────────────────────
+
 CREATE TABLE IF NOT EXISTS "applied_fixes" (
   "id"                 uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "site_id"            uuid NOT NULL REFERENCES "sites"("id") ON DELETE CASCADE,
@@ -80,11 +97,8 @@ CREATE TABLE IF NOT EXISTS "applied_fixes" (
   "created_at"         timestamp NOT NULL DEFAULT now()
 );
 
--- Indexes
-CREATE INDEX IF NOT EXISTS "opt_loops_site_idx"       ON "optimization_loops" ("site_id");
-CREATE INDEX IF NOT EXISTS "opt_loops_status_idx"     ON "optimization_loops" ("status");
-CREATE INDEX IF NOT EXISTS "opt_loops_site_cat_idx"   ON "optimization_loops" ("site_id", "category");
-CREATE INDEX IF NOT EXISTS "opt_loop_iter_loop_idx"   ON "optimization_loop_iterations" ("loop_id");
 CREATE INDEX IF NOT EXISTS "applied_fixes_site_idx"   ON "applied_fixes" ("site_id");
 CREATE INDEX IF NOT EXISTS "applied_fixes_loop_idx"   ON "applied_fixes" ("loop_id");
 CREATE INDEX IF NOT EXISTS "applied_fixes_fix_id_idx" ON "applied_fixes" ("fix_id");
+
+COMMIT;

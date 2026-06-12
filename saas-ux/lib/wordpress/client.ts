@@ -2,7 +2,7 @@
 // WordPress REST API client with error handling and retries
 
 /** Latest published version of the GetSafe360 Connector plugin. */
-export const CURRENT_PLUGIN_VERSION = "1.2.0";
+export const CURRENT_PLUGIN_VERSION = "1.3.0";
 
 /**
  * WordPress API error codes
@@ -274,6 +274,35 @@ export class WordPressClient {
       method: 'POST',
       body: JSON.stringify({ fixes }),
     });
+  }
+
+  /**
+   * List all applied fix snippets stored in the plugin.
+   * Requires plugin v1.3.0+.
+   */
+  async listFixes(): Promise<{ success: boolean; count: number; fixes: Array<{ id: string; snippet: string; title: string; section: string; appliedAt: string; status: string }> }> {
+    return this.request('fixes');
+  }
+
+  /**
+   * Delete (rollback) a specific fix by its ID.
+   * Removes the snippet from wp_head output immediately.
+   * Requires plugin v1.3.0+.
+   */
+  async deleteFix(fixId: string): Promise<{ success: boolean; deletedId: string; message: string }> {
+    return this.request(`fixes/${encodeURIComponent(fixId)}`, { method: 'DELETE' });
+  }
+
+  /**
+   * Get the connector capability map — what this plugin version supports.
+   * Requires plugin v1.3.0+.
+   */
+  async getCapabilities(): Promise<{
+    connectorVersion: string;
+    siteUrl: string;
+    capabilities: Record<string, boolean>;
+  }> {
+    return this.request('capabilities');
   }
 
   /**

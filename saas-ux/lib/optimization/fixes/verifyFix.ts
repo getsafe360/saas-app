@@ -16,6 +16,8 @@ export interface VerifyFixResult {
   snippetFound?: boolean;
   errorText?: boolean;
   reason?: string;
+  /** Raw HTML fetched during verification — reused by Tier 2 rescorer */
+  pageHtml?: string;
 }
 
 const FATAL_ERROR_PATTERNS = [
@@ -89,7 +91,7 @@ export async function verifyFix(input: VerifyFixInput): Promise<VerifyFixResult>
       };
     }
 
-    return { passed: true, httpStatus, snippetFound: true };
+    return { passed: true, httpStatus, snippetFound: true, pageHtml: html };
   } catch (err: any) {
     if (err.name === 'AbortError') {
       return { passed: false, reason: 'Verification request timed out.' };

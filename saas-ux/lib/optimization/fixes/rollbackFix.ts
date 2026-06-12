@@ -36,8 +36,7 @@ export async function rollbackFix(input: RollbackFixInput): Promise<RollbackFixR
     // Attempt connector rollback — will fail gracefully if endpoint missing
     try {
       const client = createWordPressClient({ siteUrl, tokenHash: siteToken });
-      // @ts-expect-error — deleteFix not yet on client; will be added with WP plugin v1.3.0
-      if (typeof client.deleteFix === 'function') {
+      if (typeof (client as any).deleteFix === 'function') {
         await (client as any).deleteFix(rollback.fixId);
         return {
           success: true,

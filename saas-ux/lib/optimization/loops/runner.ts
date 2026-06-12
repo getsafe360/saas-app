@@ -1,25 +1,28 @@
 // lib/optimization/loops/runner.ts
-// Generic category loop runner
-// Runs synchronously within the API route. Each iteration is fast (~3-5s):
-// snapshot lookup → fix plan → safety check → WP push → HTML verify → DB record.
-// A full rescan is triggered only at the end of the loop.
+// Generic category loop runner — 3-tier verification model:
+//   Tier 1 (every iteration): verify fix via HTML fetch + snippet check + HTTP 200
+//   Tier 2 (every iteration): lightweight category-only rescore from fetched HTML
+//   Tier 3 (end of loop): enqueue full site scan to refresh all cockpit scores
 
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 import { getDb } from '@/lib/db/drizzle';
 import {
   optimizationLoops,
   optimizationLoopIterations,
   appliedFixes,
   scanSummaries,
+  scanJobs,
 } from '@/lib/db/schema';
 import type { LoopStatus, LoopStopReason, OptimizationMode } from '@/lib/db/schema';
-import type { RunLoopInput, LoopEvent, SiteSnapshot } from './types';
+import type { RunLoopInput, SiteSnapshot } from './types';
 import { getCategoryScore } from './scoring';
 import { selectNextSeoIssue } from './categories/seoLoop';
 import { evaluateFixSafety } from '../fixes/fixPolicies';
 import { applyFix } from '../fixes/applyFix';
 import { verifyFix } from '../fixes/verifyFix';
 import { rollbackFix } from '../fixes/rollbackFix';
+import { rescoreCategory } from './rescoring';
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
@@ -168,6 +171,7 @@ export async function runCategoryLoop(input: RunLoopInput): Promise<{ stopReason
     const next = selectNextIssue(category, snapshot, attemptedIssueIds);
 
     if (!next) {
+      if (iteration > 0) await enqueueTier3Scan(siteId);
       await completeLoop(loopId, 'no_safe_fixes_available', currentScore);
       return { stopReason: 'no_safe_fixes_available' };
     }
@@ -256,7 +260,14 @@ export async function runCategoryLoop(input: RunLoopInput): Promise<{ stopReason
       return { stopReason: 'verification_failed' };
     }
 
-    // Fix applied and verified — record it
+    await setLoopStatus(loopId, 'rescoring');
+
+    // ── Tier 2: lightweight category-only rescore from verification HTML ──────
+    // Reuses the HTML already fetched during Tier 1 verification (no extra network call).
+    const tier2Score = await rescoreCategory(siteUrl, category, verification.pageHtml);
+    const newScore = tier2Score ?? currentScore;
+
+    // Fix applied and verified — record it with the Tier 2 score
     const iterId = await recordIteration({
       loopId,
       iterationNumber: iteration,
@@ -266,7 +277,7 @@ export async function runCategoryLoop(input: RunLoopInput): Promise<{ stopReason
       fixType: fixPlan.fixType,
       fixPayload: fixPlan,
       scoreBefore: currentScore,
-      scoreAfter: currentScore, // Score update happens after full rescan at end
+      scoreAfter: newScore,
       status: 'completed',
       verificationResult: verification,
     });
@@ -284,22 +295,46 @@ export async function runCategoryLoop(input: RunLoopInput): Promise<{ stopReason
       rollbackPayload: fixPlan.rollbackPayload,
     });
 
-    await setLoopStatus(loopId, 'rescoring');
+    // Regression guard (only when Tier 2 produced a real score)
+    if (tier2Score !== null && tier2Score < currentScore && input.stopOnRegression) {
+      await rollbackFix({ siteUrl, siteToken, fixPlan });
+      await completeLoop(loopId, 'score_regressed', currentScore);
+      return { stopReason: 'score_regressed' };
+    }
 
-    // Score improvement is estimated here — a full rescan is kicked off after the loop
-    // Each verified fix contributes ~2-5 points depending on severity
-    const gain = issue.severity === 'high' || issue.severity === 'critical' ? 5 : 2;
-    currentScore = Math.min(100, currentScore + gain);
+    currentScore = newScore;
     await setLoopScore(loopId, currentScore);
 
     if (currentScore >= goalScore) {
+      await enqueueTier3Scan(siteId);
       await completeLoop(loopId, 'goal_reached', currentScore);
       return { stopReason: 'goal_reached' };
     }
   }
 
+  // ── Tier 3: enqueue full site scan at end of loop ─────────────────────────
+  await enqueueTier3Scan(siteId);
   await completeLoop(loopId, 'max_iterations_reached', currentScore);
   return { stopReason: 'max_iterations_reached' };
+}
+
+// ── Tier 3: full site scan ────────────────────────────────────────────────────
+
+async function enqueueTier3Scan(siteId: string): Promise<void> {
+  const db = getDb();
+  try {
+    await db.insert(scanJobs).values({
+      id: randomUUID(),
+      siteId,
+      status: 'queued',
+      categories: 'seo,performance,accessibility,security',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  } catch (err) {
+    // Non-fatal — the loop completed successfully even if we can't enqueue the scan
+    console.error('[optimization-loop] Failed to enqueue Tier 3 scan:', err);
+  }
 }
 
 // ── Snapshot builder ──────────────────────────────────────────────────────────

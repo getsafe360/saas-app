@@ -132,11 +132,11 @@ export async function POST(req: NextRequest, { params }: Params) {
 function buildEvents(
   loop: typeof optimizationLoops.$inferSelect,
   iterations: (typeof optimizationLoopIterations.$inferSelect)[],
-) {
-  const events = [];
+): import('@/lib/optimization/loops/types').LoopEvent[] {
+  const events: import('@/lib/optimization/loops/types').LoopEvent[] = [];
 
   events.push({
-    type: 'status_change',
+    type: 'status_change' as const,
     title: 'Loop started',
     status: 'completed' as const,
     message: `Starting ${loop.category.toUpperCase()} optimization (goal: ${loop.goalScore}/100)`,
@@ -146,7 +146,7 @@ function buildEvents(
   for (const it of iterations) {
     if (it.status === 'completed') {
       events.push({
-        type: 'fix_applied',
+        type: 'fix_applied' as const,
         iterationNumber: it.iterationNumber,
         title: it.issueTitle,
         status: 'completed' as const,
@@ -159,7 +159,7 @@ function buildEvents(
     } else if (it.status === 'skipped') {
       const vr = it.verificationResult as Record<string, unknown> | null;
       events.push({
-        type: 'fix_skipped',
+        type: 'fix_skipped' as const,
         iterationNumber: it.iterationNumber,
         title: it.issueTitle,
         status: 'skipped' as const,
@@ -170,7 +170,7 @@ function buildEvents(
       });
     } else if (it.status === 'failed' || it.status === 'rolled_back') {
       events.push({
-        type: 'fix_failed',
+        type: 'fix_failed' as const,
         iterationNumber: it.iterationNumber,
         title: it.issueTitle,
         status: 'failed' as const,
@@ -194,9 +194,9 @@ function buildEvents(
     };
 
     events.push({
-      type: 'loop_complete',
+      type: 'loop_complete' as const,
       title: loop.stopReason === 'goal_reached' ? 'Goal reached' : 'Loop stopped',
-      status: (loop.status === 'completed' ? 'completed' : 'failed') as any,
+      status: (loop.status === 'completed' ? 'completed' : 'failed') as 'completed' | 'failed',
       message: stopMessages[loop.stopReason ?? ''] ?? 'Loop finished.',
       timestamp: loop.completedAt.toISOString(),
     });

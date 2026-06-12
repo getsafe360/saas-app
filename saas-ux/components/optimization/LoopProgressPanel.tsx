@@ -231,7 +231,7 @@ export function LoopProgressPanel({
   );
 }
 
-function EventRow({ event }: { event: LoopEvent & Record<string, unknown> }) {
+function EventRow({ event }: { event: LoopEvent }) {
   const isComplete = event.status === "completed";
   const isFailed = event.status === "failed";
   const isSkipped = event.status === "skipped";
