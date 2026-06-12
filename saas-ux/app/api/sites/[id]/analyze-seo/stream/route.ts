@@ -1,5 +1,5 @@
 // app/api/sites/[id]/analyze-seo/stream/route.ts
-// Streams a comprehensive SEO-GEO audit for a site using Claude Opus 4.7 (BSB)
+// Streams a comprehensive SEO-GEO audit for a site using Claude Opus 4.8 (BSB)
 // or GPT-4o-mini (other tiers). Emits one JSON finding per chunk, finalised
 // with a master score summary. Persists the completed job to the DB.
 

@@ -56,7 +56,7 @@ export function isBSBTier(tier: AITier): boolean {
   return tier === "business";
 }
 
-/** agent + agency + business all run Claude Opus 4.7; only business gets the thinking budget */
+/** agent + agency + business all run Claude Opus 4.8; only business gets the thinking budget */
 export function usesClaudeModel(tier: AITier): boolean {
   return tier === "business" || tier === "agent" || tier === "agency";
 }
@@ -81,5 +81,5 @@ export function getSeoProviderOptions(tier: AITier) {
 }
 
 export function getModelLabel(tier: AITier): string {
-  return usesClaudeModel(tier) ? `Claude Opus 4.7` : "GetSafe360 AI";
+  return usesClaudeModel(tier) ? `Claude Opus 4.8` : "GetSafe360 AI";
 }
