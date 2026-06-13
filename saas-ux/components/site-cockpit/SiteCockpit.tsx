@@ -6,9 +6,10 @@ import {
   useCallback,
   useTransition,
   useEffect,
+  useRef,
   type ComponentType,
 } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   DndContext,
@@ -135,6 +136,7 @@ export function SiteCockpit({
   const t = useTranslations("SiteCockpit");
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const locale = (params.locale as string) || "en";
 
   const [cards, setCards] = useState<CardConfig[]>(() =>
@@ -152,6 +154,7 @@ export function SiteCockpit({
     "idle" | "saving" | "saved" | "error"
   >("idle");
 
+  const autoOptimizeTriggered = useRef<string | null>(null);
 
   const saveLayout = useCallback(
     async (newCards: CardConfig[]) => {
@@ -270,6 +273,18 @@ export function SiteCockpit({
     },
     [siteId, locale, router],
   );
+
+  // Auto-start optimization when ?category= is present in URL (e.g. from sidebar links).
+  // Track last processed key so re-clicking a different category on the same mounted page works.
+  useEffect(() => {
+    const category = searchParams.get("category") as OptimizeCategory | null;
+    const validCategories: OptimizeCategory[] = ["performance", "security", "seo", "accessibility", "content", "wordpress"];
+    if (!category || !validCategories.includes(category) || !siteId) return;
+    const key = `${siteId}:${category}`;
+    if (autoOptimizeTriggered.current === key) return;
+    autoOptimizeTriggered.current = key;
+    void handleOptimizeCategory(category);
+  }, [searchParams, siteId, handleOptimizeCategory]);
 
   const isWordPress = data.cms.type === "wordpress";
   const isWordPressOptimizing = optimizingCategory === "wordpress";
