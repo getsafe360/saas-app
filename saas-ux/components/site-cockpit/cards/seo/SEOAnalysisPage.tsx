@@ -165,11 +165,6 @@ function IntroBlock({
             ? "Findings are streaming live across Technical SEO, Content & E-E-A-T, AI SEO, GEO, AEO, Author SEO, AI Analytics, and llms.txt. Tick issues as they surface to build your repair queue."
             : "Eight dimensions audited — from crawl fundamentals to AI citation tracking. Tick the issues you want Sparky to fix, then let the AI do the rest."}
         </p>
-        {streaming && (
-          <p className="text-xs text-white/25 italic">
-            <AnalysisWaitingRotator />
-          </p>
-        )}
       </div>
 
       {!streaming && (
@@ -253,7 +248,7 @@ function MasterScoreHero({ score, streaming }: { score: SeoMasterScore | null; s
         <p className="text-xs text-white/30 flex items-center gap-1.5">
           <Loader2 className="h-3 w-3 animate-spin" />
           Score will update when analysis completes —{" "}
-          <AnalysisWaitingRotator className="italic" />
+          <AnalysisWaitingRotator className="italic" withColor />
         </p>
       )}
     </div>
