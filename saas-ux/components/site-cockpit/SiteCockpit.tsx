@@ -154,7 +154,7 @@ export function SiteCockpit({
     "idle" | "saving" | "saved" | "error"
   >("idle");
 
-  const autoOptimizeTriggered = useRef(false);
+  const autoOptimizeTriggered = useRef<string | null>(null);
 
   const saveLayout = useCallback(
     async (newCards: CardConfig[]) => {
@@ -274,15 +274,16 @@ export function SiteCockpit({
     [siteId, locale, router],
   );
 
-  // Auto-start optimization when ?category= is present in URL (e.g. from sidebar links)
+  // Auto-start optimization when ?category= is present in URL (e.g. from sidebar links).
+  // Track last processed key so re-clicking a different category on the same mounted page works.
   useEffect(() => {
-    if (autoOptimizeTriggered.current) return;
     const category = searchParams.get("category") as OptimizeCategory | null;
     const validCategories: OptimizeCategory[] = ["performance", "security", "seo", "accessibility", "content", "wordpress"];
-    if (category && validCategories.includes(category) && siteId) {
-      autoOptimizeTriggered.current = true;
-      void handleOptimizeCategory(category);
-    }
+    if (!category || !validCategories.includes(category) || !siteId) return;
+    const key = `${siteId}:${category}`;
+    if (autoOptimizeTriggered.current === key) return;
+    autoOptimizeTriggered.current = key;
+    void handleOptimizeCategory(category);
   }, [searchParams, siteId, handleOptimizeCategory]);
 
   const isWordPress = data.cms.type === "wordpress";
