@@ -81,8 +81,13 @@ export function normaliseHeadSnippet(snippet: string): string | null {
     const prefix = s.slice(0, scriptTagIndex).trim();
     // Only strip if the prefix looks like raw JSON (not a comment or other tag)
     if (prefix.startsWith("{") || prefix.startsWith("[")) {
-      return s.slice(scriptTagIndex).trim();
+      return s.slice(scriptTagIndex).trim().replace(/<\/script/gi, '<\\/script');
     }
+  }
+
+  // Already-wrapped JSON-LD block at position 0 — escape any </script inside content
+  if (scriptTagIndex === 0) {
+    return s.replace(/<\/script/gi, '<\\/script');
   }
 
   // Partial JSON property strings like `"sameAs":[...]` or `"dateModified":"..."`
