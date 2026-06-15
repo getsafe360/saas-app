@@ -114,7 +114,7 @@ function CodeBlock({ code, language = "html" }: { code: string; language?: strin
         <span>{language}</span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2 py-0.5 rounded transition-colors hover:opacity-80"
+          className="flex items-center gap-1.5 px-2 py-0.5 rounded transition-colors hover:opacity-80 cursor-pointer"
           style={{ color: "var(--text-subtle)" }}
         >
           {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
@@ -319,10 +319,17 @@ export function ConnectionCard({
   // Live status can diverge from the server prop when a health check detects a change
   const [liveStatus, setLiveStatus] = useState<ConnectionStatus>(connectionStatus);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+  const [justConnected, setJustConnected] = useState(false);
 
   // Keep live status in sync when server-side props update (e.g. after router.refresh)
   useEffect(() => {
-    setLiveStatus(connectionStatus);
+    setLiveStatus((prev) => {
+      if (connectionStatus === "connected" && prev !== "connected") {
+        setJustConnected(true);
+        setTimeout(() => setJustConnected(false), 4000);
+      }
+      return connectionStatus;
+    });
   }, [connectionStatus]);
 
   const isConnected = liveStatus === "connected" && !forceWizard;
@@ -376,6 +383,19 @@ export function ConnectionCard({
         className="rounded-2xl border p-5"
         style={{ background: "var(--header-bg)", borderColor: "var(--border-default)" }}
       >
+        {justConnected && (
+          <div
+            className="flex items-center gap-2 rounded-xl px-4 py-2.5 mb-4 text-sm font-medium animate-fade-in"
+            style={{
+              background: "oklch(from var(--category-performance) l c h / 0.12)",
+              border: "1px solid oklch(from var(--category-performance) l c h / 0.3)",
+              color: "var(--category-performance)",
+            }}
+          >
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            WordPress site connected — AI optimizations are now available.
+          </div>
+        )}
         <div className="flex items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             <span
@@ -716,7 +736,7 @@ export function ConnectionCard({
 
           <button
             onClick={() => setStep("detect")}
-            className="text-xs underline opacity-60 hover:opacity-100 transition-opacity"
+            className="text-xs underline opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
             style={{ color: "var(--text-subtle)" }}
           >
             ← Back
@@ -758,7 +778,7 @@ export function ConnectionCard({
 
           <button
             onClick={() => setStep("method")}
-            className="text-xs underline opacity-60 hover:opacity-100 transition-opacity"
+            className="text-xs underline opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
             style={{ color: "var(--text-subtle)" }}
           >
             ← Back

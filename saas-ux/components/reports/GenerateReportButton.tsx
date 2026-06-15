@@ -130,7 +130,7 @@ export function GenerateReportButton({
     return (
       <button
         onClick={() => setIsModalOpen(true)}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400 hover:from-amber-500/30 hover:to-orange-500/30 transition-all"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400 hover:from-amber-500/30 hover:to-orange-500/30 transition-all cursor-pointer"
       >
         <Crown className="h-4 w-4" />
         <span className="text-sm font-medium">Generate Report</span>
@@ -144,7 +144,7 @@ export function GenerateReportButton({
       <button
         onClick={() => setIsModalOpen(true)}
         disabled={disabled || isGenerating}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         {isGenerating ? (
           <><Loader2 className="h-4 w-4 animate-spin" /><span>Generating…</span></>
