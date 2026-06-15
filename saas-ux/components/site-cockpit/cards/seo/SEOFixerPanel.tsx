@@ -249,6 +249,7 @@ export function SEOFixerPanel({
   const [devReport, setDevReport] = useState<{ url: string; filename: string } | null>(null);
   const [devReportState, setDevReportState] = useState<"idle" | "generating" | "ready" | "error">("idle");
   const [fixPackDownloading, setFixPackDownloading] = useState(false);
+  const [wpPush, setWpPush] = useState<{ status: "success" | "failed"; applied?: number; skipped?: number; reason?: string } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const startedAt = useRef<Date | null>(null);
 
@@ -349,6 +350,13 @@ export function SEOFixerPanel({
               snippet:        ev.snippet as string | undefined,
               expectedImpact: ev.expectedImpact as string | undefined,
               reason:         ev.reason as string | undefined,
+            });
+          } else if (ev.type === "wp_push") {
+            setWpPush({
+              status:  ev.status as "success" | "failed",
+              applied: ev.applied as number | undefined,
+              skipped: ev.skipped as number | undefined,
+              reason:  ev.reason as string | undefined,
             });
           } else if (ev.type === "done") {
             setDone({
@@ -554,14 +562,14 @@ export function SEOFixerPanel({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white/60 border transition-colors hover:text-white hover:bg-white/5"
+              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white/60 border transition-colors hover:text-white hover:bg-white/5 cursor-pointer"
               style={{ borderColor: "var(--border-default)" }}
             >
               Cancel
             </button>
             <button
               onClick={() => void startRepair()}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer"
               style={{
                 background: "var(--category-seo)",
                 boxShadow: "0 0 20px oklch(from var(--category-seo) l c h / 0.35)",
@@ -668,6 +676,28 @@ export function SEOFixerPanel({
                 {done.totalTokensUsed.toLocaleString()} tokens used by {AGENT_NAME}.
               </p>
             )}
+          </div>
+        )}
+
+        {/* WordPress push result */}
+        {wpPush && (
+          <div className={cn(
+            "rounded-xl border p-4 flex items-start gap-3",
+            wpPush.status === "success" ? "border-emerald-500/30 bg-emerald-500/6" : "border-amber-400/25 bg-amber-400/5",
+          )}>
+            {wpPush.status === "success"
+              ? <CheckCircle className="h-4 w-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+              : <AlertTriangle className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />}
+            <div className="space-y-0.5">
+              <p className="text-sm font-semibold text-white">
+                {wpPush.status === "success" ? "Fixes pushed to your WordPress site" : "WordPress push skipped"}
+              </p>
+              <p className="text-xs text-white/50 leading-relaxed">
+                {wpPush.status === "success"
+                  ? `${wpPush.applied ?? 0} fix${(wpPush.applied ?? 0) === 1 ? "" : "es"} applied live${(wpPush.skipped ?? 0) > 0 ? ` · ${wpPush.skipped} skipped (no snippet)` : ""}.`
+                  : (wpPush.reason ?? "Site not connected or no code fixes had snippets.")}
+              </p>
+            </div>
           </div>
         )}
 
@@ -788,7 +818,7 @@ export function SEOFixerPanel({
         {/* Return CTA */}
         <button
           onClick={onClose}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer"
           style={{ background: "var(--category-seo)", boxShadow: "0 0 20px oklch(from var(--category-seo) l c h / 0.35)" }}
         >
           Close &amp; return to report

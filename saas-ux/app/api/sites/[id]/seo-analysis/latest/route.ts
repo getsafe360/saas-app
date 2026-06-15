@@ -84,7 +84,7 @@ export async function GET(
       totalFindings: findings.length,
       totalTokensUsed: job.tokensUsed ?? 0,
       tokensRemaining: 0,
-      modelLabel: job.modelId ?? "AI",
+      modelLabel: job.modelId?.startsWith("claude") ? "Claude Opus 4.8" : (job.modelId ? "GetSafe360 AI" : "AI"),
       completedAt: job.completedAt,
     }),
     { status: 200, headers: { "Content-Type": "application/json" } },

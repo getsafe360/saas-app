@@ -58,10 +58,11 @@ export async function POST(
     return NextResponse.json({ ok: false, error: "SITE_NOT_FOUND" }, { status: 404 });
   }
 
-  // Mark selected repair actions as queued
+  // Mark selected repair actions as queued and reset any previously-completed
+  // items back to "pending" so the fixer can re-elaborate them on re-runs.
   const result = await db
     .update(aiRepairActions)
-    .set({ addedToRepairQueue: true })
+    .set({ addedToRepairQueue: true, status: "pending", errorMessage: null })
     .where(
       and(
         eq(aiRepairActions.analysisJobId, jobId),

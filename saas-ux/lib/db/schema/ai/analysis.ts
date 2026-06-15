@@ -24,7 +24,7 @@ export const aiAnalysisJobs = pgTable('ai_analysis_jobs', {
   // Token accounting
   tokensUsed: integer('tokens_used'),
   provider: text('provider'),       // 'anthropic' | 'openai' | 'google'
-  modelId: text('model_id'),        // 'claude-opus-4-7' | 'gpt-4o-mini' etc.
+  modelId: text('model_id'),        // 'claude-opus-4-8' | 'gpt-4o-mini' etc.
   startedAt: timestamp('started_at'),
   completedAt: timestamp('completed_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
