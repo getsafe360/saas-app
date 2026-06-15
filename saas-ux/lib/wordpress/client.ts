@@ -294,6 +294,15 @@ export class WordPressClient {
   }
 
   /**
+   * Remove ALL injected fix snippets from wp_head in one call.
+   * Use when bad snippets are rendering visibly on the page.
+   * Requires plugin v1.4.0+.
+   */
+  async clearAllFixes(): Promise<{ success: boolean; cleared: number; clearedIds: string[]; message: string }> {
+    return this.request('fixes', { method: 'DELETE' });
+  }
+
+  /**
    * Get the connector capability map — what this plugin version supports.
    * Requires plugin v1.3.0+.
    */

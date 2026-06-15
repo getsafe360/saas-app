@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GetSafe 360 AI Connector
  * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 1.3.0
+ * Version: 1.4.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
@@ -20,7 +20,7 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '1.3.0';
+  const VERSION = '1.4.0';
   const OPTION = 'getsafe360_connector';
   const API_BASE = 'https://saasfly-one-psi.vercel.app';
 
@@ -493,6 +493,13 @@ class GetSafe360_Connector {
       ],
     ]);
 
+    // Clear-all endpoint - remove every injected fix from wp_head (emergency purge)
+    register_rest_route('getsafe360/v1', '/fixes', [
+      'methods' => 'DELETE',
+      'callback' => [$this, 'route_clear_fixes'],
+      'permission_callback' => [$this, 'auth_api_key'],
+    ]);
+
     // Capabilities endpoint - report what this plugin version can do
     register_rest_route('getsafe360/v1', '/capabilities', [
       'methods' => 'GET',
@@ -738,6 +745,36 @@ class GetSafe360_Connector {
   }
 
   /**
+   * DELETE /wp-json/getsafe360/v1/fixes
+   * Removes ALL injected fix snippets from wp_head output in one call.
+   * Used for emergency purge when bad snippets have been injected.
+   */
+  public function route_clear_fixes(\WP_REST_Request $req) {
+    $injections = get_option('getsafe360_seo_injections', []);
+    $fix_log    = get_option('getsafe360_fix_log', []);
+
+    $cleared = array_keys($injections);
+
+    // Mark every injection as rolled_back in the log
+    foreach ($cleared as $fix_id) {
+      if (isset($fix_log[$fix_id])) {
+        $fix_log[$fix_id]['status']      = 'rolled_back';
+        $fix_log[$fix_id]['rolledBackAt'] = current_time('mysql');
+      }
+    }
+
+    update_option('getsafe360_seo_injections', []);
+    update_option('getsafe360_fix_log', $fix_log);
+
+    return [
+      'success'   => true,
+      'cleared'   => count($cleared),
+      'clearedIds' => $cleared,
+      'message'   => 'All GetSafe360 injections removed from wp_head.',
+    ];
+  }
+
+  /**
    * GET /wp-json/getsafe360/v1/capabilities
    * Reports what this plugin version can do, used by the SaaS loop runner.
    */
@@ -751,6 +788,7 @@ class GetSafe360_Connector {
         'metaTagInjection'     => true,
         'snippetDelete'        => true,
         'snippetList'          => true,
+        'clearAllFixes'        => true,
         'postRevisionCreate'   => false,
         'mediaAltUpdate'       => false,
         'optionUpdate'         => false,
