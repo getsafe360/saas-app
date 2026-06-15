@@ -587,32 +587,43 @@ class GetSafe360_Connector {
       ];
 
       if (($fix_type === 'code' || $fix_type === 'config') && !empty($snippet)) {
-        // Strip any PHP tags and only allow HTML / JSON-LD content for safety
-        // wp_kses strips <script> entirely; JSON-LD is handled in the fallback below.
-        $safe_snippet = wp_kses($snippet, [
-          'meta' => ['name' => [], 'property' => [], 'content' => [], 'charset' => [], 'http-equiv' => []],
-          'link' => ['rel' => [], 'href' => [], 'type' => [], 'sizes' => []],
-        ]);
+        // Defense-in-depth: reject non-head content that must never appear in <head>.
+        // The SaaS layer should already filter these out, but verify here as well.
+        $is_robots_directive = (strpos($snippet, 'User-agent:') !== false && (strpos($snippet, 'Allow:') !== false || strpos($snippet, 'Disallow:') !== false));
+        $is_htaccess         = (strpos($snippet, 'ServerTokens') !== false || strpos($snippet, 'Order Deny') !== false || strpos($snippet, 'Header unset') !== false || strpos($snippet, '<Files') !== false);
+        $is_llms_txt         = (substr(ltrim($snippet), 0, 1) === '#' && (strpos($snippet, 'Canonical') !== false || strpos($snippet, 'Attribution') !== false || strpos($snippet, 'User-agent') !== false));
 
-        // Always extract JSON-LD blocks from the original snippet and append them.
-        // wp_kses strips <script> entirely, so this runs regardless of whether
-        // wp_kses already preserved <meta>/<link> tags from a mixed snippet.
-        $jsonld_blocks = [];
-        preg_match_all(
-          '/<script\s[^>]*type\s*=\s*["\']application\/ld\+json["\'][^>]*>.*?<\/script>/is',
-          $snippet,
-          $jsonld_blocks
-        );
-        if (!empty($jsonld_blocks[0])) {
-          $safe_snippet = trim($safe_snippet . "\n" . implode("\n", $jsonld_blocks[0]));
-        }
-
-        if (!empty(trim($safe_snippet))) {
-          $injections[$fix_id]  = $safe_snippet;
-          $fix_log[$fix_id]['status'] = 'applied';
-          $applied[] = $fix_id;
-        } else {
+        if ($is_robots_directive || $is_htaccess || $is_llms_txt) {
+          $fix_log[$fix_id]['status']      = 'skipped';
+          $fix_log[$fix_id]['skip_reason'] = 'non-head content blocked by connector';
           $skipped[] = $fix_id;
+        } else {
+          // Strip any PHP tags and only allow HTML / JSON-LD content for safety.
+          // wp_kses strips <script> entirely; JSON-LD is handled via regex below.
+          $safe_snippet = wp_kses($snippet, [
+            'meta' => ['name' => [], 'property' => [], 'content' => [], 'charset' => [], 'http-equiv' => []],
+            'link' => ['rel' => [], 'href' => [], 'type' => [], 'sizes' => []],
+          ]);
+
+          // Extract JSON-LD <script> blocks from the original (wp_kses removes them).
+          $jsonld_blocks = [];
+          preg_match_all(
+            '/<script\s[^>]*type\s*=\s*["\']application\/ld\+json["\'][^>]*>.*?<\/script>/is',
+            $snippet,
+            $jsonld_blocks
+          );
+          if (!empty($jsonld_blocks[0])) {
+            $safe_snippet = trim($safe_snippet . "\n" . implode("\n", $jsonld_blocks[0]));
+          }
+
+          // After sanitisation, a non-empty result means we have valid head content.
+          if (!empty(trim($safe_snippet))) {
+            $injections[$fix_id]  = $safe_snippet;
+            $fix_log[$fix_id]['status'] = 'applied';
+            $applied[] = $fix_id;
+          } else {
+            $skipped[] = $fix_id;
+          }
         }
       } else {
         $skipped[] = $fix_id;
