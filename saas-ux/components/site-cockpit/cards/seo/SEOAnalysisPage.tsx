@@ -332,7 +332,7 @@ function BulkSelectBar({ findings, checkedIds, onBulkToggle }: {
         return (
           <button key={sev}
             onClick={() => onBulkToggle(group.map(f => f.id), allChecked)}
-            className={cn("text-xs px-2.5 py-1 rounded-lg border font-medium transition-opacity hover:opacity-80", cfg.bg, cfg.border, cfg.color)}>
+            className={cn("text-xs px-2.5 py-1 rounded-lg border font-medium transition-opacity hover:opacity-80 cursor-pointer", cfg.bg, cfg.border, cfg.color)}>
             {allChecked ? "− " : "+ "}{cfg.label} ({group.length})
           </button>
         );
@@ -583,13 +583,24 @@ export function SEOAnalysisPage({
     if (!jobMeta?.jobId || checkedIds.size === 0) return;
     setQueueSaving(true);
     try {
-      await fetch(`/api/sites/${siteId}/repair-queue`, {
+      const res = await fetch(`/api/sites/${siteId}/repair-queue`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobId: jobMeta.jobId, issueIds: Array.from(checkedIds) }),
       });
-      // Open the fixer panel immediately after queuing
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        setError(body.error ?? `Queue failed (HTTP ${res.status})`);
+        return;
+      }
+      const data = await res.json() as { ok: boolean; queued: number };
+      if (!data.ok || data.queued === 0) {
+        setError("No items could be queued — they may have already been repaired. Start a new analysis to re-run.");
+        return;
+      }
       setFixerOpen(true);
+    } catch (e: unknown) {
+      setError((e as Error).message ?? "Failed to queue items");
     } finally { setQueueSaving(false); }
   }, [siteId, jobMeta, checkedIds]);
 
@@ -634,6 +645,17 @@ export function SEOAnalysisPage({
           effort:  (f.automatedFix as { effort?: string } | null)?.effort,
         }))}
         onClose={() => setFixerOpen(false)}
+        onNewAnalysis={() => {
+          setFixerOpen(false);
+          hasStarted.current = false;
+          setDone(false);
+          setFindings([]);
+          setMasterScore(null);
+          setDoneEvent(null);
+          setJobMeta(null);
+          setCheckedIds(new Set());
+          startStream();
+        }}
       />
     );
   }
