@@ -132,8 +132,8 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
           setPluginDetected(true);
           setPairingStatus('connected');
           setPairingMessage('Connection established — syncing dashboard…');
-          // Hard reload after brief success display so client state resets cleanly
-          // and the cockpit re-renders with the new connected status from the DB.
+          // Signal ConnectionCard to show the "just connected" banner after reload.
+          if (siteId) sessionStorage.setItem(`gs360_just_connected_${siteId}`, '1');
           setTimeout(() => { window.location.reload(); }, 1500);
           return;
         }
@@ -154,6 +154,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
             setPluginDetected(true);
             setPairingStatus('connected');
             setPairingMessage('Connection established — syncing dashboard…');
+            if (siteId) sessionStorage.setItem(`gs360_just_connected_${siteId}`, '1');
             setTimeout(() => { window.location.reload(); }, 1500);
             return;
           }

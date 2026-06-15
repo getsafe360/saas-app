@@ -319,14 +319,29 @@ export function ConnectionCard({
   // Live status can diverge from the server prop when a health check detects a change
   const [liveStatus, setLiveStatus] = useState<ConnectionStatus>(connectionStatus);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
-  const [justConnected, setJustConnected] = useState(false);
+
+  // After a hard-reload following WordPress pairing, sessionStorage carries a flag so
+  // the banner still appears even though the component mounts already-connected.
+  const SESSION_KEY = siteId ? `gs360_just_connected_${siteId}` : null;
+  const [justConnected, setJustConnected] = useState(() => {
+    if (typeof window === "undefined" || !SESSION_KEY) return false;
+    const flag = sessionStorage.getItem(SESSION_KEY);
+    if (flag) { sessionStorage.removeItem(SESSION_KEY); return true; }
+    return false;
+  });
+
+  useEffect(() => {
+    if (justConnected) {
+      const t = setTimeout(() => setJustConnected(false), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [justConnected]);
 
   // Keep live status in sync when server-side props update (e.g. after router.refresh)
   useEffect(() => {
     setLiveStatus((prev) => {
       if (connectionStatus === "connected" && prev !== "connected") {
         setJustConnected(true);
-        setTimeout(() => setJustConnected(false), 4000);
       }
       return connectionStatus;
     });
