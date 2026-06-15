@@ -63,6 +63,7 @@ export interface SEOFixerPanelProps {
   connectionStatus?: ConnectionStatus;
   cmsType?: string;
   onClose: () => void;
+  onNewAnalysis?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -237,6 +238,7 @@ export function SEOFixerPanel({
   connectionStatus,
   cmsType,
   onClose,
+  onNewAnalysis,
 }: SEOFixerPanelProps) {
   const [step, setStep] = useState<Step>("preflight");
   const [items, setItems] = useState<FixItem[]>(
@@ -815,14 +817,29 @@ export function SEOFixerPanel({
           </button>
         </div>
 
-        {/* Return CTA */}
-        <button
-          onClick={onClose}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer"
-          style={{ background: "var(--category-seo)", boxShadow: "0 0 20px oklch(from var(--category-seo) l c h / 0.35)" }}
-        >
-          Close &amp; return to report
-        </button>
+        {/* Return / re-run CTAs */}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white/60 border transition-colors hover:text-white hover:bg-white/5 cursor-pointer"
+            style={{ borderColor: "var(--border-default)" }}
+          >
+            Close &amp; return to report
+          </button>
+          {onNewAnalysis && (
+            <button
+              onClick={onNewAnalysis}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer"
+              style={{
+                background: "var(--category-seo)",
+                boxShadow: "0 0 20px oklch(from var(--category-seo) l c h / 0.35)",
+              }}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Re-run new analysis
+            </button>
+          )}
+        </div>
 
       </main>
     </div>

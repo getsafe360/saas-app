@@ -645,6 +645,17 @@ export function SEOAnalysisPage({
           effort:  (f.automatedFix as { effort?: string } | null)?.effort,
         }))}
         onClose={() => setFixerOpen(false)}
+        onNewAnalysis={() => {
+          setFixerOpen(false);
+          hasStarted.current = false;
+          setDone(false);
+          setFindings([]);
+          setMasterScore(null);
+          setDoneEvent(null);
+          setJobMeta(null);
+          setCheckedIds(new Set());
+          startStream();
+        }}
       />
     );
   }
