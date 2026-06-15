@@ -67,7 +67,7 @@ export function normaliseHeadSnippet(snippet: string): string | null {
   if (s.startsWith("{") || s.startsWith("[")) {
     try {
       JSON.parse(s);
-      return `<script type="application/ld+json">${s}</script>`;
+      return `<script type="application/ld+json">${s.replace(/<\/script/gi, '<\\/script')}</script>`;
     } catch {
       // Not valid standalone JSON — drop it
       return null;
