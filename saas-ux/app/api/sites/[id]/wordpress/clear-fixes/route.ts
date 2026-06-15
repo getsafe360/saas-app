@@ -51,7 +51,7 @@ export async function POST(
     });
 
     const result = await wpClient.clearAllFixes();
-    return NextResponse.json({ success: true, ...result });
+    return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(
       { error: "CLEAR_FAILED", message: (err as Error).message },
