@@ -26,6 +26,7 @@ import { teams, teamMembers } from "@/lib/db/schema/auth/teams";
 import { aiAnalysisJobs, aiRepairActions } from "@/lib/db/schema/ai/analysis";
 import type { AiRepairAction } from "@/lib/db/schema/ai/analysis";
 import { WordPressClient } from "@/lib/wordpress/client";
+import { categoriseSnippet, normaliseHeadSnippet } from "@/lib/optimization/fixes/snippetUtils";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -62,7 +63,13 @@ ${fix?.snippet ? `Existing snippet hint:\n\`\`\`\n${fix.snippet}\n\`\`\`` : ""}
 Write a concise, actionable fix plan with:
 1. A 1-sentence summary of exactly what to do
 2. Step-by-step implementation (max 4 steps, each max 1 sentence)
-3. If the fix type is "code" or "config": provide a ready-to-paste code snippet (HTML/JSON-LD/htaccess/etc.)
+3. A ready-to-paste code snippet following these rules:
+   - HTML <head> fixes (meta tags, JSON-LD schema, canonical links): provide the complete HTML snippet
+   - JSON-LD schema: always wrap in <script type="application/ld+json">…</script> — never return raw JSON fragments or partial JSON properties
+   - robots.txt additions: provide the raw directives (User-agent / Allow / Disallow lines)
+   - .htaccess additions: provide the Apache directives
+   - llms.txt additions: provide the plain-text content
+   - Manual content/structural changes (H1 rewrites, new pages, GA4 setup): set snippet to null
 4. Expected SEO impact after applying this fix (1 sentence)
 
 Format your response as JSON matching this exact schema:
@@ -289,9 +296,21 @@ export async function POST(
             .where(eq(teams.id, teamRow.id));
         }
 
-        // Push completed fixes to the WordPress plugin when the site is connected
-        const pushableFixes = completedFixes.filter((f) => f.fixType !== "manual" && f.snippet);
-        if (site.connectionStatus === "connected" && site.tokenHash && pushableFixes.length > 0) {
+        // Push completed fixes to the WordPress plugin when the site is connected.
+        // Only head-safe snippets are pushed — robots.txt directives, .htaccess content,
+        // llms.txt blocks, bare JSON fragments, and plain text are excluded here and
+        // delivered to the user via the fix-pack download instead.
+        const headSafeFixes = completedFixes
+          .filter((f) => f.fixType !== "manual" && f.snippet)
+          .flatMap((f) => {
+            const cat = categoriseSnippet(f.snippet!, f.section);
+            if (cat !== "head") return [];
+            const normalisedSnippet = normaliseHeadSnippet(f.snippet!);
+            if (!normalisedSnippet) return [];
+            return [{ ...f, snippet: normalisedSnippet }];
+          });
+
+        if (site.connectionStatus === "connected" && site.tokenHash && headSafeFixes.length > 0) {
           try {
             const wpClient = new WordPressClient({
               siteUrl: site.siteUrl,
@@ -299,7 +318,7 @@ export async function POST(
               timeout: 15000,
             });
             const pushResult = await wpClient.pushFixes(
-              pushableFixes.map((f) => ({
+              headSafeFixes.map((f) => ({
                 id: f.id,
                 title: f.title ?? "",
                 section: f.section ?? "",

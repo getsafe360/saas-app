@@ -18,6 +18,7 @@ import { sites } from "@/lib/db/schema/sites/sites";
 import { users } from "@/lib/db/schema/auth/users";
 import { aiAnalysisJobs, aiRepairActions } from "@/lib/db/schema/ai/analysis";
 import type { AiRepairAction } from "@/lib/db/schema/ai/analysis";
+import { categoriseSnippet, normaliseHeadSnippet } from "@/lib/optimization/fixes/snippetUtils";
 
 export interface FixPackFile {
   name: string;
@@ -26,26 +27,10 @@ export interface FixPackFile {
   description: string;
 }
 
-// Categorise a snippet into a target file based on content patterns
 function categorise(action: AiRepairAction): "head" | "robots" | "htaccess" | "llms" | null {
   const fix = (action.automatedFix ?? {}) as Record<string, unknown>;
   const snippet = ((fix.elaboratedSnippet ?? fix.snippet) as string | null | undefined) ?? "";
-  const section = action.seoSection ?? "";
-
-  if (!snippet.trim()) return null;
-
-  // llms.txt directives
-  if (section === "llms-txt" && (snippet.includes("Canonical") || snippet.includes("Attribution") || snippet.includes("# "))) return "llms";
-  // AI-bot robots.txt directives
-  if (snippet.includes("User-agent:") && snippet.includes("Allow:")) return "robots";
-  // Apache / .htaccess directives
-  if (snippet.includes("ServerTokens") || snippet.includes("<Files") || snippet.includes("Order Deny") || snippet.includes("Header unset")) return "htaccess";
-  // JSON-LD / HTML head snippets
-  if (snippet.includes("<script") || snippet.includes("<link") || snippet.includes("<title") || snippet.includes("<meta")) return "head";
-  // JSON-only snippets (schema fragments) → head
-  if (snippet.trimStart().startsWith("{") || snippet.trimStart().startsWith("[")) return "head";
-
-  return null;
+  return categoriseSnippet(snippet, action.seoSection);
 }
 
 function buildHeadFile(actions: AiRepairAction[], siteUrl: string, date: string): string {
@@ -57,7 +42,8 @@ function buildHeadFile(actions: AiRepairAction[], siteUrl: string, date: string)
 
   for (const a of actions) {
     const fix = (a.automatedFix ?? {}) as Record<string, unknown>;
-    const snippet = ((fix.elaboratedSnippet ?? fix.snippet) as string) ?? "";
+    const raw = ((fix.elaboratedSnippet ?? fix.snippet) as string) ?? "";
+    const snippet = normaliseHeadSnippet(raw) ?? raw.trim();
     const summary = (fix.elaboratedSummary ?? fix.description ?? "") as string;
     lines.push(`<!-- ${a.title} (${a.severity ?? "medium"}) -->`);
     if (summary) lines.push(`<!-- ${summary} -->`);
