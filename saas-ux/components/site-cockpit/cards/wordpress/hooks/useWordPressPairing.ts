@@ -1,6 +1,5 @@
 // components/site-cockpit/cards/wordpress/hooks/useWordPressPairing.ts
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import type { PairingStatus, UseWordPressPairingReturn } from '../types';
 
 const POLL_INTERVAL_MS = 2500;
@@ -19,8 +18,6 @@ function mapErrorMessage(raw: string): string {
 }
 
 export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPressPairingReturn {
-  const router = useRouter();
-
   const [showPairingFlow, setShowPairingFlow] = useState(false);
   const [pairingStatus, setPairingStatus] = useState<PairingStatus>('idle');
   const [pairCode, setPairCode] = useState<string | null>(null);
@@ -135,7 +132,9 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
           setPluginDetected(true);
           setPairingStatus('connected');
           setPairingMessage('Connection established — syncing dashboard…');
-          router.refresh();
+          // Signal ConnectionCard to show the "just connected" banner after reload.
+          if (siteId) sessionStorage.setItem(`gs360_just_connected_${siteId}`, '1');
+          setTimeout(() => { window.location.reload(); }, 1500);
           return;
         }
 
@@ -155,7 +154,8 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
             setPluginDetected(true);
             setPairingStatus('connected');
             setPairingMessage('Connection established — syncing dashboard…');
-            router.refresh();
+            if (siteId) sessionStorage.setItem(`gs360_just_connected_${siteId}`, '1');
+            setTimeout(() => { window.location.reload(); }, 1500);
             return;
           }
         }
@@ -172,7 +172,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
 
     return stopPolling;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pairingStatus, pairCode, router, siteId]);
+  }, [pairingStatus, pairCode, siteId]);
 
   return {
     showPairingFlow,

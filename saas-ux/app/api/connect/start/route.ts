@@ -57,7 +57,13 @@ async function probeOnce(siteUrl: string, path: string, signal: AbortSignal) {
 }
 
 async function probePlugin(siteUrl: string, externalSignal?: AbortSignal): Promise<boolean> {
-  const paths = ["/wp-json/getsafe/v1/ping", "/?rest_route=/getsafe/v1/ping"];
+  const paths = [
+    "/wp-json/getsafe360/v1/ping",
+    "/?rest_route=/getsafe360/v1/ping",
+    // legacy namespace fallback
+    "/wp-json/getsafe/v1/ping",
+    "/?rest_route=/getsafe/v1/ping",
+  ];
   const urls = [siteUrl];
   try {
     const u = new URL(siteUrl);
