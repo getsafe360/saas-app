@@ -479,7 +479,6 @@ class GetSafe360_Connector {
     $keys_to_remove = [
       '/wp/v2/users',
       '/wp/v2/users/(?P<id>[\d]+)',
-      '/wp/v2/users/me',
     ];
 
     foreach ($keys_to_remove as $key) {

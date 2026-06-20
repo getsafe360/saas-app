@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
 import { changeItems, changeSets } from '@/lib/db/schema/copilot/changes';
@@ -104,6 +104,10 @@ export async function POST(
     .where(eq(users.clerkUserId, userId))
     .limit(1);
 
+  if (!dbUser) {
+    return NextResponse.json({ success: false, error: 'USER_NOT_SYNCED' }, { status: 401 });
+  }
+
   const [site] = await db
     .select({
       id: sites.id,
@@ -115,15 +119,11 @@ export async function POST(
       connectionStatus: sites.connectionStatus,
     })
     .from(sites)
-    .where(eq(sites.id, siteId))
+    .where(and(eq(sites.id, siteId), eq(sites.userId, dbUser.id)))
     .limit(1);
 
   if (!site) {
     return NextResponse.json({ success: false, error: 'SITE_NOT_FOUND' }, { status: 404 });
-  }
-
-  if (dbUser?.id && site.userId !== dbUser.id) {
-    return NextResponse.json({ success: false, error: 'FORBIDDEN' }, { status: 403 });
   }
 
   const tokenHash =
@@ -282,8 +282,8 @@ export async function POST(
         siteId,
         title: 'WordPress Typed Remediation',
         description: `Processed ${executionResults.length} WordPress remediation action(s) through the mutation planner/runner.`,
-        status: executionResults.some((result) => result.status === 'failed') ? 'applied' : 'applied',
-        createdByUserId: dbUser?.id,
+        status: executionResults.some((result) => result.status === 'failed') ? 'failed' : 'applied',
+        createdByUserId: dbUser.id,
       })
       .returning({ id: changeSets.id });
 
