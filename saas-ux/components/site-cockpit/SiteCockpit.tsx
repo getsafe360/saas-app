@@ -130,6 +130,7 @@ export function SiteCockpit({
   siteSummary,
   wordpressConnectionStatus = "disconnected",
   wordpressLastConnected,
+  wordpressOnly = false,
   wpVersion,
   pluginVersion,
 }: SiteCockpitProps) {
@@ -292,6 +293,14 @@ export function SiteCockpit({
   const visibleCards = cards.filter((card) => {
     if (!card.visible) return false;
 
+    if (wordpressOnly) {
+      if (card.id === "optimization") {
+        return !!optimizingCategory;
+      }
+
+      return card.id === "wordpress" && isWordPress;
+    }
+
     // WordPress card: show whenever the site is WordPress
     if (card.id === "wordpress") {
       return isWordPress;
@@ -400,8 +409,8 @@ export function SiteCockpit({
               </div>
             )}
 
-            {/* WordPress AI banner — only when WordPress optimization is active */}
-            {isWordPressOptimizing && (
+            {/* WordPress AI banner — expanded for the dedicated agent workspace */}
+            {(wordpressOnly || isWordPressOptimizing) && (
               <div
                 className="mb-6 rounded-2xl border p-5 backdrop-blur-sm"
                 style={{
@@ -419,11 +428,14 @@ export function SiteCockpit({
                   className="mt-2 text-2xl font-semibold"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  Ultimate AI WP Optimizer
+                  {wordpressOnly
+                    ? "WordPress Optimization Agent"
+                    : "Ultimate AI WP Optimizer"}
                 </h2>
                 <p className="mt-2 text-sm" style={{ color: "var(--text-subtle)" }}>
-                  Focused WordPress diagnostics and remediation workflow built
-                  for reliable checks today and plugin packaging next.
+                  {wordpressOnly
+                    ? "A focused workspace for truthful WordPress telemetry, guided fixes, and verification history."
+                    : "Focused WordPress diagnostics and remediation workflow built for reliable checks today and plugin packaging next."}
                 </p>
               </div>
             )}
@@ -498,6 +510,7 @@ export function SiteCockpit({
                       editable={editable}
                       connectionStatus={wordpressConnectionStatus}
                       lastConnected={wordpressLastConnected}
+                      agentMode={wordpressOnly}
                       pluginVersion={pluginVersion}
                     />
                   );

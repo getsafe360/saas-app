@@ -5,6 +5,20 @@ import { isPublicUrl } from "@/lib/net/isPublicUrl";
 import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { getDb } from "@/lib/db/drizzle";
+import { sites, users, wordpressSiteSnapshots } from "@/lib/db/schema";
+import { and, desc, eq } from "drizzle-orm";
+import { getUser } from "@/lib/db/queries";
+import { currentUser } from "@clerk/nextjs/server";
+import type { WordPressConnection } from "@/lib/wordpress/auth";
+import { createWordPressClient } from "@/lib/wordpress/client";
+import {
+  buildSnapshot,
+  buildWordPressTelemetry,
+  fetchLatestWordPressCoreRelease,
+  persistWordPressSnapshot,
+} from "@/lib/wordpress/inspect";
+import type { WordPressSiteSnapshot } from "@/lib/wordpress/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -271,6 +285,149 @@ async function fetchWordPressModule(url: string): Promise<WordPressModuleRespons
   }
 }
 
+async function getAppUserId(): Promise<number | null> {
+  const db = getDb();
+
+  try {
+    const appUser = await getUser();
+    if (appUser?.id) {
+      return appUser.id;
+    }
+  } catch {
+    // ignore
+  }
+
+  const clerkUser = await currentUser().catch(() => null);
+  if (!clerkUser) {
+    return null;
+  }
+
+  const [row] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.clerkUserId, clerkUser.id))
+    .limit(1);
+
+  return row?.id ?? null;
+}
+
+async function getConnectedWordPressTelemetry(siteId: string) {
+  const userId = await getAppUserId();
+  if (!userId) return null;
+
+  const db = getDb();
+  const [site] = await db
+    .select({
+      id: sites.id,
+      userId: sites.userId,
+      siteUrl: sites.siteUrl,
+      tokenHash: sites.tokenHash,
+      wordpressConnection: sites.wordpressConnection,
+      isConnected: sites.isConnected,
+      connectionStatus: sites.connectionStatus,
+      lastConnectedAt: sites.lastConnectedAt,
+      wpVersion: sites.wpVersion,
+      pluginVersion: sites.pluginVersion,
+    })
+    .from(sites)
+    .where(and(eq(sites.id, siteId), eq(sites.userId, userId)))
+    .limit(1);
+
+  if (!site) return null;
+
+  const tokenHash =
+    site.tokenHash ||
+    ((site.wordpressConnection as Partial<WordPressConnection> | null)?.tokenHash ?? null);
+
+  const latestCore = await fetchLatestWordPressCoreRelease();
+
+  let snapshot: WordPressSiteSnapshot | null = null;
+  let live = false;
+
+  if (tokenHash && site.isConnected && site.connectionStatus === 'connected') {
+    try {
+      const client = createWordPressClient({
+        siteUrl: site.siteUrl,
+        tokenHash,
+        timeout: 10000,
+      });
+
+      const [status, capabilities, pull] = await Promise.all([
+        client.getStatus(),
+        client.getCapabilities(),
+        client.pull(),
+      ]);
+
+      snapshot = buildSnapshot(status, capabilities, pull);
+      live = true;
+      try {
+        await persistWordPressSnapshot(db, site.id, snapshot, 'cockpit_enrichment');
+      } catch (persistError) {
+        console.warn('[analyze-facts] wordpress snapshot persistence skipped:', persistError);
+      }
+
+      await db
+        .update(sites)
+        .set({
+          wpVersion: snapshot.wpVersion ?? site.wpVersion,
+          pluginVersion: snapshot.pluginVersion ?? site.pluginVersion,
+          lastConnectedAt: new Date(),
+          connectionStatus: 'connected',
+          isConnected: true,
+          updatedAt: new Date(),
+        })
+        .where(eq(sites.id, site.id));
+    } catch {
+      // Fall back to the last persisted snapshot
+    }
+  }
+
+  if (!snapshot) {
+    const [latestSnapshot] = await db
+      .select({ snapshot: wordpressSiteSnapshots.snapshot })
+      .from(wordpressSiteSnapshots)
+      .where(eq(wordpressSiteSnapshots.siteId, site.id))
+      .orderBy(desc(wordpressSiteSnapshots.createdAt))
+      .limit(1);
+
+    snapshot = (latestSnapshot?.snapshot as WordPressSiteSnapshot | undefined) ?? null;
+  }
+
+  if (!snapshot) {
+    return {
+      wordpressSiteId: site.id,
+      connectionStatus: {
+        isConnected: Boolean(site.isConnected),
+        connectedAt: site.lastConnectedAt?.toISOString(),
+        lastSync: site.lastConnectedAt?.toISOString(),
+        pluginVersion: site.pluginVersion ?? undefined,
+      },
+    };
+  }
+
+  return {
+    wordpressSiteId: site.id,
+    connectionStatus: {
+      isConnected: true,
+      connectedAt: site.lastConnectedAt?.toISOString() ?? snapshot.inspectedAt,
+      lastSync: snapshot.inspectedAt,
+      pluginVersion: snapshot.pluginVersion ?? site.pluginVersion ?? undefined,
+    },
+    wordpressTelemetry: {
+      ...buildWordPressTelemetry(snapshot, latestCore.version, latestCore.releaseDate),
+      live,
+    },
+    cms: {
+      type: 'wordpress',
+      wp: {
+        version: snapshot.wpVersion ?? site.wpVersion ?? '',
+        jsonApi: true,
+        xmlrpc: null,
+      },
+    },
+  };
+}
+
 function minimalFacts(target: string, hostIP?: string, faviconUrl?: string) {
   try {
     const u = new URL(target);
@@ -352,6 +509,7 @@ function minimalFacts(target: string, hostIP?: string, faviconUrl?: string) {
 export async function GET(req: NextRequest) {
   const urlParam = req.nextUrl.searchParams.get("url") || "";
   const forceWordPress = req.nextUrl.searchParams.get("forceWordPress") === "1";
+  const siteId = req.nextUrl.searchParams.get("siteId")?.trim() || "";
   const target = normalizeInput(urlParam);
 
   if (!isPublicUrl(target)) {
@@ -369,10 +527,11 @@ export async function GET(req: NextRequest) {
   const faviconPromise = getFavicon(target);
 
   try {
-    const [facts, hostIP, faviconUrl] = await Promise.all([
+    const [facts, hostIP, faviconUrl, connectedWordPress] = await Promise.all([
       preScan(target),
       hostIPPromise,
-      faviconPromise
+      faviconPromise,
+      siteId ? getConnectedWordPressTelemetry(siteId) : Promise.resolve(null),
     ]);
 
     const wordpressModule = (facts.cms?.type === "wordpress" || forceWordPress)
@@ -386,6 +545,8 @@ export async function GET(req: NextRequest) {
       // Always use our reliable favicon fetching
       faviconUrl: faviconUrl,
       wordpressModule,
+      ...(connectedWordPress ?? {}),
+      cms: connectedWordPress?.cms ?? facts.cms,
     };
     
     return Response.json(enrichedFacts, {

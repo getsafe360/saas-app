@@ -31,6 +31,7 @@ export function WordPressCard({
   siteId,
   connectionStatus: initialStatus = "disconnected",
   lastConnected,
+  agentMode = false,
   pluginVersion,
 }: WordPressCardProps) {
   const router = useRouter();
@@ -135,6 +136,32 @@ export function WordPressCard({
     return pathname.replace(cockpitSegment, `/dashboard/sites/${siteId}/analyze`);
   }, [pathname, siteId]);
 
+  const agentWorkspacePath = useMemo(() => {
+    if (!siteId) return null;
+
+    const fallback = `/dashboard/sites/${siteId}/wordpress-agent`;
+    if (!pathname) return fallback;
+
+    const cockpitSegment = `/dashboard/sites/${siteId}/cockpit`;
+    if (pathname.includes(cockpitSegment)) {
+      return pathname.replace(cockpitSegment, `/dashboard/sites/${siteId}/wordpress-agent`);
+    }
+
+    return pathname.includes(`/dashboard/sites/${siteId}/wordpress-agent`)
+      ? pathname
+      : fallback;
+  }, [pathname, siteId]);
+
+  const telemetryStatus = wordpress.connection?.status === "degraded"
+    ? {
+        label: "Saved snapshot",
+        detail: "Live pull failed, showing the latest stored telemetry.",
+      }
+    : {
+        label: "Live telemetry",
+        detail: "Direct connector data from the current WordPress site.",
+      };
+
   const handleOptimize = async (
     selectedFindings: WordPressHealthFinding[],
     options?: { safeMode: boolean },
@@ -209,7 +236,7 @@ export function WordPressCard({
         <div className="flex items-center gap-3">
           <WordPressAIIcon size={24} className="h-6 w-6" />
           <span className="text-[var(--category-wordpress)]">
-            {t("wordpress.title")}
+            {agentMode ? "WordPress Optimization Agent" : t("wordpress.title")}
           </span>
         </div>
       }
@@ -252,8 +279,48 @@ export function WordPressCard({
             className="text-sm font-semibold"
             style={{ color: "var(--text-subtle)" }}
           >
-            {t("wordpress.title")}
+            {agentMode ? "WordPress Optimization Agent" : t("wordpress.title")}
           </h4>
+          {!agentMode && agentWorkspacePath && (
+            <button
+              type="button"
+              onClick={() => router.push(agentWorkspacePath)}
+              className="rounded-md border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/5"
+              style={{ borderColor: "var(--border-default)", color: "var(--text-primary)" }}
+            >
+              Open Agent Workspace
+            </button>
+          )}
+        </div>
+
+        <div
+          className="rounded-lg border p-3"
+          style={{ borderColor: "var(--border-default)", background: "var(--header-bg)" }}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--category-wordpress)" }}>
+                {telemetryStatus.label}
+              </div>
+              <div className="mt-1 text-sm" style={{ color: "var(--text-subtle)" }}>
+                {telemetryStatus.detail}
+              </div>
+            </div>
+            <div className="grid min-w-[220px] grid-cols-2 gap-2 text-xs sm:min-w-[280px] sm:grid-cols-3">
+              <div className="rounded-md px-2 py-2" style={{ background: "var(--background-default)" }}>
+                <div style={{ color: "var(--text-subtle)" }}>Core</div>
+                <div className="mt-1 text-sm font-semibold text-white">{wordpress.version.current}</div>
+              </div>
+              <div className="rounded-md px-2 py-2" style={{ background: "var(--background-default)" }}>
+                <div style={{ color: "var(--text-subtle)" }}>Latest</div>
+                <div className="mt-1 text-sm font-semibold text-white">{wordpress.version.latest}</div>
+              </div>
+              <div className="rounded-md px-2 py-2" style={{ background: "var(--background-default)" }}>
+                <div style={{ color: "var(--text-subtle)" }}>Plugins</div>
+                <div className="mt-1 text-sm font-semibold text-white">{wordpress.plugins.active}</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {wordpress.categoryScores && (

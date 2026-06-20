@@ -14,6 +14,7 @@ interface SiteCockpitLoaderProps {
   siteSummary?: string;
   wordpressConnectionStatus?: ConnectionStatus;
   wordpressLastConnected?: string;
+  wordpressOnly?: boolean;
   wpVersion?: string;
   pluginVersion?: string;
 }
@@ -133,6 +134,7 @@ export function SiteCockpitLoader({
   siteSummary,
   wordpressConnectionStatus = "disconnected",
   wordpressLastConnected,
+  wordpressOnly = false,
   wpVersion,
   pluginVersion,
 }: SiteCockpitLoaderProps) {
@@ -210,6 +212,7 @@ export function SiteCockpitLoader({
       siteSummary={siteSummary}
       wordpressConnectionStatus={wordpressConnectionStatus}
       wordpressLastConnected={wordpressLastConnected}
+      wordpressOnly={wordpressOnly}
       wpVersion={wpVersion}
       pluginVersion={pluginVersion}
     />

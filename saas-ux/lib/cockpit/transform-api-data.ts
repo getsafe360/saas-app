@@ -132,6 +132,28 @@ function extractWordPressPayload(raw: unknown): any | null {
   return null;
 }
 
+function compareVersionStrings(a?: string, b?: string): number {
+  const left = (a ?? "").split(".").map((part) => Number.parseInt(part, 10) || 0);
+  const right = (b ?? "").split(".").map((part) => Number.parseInt(part, 10) || 0);
+  const max = Math.max(left.length, right.length);
+
+  for (let i = 0; i < max; i += 1) {
+    const l = left[i] ?? 0;
+    const r = right[i] ?? 0;
+    if (l > r) return 1;
+    if (l < r) return -1;
+  }
+
+  return 0;
+}
+
+function daysSince(dateString?: string | null): number {
+  if (!dateString) return 0;
+  const ts = Date.parse(dateString);
+  if (Number.isNaN(ts)) return 0;
+  return Math.max(0, Math.floor((Date.now() - ts) / (1000 * 60 * 60 * 24)));
+}
+
 function parseCrewWordPressPayload(apiData: any): {
   findings: import("@/types/site-cockpit").WordPressHealthFinding[];
   backlog: CrewWpBacklog[];
@@ -357,17 +379,28 @@ function transformWordPressData(apiData: any) {
   const baselineWordPressScore = typeof apiData.summary?.categoryScores?.wordpress === "number"
     ? apiData.summary.categoryScores.wordpress
     : 68;
+  const snapshot = wpTelemetry.snapshot ?? {};
+  const currentVersion = snapshot.wpVersion || apiData.cms.wp.version || "Unknown";
+  const latestVersion = wpTelemetry.latestVersion || currentVersion;
+  const outdated = currentVersion !== "Unknown" && latestVersion !== "Unknown"
+    ? compareVersionStrings(currentVersion, latestVersion) < 0
+    : false;
+  const pluginList = Array.isArray(wpTelemetry.plugins?.list) ? wpTelemetry.plugins.list : [];
+  const pluginTotal = typeof wpTelemetry.plugins?.total === "number" ? wpTelemetry.plugins.total : pluginList.length;
+  const pluginActive = typeof wpTelemetry.plugins?.active === "number" ? wpTelemetry.plugins.active : pluginList.length;
+  const pluginOutdated = typeof wpTelemetry.plugins?.outdated === "number" ? wpTelemetry.plugins.outdated : 0;
+  const pluginVulnerable = typeof wpTelemetry.plugins?.vulnerable === "number" ? wpTelemetry.plugins.vulnerable : 0;
 
   const wordpressData: WordPress = {
     score: baselineWordPressScore,
     grade: getScoreGrade(baselineWordPressScore),
     version: {
-      current: apiData.cms.wp.version || "6.0",
-      latest: "6.7.0",
-      outdated: parseFloat(apiData.cms.wp.version || "0") < 6.7,
-      securityRisk: "medium" as const,
-      releaseDate: "2023-01-01",
-      daysOld: 365,
+      current: currentVersion,
+      latest: latestVersion,
+      outdated,
+      securityRisk: outdated ? "high" as const : "low" as const,
+      releaseDate: wpTelemetry.latestReleaseDate || "",
+      daysOld: outdated ? daysSince(wpTelemetry.latestReleaseDate) : 0,
     },
     security: {
       defaultLoginExposed: false,
@@ -379,19 +412,19 @@ function transformWordPressData(apiData: any) {
       securityPlugins: [],
     },
     plugins: {
-      total: 0,
-      active: 0,
-      outdated: 0,
-      vulnerable: 0,
-      list: wpTelemetry.plugins?.list ?? [],
+      total: pluginTotal,
+      active: pluginActive,
+      outdated: pluginOutdated,
+      vulnerable: pluginVulnerable,
+      list: pluginList,
     },
     themes: {
-      active: "Unknown Theme",
+      active: wpTelemetry.theme?.active || snapshot.activeTheme?.name || "Unknown Theme",
       version: "1.0",
       latest: "1.0",
       outdated: false,
       parent: null,
-      childTheme: false,
+      childTheme: Boolean(wpTelemetry.theme?.childTheme ?? snapshot.activeTheme?.hasChildTheme),
     },
     core: {
       multisite: false,
@@ -409,7 +442,11 @@ function transformWordPressData(apiData: any) {
     },
     connection: {
       siteId: apiData.wordpressSiteId,
-      status: apiData.connectionStatus?.isConnected ? "connected" : "disconnected",
+      status: apiData.connectionStatus?.isConnected
+        ? wpTelemetry.live === false
+          ? "degraded"
+          : "connected"
+        : "disconnected",
       authMethod: (wpTelemetry.connection?.authMethod ?? "plugin-rest") as "plugin-rest" | "xml-rpc" | "unknown",
       lastAuditAt: apiData.connectionStatus?.lastSync,
       lastSyncAt: apiData.connectionStatus?.lastSync,

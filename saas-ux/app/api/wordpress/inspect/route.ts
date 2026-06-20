@@ -12,16 +12,12 @@ import type { WordPressConnection } from '@/lib/wordpress/auth';
 import {
   createWordPressClient,
   WordPressErrorCode,
-  type WordPressCapabilitiesResponse,
-  type WordPressPullResponse,
-  type WordPressStatusResponse,
 } from '@/lib/wordpress/client';
-import type {
-  WordPressBuilder,
-  WordPressCapabilitySummary,
-  WordPressSeoPlugin,
-  WordPressSiteSnapshot,
-} from '@/lib/wordpress/types';
+import type { WordPressSiteSnapshot } from '@/lib/wordpress/types';
+import {
+  buildSnapshot,
+  persistWordPressSnapshot,
+} from '@/lib/wordpress/inspect';
 
 interface InspectRequestBody {
   siteId?: string;
@@ -33,102 +29,6 @@ interface InspectErrorPayload {
   message: string;
   action?: string;
   details?: string;
-}
-
-function normalizeThemeSlug(themeName: string): string {
-  return themeName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'unknown';
-}
-
-function detectBuilder(themeName: string, activePlugins: string[]): WordPressBuilder {
-  const theme = themeName.toLowerCase();
-  const plugins = activePlugins.map((plugin) => plugin.toLowerCase());
-
-  if (theme.includes('divi') || plugins.some((plugin) => plugin.includes('divi') || plugin.includes('et-core-plugin'))) {
-    return 'divi';
-  }
-  if (plugins.some((plugin) => plugin.includes('elementor'))) {
-    return 'elementor';
-  }
-  if (plugins.some((plugin) => plugin.includes('bricks'))) {
-    return 'bricks';
-  }
-  if (plugins.some((plugin) => plugin.includes('beaver-builder'))) {
-    return 'beaver';
-  }
-  if (plugins.some((plugin) => plugin.includes('oxygen'))) {
-    return 'oxygen';
-  }
-  if (plugins.some((plugin) => plugin.includes('gutenberg'))) {
-    return 'gutenberg';
-  }
-
-  return 'unknown';
-}
-
-function detectSeoPlugin(activePlugins: string[]): WordPressSeoPlugin {
-  const plugins = activePlugins.map((plugin) => plugin.toLowerCase());
-
-  if (plugins.includes('wordpress-seo/wp-seo.php')) {
-    return 'yoast';
-  }
-  if (plugins.includes('seo-by-rank-math/rank-math.php')) {
-    return 'rankmath';
-  }
-  if (plugins.includes('all-in-one-seo-pack/all_in_one_seo_pack.php')) {
-    return 'aioseo';
-  }
-  if (plugins.includes('wp-seopress/seopress.php')) {
-    return 'seopress';
-  }
-
-  return plugins.some((plugin) => plugin.includes('seo')) ? 'unknown' : 'none';
-}
-
-function normalizeCapabilities(
-  response: WordPressCapabilitiesResponse
-): WordPressCapabilitySummary {
-  const raw = response.capabilities ?? {};
-
-  return {
-    read: true,
-    write: Object.values(raw).some(Boolean),
-    themeFiles: Boolean(raw.optionUpdate),
-    mediaUpload: Boolean(raw.mediaAltUpdate),
-    pageUpdate: Boolean(raw.headSnippetInjection || raw.jsonLdInjection || raw.metaTagInjection),
-    rollback: Boolean(raw.rollback || raw.snippetDelete),
-    raw,
-  };
-}
-
-function buildSnapshot(
-  status: WordPressStatusResponse,
-  capabilities: WordPressCapabilitiesResponse,
-  pull: WordPressPullResponse
-): WordPressSiteSnapshot {
-  const themeSlug = normalizeThemeSlug(pull.theme);
-
-  return {
-    siteUrl: pull.siteUrl,
-    inspectedAt: new Date().toISOString(),
-    wpVersion: pull.wpVersion || status.version,
-    pluginVersion: pull.pluginVersion || status.pluginVersion,
-    phpVersion: pull.phpVersion,
-    mysqlVersion: pull.mysqlVersion,
-    activeTheme: {
-      name: pull.theme,
-      stylesheet: themeSlug,
-      template: themeSlug,
-      hasChildTheme: null,
-    },
-    builder: detectBuilder(pull.theme, pull.plugins),
-    seoPlugin: detectSeoPlugin(pull.plugins),
-    activePlugins: pull.plugins,
-    capabilities: normalizeCapabilities(capabilities),
-    issues: [],
-  };
 }
 
 async function getAppUserId(db: ReturnType<typeof getDb>): Promise<number | null> {
@@ -247,6 +147,11 @@ export async function POST(request: NextRequest) {
     ]);
 
     const snapshot = buildSnapshot(status, capabilities, pull);
+    try {
+      await persistWordPressSnapshot(db, site.id, snapshot, 'connector_inspect');
+    } catch (persistError) {
+      console.warn('[wordpress/inspect] snapshot persistence skipped:', persistError);
+    }
 
     await db
       .update(sites)
