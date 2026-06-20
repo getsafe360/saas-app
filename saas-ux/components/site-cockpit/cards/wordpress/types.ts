@@ -37,6 +37,7 @@ export interface WordPressCardProps {
   siteId?: string;
   connectionStatus?: ConnectionStatus;
   lastConnected?: string; // ISO date string
+  agentMode?: boolean;
   pluginVersion?: string;
 }
 
