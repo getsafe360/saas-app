@@ -525,13 +525,16 @@ export async function GET(req: NextRequest) {
   // Run all data fetching in parallel for best performance
   const hostIPPromise = getHostIP(target);
   const faviconPromise = getFavicon(target);
+  const connectedWordPressPromise = siteId
+    ? getConnectedWordPressTelemetry(siteId).catch(() => null)
+    : Promise.resolve(null);
 
   try {
     const [facts, hostIP, faviconUrl, connectedWordPress] = await Promise.all([
       preScan(target),
       hostIPPromise,
       faviconPromise,
-      siteId ? getConnectedWordPressTelemetry(siteId) : Promise.resolve(null),
+      connectedWordPressPromise,
     ]);
 
     const wordpressModule = (facts.cms?.type === "wordpress" || forceWordPress)
@@ -556,13 +559,20 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch {
-    // Get hostIP and favicon even in error case
-    const [hostIP, faviconUrl] = await Promise.all([
+    // Preserve connected WordPress telemetry even if the generic pre-scan fails.
+    const [hostIP, faviconUrl, connectedWordPress] = await Promise.all([
       hostIPPromise,
-      faviconPromise
+      faviconPromise,
+      connectedWordPressPromise,
     ]);
     
-    const fallback = minimalFacts(target, hostIP, faviconUrl);
+    const fallbackBase = minimalFacts(target, hostIP, faviconUrl);
+    const fallback = {
+      ...fallbackBase,
+      ...(connectedWordPress ?? {}),
+      cms: connectedWordPress?.cms ?? fallbackBase.cms,
+    };
+
     return Response.json(fallback, {
       headers: {
         "Content-Type": "application/json; charset=utf-8",
