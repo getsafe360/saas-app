@@ -6,6 +6,7 @@ import { sites } from '@/lib/db/schema/sites/sites';
 import { changeItems, changeSets } from '@/lib/db/schema/copilot/changes';
 import { users } from '@/lib/db/schema/auth/users';
 import { aiAnalysisJobs, aiRepairActions } from '@/lib/db/schema/ai/analysis';
+import { wordpressActionRuns, wordpressVerifications } from '@/lib/db/schema/wordpress/agent';
 import { publishEvent } from '@/lib/cockpit/event-bus';
 import { createWordPressClient } from '@/lib/wordpress/client';
 import { createWordPressActionPlan, type RemediationFindingInput } from '@/lib/wordpress/plan';
@@ -215,6 +216,7 @@ export async function POST(
   let auditLogged = false;
   let auditError: string | undefined;
   let aiTrackingError: string | undefined;
+  let wordpressPersistenceError: string | undefined;
 
   try {
     const [analysisJob] = await db
@@ -311,6 +313,62 @@ export async function POST(
     console.warn('[wordpress/remediate] backend audit skipped:', auditError);
   }
 
+  try {
+    const plannedActionById = new Map(plan.actions.map((action) => [action.id, action]));
+    const runValues = executionResults.map((result) => {
+      const planned = plannedActionById.get(result.actionId);
+      return {
+        siteId,
+        changeSetId: changeSetId ?? null,
+        actionId: result.actionId,
+        actionType: planned?.type ?? 'verify_render',
+        title: result.title,
+        status: result.status,
+        risk: planned?.risk ?? null,
+        autoApplied: result.autoApplied,
+        requiresApproval: result.requiresApproval,
+        inputPayload: {
+          planAction: planned ?? null,
+          findingId: result.findingId,
+        },
+        resultPayload: {
+          message: result.message,
+          connectorResult: result.connectorResult ?? null,
+        },
+        rollbackPayload: result.rollback ?? null,
+        verificationOk: result.verification?.success ?? null,
+        startedAt: new Date(),
+        completedAt: new Date(),
+      };
+    });
+
+    const insertedRuns = await db
+      .insert(wordpressActionRuns)
+      .values(runValues)
+      .returning({ id: wordpressActionRuns.id, actionId: wordpressActionRuns.actionId });
+
+    const runIdByActionId = new Map(insertedRuns.map((row) => [row.actionId, row.id]));
+    const verificationValues = executionResults
+      .filter((result) => result.verification)
+      .map((result) => ({
+        actionRunId: runIdByActionId.get(result.actionId)!,
+        siteId,
+        ok: result.verification?.success ?? false,
+        checks: result.verification?.checks ?? [],
+        domSummary: result.verification?.message ?? null,
+        screenshotUrl: result.verification?.screenshotUrl ?? null,
+        resultPayload: result.verification ?? null,
+      }))
+      .filter((value) => Boolean(value.actionRunId));
+
+    if (verificationValues.length > 0) {
+      await db.insert(wordpressVerifications).values(verificationValues);
+    }
+  } catch (error: any) {
+    wordpressPersistenceError = String(error?.message ?? error ?? 'Unknown WordPress persistence error');
+    console.warn('[wordpress/remediate] wordpress persistence skipped:', wordpressPersistenceError);
+  }
+
   for (const result of executionResults) {
     publishEvent(siteId, {
       type: 'repair',
@@ -339,6 +397,7 @@ export async function POST(
     auditLogged,
     ...(auditError ? { auditError } : {}),
     ...(aiTrackingError ? { aiTrackingError } : {}),
+    ...(wordpressPersistenceError ? { wordpressPersistenceError } : {}),
     summary: {
       requested: findings.length,
       autoApplied: executionResults.filter((result) => result.applied).length,

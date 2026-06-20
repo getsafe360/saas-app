@@ -94,6 +94,17 @@ export type { AdminAction, AdminNote } from './admin/actions';
 export { aiAnalysisJobs, aiRepairActions } from './ai/analysis';
 export type { AiAnalysisJob, NewAiAnalysisJob, AiRepairAction, NewAiRepairAction } from './ai/analysis';
 
+// WordPress agent persistence
+export { wordpressSiteSnapshots, wordpressActionRuns, wordpressVerifications } from './wordpress/agent';
+export type {
+  WordPressSiteSnapshotRow,
+  NewWordPressSiteSnapshotRow,
+  WordPressActionRunRow,
+  NewWordPressActionRunRow,
+  WordPressVerificationRow,
+  NewWordPressVerificationRow,
+} from './wordpress/agent';
+
 // Reports & Branding
 export { reportBranding } from './reports/branding';
 export type {
