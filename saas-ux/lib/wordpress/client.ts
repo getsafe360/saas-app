@@ -2,7 +2,7 @@
 // WordPress REST API client with error handling and retries
 
 /** Latest published version of the GetSafe360 Connector plugin. */
-export const CURRENT_PLUGIN_VERSION = "1.3.0";
+export const CURRENT_PLUGIN_VERSION = "1.3.1";
 
 /**
  * WordPress API error codes
@@ -95,6 +95,24 @@ export interface WordPressStatusResponse {
   connected: boolean;
   version: string;
   pluginVersion: string;
+  timestamp: string;
+}
+
+export interface WordPressCapabilitiesResponse {
+  connectorVersion: string;
+  siteUrl: string;
+  capabilities: Record<string, boolean>;
+}
+
+export interface WordPressPullResponse {
+  success: boolean;
+  wpVersion: string;
+  pluginVersion: string;
+  plugins: string[];
+  theme: string;
+  phpVersion: string;
+  mysqlVersion: string;
+  siteUrl: string;
   timestamp: string;
 }
 
@@ -303,6 +321,14 @@ export class WordPressClient {
     capabilities: Record<string, boolean>;
   }> {
     return this.request('capabilities');
+  }
+
+  /**
+   * Pull a richer WordPress environment snapshot from the connector plugin.
+   * Requires plugin v1.3.1+.
+   */
+  async pull(): Promise<WordPressPullResponse> {
+    return this.request<WordPressPullResponse>('pull');
   }
 
   /**
