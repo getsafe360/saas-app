@@ -56,6 +56,11 @@ export interface WordPressCapabilitySummary {
   raw: Record<string, boolean>;
 }
 
+export interface WordPressConnectorProtectionState {
+  disableXmlRpc: boolean;
+  blockUserEnumeration: boolean;
+}
+
 export interface WordPressSiteSnapshot {
   siteUrl: string;
   inspectedAt: string;
@@ -85,8 +90,13 @@ export type WordPressActionType =
   | 'assign_menu'
   | 'fix_broken_images'
   | 'apply_schema'
+  | 'update_connector_setting'
   | 'flush_cache'
   | 'verify_render';
+
+export type WordPressActionRisk = 'low' | 'medium' | 'high';
+export type WordPressVerificationKind = 'api' | 'visual' | 'content' | 'mixed';
+export type WordPressActionStatus = 'planned' | 'applied' | 'skipped' | 'failed';
 
 export interface WordPressVerificationResult {
   success: boolean;
@@ -96,18 +106,34 @@ export interface WordPressVerificationResult {
   issues?: WordPressIssue[];
 }
 
+export interface WordPressVerificationCheck {
+  name: string;
+  ok: boolean;
+  detail?: string;
+}
+
+export interface WordPressDetailedVerificationResult extends WordPressVerificationResult {
+  checks: WordPressVerificationCheck[];
+}
+
+export interface WordPressConnectorSettingPayload {
+  key: 'disableXmlRpc' | 'blockUserEnumeration';
+  enabled: boolean;
+}
+
 export interface WordPressPlannedAction {
   id: string;
   type: WordPressActionType;
   title: string;
   description: string;
-  risk: 'low' | 'medium' | 'high';
+  risk: WordPressActionRisk;
   autoApplyEligible: boolean;
   requiresApproval: boolean;
   requiredCapabilities: string[];
   verification?: {
-    kind: 'api' | 'visual' | 'content';
+    kind: WordPressVerificationKind;
     expectation: string;
+    assertions?: string[];
   };
   payload: Record<string, unknown>;
 }
@@ -118,4 +144,33 @@ export interface WordPressActionPlan {
   objective: string;
   builder: WordPressBuilder;
   actions: WordPressPlannedAction[];
+}
+
+export interface WordPressConnectorActionRequest {
+  id: string;
+  type: 'update_connector_setting';
+  payload: WordPressConnectorSettingPayload;
+}
+
+export interface WordPressConnectorActionResult {
+  id: string;
+  type: WordPressConnectorActionRequest['type'];
+  status: 'applied' | 'skipped' | 'failed';
+  message: string;
+  state?: WordPressConnectorProtectionState;
+  rollback?: WordPressConnectorActionRequest | null;
+}
+
+export interface WordPressActionExecutionResult {
+  actionId: string;
+  type: WordPressActionType;
+  title: string;
+  status: WordPressActionStatus;
+  applied: boolean;
+  autoApplied: boolean;
+  message: string;
+  requiresApproval: boolean;
+  verification?: WordPressDetailedVerificationResult;
+  rollback?: WordPressConnectorActionRequest | null;
+  connectorResult?: WordPressConnectorActionResult | null;
 }

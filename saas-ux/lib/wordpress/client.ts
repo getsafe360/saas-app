@@ -1,8 +1,14 @@
 // lib/wordpress/client.ts
 // WordPress REST API client with error handling and retries
 
+import type {
+  WordPressConnectorActionRequest,
+  WordPressConnectorActionResult,
+  WordPressConnectorProtectionState,
+} from '@/lib/wordpress/types';
+
 /** Latest published version of the GetSafe360 Connector plugin. */
-export const CURRENT_PLUGIN_VERSION = "1.3.1";
+export const CURRENT_PLUGIN_VERSION = "1.4.0";
 
 /**
  * WordPress API error codes
@@ -114,6 +120,7 @@ export interface WordPressPullResponse {
   mysqlVersion: string;
   siteUrl: string;
   timestamp: string;
+  protections?: WordPressConnectorProtectionState;
 }
 
 /**
@@ -138,6 +145,11 @@ export interface WordPressPushResponse {
   applied: number;
   skipped: number;
   appliedIds: string[];
+}
+
+export interface WordPressActionGatewayResponse {
+  success: boolean;
+  results: WordPressConnectorActionResult[];
 }
 
 /**
@@ -329,6 +341,17 @@ export class WordPressClient {
    */
   async pull(): Promise<WordPressPullResponse> {
     return this.request<WordPressPullResponse>('pull');
+  }
+
+  /**
+   * Apply allowlisted connector actions such as safe security toggles.
+   * Requires plugin v1.4.0+.
+   */
+  async applyActions(actions: WordPressConnectorActionRequest[]): Promise<WordPressActionGatewayResponse> {
+    return this.request<WordPressActionGatewayResponse>('actions', {
+      method: 'POST',
+      body: JSON.stringify({ actions }),
+    });
   }
 
   /**
