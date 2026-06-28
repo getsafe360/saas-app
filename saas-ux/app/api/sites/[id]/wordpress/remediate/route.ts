@@ -6,17 +6,69 @@ import { sites } from '@/lib/db/schema/sites/sites';
 import { changeItems, changeSets } from '@/lib/db/schema/copilot/changes';
 import { users } from '@/lib/db/schema/auth/users';
 import { aiAnalysisJobs, aiRepairActions } from '@/lib/db/schema/ai/analysis';
+import { wordpressActionRuns, wordpressVerifications } from '@/lib/db/schema/wordpress/agent';
 import { publishEvent } from '@/lib/cockpit/event-bus';
+import { createWordPressClient } from '@/lib/wordpress/client';
+import { createWordPressActionPlan, type RemediationFindingInput } from '@/lib/wordpress/plan';
+import { executeWordPressActionPlan } from '@/lib/wordpress/actions';
+import type {
+  WordPressCapabilitySummary,
+  WordPressDetailedVerificationResult,
+  WordPressSiteSnapshot,
+} from '@/lib/wordpress/types';
 
-type RemediationFinding = {
-  id: string;
-  actionId?: string;
-  title?: string;
-  severity?: string;
-  category?: string;
-  automationLevel?: string;
-  safetyLevel?: 'safe' | 'review' | 'sensitive';
+type PersistedExecutionResult = {
+  findingId: string;
+  actionId: string;
+  title: string;
+  status: 'applied' | 'skipped' | 'failed';
+  applied: boolean;
+  autoApplied: boolean;
+  message: string;
+  skippedBySafeMode: boolean;
+  requiresApproval: boolean;
+  verification?: WordPressDetailedVerificationResult;
+  connectorResult?: unknown;
+  rollback?: unknown;
 };
+
+function normalizeCapabilities(raw: Record<string, boolean>): WordPressCapabilitySummary {
+  return {
+    read: true,
+    write: Object.values(raw).some(Boolean),
+    themeFiles: Boolean(raw.optionUpdate),
+    mediaUpload: Boolean(raw.mediaAltUpdate),
+    pageUpdate: Boolean(raw.headSnippetInjection || raw.jsonLdInjection || raw.metaTagInjection),
+    rollback: Boolean(raw.rollback || raw.snippetDelete),
+    raw,
+  };
+}
+
+function inferBuilderFromPull(pull: { plugins?: string[]; theme?: string }): WordPressSiteSnapshot['builder'] {
+  const theme = (pull.theme ?? '').toLowerCase();
+  const plugins = (pull.plugins ?? []).map((plugin) => plugin.toLowerCase());
+
+  if (theme.includes('divi') || plugins.some((plugin) => plugin.includes('divi') || plugin.includes('et-core-plugin'))) {
+    return 'divi';
+  }
+  if (plugins.some((plugin) => plugin.includes('elementor'))) {
+    return 'elementor';
+  }
+  if (plugins.some((plugin) => plugin.includes('bricks'))) {
+    return 'bricks';
+  }
+  if (plugins.some((plugin) => plugin.includes('beaver-builder'))) {
+    return 'beaver';
+  }
+  if (plugins.some((plugin) => plugin.includes('oxygen'))) {
+    return 'oxygen';
+  }
+  if (plugins.some((plugin) => plugin.includes('gutenberg'))) {
+    return 'gutenberg';
+  }
+
+  return 'unknown';
+}
 
 export async function POST(
   request: NextRequest,
@@ -30,7 +82,7 @@ export async function POST(
   }
 
   const body = await request.json().catch(() => ({}));
-  const findings: RemediationFinding[] = Array.isArray(body?.findings) ? body.findings : [];
+  const findings: RemediationFindingInput[] = Array.isArray(body?.findings) ? body.findings : [];
   const safeMode = body?.safeMode !== false;
   const locale = typeof body?.locale === 'string' ? body.locale : 'en';
 
@@ -38,121 +90,201 @@ export async function POST(
     return NextResponse.json({ success: false, error: 'NO_FINDINGS_SELECTED' }, { status: 400 });
   }
 
-  publishEvent(siteId, { type: 'repair', state: 'repairing', message: 'Starting WordPress remediation', platform: 'wordpress' });
-
-  const executionResults: Array<{
-    findingId: string;
-    actionId: string;
-    status: 'skipped' | 'applied';
-    message: string;
-    skippedBySafeMode: boolean;
-    finding: RemediationFinding;
-  }> = findings.map((finding) => {
-    const skippedBySafeMode = safeMode && finding.safetyLevel === 'sensitive';
-    return {
-      findingId: finding.id,
-      actionId: finding.actionId ?? finding.id,
-      status: skippedBySafeMode ? 'skipped' : 'applied',
-      message: skippedBySafeMode
-        ? `Skipped ${finding.title ?? finding.id} due to safe mode`
-        : `Queued remediation for ${finding.title ?? finding.id}`,
-      skippedBySafeMode,
-      finding,
-    };
+  publishEvent(siteId, {
+    type: 'repair',
+    state: 'repairing',
+    message: 'Planning WordPress remediation actions',
+    platform: 'wordpress',
   });
+
+  const db = getDrizzle();
+
+  const [dbUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.clerkUserId, userId))
+    .limit(1);
+
+  const [site] = await db
+    .select({
+      id: sites.id,
+      userId: sites.userId,
+      siteUrl: sites.siteUrl,
+      tokenHash: sites.tokenHash,
+      wordpressConnection: sites.wordpressConnection,
+      isConnected: sites.isConnected,
+      connectionStatus: sites.connectionStatus,
+    })
+    .from(sites)
+    .where(eq(sites.id, siteId))
+    .limit(1);
+
+  if (!site) {
+    return NextResponse.json({ success: false, error: 'SITE_NOT_FOUND' }, { status: 404 });
+  }
+
+  if (dbUser?.id && site.userId !== dbUser.id) {
+    return NextResponse.json({ success: false, error: 'FORBIDDEN' }, { status: 403 });
+  }
+
+  const tokenHash =
+    site.tokenHash ||
+    ((site.wordpressConnection as { tokenHash?: string } | null)?.tokenHash ?? null);
+
+  if (!tokenHash || !site.isConnected || site.connectionStatus !== 'connected') {
+    return NextResponse.json(
+      { success: false, error: 'WORDPRESS_NOT_CONNECTED' },
+      { status: 422 },
+    );
+  }
+
+  const allowedFindings = safeMode
+    ? findings.filter((finding) => finding.safetyLevel !== 'sensitive')
+    : findings;
+  const safeModeSkipped = safeMode
+    ? findings.filter((finding) => finding.safetyLevel === 'sensitive')
+    : [];
+
+  const client = createWordPressClient({
+    siteUrl: site.siteUrl,
+    tokenHash,
+    timeout: 10000,
+  });
+
+  const [capabilitiesResponse, pull] = await Promise.all([
+    client.getCapabilities(),
+    client.pull(),
+  ]);
+
+  const capabilities = normalizeCapabilities(capabilitiesResponse.capabilities ?? {});
+  const plan = createWordPressActionPlan({
+    siteId,
+    source: 'system',
+    objective: `Remediate ${allowedFindings.length} selected WordPress finding(s) with low-risk auto-apply where supported.`,
+    findings: allowedFindings,
+    snapshot: {
+      builder: inferBuilderFromPull(pull),
+    },
+    capabilities,
+  });
+
+  const actionResults = await executeWordPressActionPlan({
+    siteUrl: site.siteUrl,
+    tokenHash,
+    plan,
+  });
+
+  const skippedBySafeModeResults: PersistedExecutionResult[] = safeModeSkipped.map((finding) => ({
+    findingId: finding.id,
+    actionId: finding.actionId ?? finding.id,
+    title: finding.title ?? finding.id,
+    status: 'skipped',
+    applied: false,
+    autoApplied: false,
+    message: `Skipped ${finding.title ?? finding.id} because safe mode blocks sensitive changes.`,
+    skippedBySafeMode: true,
+    requiresApproval: true,
+  }));
+
+  const executionResults: PersistedExecutionResult[] = [
+    ...actionResults.map((result): PersistedExecutionResult => {
+      const persistedStatus: PersistedExecutionResult['status'] =
+        result.status === 'applied' || result.status === 'failed' ? result.status : 'skipped';
+
+      return {
+        findingId:
+          (plan.actions.find((action) => action.id === result.actionId)?.payload.sourceFindingId as string | undefined) ??
+          result.actionId,
+        actionId: result.actionId,
+        title: result.title,
+        status: persistedStatus,
+        applied: result.applied,
+        autoApplied: result.autoApplied,
+        message: result.message,
+        skippedBySafeMode: false,
+        requiresApproval: result.requiresApproval,
+        verification: result.verification,
+        connectorResult: result.connectorResult,
+        rollback: result.rollback,
+      };
+    }),
+    ...skippedBySafeModeResults,
+  ];
 
   let changeSetId: string | undefined;
   let analysisJobId: string | undefined;
   let auditLogged = false;
   let auditError: string | undefined;
   let aiTrackingError: string | undefined;
-  let ownershipValidated = false;
+  let wordpressPersistenceError: string | undefined;
 
   try {
-    const db = getDrizzle();
+    const [analysisJob] = await db
+      .insert(aiAnalysisJobs)
+      .values({
+        siteId,
+        userId: dbUser?.id,
+        status: 'completed',
+        selectedModules: { wordpress: true, remediation: true },
+        locale,
+        analysisDepth: 'balanced',
+        safeMode,
+        issuesFound: findings.length,
+        repairableIssues: executionResults.filter((result) => result.status === 'applied').length,
+        startedAt: new Date(),
+        completedAt: new Date(),
+      })
+      .returning({ id: aiAnalysisJobs.id });
 
-    const [dbUser] = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.clerkUserId, userId))
-      .limit(1);
+    analysisJobId = analysisJob?.id;
 
-    const [site] = await db
-      .select({ id: sites.id, userId: sites.userId })
-      .from(sites)
-      .where(eq(sites.id, siteId))
-      .limit(1);
+    if (analysisJobId) {
+      const repairActionValues = executionResults.map((result) => {
+        const persistedStatus: 'completed' | 'failed' | 'skipped' =
+          result.status === 'applied'
+            ? 'completed'
+            : result.status === 'failed'
+              ? 'failed'
+              : 'skipped';
 
-    if (!site) {
-      return NextResponse.json({ success: false, error: 'SITE_NOT_FOUND' }, { status: 404 });
-    }
-
-    if (dbUser?.id && site.userId !== dbUser.id) {
-      return NextResponse.json({ success: false, error: 'FORBIDDEN' }, { status: 403 });
-    }
-
-    ownershipValidated = true;
-
-    // Persist AI analysis/remediation tracking records (best effort, non-blocking)
-    try {
-      const [analysisJob] = await db
-        .insert(aiAnalysisJobs)
-        .values({
+        return {
+          analysisJobId,
           siteId,
-          userId: dbUser?.id,
-          status: 'completed',
-          selectedModules: { wordpress: true, remediation: true },
-          locale,
-          analysisDepth: 'balanced',
-          safeMode,
-          issuesFound: findings.length,
-          repairableIssues: executionResults.filter((result) => !result.skippedBySafeMode).length,
-          startedAt: new Date(),
-          completedAt: new Date(),
-        })
-        .returning({ id: aiAnalysisJobs.id });
+          issueId: result.findingId,
+          actionId: result.actionId,
+          title: result.title,
+          category: 'wordpress',
+          severity: findings.find((finding) => finding.id === result.findingId)?.severity,
+          status: persistedStatus,
+          repairMethod: result.autoApplied ? 'connector-action-gateway' : 'manual-review',
+          changes: {
+            safeMode,
+            locale,
+            planActionId: result.actionId,
+            applied: result.applied,
+            requiresApproval: result.requiresApproval,
+          },
+          executedAt: new Date(),
+          safeModeSkipped: result.skippedBySafeMode,
+          reportIncluded: true,
+        };
+      });
 
-      analysisJobId = analysisJob?.id;
-
-      if (analysisJobId) {
-        const persistedAnalysisJobId = analysisJobId;
-        await db.insert(aiRepairActions).values(
-          executionResults.map((result) => {
-            const actionStatus: 'skipped' | 'completed' = result.skippedBySafeMode
-              ? 'skipped'
-              : 'completed';
-
-            return {
-              analysisJobId: persistedAnalysisJobId,
-              siteId,
-              issueId: result.findingId,
-              actionId: result.actionId,
-              title: result.finding.title ?? result.findingId,
-              category: result.finding.category,
-              severity: result.finding.severity,
-              status: actionStatus,
-              repairMethod: result.finding.automationLevel ?? 'manual',
-              changes: { safeMode, locale },
-              executedAt: new Date(),
-              safeModeSkipped: result.skippedBySafeMode,
-              reportIncluded: true,
-            };
-          }),
-        );
-      }
-    } catch (error: any) {
-      aiTrackingError = String(error?.message ?? error ?? 'Unknown AI tracking error');
-      console.warn('[wordpress/remediate] ai tracking skipped:', aiTrackingError);
+      await db.insert(aiRepairActions).values(repairActionValues);
     }
+  } catch (error: any) {
+    aiTrackingError = String(error?.message ?? error ?? 'Unknown AI tracking error');
+    console.warn('[wordpress/remediate] ai tracking skipped:', aiTrackingError);
+  }
 
-    // Audit logging must never block remediation UX (deployed envs may lag migrations).
+  try {
     const [changeSet] = await db
       .insert(changeSets)
       .values({
         siteId,
-        title: 'WordPress Batch Remediation',
-        description: `Applied ${findings.length} selected remediation action(s)`,
-        status: 'applied',
+        title: 'WordPress Typed Remediation',
+        description: `Processed ${executionResults.length} WordPress remediation action(s) through the mutation planner/runner.`,
+        status: executionResults.some((result) => result.status === 'failed') ? 'applied' : 'applied',
         createdByUserId: dbUser?.id,
       })
       .returning({ id: changeSets.id });
@@ -161,44 +293,117 @@ export async function POST(
 
     if (changeSetId) {
       const persistedChangeSetId = changeSetId;
-      await db.insert(changeItems).values(
-        executionResults.map((result) => ({
-          changeSetId: persistedChangeSetId,
+      const changeItemValues = executionResults.map((result) => ({
+        changeSetId: persistedChangeSetId,
           op: 'remediate',
           path: `wordpress/${result.actionId}`,
-          oldValue: { status: 'pending' },
-          newValue: { status: result.status, findingId: result.findingId },
-        })),
-      );
+          oldValue: { status: 'planned' },
+          newValue: {
+            status: result.status,
+            applied: result.applied,
+            requiresApproval: result.requiresApproval,
+            verification: result.verification ?? null,
+          },
+      }));
+      await db.insert(changeItems).values(changeItemValues);
       auditLogged = true;
     }
   } catch (error: any) {
     auditError = String(error?.message ?? error ?? 'Unknown remediation backend error');
-    console.warn('[wordpress/remediate] backend checks/audit skipped:', auditError);
+    console.warn('[wordpress/remediate] backend audit skipped:', auditError);
+  }
+
+  try {
+    const plannedActionById = new Map(plan.actions.map((action) => [action.id, action]));
+    const runValues = executionResults.map((result) => {
+      const planned = plannedActionById.get(result.actionId);
+      return {
+        siteId,
+        changeSetId: changeSetId ?? null,
+        actionId: result.actionId,
+        actionType: planned?.type ?? 'verify_render',
+        title: result.title,
+        status: result.status,
+        risk: planned?.risk ?? null,
+        autoApplied: result.autoApplied,
+        requiresApproval: result.requiresApproval,
+        inputPayload: {
+          planAction: planned ?? null,
+          findingId: result.findingId,
+        },
+        resultPayload: {
+          message: result.message,
+          connectorResult: result.connectorResult ?? null,
+        },
+        rollbackPayload: result.rollback ?? null,
+        verificationOk: result.verification?.success ?? null,
+        startedAt: new Date(),
+        completedAt: new Date(),
+      };
+    });
+
+    const insertedRuns = await db
+      .insert(wordpressActionRuns)
+      .values(runValues)
+      .returning({ id: wordpressActionRuns.id, actionId: wordpressActionRuns.actionId });
+
+    const runIdByActionId = new Map(insertedRuns.map((row) => [row.actionId, row.id]));
+    const verificationValues = executionResults
+      .filter((result) => result.verification)
+      .map((result) => ({
+        actionRunId: runIdByActionId.get(result.actionId)!,
+        siteId,
+        ok: result.verification?.success ?? false,
+        checks: result.verification?.checks ?? [],
+        domSummary: result.verification?.message ?? null,
+        screenshotUrl: result.verification?.screenshotUrl ?? null,
+        resultPayload: result.verification ?? null,
+      }))
+      .filter((value) => Boolean(value.actionRunId));
+
+    if (verificationValues.length > 0) {
+      await db.insert(wordpressVerifications).values(verificationValues);
+    }
+  } catch (error: any) {
+    wordpressPersistenceError = String(error?.message ?? error ?? 'Unknown WordPress persistence error');
+    console.warn('[wordpress/remediate] wordpress persistence skipped:', wordpressPersistenceError);
   }
 
   for (const result of executionResults) {
     publishEvent(siteId, {
       type: 'repair',
-      state: 'repairing',
+      state: result.status === 'failed' ? 'repairing' : 'repairing',
       message: result.message,
       platform: 'wordpress',
     });
   }
-  publishEvent(siteId, { type: 'repair', state: 'repaired', platform: 'wordpress' });
+
+  publishEvent(siteId, {
+    type: 'repair',
+    state: 'repaired',
+    message: `${executionResults.filter((result) => result.applied).length} WordPress action(s) applied, ${executionResults.filter((result) => result.status === 'skipped').length} deferred.`,
+    platform: 'wordpress',
+  });
 
   return NextResponse.json({
     success: true,
     siteId,
-    ownershipValidated,
+    safeMode,
+    locale,
+    plan,
+    capabilities: capabilities.raw,
+    analysisJobId,
     changeSetId,
     auditLogged,
     ...(auditError ? { auditError } : {}),
     ...(aiTrackingError ? { aiTrackingError } : {}),
-    analysisJobId,
-    safeMode,
-    locale,
-    executed: executionResults.map(({ finding, skippedBySafeMode, ...rest }) => rest),
-    rerunSuggestedChecks: executionResults.map((result) => result.findingId),
+    ...(wordpressPersistenceError ? { wordpressPersistenceError } : {}),
+    summary: {
+      requested: findings.length,
+      autoApplied: executionResults.filter((result) => result.applied).length,
+      deferred: executionResults.filter((result) => result.status === 'skipped').length,
+      failed: executionResults.filter((result) => result.status === 'failed').length,
+    },
+    executed: executionResults,
   });
 }

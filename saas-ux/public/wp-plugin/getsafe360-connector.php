@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GetSafe 360 AI Connector
  * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 1.3.1
+ * Version: 1.4.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
@@ -20,8 +20,9 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '1.3.1';
+  const VERSION = '1.4.0';
   const OPTION = 'getsafe360_connector';
+  const ACTION_STATE_OPTION = 'getsafe360_action_state';
   const API_BASE = 'https://saasfly-one-psi.vercel.app';
 
   public function __construct() {
@@ -30,6 +31,9 @@ class GetSafe360_Connector {
     add_action('rest_api_init', [$this, 'routes']);
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('wp_head', [$this, 'output_seo_injections'], 5);
+    add_filter('xmlrpc_enabled', [$this, 'filter_xmlrpc_enabled']);
+    add_filter('rest_endpoints', [$this, 'filter_rest_endpoints']);
+    add_action('template_redirect', [$this, 'block_author_enumeration']);
     add_filter('update_plugins_www.getsafe360.ai', [$this, 'check_for_update'], 10, 4);
     add_filter('plugins_api', [$this, 'plugin_api_info'], 10, 3);
     add_filter('plugin_action_links_' . plugin_basename(__FILE__), [$this, 'action_links']);
@@ -64,6 +68,25 @@ class GetSafe360_Connector {
       $headers['x-vercel-protection-bypass'] = VERCEL_AUTOMATION_BYPASS_SECRET;
     }
     return $headers;
+  }
+
+  private function get_action_state() {
+    $defaults = [
+      'disableXmlRpc' => false,
+      'blockUserEnumeration' => false,
+    ];
+
+    $state = get_option(self::ACTION_STATE_OPTION, []);
+    if (!is_array($state)) {
+      return $defaults;
+    }
+
+    return array_merge($defaults, $state);
+  }
+
+  private function update_action_state($state) {
+    update_option(self::ACTION_STATE_OPTION, $state, false);
+    return $state;
   }
 
   private function render_notice($type, $title, $message = '', $debug = null) {
@@ -438,6 +461,54 @@ class GetSafe360_Connector {
 
   // ---------- REST routes ----------
 
+  public function filter_xmlrpc_enabled($enabled) {
+    $state = $this->get_action_state();
+    if (!empty($state['disableXmlRpc'])) {
+      return false;
+    }
+
+    return $enabled;
+  }
+
+  public function filter_rest_endpoints($endpoints) {
+    $state = $this->get_action_state();
+    if (empty($state['blockUserEnumeration']) || !is_array($endpoints)) {
+      return $endpoints;
+    }
+
+    $keys_to_remove = [
+      '/wp/v2/users',
+      '/wp/v2/users/(?P<id>[\d]+)',
+      '/wp/v2/users/me',
+    ];
+
+    foreach ($keys_to_remove as $key) {
+      if (isset($endpoints[$key])) {
+        unset($endpoints[$key]);
+      }
+    }
+
+    return $endpoints;
+  }
+
+  public function block_author_enumeration() {
+    $state = $this->get_action_state();
+    if (empty($state['blockUserEnumeration'])) {
+      return;
+    }
+
+    $author_probe = isset($_GET['author']) ? sanitize_text_field($_GET['author']) : '';
+    if ($author_probe !== '' && ctype_digit($author_probe)) {
+      status_header(403);
+      nocache_headers();
+      wp_die(
+        esc_html__('Author enumeration blocked by GetSafe 360 AI.', 'getsafe360-connector'),
+        esc_html__('Forbidden', 'getsafe360-connector'),
+        ['response' => 403]
+      );
+    }
+  }
+
   public function routes() {
     // Ping endpoint - check if plugin is installed
     register_rest_route('getsafe360/v1', '/ping', [
@@ -497,6 +568,13 @@ class GetSafe360_Connector {
     register_rest_route('getsafe360/v1', '/capabilities', [
       'methods' => 'GET',
       'callback' => [$this, 'route_capabilities'],
+      'permission_callback' => [$this, 'auth_api_key']
+    ]);
+
+    // Actions endpoint - apply allowlisted connector-native mutations
+    register_rest_route('getsafe360/v1', '/actions', [
+      'methods' => 'POST',
+      'callback' => [$this, 'route_actions'],
       'permission_callback' => [$this, 'auth_api_key']
     ]);
   }
@@ -669,6 +747,84 @@ class GetSafe360_Connector {
       'mysqlVersion' => $GLOBALS['wpdb']->db_version(),
       'siteUrl' => get_site_url(),
       'timestamp' => current_time('mysql'),
+      'protections' => $this->get_action_state(),
+    ];
+  }
+
+  /**
+   * POST /wp-json/getsafe360/v1/actions
+   * Applies allowlisted connector-native actions with rollback metadata.
+   */
+  public function route_actions(\WP_REST_Request $req) {
+    $payload = $req->get_json_params();
+    $actions = isset($payload['actions']) && is_array($payload['actions']) ? $payload['actions'] : [];
+    $state = $this->get_action_state();
+    $results = [];
+
+    foreach ($actions as $action) {
+      if (!is_array($action) || empty($action['id']) || empty($action['type'])) {
+        continue;
+      }
+
+      $action_id = sanitize_text_field($action['id']);
+      $action_type = sanitize_text_field($action['type']);
+
+      if ($action_type !== 'update_connector_setting') {
+        $results[] = [
+          'id' => $action_id,
+          'type' => $action_type,
+          'status' => 'skipped',
+          'message' => 'Unsupported action type.',
+          'state' => $state,
+          'rollback' => null,
+        ];
+        continue;
+      }
+
+      $setting = isset($action['payload']) && is_array($action['payload']) ? $action['payload'] : [];
+      $key = isset($setting['key']) ? sanitize_text_field($setting['key']) : '';
+      $enabled = isset($setting['enabled']) ? (bool) $setting['enabled'] : true;
+
+      if (!in_array($key, ['disableXmlRpc', 'blockUserEnumeration'], true)) {
+        $results[] = [
+          'id' => $action_id,
+          'type' => $action_type,
+          'status' => 'skipped',
+          'message' => 'Unsupported connector setting.',
+          'state' => $state,
+          'rollback' => null,
+        ];
+        continue;
+      }
+
+      $previous = !empty($state[$key]);
+      $state[$key] = $enabled;
+      $this->update_action_state($state);
+
+      $label = $key === 'disableXmlRpc'
+        ? 'XML-RPC protection'
+        : 'user enumeration protection';
+
+      $results[] = [
+        'id' => $action_id,
+        'type' => $action_type,
+        'status' => 'applied',
+        'message' => sprintf('%s %s.', $label, $enabled ? 'enabled' : 'disabled'),
+        'state' => $state,
+        'rollback' => [
+          'id' => $action_id . '-rollback',
+          'type' => 'update_connector_setting',
+          'payload' => [
+            'key' => $key,
+            'enabled' => $previous,
+          ],
+        ],
+      ];
+    }
+
+    return [
+      'success' => true,
+      'results' => $results,
     ];
   }
 
@@ -754,6 +910,9 @@ class GetSafe360_Connector {
         'postRevisionCreate'   => false,
         'mediaAltUpdate'       => false,
         'optionUpdate'         => false,
+        'actionGateway'        => true,
+        'securityDisableXmlrpc' => true,
+        'securityBlockUserEnumeration' => true,
         'rollback'             => true,
       ],
     ];
