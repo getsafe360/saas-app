@@ -11,6 +11,9 @@ import { teams } from '@/lib/db/schema/auth';
 import { and, eq } from 'drizzle-orm';
 import { recordTokenPurchase } from '@/lib/usage/token-transactions';
 import { getTokenPackById } from '@/config/billing/token-packs';
+import { sendSubscriptionConfirmationEmail, sendPaymentReceiptEmail } from '@/lib/email/send';
+import { users } from '@/lib/db/schema/auth/users';
+import { teamMembers } from '@/lib/db/schema/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -92,6 +95,28 @@ export async function POST(req: Request) {
                 updatedAt: new Date(),
               })
               .where(eq(teams.id, teamId));
+
+            // Subscription confirmation email
+            const owner = await db
+              .select({ email: users.email, name: users.name })
+              .from(teamMembers)
+              .innerJoin(users, eq(teamMembers.userId, users.id))
+              .where(eq(teamMembers.teamId, teamId))
+              .limit(1)
+              .then((r) => r[0] ?? null);
+            if (owner) {
+              const [pl2] = await db.select().from(plans).where(eq(plans.slug, planSlug)).limit(1);
+              const [teamRow] = await db.select().from(teams).where(eq(teams.id, teamId)).limit(1);
+              sendSubscriptionConfirmationEmail({
+                to: owner.email,
+                firstName: (owner.name ?? owner.email).split(' ')[0],
+                planName: pl2?.name ?? planSlug,
+                billingAmount: s.amount_total ? `€${(s.amount_total / 100).toFixed(2)}` : '',
+                billingPeriod: 'month',
+                tokenBalance: (teamRow?.tokensIncluded ?? 0).toLocaleString('en'),
+                nextRenewalDate: '',
+              }).catch((e) => console.error('[webhook] subscription confirmation email failed', e));
+            }
           }
         }
 
@@ -159,6 +184,49 @@ export async function POST(req: Request) {
             })
             .where(eq(teams.stripeSubscriptionId, sub.id)),
         ]);
+        break;
+      }
+
+      case 'invoice.payment_succeeded': {
+        // Cast broadly to avoid Stripe SDK version mismatches on optional fields
+        const inv = event.data.object as any;
+
+        const customerEmail: string | undefined = inv.customer_email;
+        if (!customerEmail) break;
+
+        const piId: string | null = inv.payment_intent ?? null;
+        const pi = piId
+          ? await stripe.paymentIntents.retrieve(piId, { expand: ['payment_method'] }).catch(() => null)
+          : null;
+        const card = (pi?.payment_method as Stripe.PaymentMethod | null)?.card;
+
+        const subId2: string | null = inv.subscription ?? null;
+        const sub2 = subId2
+          ? await stripe.subscriptions.retrieve(subId2).catch(() => null) as any
+          : null;
+
+        const lineItem = inv.lines?.data?.[0];
+        const planName: string = lineItem?.description ?? 'Pro';
+
+        sendPaymentReceiptEmail({
+          to: customerEmail,
+          firstName: ((inv.customer_name ?? customerEmail) as string).split(' ')[0],
+          billingName: inv.customer_name ?? customerEmail,
+          planName,
+          billingAmountCents: inv.amount_paid ?? 0,
+          billingCurrency: inv.currency ?? 'eur',
+          billingDate: new Date(inv.created * 1000),
+          periodStart: new Date((inv.period_start ?? inv.created) * 1000),
+          periodEnd: new Date((inv.period_end ?? inv.created) * 1000),
+          invoiceNumber: inv.number ?? '',
+          invoicePdfUrl: inv.invoice_pdf ?? '',
+          cardBrand: card?.brand ?? 'Card',
+          cardLast4: card?.last4 ?? '****',
+          nextRenewalDate: sub2?.current_period_end
+            ? new Date(sub2.current_period_end * 1000)
+            : new Date(),
+        }).catch((e) => console.error('[webhook] payment receipt email failed', e));
+
         break;
       }
 
