@@ -3,6 +3,7 @@
 
 import { currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/db/drizzle';
+import { sendWelcomeEmail } from '@/lib/email/send';
 import { users, type NewUser } from '@/lib/db/schema/auth/users';
 import { teams, teamMembers, type NewTeam, type NewTeamMember } from '@/lib/db/schema/auth';
 import { eq } from 'drizzle-orm';
@@ -150,6 +151,12 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
     }
 
     console.log('[syncClerkUser] User created:', createdUser.id);
+
+    // Fire-and-forget — never block provisioning on email delivery
+    sendWelcomeEmail({
+      to: createdUser.email,
+      firstName: clerkUser.firstName || createdUser.email.split('@')[0],
+    }).catch((e) => console.error('[syncClerkUser] welcome email failed', e));
 
     const teamId = await createTeamForUser(
       createdUser.id,
