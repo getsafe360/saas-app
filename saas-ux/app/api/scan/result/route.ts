@@ -78,17 +78,16 @@ export async function GET(req: NextRequest) {
           .limit(1);
         if (userRow) {
           const { findings, remaining } = extractFindings(report);
-          const scores = report.scores ?? {};
           sendScanCompleteEmail({
             to: userRow.email,
             firstName: (userRow.name ?? userRow.email).split(' ')[0],
             siteUrl: new URL(siteRow.siteUrl).hostname,
             siteId: job.siteId,
-            overallScore: scores.overall ?? 0,
-            seoScore: scores.seo ?? 0,
-            perfScore: scores.performance ?? 0,
-            secScore: scores.security ?? 0,
-            a11yScore: scores.accessibility ?? 0,
+            overallScore: report.summary?.score ?? 0,
+            seoScore: 0,
+            perfScore: 0,
+            secScore: 0,
+            a11yScore: 0,
             topFindings: findings,
             remainingCount: remaining,
           }).catch((e) => console.error('[scan/result] email failed', e));
