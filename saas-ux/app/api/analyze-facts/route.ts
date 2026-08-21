@@ -5,6 +5,7 @@ import { isPublicUrl } from "@/lib/net/isPublicUrl";
 import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { getRedisCredentials } from "@/lib/api/redis";
 import { getDb } from "@/lib/db/drizzle";
 import { sites, users, wordpressSiteSnapshots } from "@/lib/db/schema";
 import { and, desc, eq } from "drizzle-orm";
@@ -23,13 +24,11 @@ import type { WordPressSiteSnapshot } from "@/lib/wordpress/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const redis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL!,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-      })
-    : null;
+// Accepts both KV_REST_API_* and UPSTASH_REDIS_REST_* naming — see
+// lib/api/redis.ts. Reading only the latter meant rate limiting was off in
+// production, where only the KV_* pair is set.
+const redisCreds = getRedisCredentials();
+const redis = redisCreds ? new Redis(redisCreds) : null;
 
 const ratelimit = redis
   ? new Ratelimit({ redis, limiter: Ratelimit.fixedWindow(30, "1 m") })

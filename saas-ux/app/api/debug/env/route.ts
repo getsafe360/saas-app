@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/server/isAdminRequest";
 
 const PAGESPEED_TIMEOUT_MS = 30_000;
 
@@ -128,6 +129,13 @@ async function probePageSpeed(url: string, apiKey?: string): Promise<PageSpeedPr
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  // This route reports which secrets are configured (with partial previews) and
+  // proxies arbitrary URLs into the Google PageSpeed API on our own key.
+  // Both are admin-only capabilities — never expose them publicly.
+  if (!(await isAdminRequest())) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
   const testUrl = normalizeProbeUrl(req.nextUrl.searchParams.get("url"));
 
   const pageSpeed = await probePageSpeed(testUrl, process.env.PAGESPEED_API_KEY);

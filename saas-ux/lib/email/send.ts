@@ -1,5 +1,6 @@
 import 'server-only';
 import { getResend, FROM, BASE_URL } from './client';
+import { fallbackEmails } from './fallback';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -50,8 +51,13 @@ export async function sendWelcomeEmail(opts: {
   to: string;
   firstName: string;
 }) {
+  const dashboardUrl = `${BASE_URL}/en/dashboard/`;
   const id = TEMPLATE.welcome;
-  if (!id) { console.warn('[email] RESEND_TEMPLATE_WELCOME not set — skipping'); return; }
+  if (!id) {
+    const fb = fallbackEmails.welcome({ firstName: opts.firstName, dashboardUrl });
+    await send({ from: FROM, to: opts.to, subject: fb.subject, html: fb.html });
+    return;
+  }
   await send({
     from: FROM,
     to: opts.to,
@@ -59,7 +65,7 @@ export async function sendWelcomeEmail(opts: {
       id,
       variables: {
         first_name:     opts.firstName,
-        dashboard_url:  `${BASE_URL}/en/dashboard/`,
+        dashboard_url:  dashboardUrl,
       },
     },
   });
@@ -77,7 +83,19 @@ export async function sendSubscriptionConfirmationEmail(opts: {
   nextRenewalDate: string;
 }) {
   const id = TEMPLATE.subscription_confirmation;
-  if (!id) { console.warn('[email] RESEND_TEMPLATE_SUBSCRIPTION not set — skipping'); return; }
+  if (!id) {
+    const fb = fallbackEmails.subscriptionConfirmation({
+      firstName: opts.firstName,
+      planName: opts.planName,
+      billingAmount: opts.billingAmount,
+      billingPeriod: opts.billingPeriod,
+      tokenBalance: opts.tokenBalance,
+      nextRenewalDate: opts.nextRenewalDate,
+      dashboardUrl: `${BASE_URL}/en/dashboard/`,
+    });
+    await send({ from: FROM, to: opts.to, subject: fb.subject, html: fb.html });
+    return;
+  }
   await send({
     from: FROM,
     to: opts.to,
@@ -117,7 +135,23 @@ export async function sendScanCompleteEmail(opts: {
   remainingCount: number;
 }) {
   const id = TEMPLATE.scan_complete;
-  if (!id) { console.warn('[email] RESEND_TEMPLATE_SCAN_COMPLETE not set — skipping'); return; }
+  const resultsUrl = `${BASE_URL}/en/dashboard/sites/${opts.siteId}`;
+  if (!id) {
+    const fb = fallbackEmails.scanComplete({
+      firstName: opts.firstName,
+      siteUrl: opts.siteUrl,
+      overallScore: opts.overallScore,
+      seoScore: opts.seoScore,
+      perfScore: opts.perfScore,
+      secScore: opts.secScore,
+      a11yScore: opts.a11yScore,
+      findings: opts.topFindings,
+      remainingCount: opts.remainingCount,
+      resultsUrl,
+    });
+    await send({ from: FROM, to: opts.to, subject: fb.subject, html: fb.html });
+    return;
+  }
 
   const [f1, f2, f3] = opts.topFindings;
   await send({
@@ -147,7 +181,7 @@ export async function sendScanCompleteEmail(opts: {
         finding_3_title:          f3?.title ?? '',
         finding_3_description:    f3?.description ?? '',
         remaining_findings_count: String(opts.remainingCount),
-        scan_results_url:         `${BASE_URL}/en/dashboard/sites/${opts.siteId}`,
+        scan_results_url:         resultsUrl,
       },
     },
   });
@@ -168,7 +202,20 @@ export async function sendFixCompleteEmail(opts: {
   tokensRemaining: number;
 }) {
   const id = TEMPLATE.fix_complete;
-  if (!id) { console.warn('[email] RESEND_TEMPLATE_FIX_COMPLETE not set — skipping'); return; }
+  const cockpitUrl = `${BASE_URL}/en/dashboard/sites/${opts.siteId}`;
+  if (!id) {
+    const fb = fallbackEmails.fixComplete({
+      firstName: opts.firstName,
+      siteUrl: opts.siteUrl,
+      fixTitle: opts.fixTitle,
+      fixDescription: opts.fixDescription,
+      tokensUsed: opts.tokensUsed,
+      tokensRemaining: opts.tokensRemaining,
+      cockpitUrl,
+    });
+    await send({ from: FROM, to: opts.to, subject: fb.subject, html: fb.html });
+    return;
+  }
   await send({
     from: FROM,
     to: opts.to,
@@ -183,7 +230,7 @@ export async function sendFixCompleteEmail(opts: {
         fix_description:  opts.fixDescription,
         tokens_used:      opts.tokensUsed.toLocaleString('en'),
         tokens_remaining: opts.tokensRemaining.toLocaleString('en'),
-        site_cockpit_url: `${BASE_URL}/en/dashboard/sites/${opts.siteId}`,
+        site_cockpit_url: cockpitUrl,
       },
     },
   });
@@ -209,8 +256,22 @@ export async function sendPaymentReceiptEmail(opts: {
   nextRenewalDate: Date;
 }) {
   const id = TEMPLATE.payment_receipt;
-  if (!id) { console.warn('[email] RESEND_TEMPLATE_PAYMENT_RECEIPT not set — skipping'); return; }
   const amount = fmtAmount(opts.billingAmountCents, opts.billingCurrency);
+  if (!id) {
+    const fb = fallbackEmails.paymentReceipt({
+      firstName: opts.firstName,
+      planName: opts.planName,
+      billingAmount: amount,
+      billingDate: fmtDate(opts.billingDate),
+      periodStart: fmtDate(opts.periodStart),
+      periodEnd: fmtDate(opts.periodEnd),
+      invoiceNumber: opts.invoiceNumber,
+      invoicePdfUrl: opts.invoicePdfUrl,
+      companyAddress: process.env.COMPANY_ADDRESS ?? '',
+    });
+    await send({ from: FROM, to: opts.to, subject: fb.subject, html: fb.html });
+    return;
+  }
   await send({
     from: FROM,
     to: opts.to,

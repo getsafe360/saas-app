@@ -6,20 +6,21 @@ import { isPublicUrl } from "@/lib/net/isPublicUrl";
 import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { getRedisCredentials } from "@/lib/api/redis";
 import { streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
-// --- rate limit (optional, auto-off if no envs) ---
-const redis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL!,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-      })
-    : null;
+// --- rate limit ---
+// This used to read UPSTASH_REDIS_REST_URL/TOKEN, which nothing sets — the
+// rest of the app uses the KV_REST_API_* names from the Vercel/Upstash
+// integration. The result was that this public, unauthenticated endpoint ran
+// with rate limiting silently disabled in production. getRedisCredentials()
+// accepts either pair.
+const creds = getRedisCredentials();
+const redis = creds ? new Redis(creds) : null;
 
 const ratelimit = redis
   ? new Ratelimit({ redis, limiter: Ratelimit.fixedWindow(30, "1 m") })

@@ -35,6 +35,13 @@ export async function preScan(inputUrl: string) {
   const metaDesc = (html.match(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/i)?.[1] || "").trim();
   const robotsMeta = (html.match(/<meta[^>]+name=["']robots["'][^>]*content=["']([^"']*)["'][^>]*>/i)?.[1] || "").trim();
   const hasCanonical = /<link[^>]+rel=["']canonical["']/i.test(html);
+  // Signals the SEO fix planner needs. All three are things the WordPress
+  // connector can inject into <head>, so detecting them is what makes a
+  // "fix available" claim honest.
+  const hasJsonLd = /<script[^>]+type=["']application\/ld\+json["']/i.test(html);
+  const hasOgTitle = /<meta[^>]+property=["']og:title["']/i.test(html);
+  const hasOgImage = /<meta[^>]+property=["']og:image["']/i.test(html);
+  const hasTwitterCard = /<meta[^>]+name=["']twitter:card["']/i.test(html);
 
   const scripts = html.match(/<script\b[^>]*>/gi)?.length ?? 0;
   const imgs = html.match(/<img\b[^>]*>/gi)?.length ?? 0;
@@ -99,7 +106,11 @@ export async function preScan(inputUrl: string) {
       titleLen: title.length,
       descriptionLen: metaDesc.length,
       robotsMeta,
-      hasCanonical
+      hasCanonical,
+      hasJsonLd,
+      hasOgTitle,
+      hasOgImage,
+      hasTwitterCard
     },
     dom: {
       h1Count: h1s,

@@ -44,6 +44,21 @@ export const fixJobs = pgTable('fix_jobs', {
   estTokens: integer('est_tokens').notNull().default(0),
   agentUsed: agentEnum('agent_used'),
 
+  // Token escrow. Tokens are held when the job is created and only deducted
+  // from teams.tokensRemaining once the apply actually succeeds, so a failed
+  // or cancelled fix never costs the customer anything.
+  holdTokens: integer('hold_tokens').notNull().default(0),
+
+  // 'pending'   → proposal generated, waiting for the user to approve
+  // 'applied'   → approved and successfully pushed; tokens deducted
+  // 'failed'    → approved but the site rejected it; hold released
+  // 'cancelled' → user declined; hold released
+  // 'legacy'    → predates the escrow model
+  approvalState: varchar('approval_state', { length: 24 }).notNull().default('pending'),
+
+  /** Blob key of the FixProposal the user is asked to approve. */
+  proposalBlobKey: varchar('proposal_blob_key', { length: 256 }),
+
   resultBlobKey: varchar('result_blob_key', { length: 256 }),
   errorMessage: text('error_message'),
 
@@ -56,6 +71,7 @@ export const fixJobs = pgTable('fix_jobs', {
   bySite: index('fix_jobs_site_idx').on(t.siteId),
   byTeam: index('fix_jobs_team_idx').on(t.teamId),
   byStatus: index('fix_jobs_status_idx').on(t.status),
+  byTeamApproval: index('fix_jobs_team_approval_idx').on(t.teamId, t.approvalState),
 }));
 
 export const editJobs = pgTable('edit_jobs', {
