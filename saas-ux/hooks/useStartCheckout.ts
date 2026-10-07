@@ -1,14 +1,18 @@
 "use client";
 
+import { useClerk } from "@clerk/nextjs";
 import { useCallback, useState } from "react";
 
 import type { CheckoutTarget } from "@/config/billing/catalogue";
 
 /**
  * Starts a server-created Stripe Checkout Session and sends the browser to it.
- * Signed-out visitors are sent to sign-up and brought back to `returnTo`.
+ * Signed-out visitors get the Clerk sign-up modal and land back on `returnTo`
+ * (the checkout endpoint authenticates with Clerk, so the legacy /sign-up form
+ * would not give them a usable session).
  */
 export function useStartCheckout(returnTo = "/pricing") {
+  const { openSignUp } = useClerk();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +28,8 @@ export function useStartCheckout(returnTo = "/pricing") {
         });
 
         if (res.status === 401) {
-          window.location.assign(`/sign-up?redirect_url=${encodeURIComponent(returnTo)}`);
+          setLoading(false);
+          openSignUp({ forceRedirectUrl: returnTo });
           return;
         }
 
@@ -38,7 +43,7 @@ export function useStartCheckout(returnTo = "/pricing") {
         setLoading(false);
       }
     },
-    [returnTo],
+    [returnTo, openSignUp],
   );
 
   return { start, loading, error };
