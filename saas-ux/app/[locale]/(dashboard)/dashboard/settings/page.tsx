@@ -4,6 +4,7 @@ import { CreditCard, Zap, ExternalLink, TrendingUp } from "lucide-react";
 import { getDbUserFromClerk, findCurrentUserTeam } from "@/lib/auth/current";
 import { PLANS, type PlanName } from "@/lib/plans/config";
 import { TOKEN_PACKS } from "@/config/billing/token-packs";
+import { StartCheckoutButton } from "@/components/checkout/start-checkout-button";
 
 export const dynamic = "force-dynamic";
 
@@ -190,14 +191,13 @@ export default async function SettingsPage() {
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {pack.tokens.toLocaleString()} tokens
               </p>
-              <a
-                href={pack.stripeCheckoutUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 block w-full text-center px-3 py-2 rounded-lg bg-[var(--text-default)] text-[var(--background-default)] text-sm font-medium hover:opacity-80 transition-opacity"
+              <StartCheckoutButton
+                target={{ kind: "pack", pack: pack.id }}
+                returnTo="/dashboard/settings"
+                className="mt-2 w-full"
               >
                 Buy
-              </a>
+              </StartCheckoutButton>
             </div>
           ))}
         </div>

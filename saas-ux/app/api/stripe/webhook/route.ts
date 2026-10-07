@@ -8,7 +8,8 @@ import { webhookEvents } from '@/lib/db/schema';
 import { teamSubscriptions } from '@/lib/db/schema';
 import { plans } from '@/lib/db/schema/billing/plans';
 import { teams } from '@/lib/db/schema/auth';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
+import { PLANS, type PlanName } from '@/lib/plans/config';
 import { recordTokenPurchase } from '@/lib/usage/token-transactions';
 import { getTokenPackById } from '@/config/billing/token-packs';
 import { sendSubscriptionConfirmationEmail, sendPaymentReceiptEmail } from '@/lib/email/send';
@@ -85,6 +86,10 @@ export async function POST(req: Request) {
           }
 
           if (planSlug) {
+            // Grant the plan's monthly quota. Applied as a delta against the
+            // current quota so a retried webhook is a no-op and existing usage
+            // and purchased tokens are preserved.
+            const quota = PLANS[planSlug as PlanName]?.tokensIncluded;
             await db
               .update(teams)
               .set({
@@ -92,6 +97,12 @@ export async function POST(req: Request) {
                 subscriptionStatus: 'active',
                 stripeCustomerId: custId,
                 stripeSubscriptionId: subId,
+                ...(quota
+                  ? {
+                      tokensRemaining: sql`GREATEST(0, ${teams.tokensRemaining} + ${quota} - ${teams.tokensIncluded})`,
+                      tokensIncluded: quota,
+                    }
+                  : {}),
                 updatedAt: new Date(),
               })
               .where(eq(teams.id, teamId));
@@ -111,8 +122,13 @@ export async function POST(req: Request) {
                 to: owner.email,
                 firstName: (owner.name ?? owner.email).split(' ')[0],
                 planName: pl2?.name ?? planSlug,
-                billingAmount: s.amount_total ? `€${(s.amount_total / 100).toFixed(2)}` : '',
-                billingPeriod: 'month',
+                billingAmount: s.amount_total
+                  ? new Intl.NumberFormat('en', {
+                      style: 'currency',
+                      currency: (s.currency ?? 'eur').toUpperCase(),
+                    }).format(s.amount_total / 100)
+                  : '',
+                billingPeriod: meta.billing === 'yearly' ? 'year' : 'month',
                 tokenBalance: (teamRow?.tokensIncluded ?? 0).toLocaleString('en'),
                 nextRenewalDate: '',
               }).catch((e) => console.error('[webhook] subscription confirmation email failed', e));
