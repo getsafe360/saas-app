@@ -8,3 +8,4 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 tsconfig.tsbuildinfo
+.env*.local
