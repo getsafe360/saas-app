@@ -27,6 +27,10 @@ const COUNTRY_CURRENCY: Record<string, Currency> = {
   SE: 'sek',
 };
 
+export function isCurrency(value: string | null | undefined): value is Currency {
+  return !!value && (CURRENCIES as readonly string[]).includes(value.toLowerCase());
+}
+
 /** Unmapped countries (including the eurozone) get EUR. */
 export function currencyForCountry(country: string | null | undefined): Currency {
   return COUNTRY_CURRENCY[(country ?? '').toUpperCase()] ?? DEFAULT_CURRENCY;
