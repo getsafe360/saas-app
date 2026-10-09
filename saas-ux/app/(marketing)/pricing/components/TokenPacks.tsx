@@ -2,6 +2,8 @@
 
 import { TOKEN_PACKS } from "@/config/plans.config";
 import { useStartCheckout } from "@/hooks/useStartCheckout";
+import { useCurrency } from "@/components/pricing/currency-context";
+import { PACK_AMOUNTS, formatPrice } from "@/config/billing/currency";
 
 import {
   MICROCOPY_TOOLTIPS,
@@ -12,6 +14,7 @@ import { usePricingCopy } from "./pricing-copy";
 export default function TokenPacks() {
   const t = usePricingCopy();
   const { start, loading, error } = useStartCheckout("/pricing");
+  const currency = useCurrency();
   return (
     <section className="mx-auto mt-16 w-full max-w-6xl px-4 sm:px-6 lg:px-8">
       <div className="mb-8 text-center">
@@ -37,7 +40,7 @@ export default function TokenPacks() {
             <p className="mt-2 text-sm leading-relaxed text-[var(--text-subtle)]">
               {t(pack.descriptionKey)}
             </p>
-            <p className="mt-4 text-3xl font-semibold text-[var(--text-default)]">{pack.price}</p>
+            <p className="mt-4 text-3xl font-semibold text-[var(--text-default)]">{formatPrice(PACK_AMOUNTS[pack.slug][currency], currency)}</p>
 
             <button
               type="button"

@@ -61,6 +61,9 @@ export async function createCheckoutSession(opts: CheckoutOptions) {
     mode: opts.mode,
     customer: opts.customerId,
     customer_email: !opts.customerId ? opts.customerEmail : undefined,
+    // Pin Checkout to the currency the pricing page showed. Must be one of the
+    // price's currency_options; omit for existing customers (Stripe keeps their currency).
+    currency: currency?.toLowerCase(),
     line_items: [{ price: opts.priceId, quantity: qty }],
     success_url: opts.successUrl,
     cancel_url: opts.cancelUrl,

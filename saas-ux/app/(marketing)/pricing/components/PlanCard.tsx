@@ -10,6 +10,8 @@ import { MICROCOPY_TOOLTIPS, MicrocopyTooltip } from "./MicrocopyTooltips";
 import { usePricingCopy } from "./pricing-copy";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { useStartCheckout } from "@/hooks/useStartCheckout";
+import { useCurrency } from "@/components/pricing/currency-context";
+import { PLAN_AMOUNTS, formatPrice } from "@/config/billing/currency";
 
 interface PlanCardProps {
   nameKey: string;
@@ -49,7 +51,15 @@ export default function PlanCard({
   const { openSignIn } = useClerk();
   const [isPriceVisible, setIsPriceVisible] = useState(true);
 
-  const targetPrice = billingCycle === "monthly" ? priceMonthly : priceYearly;
+  const currency = useCurrency();
+  const localAmounts =
+    type === "free" ? null : PLAN_AMOUNTS[type === "agency" ? "agent" : type][billingCycle];
+  // Fall back to the configured euro price if a plan has no currency table.
+  const targetPrice = localAmounts
+    ? localAmounts[currency]
+    : billingCycle === "monthly"
+      ? priceMonthly
+      : priceYearly;
   const animatedPrice = useAnimatedNumber(targetPrice);
 
   const suffix =
@@ -118,7 +128,7 @@ export default function PlanCard({
           t("labels.custom")
         ) : (
           <>
-            €{animatedPrice}
+            {formatPrice(animatedPrice, currency)}
             <span className="ml-1 text-base font-normal text-[var(--text-subtle)]">
               {suffix}
             </span>

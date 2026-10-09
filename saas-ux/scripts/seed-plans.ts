@@ -14,10 +14,9 @@ import 'dotenv/config';
 import { and, eq, notInArray } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
 import { plans, planPrices } from '@/lib/db/schema/billing/plans';
+import { PLAN_AMOUNTS, type Currency } from '@/config/billing/currency';
 
 type Billing = 'monthly' | 'yearly';
-
-type Currency = 'usd' | 'eur' | 'gbp' | 'chf' | 'cad' | 'aud' | 'sgd' | 'nzd' | 'sek';
 
 interface PriceSeed {
   currency: Currency;
@@ -45,22 +44,16 @@ interface PlanSeed {
 // scripts/add-currency-options.mjs, which writes them there.
 // ---------------------------------------------------------------------------
 
-// Minor units, by currency.
-type Amounts = Record<Currency, number>;
-
-function expand(billing: Billing, stripePriceId: string, amounts: Amounts): PriceSeed[] {
-  return (Object.entries(amounts) as [Currency, number][]).map(([currency, amountCents]) => ({
+// Amounts come from config/billing/currency.ts (major units) — the same table
+// the pricing page renders — converted to minor units here.
+function expand(billing: Billing, stripePriceId: string, amounts: Record<Currency, number>): PriceSeed[] {
+  return (Object.entries(amounts) as [Currency, number][]).map(([currency, major]) => ({
     currency,
     billing,
-    amountCents,
+    amountCents: Math.round(major * 100),
     stripePriceId,
   }));
 }
-
-const PRO_MONTHLY: Amounts = { usd: 1900, eur: 1900, gbp: 1700, chf: 1900, cad: 2500, aud: 2900, sgd: 2500, nzd: 3100, sek: 19900 };
-const PRO_YEARLY: Amounts = { usd: 19000, eur: 19000, gbp: 17000, chf: 19000, cad: 25000, aud: 29000, sgd: 25000, nzd: 31000, sek: 199000 };
-const AGENCY_MONTHLY: Amounts = { usd: 4900, eur: 4900, gbp: 4400, chf: 4900, cad: 6500, aud: 7500, sgd: 6500, nzd: 8000, sek: 51900 };
-const AGENCY_YEARLY: Amounts = { usd: 49000, eur: 49000, gbp: 44000, chf: 49000, cad: 65000, aud: 75000, sgd: 65000, nzd: 80000, sek: 519000 };
 
 const CATALOGUE: PlanSeed[] = [
   {
@@ -76,8 +69,8 @@ const CATALOGUE: PlanSeed[] = [
     description: 'For growing sites that need automated repairs.',
     stripeProductId: 'prod_UCFWLyxay24p3A',
     prices: [
-      ...expand('monthly', 'price_1TDr1XCs6GUQsp1I4UDcDRpF', PRO_MONTHLY),
-      ...expand('yearly', 'price_1TDr1XCs6GUQsp1IESTw31tP', PRO_YEARLY),
+      ...expand('monthly', 'price_1TDr1XCs6GUQsp1I4UDcDRpF', PLAN_AMOUNTS.pro.monthly),
+      ...expand('yearly', 'price_1TDr1XCs6GUQsp1IESTw31tP', PLAN_AMOUNTS.pro.yearly),
     ],
   },
   {
@@ -89,8 +82,8 @@ const CATALOGUE: PlanSeed[] = [
     description: 'For agencies and professionals managing multiple client sites.',
     stripeProductId: null, // TODO: paste the Agency product's prod_… id
     prices: [
-      ...expand('monthly', 'price_1TDrW3Cs6GUQsp1ImxkxMw4l', AGENCY_MONTHLY),
-      ...expand('yearly', 'price_1TDrW3Cs6GUQsp1IjnOw41MN', AGENCY_YEARLY),
+      ...expand('monthly', 'price_1TDrW3Cs6GUQsp1ImxkxMw4l', PLAN_AMOUNTS.agent.monthly),
+      ...expand('yearly', 'price_1TDrW3Cs6GUQsp1IjnOw41MN', PLAN_AMOUNTS.agent.yearly),
     ],
   },
   {
