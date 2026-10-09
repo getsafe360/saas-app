@@ -2,6 +2,7 @@
 // Pricing plans and token pack configurations
 import { TOKENS_PER_FIX_UNIT } from '@/config/billing/token-economy';
 import { TOKEN_PACKS as SHARED_TOKEN_PACKS } from '@/config/billing/token-packs';
+import { PLAN_PRICE_IDS } from '@/config/billing/catalogue';
 
 export type PlanName = 'free' | 'pro' | 'agent' | 'business' | 'agency';
 
@@ -12,8 +13,6 @@ export interface PlanConfig {
   price: number; // in cents (EUR)
   priceDisplay: string;
   stripePriceId: string | null; // null for free plan
-  stripeBuyButtonId: string | null; // null for free plan
-  stripeCheckoutUrl: string | null; // Direct link to Stripe checkout
   tokensIncluded: number; // Monthly token allowance
   features: string[];
   isPopular?: boolean;
@@ -26,8 +25,6 @@ export interface TokenPackConfig {
   price: number; // in cents (EUR)
   priceDisplay: string;
   stripePriceId: string;
-  stripeBuyButtonId: string;
-  stripeCheckoutUrl: string; // Direct link to Stripe checkout
   savingsPercent?: number;
 }
 
@@ -51,8 +48,6 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     price: 0,
     priceDisplay: '€0',
     stripePriceId: null,
-    stripeBuyButtonId: null,
-    stripeCheckoutUrl: null,
     tokensIncluded: 5000, // ~2-3 AI fixes
     features: [
       'Unlimited site analyses',
@@ -68,9 +63,7 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     description: 'Best for professionals and agencies',
     price: 1900, // €19.00
     priceDisplay: '€19',
-    stripePriceId: 'price_1SpxHnCs6GUQsp1IUuZiUj99',
-    stripeBuyButtonId: 'buy_btn_1Sr2sSCs6GUQsp1IxgHcbCpJ',
-    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/8x214mfQud5mbNf84abAs00',
+    stripePriceId: PLAN_PRICE_IDS.pro.monthly,
     tokensIncluded: 100000, // ~50 AI fixes
     features: [
       'Unlimited site analyses',
@@ -88,9 +81,7 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     description: 'For agencies and professionals managing multiple client sites',
     price: 4900, // €49.00
     priceDisplay: '€49',
-    stripePriceId: 'price_1SpxuBCs6GUQsp1IriBKXbat',
-    stripeBuyButtonId: 'buy_btn_1Sr2ybCs6GUQsp1IMUpTefbp',
-    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/14AbJ09s61mE2cF5W2bAs01',
+    stripePriceId: PLAN_PRICE_IDS.agent.monthly,
     tokensIncluded: 300000, // ~150 AI fixes
     features: [
       'Unlimited site analyses',
@@ -108,9 +99,7 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     description: 'Legacy alias for Agent',
     price: 4900,
     priceDisplay: '€49',
-    stripePriceId: 'price_1SpxuBCs6GUQsp1IriBKXbat',
-    stripeBuyButtonId: 'buy_btn_1Sr2ybCs6GUQsp1IMUpTefbp',
-    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/14AbJ09s61mE2cF5W2bAs01',
+    stripePriceId: PLAN_PRICE_IDS.agent.monthly,
     tokensIncluded: 300000,
     features: [
       'Everything in Pro',
@@ -126,8 +115,6 @@ export const PLANS: Record<PlanName, PlanConfig> = {
     price: 0,
     priceDisplay: 'Custom',
     stripePriceId: null,
-    stripeBuyButtonId: null,
-    stripeCheckoutUrl: null,
     tokensIncluded: 0,
     features: [
       'Everything in Agent',
@@ -153,8 +140,6 @@ export const TOKEN_PACKS: TokenPackConfig[] = [
     price: pack.priceEur * 100,
     priceDisplay: `€${pack.priceEur}`,
     stripePriceId: pack.stripePriceId,
-    stripeBuyButtonId: '',
-    stripeCheckoutUrl: pack.stripeCheckoutUrl,
     savingsPercent: pack.id === 'medium' ? 25 : pack.id === 'large' ? 33 : undefined,
   })),
 ];

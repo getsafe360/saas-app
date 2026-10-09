@@ -1,3 +1,5 @@
+import { PLAN_PRICE_IDS } from './catalogue';
+
 export const PRO_PLAN_PRICE_EUR = Number(process.env.PRO_PLAN_PRICE_EUR ?? 19);
 
 export type LogicalPlanId = 'free' | 'pro' | 'agent' | 'business';
@@ -8,8 +10,7 @@ export interface LogicalPlanDefinition {
   monthlyPriceEur: number | null;
   description: string;
   features: string[];
-  stripePriceId?: string;
-  stripeCheckoutUrl?: string;
+  stripePriceId?: string; // monthly price; see catalogue.ts for yearly
 }
 
 export const LOGICAL_PLANS: LogicalPlanDefinition[] = [
@@ -38,8 +39,7 @@ export const LOGICAL_PLANS: LogicalPlanDefinition[] = [
       'Priority processing over Free',
       'Basic reports',
     ],
-    stripePriceId: 'price_1SpxHnCs6GUQsp1IUuZiUj99',
-    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/8x214mfQud5mbNf84abAs00',
+    stripePriceId: PLAN_PRICE_IDS.pro.monthly,
   },
   {
     id: 'agent',
@@ -53,8 +53,7 @@ export const LOGICAL_PLANS: LogicalPlanDefinition[] = [
       'Multi-site cockpit',
       'Best queue priority',
     ],
-    stripePriceId: 'price_1SpxuBCs6GUQsp1IriBKXbat',
-    stripeCheckoutUrl: 'https://buy.getsafe360.ai/b/14AbJ09s61mE2cF5W2bAs01',
+    stripePriceId: PLAN_PRICE_IDS.agent.monthly,
   },
   {
     id: 'business',
@@ -72,6 +71,8 @@ export const LOGICAL_PLANS: LogicalPlanDefinition[] = [
 ];
 
 export const STRIPE_PLAN_MAPPING: Record<string, LogicalPlanId> = {
-  price_1SpxHnCs6GUQsp1IUuZiUj99: 'pro',
-  price_1SpxuBCs6GUQsp1IriBKXbat: 'agent',
+  [PLAN_PRICE_IDS.pro.monthly]: 'pro',
+  [PLAN_PRICE_IDS.pro.yearly]: 'pro',
+  [PLAN_PRICE_IDS.agent.monthly]: 'agent',
+  [PLAN_PRICE_IDS.agent.yearly]: 'agent',
 };

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { StartCheckoutButton } from '@/components/checkout/start-checkout-button';
 import { LOGICAL_PLANS } from '@/config/billing/plans';
 import { TOKEN_PACKS } from '@/config/billing/token-packs';
 import { TOKENS_PER_FIX_UNIT } from '@/config/billing/token-economy';
@@ -33,7 +34,11 @@ export function PlansPageContent({ state }: { state: PricingViewerState }) {
               <p className="font-semibold">{t('upgradeBannerTitle')}</p>
               <p className="text-sm text-muted-foreground">{t('upgradeBannerBody')}</p>
             </div>
-            <Button asChild><Link href={state.isLoggedIn ? (LOGICAL_PLANS.find((p) => p.id === "pro")?.stripeCheckoutUrl ?? "/sign-up?plan=pro") : "/sign-up?plan=pro"}>{t('upgradeBannerCta')}</Link></Button>
+            {state.isLoggedIn ? (
+              <StartCheckoutButton target={{ kind: 'plan', plan: 'pro', billing: 'monthly' }} returnTo="/plans">{t('upgradeBannerCta')}</StartCheckoutButton>
+            ) : (
+              <Button asChild><Link href="/sign-up?plan=pro">{t('upgradeBannerCta')}</Link></Button>
+            )}
           </section>
         )}
 
@@ -53,7 +58,7 @@ export function PlansPageContent({ state }: { state: PricingViewerState }) {
               if (plan.id === 'business') return '/contact';
               if (!state.isLoggedIn) return `/sign-up?plan=${plan.id}`;
               if (plan.id === 'free') return '/sign-up?plan=free';
-              return plan.stripeCheckoutUrl ?? `/sign-up?plan=${plan.id}`;
+              return null; // paid plans start a server-created checkout session
             })();
 
             return (
@@ -75,7 +80,17 @@ export function PlansPageContent({ state }: { state: PricingViewerState }) {
                       {isSubscribed && <Button asChild variant="outline" className="w-full"><Link href="/dashboard/settings">Manage billing</Link></Button>}
                     </div>
                   ) : (
-                    <Button asChild className="w-full"><Link href={href}>{cta}</Link></Button>
+                    href ? (
+                      <Button asChild className="w-full"><Link href={href}>{cta}</Link></Button>
+                    ) : (
+                      <StartCheckoutButton
+                        className="w-full"
+                        returnTo="/plans"
+                        target={{ kind: 'plan', plan: plan.id === 'pro' ? 'pro' : 'agent', billing: 'monthly' }}
+                      >
+                        {cta}
+                      </StartCheckoutButton>
+                    )
                   )}
                 </CardContent>
               </Card>
@@ -100,7 +115,7 @@ export function PlansPageContent({ state }: { state: PricingViewerState }) {
                   <p>{pack.tokens.toLocaleString()} tokens</p>
                   <p className="text-sm text-muted-foreground">{t('tokenPackApproxFixes', { count: Math.floor(pack.tokens / TOKENS_PER_FIX_UNIT) })}</p>
                   <p className="text-xs text-muted-foreground">{t('tokenNoteFixUnits')}</p>
-                  <Button asChild className="w-full" variant="outline"><a href={pack.stripeCheckoutUrl} target="_blank">{t('buyTokens')}</a></Button>
+                  <StartCheckoutButton className="w-full" variant="outline" returnTo="/plans" target={{ kind: 'pack', pack: pack.id }}>{t('buyTokens')}</StartCheckoutButton>
                 </CardContent>
               </Card>
             ))}

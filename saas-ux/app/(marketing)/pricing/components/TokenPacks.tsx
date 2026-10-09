@@ -1,6 +1,7 @@
 "use client";
 
 import { TOKEN_PACKS } from "@/config/plans.config";
+import { useStartCheckout } from "@/hooks/useStartCheckout";
 
 import {
   MICROCOPY_TOOLTIPS,
@@ -10,6 +11,7 @@ import { usePricingCopy } from "./pricing-copy";
 
 export default function TokenPacks() {
   const t = usePricingCopy();
+  const { start, loading, error } = useStartCheckout("/pricing");
   return (
     <section className="mx-auto mt-16 w-full max-w-6xl px-4 sm:px-6 lg:px-8">
       <div className="mb-8 text-center">
@@ -20,6 +22,11 @@ export default function TokenPacks() {
         </p>
       </div>
 
+      {error && (
+        <p role="alert" className="mb-4 text-center text-sm text-red-500">
+          {error}
+        </p>
+      )}
       <div className="grid gap-6 md:grid-cols-3">
         {TOKEN_PACKS.map((pack) => (
           <article
@@ -32,14 +39,14 @@ export default function TokenPacks() {
             </p>
             <p className="mt-4 text-3xl font-semibold text-[var(--text-default)]">{pack.price}</p>
 
-            <a
-              href={pack.stripeUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-[var(--border-default)] bg-[var(--color-neutral-200)] px-4 py-2.5 text-base font-medium text-[var(--text-default)] transition-colors duration-200 hover:border-[var(--border-primary)] hover:bg-[var(--color-neutral-300)]"
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => start({ kind: "pack", pack: pack.slug })}
+              className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-[var(--border-default)] bg-[var(--color-neutral-200)] px-4 py-2.5 text-base font-medium text-[var(--text-default)] transition-colors duration-200 hover:border-[var(--border-primary)] hover:bg-[var(--color-neutral-300)] disabled:cursor-wait disabled:opacity-60"
             >
               {t("tokenPacks.button")}
-            </a>
+            </button>
           </article>
         ))}
       </div>

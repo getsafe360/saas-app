@@ -9,6 +9,7 @@ import type { BillingCycle } from "@/config/plans.config";
 import { MICROCOPY_TOOLTIPS, MicrocopyTooltip } from "./MicrocopyTooltips";
 import { usePricingCopy } from "./pricing-copy";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
+import { useStartCheckout } from "@/hooks/useStartCheckout";
 
 interface PlanCardProps {
   nameKey: string;
@@ -17,8 +18,6 @@ interface PlanCardProps {
   priceYearly: number;
   features: string[];
   bestForKey: string;
-  stripeUrlMonthly?: string;
-  stripeUrlYearly?: string;
   borderColorToken: string;
   type: "free" | "pro" | "agency";
   ctaLabelKey: string;
@@ -41,8 +40,6 @@ export default function PlanCard({
   priceYearly,
   features,
   bestForKey,
-  stripeUrlMonthly,
-  stripeUrlYearly,
   borderColorToken,
   type,
   ctaLabelKey,
@@ -59,8 +56,7 @@ export default function PlanCard({
     billingCycle === "monthly"
       ? t("labels.perMonth")
       : t("labels.perYear");
-  const checkoutUrl =
-    billingCycle === "yearly" ? stripeUrlYearly ?? stripeUrlMonthly : stripeUrlMonthly;
+  const { start, loading, error } = useStartCheckout("/pricing");
   const isCustomPrice = priceMonthly === 0 && priceYearly === 0;
 
   useEffect(() => {
@@ -165,14 +161,27 @@ export default function PlanCard({
           {t(ctaLabelKey)}
         </button>
       ) : (
-        <a
-          href={checkoutUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-[var(--border-default)] bg-[var(--color-neutral-200)] px-4 py-2.5 text-base font-medium text-[var(--text-default)] transition-colors duration-200 hover:border-[var(--border-primary)] hover:bg-[var(--color-neutral-300)]"
-        >
-          {t(ctaLabelKey)}
-        </a>
+        <>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() =>
+              start({
+                kind: "plan",
+                plan: type === "agency" ? "agent" : type,
+                billing: billingCycle,
+              })
+            }
+            className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-[var(--border-default)] bg-[var(--color-neutral-200)] px-4 py-2.5 text-base font-medium text-[var(--text-default)] transition-colors duration-200 hover:border-[var(--border-primary)] hover:bg-[var(--color-neutral-300)] disabled:cursor-wait disabled:opacity-60"
+          >
+            {t(ctaLabelKey)}
+          </button>
+          {error && (
+            <p role="alert" className="mt-2 text-sm text-red-500">
+              {error}
+            </p>
+          )}
+        </>
       )}
     </article>
   );

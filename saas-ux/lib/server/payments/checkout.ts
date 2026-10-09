@@ -24,35 +24,20 @@ export type CheckoutOptions = {
   // Webhook hints (so /api/stripe/webhook can reconcile)
   teamId?: number | string;
   planSlug?: string;                   // set for plan purchases
+  billing?: 'monthly' | 'yearly';      // set for plan purchases
   packSlug?: string;                   // set for pack purchases
 
   // Tax & payments
-  collectTaxId?: boolean;              // override; if omitted we derive from region
+  collectTaxId?: boolean;              // defaults to true — B2B, tax ID collected everywhere
   allowPromotionCodes?: boolean;       // let customers apply coupons
   paymentMethodTypes?: Stripe.Checkout.SessionCreateParams.PaymentMethodType[]; // optional restriction
 };
 
-function deriveCollectTaxId(region?: string | null) {
-  if (!region) return false;
-  const r = region.toUpperCase();
-
-  // EU VAT countries — collect VAT ID to enable reverse charge at Stripe Tax layer
-  const EU = new Set([
-    'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT',
-    'LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'
-  ]);
-  if (EU.has(r)) return true;
-
-  // Brazil — collect CPF/CNPJ (Stripe Tax uses tax_id_collection for this)
-  if (r === 'BR') return true;
-
-  return false; // US/AU/NZ typically add tax at checkout without tax ID
-}
-
 /**
  * Create a Stripe Checkout Session with:
- * - automatic tax enabled
- * - correct tax_id_collection (derived from region unless explicitly passed)
+ * - tax_id_collection on by default (B2B: we collect the customer's tax ID for
+ *   invoices/reverse charge but do not calculate or charge tax ourselves, so
+ *   automatic_tax stays off)
  * - metadata for webhooks (team_id, plan_slug/pack_slug, region, currency)
  * - optional allowed payment method types & promotion codes
  */
@@ -65,10 +50,11 @@ export async function createCheckoutSession(opts: CheckoutOptions) {
   if (opts.teamId != null) metadata.team_id = String(opts.teamId);
   if (opts.planSlug) metadata.plan_slug = opts.planSlug;
   if (opts.packSlug) metadata.pack_slug = opts.packSlug;
+  if (opts.billing) metadata.billing = opts.billing;
   if (region) metadata.region = region.toUpperCase();
   if (currency) metadata.currency = currency;
 
-  const collectTaxId = opts.collectTaxId ?? deriveCollectTaxId(region);
+  const collectTaxId = opts.collectTaxId ?? true;
 
   // Shared session params
   const base: Stripe.Checkout.SessionCreateParams = {
@@ -78,18 +64,15 @@ export async function createCheckoutSession(opts: CheckoutOptions) {
     line_items: [{ price: opts.priceId, quantity: qty }],
     success_url: opts.successUrl,
     cancel_url: opts.cancelUrl,
-    automatic_tax: { enabled: true },
-    tax_id_collection: { enabled: !!collectTaxId },
+    tax_id_collection: { enabled: collectTaxId },
+    billing_address_collection: 'required',
     allow_promotion_codes: !!opts.allowPromotionCodes,
     locale: (opts.locale as any) ?? 'auto',
     client_reference_id: metadata.team_id, // handy in Stripe dashboard
 
-    // Help keep customer records tidy automatically
-    customer_update: {
-      address: 'auto',
-      name: 'auto',
-      shipping: 'auto',
-    },
+    // Stripe only accepts customer_update alongside an existing customer, and
+    // requires name/address updates when tax_id_collection is on.
+    customer_update: opts.customerId ? { address: 'auto', name: 'auto' } : undefined,
 
     // Optionally limit methods shown by Checkout (usually not required)
     payment_method_types: opts.paymentMethodTypes,
@@ -104,6 +87,8 @@ export async function createCheckoutSession(opts: CheckoutOptions) {
     };
   } else {
     base.metadata = metadata;
+    // Persist a Customer so the collected tax ID and billing details are kept.
+    if (!opts.customerId) base.customer_creation = 'always';
     base.payment_intent_data = {
       metadata,
     };

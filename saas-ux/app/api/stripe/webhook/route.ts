@@ -4,11 +4,12 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getDb } from '@/lib/db/drizzle';
-import { webhookEvents } from '@/lib/db/schema';
+import { webhookEvents, tokenTransactions } from '@/lib/db/schema';
 import { teamSubscriptions } from '@/lib/db/schema';
 import { plans } from '@/lib/db/schema/billing/plans';
 import { teams } from '@/lib/db/schema/auth';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
+import { PLANS, type PlanName } from '@/lib/plans/config';
 import { recordTokenPurchase } from '@/lib/usage/token-transactions';
 import { getTokenPackById } from '@/config/billing/token-packs';
 import { sendSubscriptionConfirmationEmail, sendPaymentReceiptEmail } from '@/lib/email/send';
@@ -39,7 +40,9 @@ export async function POST(req: Request) {
 
   const db = getDb();
 
-  // Persist event (idempotent-ish)
+  // Persist event. A duplicate eventId means Stripe is retrying: if we already
+  // processed it, acknowledge without re-running handlers (they grant tokens and
+  // entitlements). Events stuck in 'stored'/'error' are reprocessed.
   try {
     await db.insert(webhookEvents).values({
       provider: 'stripe',
@@ -49,7 +52,14 @@ export async function POST(req: Request) {
       status: 'stored',
     });
   } catch {
-    // duplicate eventId -> ignore
+    const [prior] = await db
+      .select({ status: webhookEvents.status })
+      .from(webhookEvents)
+      .where(and(eq(webhookEvents.provider, 'stripe'), eq(webhookEvents.eventId, event.id)))
+      .limit(1);
+    if (prior?.status === 'processed') {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
   }
 
   try {
@@ -68,23 +78,41 @@ export async function POST(req: Request) {
           if (planSlug) {
             const [pl] = await db.select().from(plans).where(eq(plans.slug, planSlug)).limit(1);
             if (pl) {
-              await db
-                .insert(teamSubscriptions)
-                .values({
+              // team_subscriptions has no unique index on (team_id, stripe_subscription_id),
+              // so ON CONFLICT would be rejected by Postgres; look the row up instead.
+              const [existingSub] = await db
+                .select({ id: teamSubscriptions.id })
+                .from(teamSubscriptions)
+                .where(
+                  and(
+                    eq(teamSubscriptions.teamId, teamId),
+                    eq(teamSubscriptions.stripeSubscriptionId, subId),
+                  ),
+                )
+                .limit(1);
+
+              if (existingSub) {
+                await db
+                  .update(teamSubscriptions)
+                  .set({ planId: pl.id, status: 'active', updatedAt: new Date() })
+                  .where(eq(teamSubscriptions.id, existingSub.id));
+              } else {
+                await db.insert(teamSubscriptions).values({
                   teamId,
                   planId: pl.id,
                   status: 'active',
                   stripeCustomerId: custId,
                   stripeSubscriptionId: subId,
-                })
-                .onConflictDoUpdate({
-                  target: [teamSubscriptions.teamId, teamSubscriptions.stripeSubscriptionId],
-                  set: { status: 'active' },
                 });
+              }
             }
           }
 
           if (planSlug) {
+            // Grant the plan's monthly quota. Applied as a delta against the
+            // current quota so a retried webhook is a no-op and existing usage
+            // and purchased tokens are preserved.
+            const quota = PLANS[planSlug as PlanName]?.tokensIncluded;
             await db
               .update(teams)
               .set({
@@ -92,6 +120,12 @@ export async function POST(req: Request) {
                 subscriptionStatus: 'active',
                 stripeCustomerId: custId,
                 stripeSubscriptionId: subId,
+                ...(quota
+                  ? {
+                      tokensRemaining: sql`GREATEST(0, ${teams.tokensRemaining} + ${quota} - ${teams.tokensIncluded})`,
+                      tokensIncluded: quota,
+                    }
+                  : {}),
                 updatedAt: new Date(),
               })
               .where(eq(teams.id, teamId));
@@ -111,8 +145,13 @@ export async function POST(req: Request) {
                 to: owner.email,
                 firstName: (owner.name ?? owner.email).split(' ')[0],
                 planName: pl2?.name ?? planSlug,
-                billingAmount: s.amount_total ? `€${(s.amount_total / 100).toFixed(2)}` : '',
-                billingPeriod: 'month',
+                billingAmount: s.amount_total
+                  ? new Intl.NumberFormat('en', {
+                      style: 'currency',
+                      currency: (s.currency ?? 'eur').toUpperCase(),
+                    }).format(s.amount_total / 100)
+                  : '',
+                billingPeriod: meta.billing === 'yearly' ? 'year' : 'month',
                 tokenBalance: (teamRow?.tokensIncluded ?? 0).toLocaleString('en'),
                 nextRenewalDate: '',
               }).catch((e) => console.error('[webhook] subscription confirmation email failed', e));
@@ -123,12 +162,22 @@ export async function POST(req: Request) {
         if (mode === 'payment' && teamId) {
           const packSlug = meta.pack_slug as string | undefined;
           const pack = getTokenPackById(packSlug);
-          if (pack) {
+          const paymentId = (s.payment_intent as string | null) ?? undefined;
+          const alreadyGranted = paymentId
+            ? (
+                await db
+                  .select({ id: tokenTransactions.id })
+                  .from(tokenTransactions)
+                  .where(eq(tokenTransactions.stripePaymentId, paymentId))
+                  .limit(1)
+              ).length > 0
+            : false;
+          if (pack && !alreadyGranted) {
             await recordTokenPurchase({
               teamId,
               pack,
               amountEur: pack.priceEur,
-              stripePaymentId: (s.payment_intent as string | null) ?? undefined,
+              stripePaymentId: paymentId,
               type: 'purchase',
             });
           }

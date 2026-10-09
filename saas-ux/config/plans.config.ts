@@ -7,8 +7,6 @@ export interface PlanDefinition {
   priceYearly: number;
   features: string[];
   bestForKey: string;
-  stripeUrlMonthly?: string;
-  stripeUrlYearly?: string;
   borderColorToken: string;
   type: "free" | "pro" | "agency";
   ctaLabelKey: string;
@@ -18,7 +16,7 @@ export interface TokenPackDefinition {
   nameKey: string;
   descriptionKey: string;
   price: string;
-  stripeUrl: string;
+  slug: "small" | "medium" | "large";
 }
 
 export const PRICING_PLANS: PlanDefinition[] = [
@@ -57,8 +55,6 @@ export const PRICING_PLANS: PlanDefinition[] = [
       "plans.pro.features.multiSite",
     ],
     bestForKey: "plans.pro.bestFor",
-    stripeUrlMonthly: "https://buy.getsafe360.ai/b/28EdR833Ie9q04x5W2bAs07",
-    stripeUrlYearly: "https://buy.getsafe360.ai/b/fZu8wOdIm1mE04x3NUbAs08",
     borderColorToken: "var(--color-primary-500)",
     type: "pro",
     ctaLabelKey: "plans.pro.cta",
@@ -75,8 +71,6 @@ export const PRICING_PLANS: PlanDefinition[] = [
       "plans.agency.features.multiClient",
     ],
     bestForKey: "plans.agency.bestFor",
-    stripeUrlMonthly: "https://buy.getsafe360.ai/b/5kQdR8cEi0iA6sV1FMbAs09",
-    stripeUrlYearly: "https://buy.getsafe360.ai/b/28E8wOawa8P66sV0BIbAs0a",
     borderColorToken: "var(--color-primary-300)",
     type: "agency",
     ctaLabelKey: "plans.agency.cta",
@@ -88,19 +82,19 @@ export const TOKEN_PACKS: TokenPackDefinition[] = [
     nameKey: "tokenPacks.items.small.name",
     descriptionKey: "tokenPacks.items.small.description",
     price: "€5",
-    stripeUrl: "https://buy.getsafe360.ai/b/8x200ifQuc1i6sVgAGbAs0b",
+    slug: "small",
   },
   {
     nameKey: "tokenPacks.items.medium.name",
     descriptionKey: "tokenPacks.items.medium.description",
     price: "€10",
-    stripeUrl: "https://buy.getsafe360.ai/b/fZubJ05bQ6GY04x1FMbAs0c",
+    slug: "medium",
   },
   {
     nameKey: "tokenPacks.items.large.name",
     descriptionKey: "tokenPacks.items.large.description",
     price: "€15",
-    stripeUrl: "https://buy.getsafe360.ai/b/9B6fZg6fUd5m3gJdoubAs0d",
+    slug: "large",
   },
 ];
 
