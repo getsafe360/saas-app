@@ -11,7 +11,7 @@
 // schema does. Re-running this is cheaper than a migration per price edit.
 
 import 'dotenv/config';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, notInArray } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
 import { plans, planPrices } from '@/lib/db/schema/billing/plans';
 
@@ -187,6 +187,15 @@ async function main() {
       }
     }
   }
+
+  // Retire plans that are no longer in the catalogue (e.g. a legacy 'starter').
+  // Deactivate rather than delete: team_subscriptions.plan_id is ON DELETE RESTRICT.
+  const retired = await db
+    .update(plans)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(and(notInArray(plans.slug, CATALOGUE.map((p) => p.slug)), eq(plans.isActive, true)))
+    .returning({ slug: plans.slug });
+  for (const r of retired) console.log(`plan   - ${r.slug} (deactivated)`);
 
   console.log(`\ndone — ${created} prices created, ${updated} updated`);
 }
