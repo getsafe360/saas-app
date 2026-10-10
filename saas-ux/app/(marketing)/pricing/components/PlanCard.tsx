@@ -10,6 +10,9 @@ import { MICROCOPY_TOOLTIPS, MicrocopyTooltip } from "./MicrocopyTooltips";
 import { usePricingCopy } from "./pricing-copy";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { useStartCheckout } from "@/hooks/useStartCheckout";
+import { ACCENT_BUTTON } from "./button-styles";
+import { useCurrency } from "@/components/pricing/currency-context";
+import { PLAN_AMOUNTS, formatPrice } from "@/config/billing/currency";
 
 interface PlanCardProps {
   nameKey: string;
@@ -49,7 +52,15 @@ export default function PlanCard({
   const { openSignIn } = useClerk();
   const [isPriceVisible, setIsPriceVisible] = useState(true);
 
-  const targetPrice = billingCycle === "monthly" ? priceMonthly : priceYearly;
+  const currency = useCurrency();
+  const localAmounts =
+    type === "free" ? null : PLAN_AMOUNTS[type === "agency" ? "agent" : type][billingCycle];
+  // Fall back to the configured euro price if a plan has no currency table.
+  const targetPrice = localAmounts
+    ? localAmounts[currency]
+    : billingCycle === "monthly"
+      ? priceMonthly
+      : priceYearly;
   const animatedPrice = useAnimatedNumber(targetPrice);
 
   const suffix =
@@ -118,7 +129,7 @@ export default function PlanCard({
           t("labels.custom")
         ) : (
           <>
-            €{animatedPrice}
+            {formatPrice(animatedPrice, currency)}
             <span className="ml-1 text-base font-normal text-[var(--text-subtle)]">
               {suffix}
             </span>
@@ -156,7 +167,7 @@ export default function PlanCard({
         <button
           type="button"
           onClick={() => openSignIn?.()}
-          className="mt-6 w-full rounded-md border border-[var(--border-default)] bg-[var(--color-neutral-200)] px-4 py-2.5 text-base font-medium text-[var(--text-default)] transition-colors duration-200 hover:border-[var(--border-primary)] hover:bg-[var(--color-neutral-300)]"
+          className={ACCENT_BUTTON[type]}
         >
           {t(ctaLabelKey)}
         </button>
@@ -172,7 +183,7 @@ export default function PlanCard({
                 billing: billingCycle,
               })
             }
-            className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-[var(--border-default)] bg-[var(--color-neutral-200)] px-4 py-2.5 text-base font-medium text-[var(--text-default)] transition-colors duration-200 hover:border-[var(--border-primary)] hover:bg-[var(--color-neutral-300)] disabled:cursor-wait disabled:opacity-60"
+            className={ACCENT_BUTTON[type]}
           >
             {t(ctaLabelKey)}
           </button>

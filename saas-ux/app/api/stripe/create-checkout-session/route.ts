@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDbUserFromClerk, findCurrentUserTeam } from '@/lib/auth/current';
 import { createCheckoutSession } from '@/lib/server/payments/checkout';
 import { parseCheckoutTarget, priceIdForTarget } from '@/config/billing/catalogue';
+import { stripe } from '@/lib/payments/stripe';
+import { currencyForCountry, isCurrency } from '@/config/billing/currency';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -43,12 +45,34 @@ export async function POST(req: NextRequest) {
 
   const origin = req.nextUrl.origin;
 
+  // Currency comes from the real request country, never from the client, so it
+  // cannot be used as a discount switch. It matches what /pricing displayed.
+  // A Stripe customer is locked to the currency of their first subscription or
+  // invoice, so an existing customer is charged in that currency regardless of
+  // where they are now.
+  const country = req.headers.get('x-vercel-ip-country');
+  let currency: string | undefined = currencyForCountry(country);
+  if (team.stripeCustomerId) {
+    try {
+      const customer = await stripe.customers.retrieve(team.stripeCustomerId);
+      if (!customer.deleted && customer.currency) {
+        // Unknown currency (not one of ours) -> let Stripe decide.
+        currency = isCurrency(customer.currency) ? customer.currency.toLowerCase() : undefined;
+      }
+    } catch (err) {
+      console.error('[create-checkout-session] customer lookup failed', err);
+      currency = undefined; // let Stripe use the customer's currency
+    }
+  }
+
   try {
     const session = await createCheckoutSession({
       customerId: team.stripeCustomerId ?? undefined,
       customerEmail: user.email ?? undefined,
       priceId: priceIdForTarget(target),
       mode: target.kind === 'plan' ? 'subscription' : 'payment',
+      currency,
+      region: country,
       successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/pricing`,
       teamId: team.id,
