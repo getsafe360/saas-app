@@ -2,6 +2,7 @@
 
 import { TOKEN_PACKS } from "@/config/plans.config";
 import { useStartCheckout } from "@/hooks/useStartCheckout";
+import { OUTLINE_BUTTON } from "./button-styles";
 import { useCurrency } from "@/components/pricing/currency-context";
 import { PACK_AMOUNTS, formatPrice } from "@/config/billing/currency";
 
@@ -46,7 +47,7 @@ export default function TokenPacks() {
               type="button"
               disabled={loading}
               onClick={() => start({ kind: "pack", pack: pack.slug })}
-              className="mt-6 inline-flex w-full items-center justify-center rounded-md border border-[var(--border-default)] bg-[var(--color-neutral-200)] px-4 py-2.5 text-base font-medium text-[var(--text-default)] transition-colors duration-200 hover:border-[var(--border-primary)] hover:bg-[var(--color-neutral-300)] disabled:cursor-wait disabled:opacity-60"
+              className={OUTLINE_BUTTON}
             >
               {t("tokenPacks.button")}
             </button>
