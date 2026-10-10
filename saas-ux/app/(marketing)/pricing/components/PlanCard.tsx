@@ -10,7 +10,7 @@ import { MICROCOPY_TOOLTIPS, MicrocopyTooltip } from "./MicrocopyTooltips";
 import { usePricingCopy } from "./pricing-copy";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { useStartCheckout } from "@/hooks/useStartCheckout";
-import { PRIMARY_BUTTON, SECONDARY_BUTTON } from "./button-styles";
+import { ACCENT_BUTTON } from "./button-styles";
 import { useCurrency } from "@/components/pricing/currency-context";
 import { PLAN_AMOUNTS, formatPrice } from "@/config/billing/currency";
 
@@ -167,7 +167,7 @@ export default function PlanCard({
         <button
           type="button"
           onClick={() => openSignIn?.()}
-          className={SECONDARY_BUTTON}
+          className={ACCENT_BUTTON[type]}
         >
           {t(ctaLabelKey)}
         </button>
@@ -183,7 +183,7 @@ export default function PlanCard({
                 billing: billingCycle,
               })
             }
-            className={PRIMARY_BUTTON}
+            className={ACCENT_BUTTON[type]}
           >
             {t(ctaLabelKey)}
           </button>
