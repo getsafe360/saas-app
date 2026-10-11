@@ -33,9 +33,10 @@ export function useStartCheckout(returnTo = "/pricing") {
           return;
         }
 
-        const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+        const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string; code?: string };
         if (!res.ok || !data.url) {
-          throw new Error(data.error ?? "Checkout failed → Try again in a moment");
+          const base = data.error ?? "Checkout failed → Try again in a moment";
+          throw new Error(data.code ? `${base} (${data.code})` : base);
         }
         window.location.assign(data.url);
       } catch (e) {

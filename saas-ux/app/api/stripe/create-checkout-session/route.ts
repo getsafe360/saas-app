@@ -85,7 +85,19 @@ export async function POST(req: NextRequest) {
     if (!session.url) throw new Error('Stripe returned no checkout URL');
     return NextResponse.json({ url: session.url });
   } catch (err) {
-    console.error('[create-checkout-session] failed', err);
-    return NextResponse.json({ error: 'Checkout failed → Try again in a moment' }, { status: 502 });
+    // Stripe errors carry a machine-readable type/code (e.g. permission_error,
+    // api_key_expired, resource_missing). Log them and return the code so a
+    // failure is diagnosable from the browser without leaking details.
+    const e = err as { type?: string; code?: string; message?: string; param?: string };
+    console.error('[create-checkout-session] failed', {
+      type: e.type,
+      code: e.code,
+      param: e.param,
+      message: e.message,
+    });
+    return NextResponse.json(
+      { error: 'Checkout failed → Try again in a moment', code: e.code ?? e.type ?? 'unknown' },
+      { status: 502 },
+    );
   }
 }
