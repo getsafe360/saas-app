@@ -12,5 +12,9 @@ export function getResend(): Resend {
   return _client;
 }
 
-export const FROM = 'GetSafe360 AI <support@getsafe360.ai>';
+// The sending domain must be verified in Resend. Only mail.getsafe360.ai is
+// verified (the root getsafe360.ai is not), so the default sits on it. A new
+// variable name is used on purpose: RESEND_FROM was documented as
+// orders@getsafe360.ai and may still hold that unverified address in Vercel.
+export const FROM = process.env.EMAIL_FROM ?? 'GetSafe 360 AI <hello@mail.getsafe360.ai>';
 export const BASE_URL = 'https://www.getsafe360.ai';
