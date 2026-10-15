@@ -29,7 +29,7 @@ const INTL_TAG: Record<Locale, string> = {
   es: 'es-ES',
   fr: 'fr-FR',
   it: 'it-IT',
-  pt: 'pt-PT',
+  pt: 'pt-BR', // 'pt' is Brazilian Portuguese in this app
 };
 
 export function formatEmailDate(date: Date | number, locale: Locale): string {

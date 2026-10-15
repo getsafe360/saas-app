@@ -4,6 +4,7 @@
 import { currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/db/drizzle';
 import { sendWelcomeEmail } from '@/lib/email/send';
+import { detectVisitorLocale } from '@/i18n/resolve-locale';
 import { users, type NewUser } from '@/lib/db/schema/auth/users';
 import { teams, teamMembers, type NewTeam, type NewTeamMember } from '@/lib/db/schema/auth';
 import { eq } from 'drizzle-orm';
@@ -133,7 +134,7 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
       email: primaryEmail.emailAddress,
       passwordHash: '', // Empty - auth handled by Clerk
       role: 'owner',
-      language: 'en', // Default, can be updated later
+      language: await detectVisitorLocale(), // site language / browser language, else 'en'
       clerkUserId: clerkUser.id,
       name: clerkUser.firstName && clerkUser.lastName
         ? `${clerkUser.firstName} ${clerkUser.lastName}`.trim()
