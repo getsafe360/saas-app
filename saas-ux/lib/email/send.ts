@@ -1,68 +1,53 @@
 import 'server-only';
 import { getResend, FROM, BASE_URL } from './client';
+import {
+  formatEmailAmount,
+  formatEmailDate,
+  formatEmailNumber,
+  renderFix,
+  renderReceipt,
+  renderScan,
+  renderSubscription,
+  renderWelcome,
+  resolveEmailLocale,
+  type RenderedEmail,
+} from './render';
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function scoreColor(score: number): string {
-  if (score >= 80) return '#4ade80';
-  if (score >= 50) return '#fb923c';
-  return '#f87171';
-}
-
-function fmtDate(d: Date | number): string {
-  return new Date(typeof d === 'number' ? d * 1000 : d).toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
-}
-
-function fmtAmount(cents: number, currency = 'eur'): string {
-  return new Intl.NumberFormat('en-DE', {
-    style: 'currency',
-    currency: currency.toUpperCase(),
-    minimumFractionDigits: 2,
-  }).format(cents / 100);
-}
+// Every send function takes an optional `language` (the recipient's
+// users.language). Empty or unsupported values fall back to English.
 
 /** Fire-and-forget wrapper — email never takes down the calling route. */
-async function send(payload: Parameters<ReturnType<typeof getResend>['emails']['send']>[0]) {
+async function send(to: string, email: RenderedEmail) {
   try {
     const resend = getResend();
-    const { error } = await resend.emails.send(payload);
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+    });
     if (error) console.error('[email] send error', error);
   } catch (err) {
     console.error('[email] unexpected error', err);
   }
 }
 
-// ─── Template IDs (set these to your Resend template IDs) ───────────────────
-// Find them in Resend dashboard → Emails → Templates → click template → copy ID
-const TEMPLATE = {
-  welcome:                   process.env.RESEND_TEMPLATE_WELCOME,
-  subscription_confirmation: process.env.RESEND_TEMPLATE_SUBSCRIPTION,
-  scan_complete:             process.env.RESEND_TEMPLATE_SCAN_COMPLETE,
-  fix_complete:              process.env.RESEND_TEMPLATE_FIX_COMPLETE,
-  payment_receipt:           process.env.RESEND_TEMPLATE_PAYMENT_RECEIPT,
-} as const;
-
 // ─── 1. Welcome ──────────────────────────────────────────────────────────────
 
 export async function sendWelcomeEmail(opts: {
   to: string;
   firstName: string;
+  language?: string | null;
 }) {
-  const id = TEMPLATE.welcome;
-  if (!id) { console.warn('[email] RESEND_TEMPLATE_WELCOME not set — skipping'); return; }
-  await send({
-    from: FROM,
-    to: opts.to,
-    template: {
-      id,
-      variables: {
-        first_name:     opts.firstName,
-        dashboard_url:  `${BASE_URL}/en/dashboard/`,
-      },
-    },
-  });
+  const locale = resolveEmailLocale(opts.language);
+  await send(
+    opts.to,
+    renderWelcome(locale, {
+      firstName: opts.firstName,
+      dashboardUrl: `${BASE_URL}/${locale}/dashboard`,
+    }),
+  );
 }
 
 // ─── 2. Subscription Confirmation ────────────────────────────────────────────
@@ -71,28 +56,30 @@ export async function sendSubscriptionConfirmationEmail(opts: {
   to: string;
   firstName: string;
   planName: string;
-  billingAmount: string;
-  billingPeriod: string;
-  tokenBalance: string;
-  nextRenewalDate: string;
+  /** Amount in minor units, with its ISO currency; omitted if unknown. */
+  billingAmountCents?: number | null;
+  billingCurrency?: string | null;
+  billingPeriod: 'month' | 'year';
+  tokensIncluded: number;
+  nextRenewalDate?: Date | null;
+  language?: string | null;
 }) {
-  const id = TEMPLATE.subscription_confirmation;
-  if (!id) { console.warn('[email] RESEND_TEMPLATE_SUBSCRIPTION not set — skipping'); return; }
-  await send({
-    from: FROM,
-    to: opts.to,
-    template: {
-      id,
-      variables: {
-        first_name:        opts.firstName,
-        plan_name:         opts.planName,
-        billing_amount:    opts.billingAmount,
-        billing_period:    opts.billingPeriod,
-        token_balance:     opts.tokenBalance,
-        next_renewal_date: opts.nextRenewalDate,
-      },
-    },
-  });
+  const locale = resolveEmailLocale(opts.language);
+  await send(
+    opts.to,
+    renderSubscription(locale, {
+      firstName: opts.firstName,
+      planName: opts.planName,
+      billingAmount:
+        opts.billingAmountCents != null && opts.billingCurrency
+          ? formatEmailAmount(opts.billingAmountCents, opts.billingCurrency, locale)
+          : '',
+      billingPeriod: opts.billingPeriod,
+      tokenBalance: opts.tokensIncluded > 0 ? formatEmailNumber(opts.tokensIncluded, locale) : '',
+      nextRenewalDate: opts.nextRenewalDate ? formatEmailDate(opts.nextRenewalDate, locale) : '',
+      dashboardUrl: `${BASE_URL}/${locale}/dashboard`,
+    }),
+  );
 }
 
 // ─── 3. Scan Complete ─────────────────────────────────────────────────────────
@@ -115,42 +102,24 @@ export async function sendScanCompleteEmail(opts: {
   a11yScore: number;
   topFindings: ScanFinding[];
   remainingCount: number;
+  language?: string | null;
 }) {
-  const id = TEMPLATE.scan_complete;
-  if (!id) { console.warn('[email] RESEND_TEMPLATE_SCAN_COMPLETE not set — skipping'); return; }
-
-  const [f1, f2, f3] = opts.topFindings;
-  await send({
-    from: FROM,
-    to: opts.to,
-    template: {
-      id,
-      variables: {
-        first_name:               opts.firstName,
-        site_url:                 opts.siteUrl,
-        overall_score:            String(opts.overallScore),
-        seo_score:                String(opts.seoScore),
-        seo_color:                scoreColor(opts.seoScore),
-        perf_score:               String(opts.perfScore),
-        perf_color:               scoreColor(opts.perfScore),
-        sec_score:                String(opts.secScore),
-        sec_color:                scoreColor(opts.secScore),
-        a11y_score:               String(opts.a11yScore),
-        a11y_color:               scoreColor(opts.a11yScore),
-        finding_1_severity:       f1?.severity ?? '',
-        finding_1_title:          f1?.title ?? '',
-        finding_1_description:    f1?.description ?? '',
-        finding_2_severity:       f2?.severity ?? '',
-        finding_2_title:          f2?.title ?? '',
-        finding_2_description:    f2?.description ?? '',
-        finding_3_severity:       f3?.severity ?? '',
-        finding_3_title:          f3?.title ?? '',
-        finding_3_description:    f3?.description ?? '',
-        remaining_findings_count: String(opts.remainingCount),
-        scan_results_url:         `${BASE_URL}/en/dashboard/sites/${opts.siteId}`,
-      },
-    },
-  });
+  const locale = resolveEmailLocale(opts.language);
+  await send(
+    opts.to,
+    renderScan(locale, {
+      firstName: opts.firstName,
+      siteUrl: opts.siteUrl,
+      overallScore: opts.overallScore,
+      seoScore: opts.seoScore,
+      perfScore: opts.perfScore,
+      secScore: opts.secScore,
+      a11yScore: opts.a11yScore,
+      topFindings: opts.topFindings.slice(0, 3),
+      remainingCount: opts.remainingCount,
+      resultsUrl: `${BASE_URL}/${locale}/dashboard/sites/${opts.siteId}`,
+    }),
+  );
 }
 
 // ─── 4. Fix Complete ──────────────────────────────────────────────────────────
@@ -166,27 +135,23 @@ export async function sendFixCompleteEmail(opts: {
   fixDescription: string;
   tokensUsed: number;
   tokensRemaining: number;
+  language?: string | null;
 }) {
-  const id = TEMPLATE.fix_complete;
-  if (!id) { console.warn('[email] RESEND_TEMPLATE_FIX_COMPLETE not set — skipping'); return; }
-  await send({
-    from: FROM,
-    to: opts.to,
-    template: {
-      id,
-      variables: {
-        first_name:       opts.firstName,
-        site_url:         opts.siteUrl,
-        fix_title:        opts.fixTitle,
-        fix_category:     opts.fixCategory,
-        fix_impact:       opts.fixImpact,
-        fix_description:  opts.fixDescription,
-        tokens_used:      opts.tokensUsed.toLocaleString('en'),
-        tokens_remaining: opts.tokensRemaining.toLocaleString('en'),
-        site_cockpit_url: `${BASE_URL}/en/dashboard/sites/${opts.siteId}`,
-      },
-    },
-  });
+  const locale = resolveEmailLocale(opts.language);
+  await send(
+    opts.to,
+    renderFix(locale, {
+      firstName: opts.firstName,
+      siteUrl: opts.siteUrl,
+      fixTitle: opts.fixTitle,
+      fixCategory: opts.fixCategory,
+      fixImpact: opts.fixImpact,
+      fixDescription: opts.fixDescription,
+      tokensUsed: opts.tokensUsed,
+      tokensRemaining: opts.tokensRemaining,
+      cockpitUrl: `${BASE_URL}/${locale}/dashboard/sites/${opts.siteId}`,
+    }),
+  );
 }
 
 // ─── 5. Payment Receipt ───────────────────────────────────────────────────────
@@ -207,33 +172,24 @@ export async function sendPaymentReceiptEmail(opts: {
   cardBrand: string;
   cardLast4: string;
   nextRenewalDate: Date;
+  language?: string | null;
 }) {
-  const id = TEMPLATE.payment_receipt;
-  if (!id) { console.warn('[email] RESEND_TEMPLATE_PAYMENT_RECEIPT not set — skipping'); return; }
-  const amount = fmtAmount(opts.billingAmountCents, opts.billingCurrency);
-  await send({
-    from: FROM,
-    to: opts.to,
-    template: {
-      id,
-      variables: {
-        first_name:        opts.firstName,
-        billing_name:      opts.billingName,
-        billing_email:     opts.to,
-        billing_company:   opts.billingCompany ?? '',
-        plan_name:         opts.planName,
-        billing_amount:    amount,
-        billing_period:    'monthly',
-        billing_date:      fmtDate(opts.billingDate),
-        period_start:      fmtDate(opts.periodStart),
-        period_end:        fmtDate(opts.periodEnd),
-        invoice_number:    opts.invoiceNumber,
-        invoice_pdf_url:   opts.invoicePdfUrl,
-        card_brand:        opts.cardBrand,
-        card_last4:        opts.cardLast4,
-        next_renewal_date: fmtDate(opts.nextRenewalDate),
-        company_address:   process.env.COMPANY_ADDRESS ?? '',
-      },
-    },
-  });
+  const locale = resolveEmailLocale(opts.language);
+  await send(
+    opts.to,
+    renderReceipt(locale, {
+      firstName: opts.firstName,
+      planName: opts.planName,
+      amountCents: opts.billingAmountCents,
+      currency: opts.billingCurrency,
+      billingDate: opts.billingDate,
+      periodStart: opts.periodStart,
+      periodEnd: opts.periodEnd,
+      invoiceNumber: opts.invoiceNumber,
+      invoicePdfUrl: opts.invoicePdfUrl,
+      cardBrand: opts.cardBrand,
+      cardLast4: opts.cardLast4,
+      nextRenewalDate: opts.nextRenewalDate,
+    }),
+  );
 }

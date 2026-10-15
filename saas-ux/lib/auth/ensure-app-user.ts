@@ -7,6 +7,7 @@ import { getDb } from '@/lib/db/drizzle';
 import { users } from '@/lib/db/schema/auth/users';
 import { getUser } from '@/lib/db/queries';
 import { hashPassword } from '@/lib/auth/session';
+import { detectVisitorLocale } from '@/i18n/resolve-locale';
 
 /**
  * Returns the app user id for the current request.
@@ -51,7 +52,7 @@ export async function ensureAppUserId(): Promise<number | null> {
         name: displayName || primaryEmail.split('@')[0],
         passwordHash: await hashPassword(crypto.randomUUID()),
         role: 'member',
-        language: 'en',
+        language: await detectVisitorLocale(),
       } as any)
       .returning({ id: users.id });
 

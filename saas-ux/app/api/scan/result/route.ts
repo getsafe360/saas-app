@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
         .limit(1);
       if (siteRow) {
         const [userRow] = await db
-          .select({ email: users.email, name: users.name })
+          .select({ email: users.email, name: users.name, language: users.language })
           .from(users)
           .where(eq(users.id, siteRow.userId))
           .limit(1);
@@ -90,6 +90,7 @@ export async function GET(req: NextRequest) {
             a11yScore: 0,
             topFindings: findings,
             remainingCount: remaining,
+            language: userRow.language,
           }).catch((e) => console.error('[scan/result] email failed', e));
         }
       }

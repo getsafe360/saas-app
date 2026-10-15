@@ -132,7 +132,7 @@ export async function POST(req: Request) {
 
             // Subscription confirmation email
             const owner = await db
-              .select({ email: users.email, name: users.name })
+              .select({ email: users.email, name: users.name, language: users.language })
               .from(teamMembers)
               .innerJoin(users, eq(teamMembers.userId, users.id))
               .where(eq(teamMembers.teamId, teamId))
@@ -145,15 +145,11 @@ export async function POST(req: Request) {
                 to: owner.email,
                 firstName: (owner.name ?? owner.email).split(' ')[0],
                 planName: pl2?.name ?? planSlug,
-                billingAmount: s.amount_total
-                  ? new Intl.NumberFormat('en', {
-                      style: 'currency',
-                      currency: (s.currency ?? 'eur').toUpperCase(),
-                    }).format(s.amount_total / 100)
-                  : '',
+                billingAmountCents: s.amount_total,
+                billingCurrency: s.currency,
                 billingPeriod: meta.billing === 'yearly' ? 'year' : 'month',
-                tokenBalance: (teamRow?.tokensIncluded ?? 0).toLocaleString('en'),
-                nextRenewalDate: '',
+                tokensIncluded: teamRow?.tokensIncluded ?? 0,
+                language: owner.language,
               }).catch((e) => console.error('[webhook] subscription confirmation email failed', e));
             }
           }
@@ -257,6 +253,13 @@ export async function POST(req: Request) {
         const lineItem = inv.lines?.data?.[0];
         const planName: string = lineItem?.description ?? 'Pro';
 
+        // Recipient's language, if the invoice email belongs to a known user.
+        const [receiptUser] = await db
+          .select({ language: users.language })
+          .from(users)
+          .where(eq(users.email, customerEmail))
+          .limit(1);
+
         sendPaymentReceiptEmail({
           to: customerEmail,
           firstName: ((inv.customer_name ?? customerEmail) as string).split(' ')[0],
@@ -274,6 +277,7 @@ export async function POST(req: Request) {
           nextRenewalDate: sub2?.current_period_end
             ? new Date(sub2.current_period_end * 1000)
             : new Date(),
+          language: receiptUser?.language,
         }).catch((e) => console.error('[webhook] payment receipt email failed', e));
 
         break;

@@ -11,6 +11,7 @@ import { eq } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { hashPassword } from '@/lib/auth/session';
+import { detectVisitorLocale } from '@/i18n/resolve-locale';
 import { put } from '@vercel/blob';
 
 const DEV = process.env.NODE_ENV !== 'production';
@@ -64,7 +65,7 @@ async function ensureAppUserId(db: ReturnType<typeof getDb>): Promise<number | n
       email: primaryEmail,
       passwordHash,
       role: 'member',
-      language: 'en',
+      language: await detectVisitorLocale(),
       clerkUserId: clerkId
     } as any)
     .returning();

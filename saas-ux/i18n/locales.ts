@@ -69,3 +69,24 @@ export function buildHreflangMap(
 export function ogAlternateLocales(current: Locale): string[] {
   return locales.filter(l => l !== current).map(toOgLocale);
 }
+
+/**
+ * First supported language in an Accept-Language header, honouring q-values.
+ * Returns null when none of the entries is supported (caller picks the default).
+ */
+export function pickLocaleFromAcceptLanguage(header: string | null | undefined): Locale | null {
+  const ranked = (header ?? '')
+    .split(',')
+    .map((part) => {
+      const [tag, ...params] = part.trim().split(';');
+      const q = Number(params.find((p) => p.trim().startsWith('q='))?.split('=')[1] ?? 1);
+      return { base: tag.trim().toLowerCase().split('-')[0], q: Number.isFinite(q) ? q : 0 };
+    })
+    .filter((e) => e.base && e.q > 0)
+    .sort((a, b) => b.q - a.q);
+
+  for (const { base } of ranked) {
+    if (isSupportedLocale(base)) return base;
+  }
+  return null;
+}
