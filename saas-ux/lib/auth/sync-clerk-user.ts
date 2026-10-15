@@ -156,6 +156,7 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
     sendWelcomeEmail({
       to: createdUser.email,
       firstName: clerkUser.firstName || createdUser.email.split('@')[0],
+      language: createdUser.language,
     }).catch((e) => console.error('[syncClerkUser] welcome email failed', e));
 
     const teamId = await createTeamForUser(

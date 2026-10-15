@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
     // Resolve recipient via teamId → team_members → users
     if (job.teamId) {
       const [memberRow] = await db
-        .select({ email: users.email, name: users.name })
+        .select({ email: users.email, name: users.name, language: users.language })
         .from(teamMembers)
         .innerJoin(users, eq(teamMembers.userId, users.id))
         .where(eq(teamMembers.teamId, job.teamId))
@@ -72,6 +72,7 @@ export async function GET(req: NextRequest) {
           fixDescription: result?.description ?? '',
           tokensUsed,
           tokensRemaining: teamRow?.tokensRemaining ?? 0,
+          language: memberRow.language,
         }).catch((e) => console.error('[fix/result] email failed', e));
       }
     }
