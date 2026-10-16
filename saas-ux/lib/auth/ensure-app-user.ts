@@ -58,7 +58,7 @@ export async function ensureAppUserId(): Promise<number | null> {
       .returning({ id: users.id, email: users.email, name: users.name, language: users.language });
 
     // Only the request whose insert succeeded sends the welcome email.
-    if (created) sendWelcomeToNewUser(created);
+    if (created) await sendWelcomeToNewUser(created);
 
     return created?.id ?? null;
   } catch (insertError: any) {

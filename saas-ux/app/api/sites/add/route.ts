@@ -73,7 +73,7 @@ async function ensureAppUserId(db: ReturnType<typeof getDb>): Promise<number | n
 
   // Only the request whose insert succeeded sends the welcome email.
   if (created) {
-    sendWelcomeToNewUser({
+    await sendWelcomeToNewUser({
       email: created.email,
       name: cu.firstName || created.name,
       language: created.language,

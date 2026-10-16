@@ -3,7 +3,7 @@
 
 import { currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/db/drizzle';
-import { sendWelcomeEmail } from '@/lib/email/send';
+import { sendWelcomeToNewUser } from '@/lib/email/welcome';
 import { detectVisitorLocale } from '@/i18n/resolve-locale';
 import { users, type NewUser } from '@/lib/db/schema/auth/users';
 import { teams, teamMembers, type NewTeam, type NewTeamMember } from '@/lib/db/schema/auth';
@@ -153,12 +153,9 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
 
     console.log('[syncClerkUser] User created:', createdUser.id);
 
-    // Fire-and-forget — never block provisioning on email delivery
-    sendWelcomeEmail({
-      to: createdUser.email,
-      firstName: clerkUser.firstName || createdUser.email.split('@')[0],
-      language: createdUser.language,
-    }).catch((e) => console.error('[syncClerkUser] welcome email failed', e));
+    // Awaited so the send isn't dropped when the serverless invocation is frozen;
+    // sendWelcomeToNewUser never throws, so provisioning is not blocked by failures.
+    await sendWelcomeToNewUser(createdUser);
 
     const teamId = await createTeamForUser(
       createdUser.id,
