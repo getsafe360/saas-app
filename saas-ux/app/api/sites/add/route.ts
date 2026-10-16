@@ -12,6 +12,7 @@ import { getUser } from '@/lib/db/queries';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { hashPassword } from '@/lib/auth/session';
 import { detectVisitorLocale } from '@/i18n/resolve-locale';
+import { sendWelcomeToNewUser } from '@/lib/email/welcome';
 import { put } from '@vercel/blob';
 
 const DEV = process.env.NODE_ENV !== 'production';
@@ -69,6 +70,15 @@ async function ensureAppUserId(db: ReturnType<typeof getDb>): Promise<number | n
       clerkUserId: clerkId
     } as any)
     .returning();
+
+  // Only the request whose insert succeeded sends the welcome email.
+  if (created) {
+    await sendWelcomeToNewUser({
+      email: created.email,
+      name: cu.firstName || created.name,
+      language: created.language,
+    });
+  }
 
   return created?.id ?? null;
 }

@@ -8,6 +8,7 @@ import { users } from '@/lib/db/schema/auth/users';
 import { getUser } from '@/lib/db/queries';
 import { hashPassword } from '@/lib/auth/session';
 import { detectVisitorLocale } from '@/i18n/resolve-locale';
+import { sendWelcomeToNewUser } from '@/lib/email/welcome';
 
 /**
  * Returns the app user id for the current request.
@@ -54,7 +55,10 @@ export async function ensureAppUserId(): Promise<number | null> {
         role: 'member',
         language: await detectVisitorLocale(),
       } as any)
-      .returning({ id: users.id });
+      .returning({ id: users.id, email: users.email, name: users.name, language: users.language });
+
+    // Only the request whose insert succeeded sends the welcome email.
+    if (created) await sendWelcomeToNewUser(created);
 
     return created?.id ?? null;
   } catch (insertError: any) {
