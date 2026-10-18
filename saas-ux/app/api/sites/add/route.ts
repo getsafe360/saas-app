@@ -11,8 +11,7 @@ import { eq } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { hashPassword } from '@/lib/auth/session';
-import { detectVisitorLocale } from '@/i18n/resolve-locale';
-import { sendWelcomeToNewUser } from '@/lib/email/welcome';
+import { ensureAppUserId } from '@/lib/auth/ensure-app-user';
 import { put } from '@vercel/blob';
 
 const DEV = process.env.NODE_ENV !== 'production';
@@ -23,64 +22,6 @@ function normalizeUrl(input: string): string {
   const url = new URL(u);
   url.hash = '';
   return url.toString().replace(/\/$/, '');
-}
-
-// Ensure we have an app user row and return its numeric id
-async function ensureAppUserId(db: ReturnType<typeof getDb>): Promise<number | null> {
-  // 1) Local session user (your own auth)
-  try {
-    const u = await getUser();
-    if (u?.id) return u.id;
-  } catch {
-    // ignore
-  }
-
-  // 2) Clerk user → map/provision
-  const cu = await currentUser().catch(() => null);
-  if (!cu) return null; // not signed in
-
-  const clerkId = cu.id;
-
- // Try existing mapping
-  const [row] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.clerkUserId, clerkId))
-    .limit(1);
-
-  if (row?.id) return row.id;
-
-  // 3) Provision user row from Clerk profile (schema requires passwordHash + email)
-
-  const primaryEmail =
-    cu.primaryEmailAddress?.emailAddress ??
-    cu.emailAddresses?.[0]?.emailAddress ??
-    `user-${clerkId}@example.invalid`;
-
-  const randomPassword = crypto.randomUUID(); // never used for login (Clerk handles auth)
-  const passwordHash = await hashPassword(randomPassword);
-
-  const [created] = await db
-    .insert(users)
-    .values({
-      email: primaryEmail,
-      passwordHash,
-      role: 'member',
-      language: await detectVisitorLocale(),
-      clerkUserId: clerkId
-    } as any)
-    .returning();
-
-  // Only the request whose insert succeeded sends the welcome email.
-  if (created) {
-    await sendWelcomeToNewUser({
-      email: created.email,
-      name: cu.firstName || created.name,
-      language: created.language,
-    });
-  }
-
-  return created?.id ?? null;
 }
 
 export async function POST(req: NextRequest) {
@@ -108,7 +49,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Resolve / provision app user id
-  const userId = await ensureAppUserId(db);
+  const userId = await ensureAppUserId();
   if (!userId) {
     return NextResponse.json(
       { ok: false, error: 'SIGN_IN_REQUIRED' },

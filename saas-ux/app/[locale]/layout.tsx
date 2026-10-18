@@ -1,5 +1,6 @@
 // app/[locale]/layout.tsx
 import type { ReactNode } from "react";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import {
@@ -39,6 +40,10 @@ export async function generateMetadata({
   params: Promise<{ locale: Locale }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  // Paths like /favicon.ico or /apple-touch-icon.png skip the i18n middleware (they
+  // contain a dot) and would otherwise render the app with that string as the
+  // locale, crashing in Intl. Anything that is not a supported locale is a 404.
+  if (!(locales as readonly string[]).includes(locale)) notFound();
 
   // Pull strings from messages.metaRoot.*
   const t = await getTranslations({ locale, namespace: "metaRoot" });
@@ -108,6 +113,10 @@ export default async function LocaleLayout({
   params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = await params;
+  // Paths like /favicon.ico or /apple-touch-icon.png skip the i18n middleware (they
+  // contain a dot) and would otherwise render the app with that string as the
+  // locale, crashing in Intl. Anything that is not a supported locale is a 404.
+  if (!(locales as readonly string[]).includes(locale)) notFound();
 
   setRequestLocale(locale);
 

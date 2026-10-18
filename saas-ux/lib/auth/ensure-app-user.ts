@@ -9,6 +9,7 @@ import { getUser } from '@/lib/db/queries';
 import { hashPassword } from '@/lib/auth/session';
 import { detectVisitorLocale } from '@/i18n/resolve-locale';
 import { sendWelcomeToNewUser } from '@/lib/email/welcome';
+import { ensureTeamForUser } from '@/lib/auth/provision';
 
 /**
  * Returns the app user id for the current request.
@@ -44,36 +45,50 @@ export async function ensureAppUserId(): Promise<number | null> {
 
   const displayName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ').trim();
 
-  try {
-    const [created] = await db
-      .insert(users)
-      .values({
-        clerkUserId: clerkUser.id,
-        email: primaryEmail,
-        name: displayName || primaryEmail.split('@')[0],
-        passwordHash: await hashPassword(crypto.randomUUID()),
-        role: 'member',
-        language: await detectVisitorLocale(),
-      } as any)
-      .returning({ id: users.id, email: users.email, name: users.name, language: users.language });
+  const name = displayName || primaryEmail.split('@')[0];
 
+  // ON CONFLICT DO NOTHING: when two requests provision the same Clerk user at
+  // once, exactly one insert wins and the other gets no row (instead of throwing
+  // a duplicate-key error). Drizzle wraps Postgres errors, so a catch on
+  // `error.code` would never match anyway.
+  const [created] = await db
+    .insert(users)
+    .values({
+      clerkUserId: clerkUser.id,
+      email: primaryEmail,
+      name,
+      passwordHash: await hashPassword(crypto.randomUUID()),
+      role: 'member',
+      language: await detectVisitorLocale(),
+    } as any)
+    .onConflictDoNothing()
+    .returning({ id: users.id, email: users.email, name: users.name, language: users.language });
+
+  let userId: number | null = created?.id ?? null;
+
+  if (created) {
     // Only the request whose insert succeeded sends the welcome email.
-    if (created) await sendWelcomeToNewUser(created);
+    await sendWelcomeToNewUser(created);
+  } else {
+    // Lost the race to another request, or a pre-Clerk row already owns this email.
+    const [byClerkId] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.clerkUserId, clerkUser.id))
+      .limit(1);
 
-    return created?.id ?? null;
-  } catch (insertError: any) {
-    // Existing email row can happen on migrations from pre-Clerk accounts.
-    if (insertError?.code === '23505' && insertError?.constraint === 'users_email_unique') {
-      const [updated] = await db
+    if (byClerkId) {
+      userId = byClerkId.id;
+    } else {
+      const [linked] = await db
         .update(users)
         .set({ clerkUserId: clerkUser.id })
         .where(eq(users.email, primaryEmail))
         .returning({ id: users.id });
-
-      return updated?.id ?? null;
+      userId = linked?.id ?? null;
     }
-
-    throw insertError;
   }
-}
 
+  if (userId) await ensureTeamForUser(userId, displayName || primaryEmail);
+  return userId;
+}
