@@ -5,37 +5,10 @@ import { currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/db/drizzle';
 import { sendWelcomeToNewUser } from '@/lib/email/welcome';
 import { detectVisitorLocale } from '@/i18n/resolve-locale';
+import { ensureTeamForUser } from '@/lib/auth/provision';
 import { users, type NewUser } from '@/lib/db/schema/auth/users';
-import { teams, teamMembers, type NewTeam, type NewTeamMember } from '@/lib/db/schema/auth';
+import { teamMembers } from '@/lib/db/schema/auth';
 import { eq } from 'drizzle-orm';
-
-async function createTeamForUser(userId: number, displayName: string): Promise<number | null> {
-  const db = getDb();
-  const [createdTeam] = await db
-    .insert(teams)
-    .values({
-      name: `${displayName}'s Team`,
-      planName: 'free',
-      subscriptionStatus: 'active',
-      tokensIncluded: 5000,
-      tokensUsedThisMonth: 0,
-      tokensPurchased: 0,
-      billingCycleStart: new Date(),
-      notifiedAt80Percent: false,
-      notifiedAt100Percent: false,
-    } satisfies NewTeam)
-    .returning();
-
-  if (!createdTeam) return null;
-
-  await db.insert(teamMembers).values({
-    userId,
-    teamId: createdTeam.id,
-    role: 'owner',
-  } satisfies NewTeamMember);
-
-  return createdTeam.id;
-}
 
 /**
  * Syncs a Clerk user to the local database.
@@ -80,7 +53,7 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
             : clerkUser.firstName) ||
           clerkUser.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ||
           String(existingUser.id);
-        await createTeamForUser(existingUser.id, displayName);
+        await ensureTeamForUser(existingUser.id, displayName);
       }
 
       return existingUser.id;
@@ -124,7 +97,7 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
             ? `${clerkUser.firstName} ${clerkUser.lastName}`.trim()
             : clerkUser.firstName) ||
           primaryEmail.emailAddress;
-        await createTeamForUser(resolvedId, displayName);
+        await ensureTeamForUser(resolvedId, displayName);
       }
       return resolvedId;
     }
@@ -141,14 +114,27 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
         : clerkUser.firstName || primaryEmail.emailAddress.split('@')[0],
     };
 
+    // ON CONFLICT DO NOTHING: parallel requests right after sign-up can all reach
+    // this point; one insert wins, the others get no row instead of an error.
     const [createdUser] = await db
       .insert(users)
       .values(newUser)
+      .onConflictDoNothing()
       .returning();
 
     if (!createdUser) {
-      console.error('[syncClerkUser] Failed to create user');
-      return null;
+      // Another request provisioned this user first — reuse its row.
+      const [winner] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.clerkUserId, clerkUser.id))
+        .limit(1);
+      if (!winner) {
+        console.error('[syncClerkUser] Failed to create user');
+        return null;
+      }
+      await ensureTeamForUser(winner.id, newUser.name || primaryEmail.emailAddress);
+      return winner.id;
     }
 
     console.log('[syncClerkUser] User created:', createdUser.id);
@@ -157,7 +143,7 @@ export async function syncClerkUserToDatabase(): Promise<number | null> {
     // sendWelcomeToNewUser never throws, so provisioning is not blocked by failures.
     await sendWelcomeToNewUser(createdUser);
 
-    const teamId = await createTeamForUser(
+    const teamId = await ensureTeamForUser(
       createdUser.id,
       createdUser.name || createdUser.email,
     );
