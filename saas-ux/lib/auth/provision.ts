@@ -16,6 +16,15 @@ import { teams, teamMembers, type NewTeam } from '@/lib/db/schema/auth';
 export async function ensureTeamForUser(userId: number, displayName: string): Promise<number | null> {
   const db = getDb();
 
+  // Fast path (the common case, and this runs on hot routes): no lock needed
+  // when the team already exists.
+  const [existing] = await db
+    .select({ teamId: teamMembers.teamId })
+    .from(teamMembers)
+    .where(eq(teamMembers.userId, userId))
+    .limit(1);
+  if (existing) return existing.teamId;
+
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(${userId}::bigint)`);
 

@@ -30,22 +30,27 @@ export async function ensureAppUserId(): Promise<number | null> {
   const clerkUser = await currentUser().catch(() => null);
   if (!clerkUser) return null;
 
-  const [mappedUser] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.clerkUserId, clerkUser.id))
-    .limit(1);
-
-  if (mappedUser?.id) return mappedUser.id;
-
   const primaryEmail =
     clerkUser.primaryEmailAddress?.emailAddress ??
     clerkUser.emailAddresses?.[0]?.emailAddress ??
     `user-${clerkUser.id}@example.invalid`;
 
   const displayName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ').trim();
-
   const name = displayName || primaryEmail.split('@')[0];
+
+  const [mappedUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.clerkUserId, clerkUser.id))
+    .limit(1);
+
+  if (mappedUser?.id) {
+    // The user row can exist before its team does (a parallel request is still
+    // provisioning it, or it failed part-way), so make sure the team is there too.
+    // Cheap when it already exists: ensureTeamForUser short-circuits on a lookup.
+    await ensureTeamForUser(mappedUser.id, name);
+    return mappedUser.id;
+  }
 
   // ON CONFLICT DO NOTHING: when two requests provision the same Clerk user at
   // once, exactly one insert wins and the other gets no row (instead of throwing
@@ -66,10 +71,7 @@ export async function ensureAppUserId(): Promise<number | null> {
 
   let userId: number | null = created?.id ?? null;
 
-  if (created) {
-    // Only the request whose insert succeeded sends the welcome email.
-    await sendWelcomeToNewUser(created);
-  } else {
+  if (!created) {
     // Lost the race to another request, or a pre-Clerk row already owns this email.
     const [byClerkId] = await db
       .select({ id: users.id })
@@ -89,6 +91,12 @@ export async function ensureAppUserId(): Promise<number | null> {
     }
   }
 
-  if (userId) await ensureTeamForUser(userId, displayName || primaryEmail);
+  // Team first: the welcome email is slow, and other requests that already see
+  // the user row must not find it without a team in the meantime.
+  if (userId) await ensureTeamForUser(userId, name);
+
+  // Only the request whose insert succeeded sends the welcome email.
+  if (created) await sendWelcomeToNewUser(created);
+
   return userId;
 }
