@@ -70,7 +70,11 @@ const C = {
   text: '#e6edf3',
   muted: '#8b98a5',
   accent: '#38bdf8',
-  accentText: '#04121a',
+  // Button: white on a mid-tone blue. Mail clients' dark modes auto-invert dark
+  // text on light backgrounds (making it unreadable), but leave white-on-mid-tone
+  // alone. 5.9:1 contrast.
+  button: '#0369a1',
+  buttonText: '#ffffff',
 };
 
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
@@ -102,8 +106,8 @@ function rowsTable(rows: Array<[string, string]>): string {
 }
 
 function button(label: string, url: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 8px;"><tr><td style="background:${C.accent};border-radius:8px;">
-<a href="${esc(safeUrl(url))}" style="display:inline-block;padding:12px 24px;color:${C.accentText};font-size:15px;font-weight:600;text-decoration:none;">${esc(label)}</a>
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 8px;"><tr><td bgcolor="${C.button}" style="background:${C.button};border:1px solid ${C.accent};border-radius:8px;">
+<a href="${esc(safeUrl(url))}" style="display:inline-block;padding:12px 24px;color:${C.buttonText};font-size:15px;font-weight:600;text-decoration:none;">${esc(label)}</a>
 </td></tr></table>`;
 }
 
@@ -120,7 +124,7 @@ interface LayoutArgs {
 function layout(a: LayoutArgs): string {
   return `<!doctype html>
 <html lang="${a.locale}">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>${esc(a.title)}</title></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${esc(a.title)}</title></head>
 <body style="margin:0;padding:0;background:${C.page};font-family:${FONT};">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.page};padding:32px 16px;"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:${C.card};border:1px solid ${C.border};border-radius:12px;">
