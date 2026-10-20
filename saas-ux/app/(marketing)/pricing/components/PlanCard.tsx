@@ -51,7 +51,7 @@ export default function PlanCard({
 }: PlanCardProps) {
   const t = usePricingCopy();
   const { openSignUp } = useClerk();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
   const [isPriceVisible, setIsPriceVisible] = useState(true);
 
@@ -169,6 +169,7 @@ export default function PlanCard({
       {type === "free" ? (
         <button
           type="button"
+          disabled={!isLoaded}
           onClick={() =>
             // Pay-as-you-go is the free tier: no Stripe product, just an account.
             isSignedIn ? router.push("/dashboard") : openSignUp({ forceRedirectUrl: "/dashboard" })
