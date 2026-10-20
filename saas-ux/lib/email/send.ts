@@ -1,5 +1,5 @@
 import 'server-only';
-import { getResend, FROM, BASE_URL } from './client';
+import { getResend, FROM, REPLY_TO, BASE_URL } from './client';
 import {
   formatEmailAmount,
   formatEmailDate,
@@ -22,6 +22,7 @@ async function send(to: string, email: RenderedEmail) {
     const resend = getResend();
     const { error } = await resend.emails.send({
       from: FROM,
+      replyTo: REPLY_TO,
       to,
       subject: email.subject,
       html: email.html,
