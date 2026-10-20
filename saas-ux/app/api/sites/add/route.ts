@@ -12,7 +12,7 @@ import { getUser } from '@/lib/db/queries';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { hashPassword } from '@/lib/auth/session';
 import { ensureAppUserId } from '@/lib/auth/ensure-app-user';
-import { isPublicUrlResolved } from '@/lib/net/isPublicUrl';
+import { isPublicUrlResolved } from '@/lib/net/isPublicUrlResolved';
 import { put } from '@vercel/blob';
 
 const DEV = process.env.NODE_ENV !== 'production';

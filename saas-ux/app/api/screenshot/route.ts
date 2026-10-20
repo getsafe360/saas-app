@@ -1,6 +1,7 @@
 // app/api/screenshot/route.ts
 import { NextRequest } from "next/server";
-import { isPublicUrl, isPublicUrlResolved } from "@/lib/net/isPublicUrl";
+import { isPublicUrl } from "@/lib/net/isPublicUrl";
+import { isPublicUrlResolved } from "@/lib/net/isPublicUrlResolved";
 import { chromium } from "playwright-core";
 import type { Browser, BrowserContext, Page } from "playwright-core";
 

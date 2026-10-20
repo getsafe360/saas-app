@@ -1,7 +1,7 @@
 // saas-ux/app/api/analyze-facts/route.ts
 import { NextRequest } from "next/server";
 import { preScan } from "@/lib/analyzer/preScan";
-import { isPublicUrlResolved } from "@/lib/net/isPublicUrl";
+import { isPublicUrlResolved } from "@/lib/net/isPublicUrlResolved";
 import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
