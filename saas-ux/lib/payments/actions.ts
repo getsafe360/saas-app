@@ -33,7 +33,7 @@ export const checkoutAction = withTeam(async (formData, team) => {
         customerEmail: user.email || undefined,
         priceId,
         mode,
-        successUrl: `${baseUrl}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
+        successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${baseUrl}/plans`,
         teamId: team.id,
         planSlug: isSubscription ? Object.values(PLANS).find(p => p.stripePriceId === priceId)?.name : undefined,

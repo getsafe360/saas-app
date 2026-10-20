@@ -2,7 +2,7 @@
 import { preScan } from "@/lib/analyzer/preScan";
 import { buildPrompt } from "@/lib/analyzer/prompt";
 import { kvGet, kvSet } from "@/lib/kv";
-import { isPublicUrl } from "@/lib/net/isPublicUrl";
+import { isPublicUrlResolved } from "@/lib/net/isPublicUrl";
 import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     }
 
     const target = normalizeInput(unsafeUrl);
-    if (!isPublicUrl(target)) {
+    if (!(await isPublicUrlResolved(target))) {
       return new Response("Invalid URL", { status: 400 });
     }
 

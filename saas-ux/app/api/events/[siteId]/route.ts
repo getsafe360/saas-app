@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { publishEvent, subscribeToSiteEvents, unsubscribe } from '@/lib/cockpit/event-bus';
+import { requireSiteOwner } from '@/lib/auth/site-access';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -9,6 +10,10 @@ export async function GET(
   { params }: { params: Promise<{ siteId: string }> },
 ) {
   const { siteId } = await params;
+
+  // Live site events are private to the site's owner.
+  const access = await requireSiteOwner(siteId);
+  if (!access.ok) return access.response;
   let streamController: ReadableStreamDefaultController<string> | null = null;
 
   const stream = new ReadableStream<string>({

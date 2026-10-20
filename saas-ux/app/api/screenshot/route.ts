@@ -1,5 +1,6 @@
 // app/api/screenshot/route.ts
 import { NextRequest } from "next/server";
+import { isPublicUrl, isPublicUrlResolved } from "@/lib/net/isPublicUrl";
 import { chromium } from "playwright-core";
 import type { Browser, BrowserContext, Page } from "playwright-core";
 
@@ -181,6 +182,12 @@ export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
   if (!url) return new Response("Missing url", { status: 400 });
 
+  // SSRF guard: this route is public (the homepage analyzer uses it), so it must
+  // never be pointed at internal or cloud-metadata addresses.
+  if (url.length > 2048 || !(await isPublicUrlResolved(url))) {
+    return new Response("Invalid URL", { status: 400 });
+  }
+
   const w = clamp(parseInt(req.nextUrl.searchParams.get("w") || "650", 10), 320, 1600);
   const h = req.nextUrl.searchParams.get("h") 
     ? clamp(parseInt(req.nextUrl.searchParams.get("h")!, 10), 400, 2000) 
@@ -212,10 +219,21 @@ export async function GET(req: NextRequest) {
     page = await browser.newPage();
 
     // Aggressive resource blocking for speed
-    await page.route('**/*', (route) => {
+    await page.route('**/*', async (route) => {
       const request = route.request();
       const resourceType = request.resourceType();
       const url = request.url();
+
+      // Re-check every navigation (the first load and each redirect hop) with DNS,
+      // and every other request against IP literals, so a redirect or an embedded
+      // resource cannot reach internal addresses.
+      const allowed = request.isNavigationRequest()
+        ? await isPublicUrlResolved(url)
+        : isPublicUrl(url);
+      if (!allowed) {
+        await route.abort('blockedbyclient');
+        return;
+      }
       
       // Block non-essential resources
       if (

@@ -1,7 +1,7 @@
 // saas-ux/app/api/analyze-facts/route.ts
 import { NextRequest } from "next/server";
 import { preScan } from "@/lib/analyzer/preScan";
-import { isPublicUrl } from "@/lib/net/isPublicUrl";
+import { isPublicUrlResolved } from "@/lib/net/isPublicUrl";
 import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
@@ -512,7 +512,7 @@ export async function GET(req: NextRequest) {
   const siteId = req.nextUrl.searchParams.get("siteId")?.trim() || "";
   const target = normalizeInput(urlParam);
 
-  if (!isPublicUrl(target)) {
+  if (!(await isPublicUrlResolved(target))) {
     return new Response("Invalid URL", { status: 400 });
   }
 
