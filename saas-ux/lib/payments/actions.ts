@@ -1,6 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
+import { toSupportedLocale } from '@/lib/server/payments/locale';
 import { createCustomerPortalSession } from './stripe';
 import { createCheckoutSession } from '@/lib/server/payments/checkout';
 import { withTeam } from '@/lib/auth/middleware';
@@ -48,6 +50,7 @@ export const checkoutAction = withTeam(async (formData, team) => {
 });
 
 export const customerPortalAction = withTeam(async (_, team) => {
-    const portalSession = await createCustomerPortalSession(team);
+    const locale = toSupportedLocale(await getLocale().catch(() => undefined));
+    const portalSession = await createCustomerPortalSession(team, locale);
     redirect(portalSession.url);
 });

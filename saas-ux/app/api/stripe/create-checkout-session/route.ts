@@ -10,6 +10,7 @@ import { createCheckoutSession } from '@/lib/server/payments/checkout';
 import { parseCheckoutTarget, priceIdForTarget } from '@/config/billing/catalogue';
 import { stripe } from '@/lib/payments/stripe';
 import { currencyForCountry, isCurrency } from '@/config/billing/currency';
+import { toSupportedLocale } from '@/lib/server/payments/locale';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Sign in required → Sign in and try again' }, { status: 401 });
   }
 
-  const target = parseCheckoutTarget(await req.json().catch(() => null));
+  const body = await req.json().catch(() => null);
+  const target = parseCheckoutTarget(body);
+  const locale = toSupportedLocale((body as { locale?: unknown } | null)?.locale);
   if (!target) {
     return NextResponse.json({ error: 'Invalid checkout request → Pick a plan or pack' }, { status: 400 });
   }
@@ -63,6 +66,13 @@ export async function POST(req: NextRequest) {
       console.error('[create-checkout-session] customer lookup failed', err);
       currency = undefined; // let Stripe use the customer's currency
     }
+
+    // Keep invoices/receipts in the language the customer is browsing in.
+    if (locale) {
+      await stripe.customers
+        .update(team.stripeCustomerId, { preferred_locales: [locale] })
+        .catch((err) => console.error('[create-checkout-session] preferred_locales update failed', err));
+    }
   }
 
   try {
@@ -72,6 +82,7 @@ export async function POST(req: NextRequest) {
       priceId: priceIdForTarget(target),
       mode: target.kind === 'plan' ? 'subscription' : 'payment',
       currency,
+      locale,
       region: country,
       successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/pricing`,
