@@ -32,6 +32,19 @@ export type CheckoutTarget =
   | { kind: 'plan'; plan: CheckoutPlanSlug; billing: BillingInterval }
   | { kind: 'pack'; pack: CheckoutPackSlug };
 
+/** Maps any catalogue price ID back to its checkout target; null if it is not ours. */
+export function targetForPriceId(priceId: string): CheckoutTarget | null {
+  for (const [plan, prices] of Object.entries(PLAN_PRICE_IDS) as Array<[CheckoutPlanSlug, Record<BillingInterval, string>]>) {
+    for (const billing of ['monthly', 'yearly'] as const) {
+      if (prices[billing] === priceId) return { kind: 'plan', plan, billing };
+    }
+  }
+  for (const [pack, id] of Object.entries(PACK_PRICE_IDS) as Array<[CheckoutPackSlug, string]>) {
+    if (id === priceId) return { kind: 'pack', pack };
+  }
+  return null;
+}
+
 /** Maps a price ID back to a plan slug (used by webhook fallbacks). */
 export function planSlugForPriceId(priceId: string): CheckoutPlanSlug | null {
   for (const [slug, prices] of Object.entries(PLAN_PRICE_IDS)) {
