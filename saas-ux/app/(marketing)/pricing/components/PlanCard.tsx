@@ -1,6 +1,7 @@
 "use client";
 
-import { useClerk } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
+import { useRouter } from "@/navigation";
 import { Check, Code2, Coins, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -49,7 +50,9 @@ export default function PlanCard({
   billingCycle,
 }: PlanCardProps) {
   const t = usePricingCopy();
-  const { openSignIn } = useClerk();
+  const { openSignUp } = useClerk();
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
   const [isPriceVisible, setIsPriceVisible] = useState(true);
 
   const currency = useCurrency();
@@ -166,7 +169,11 @@ export default function PlanCard({
       {type === "free" ? (
         <button
           type="button"
-          onClick={() => openSignIn?.()}
+          disabled={!isLoaded}
+          onClick={() =>
+            // Pay-as-you-go is the free tier: no Stripe product, just an account.
+            isSignedIn ? router.push("/dashboard") : openSignUp({ forceRedirectUrl: "/dashboard" })
+          }
           className={ACCENT_BUTTON[type]}
         >
           {t(ctaLabelKey)}
