@@ -1,6 +1,7 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
+import { useLocale } from "next-intl";
 import { useCallback, useState } from "react";
 
 import type { CheckoutTarget } from "@/config/billing/catalogue";
@@ -13,6 +14,7 @@ import type { CheckoutTarget } from "@/config/billing/catalogue";
  */
 export function useStartCheckout(returnTo = "/pricing") {
   const { openSignUp } = useClerk();
+  const locale = useLocale();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +26,7 @@ export function useStartCheckout(returnTo = "/pricing") {
         const res = await fetch("/api/stripe/create-checkout-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(target),
+          body: JSON.stringify({ ...target, locale }),
         });
 
         if (res.status === 401) {
@@ -44,7 +46,7 @@ export function useStartCheckout(returnTo = "/pricing") {
         setLoading(false);
       }
     },
-    [returnTo, openSignUp],
+    [returnTo, openSignUp, locale],
   );
 
   return { start, loading, error };

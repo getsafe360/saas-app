@@ -53,6 +53,8 @@ export async function createCheckoutSession(opts: CheckoutOptions) {
   if (opts.billing) metadata.billing = opts.billing;
   if (region) metadata.region = region.toUpperCase();
   if (currency) metadata.currency = currency;
+  // Lets link-purchase set the new customer's preferred_locales (invoice/receipt language).
+  if (opts.locale && opts.locale !== 'auto') metadata.locale = opts.locale;
 
   const collectTaxId = opts.collectTaxId ?? true;
 

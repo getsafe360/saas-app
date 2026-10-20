@@ -2,6 +2,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { toSupportedLocale } from '@/lib/server/payments/locale';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -52,10 +53,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Update Stripe customer metadata with Clerk user ID
+    const locale = toSupportedLocale(session.metadata?.locale);
     await stripe.customers.update(customerId, {
       metadata: {
         clerkUserId: userId,
       },
+      // Invoices/receipts in the language the customer checked out in.
+      ...(locale ? { preferred_locales: [locale] } : {}),
     });
 
     // If this is a subscription, update subscription metadata too

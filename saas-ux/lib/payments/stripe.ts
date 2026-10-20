@@ -45,7 +45,10 @@ export async function createCheckoutSession({
   redirect(session.url!);
 }
 
-export async function createCustomerPortalSession(team: Team) {
+export async function createCustomerPortalSession(
+  team: Team,
+  locale?: Stripe.BillingPortal.SessionCreateParams.Locale
+) {
   if (!team.stripeCustomerId || !team.stripeProductId) {
     redirect('/pricing');
   }
@@ -108,6 +111,7 @@ export async function createCustomerPortalSession(team: Team) {
 
   return stripe.billingPortal.sessions.create({
     customer: team.stripeCustomerId,
+    locale,
     return_url: `${process.env.BASE_URL}/dashboard`,
     configuration: configuration.id
   });
