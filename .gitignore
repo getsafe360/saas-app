@@ -37,11 +37,6 @@ saas-ux/node_modules
 __pycache__/
 .vercel
 
-# local test routes (do not deploy)
-saas-ux/app/api/blobtest/
-saas-ux/app/api/bloblist/
-saas-ux/app/api/blobdelete/
-saas-ux/app/api/selftest/
 node_modules
 
 # Drizzle: track canonical migrations + meta in repo
