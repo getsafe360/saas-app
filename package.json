@@ -10,7 +10,18 @@
   "pnpm": {
     "overrides": {
       "sha3": "npm:js-sha3@0.9.3",
-      "scrypt": "npm:scrypt-js@3.0.1"
+      "scrypt": "npm:scrypt-js@3.0.1",
+      "basic-ftp@<5.3.0": "^5.3.0",
+      "tar@<7.5.11": "^7.5.11",
+      "ws@>=8 <8.21.0": "^8.21.0",
+      "ip-address@<10.3.1": "^10.3.1",
+      "js-cookie@<3.0.7": "^3.0.7",
+      "nanoid@<3.3.18": "^3.3.18",
+      "source-map-js@<1.2.2": "^1.2.2",
+      "browserslist@<4.28.7": "^4.28.7",
+      "postcss@<8.5.18": "^8.5.18",
+      "undici@<6.27.0": "^6.27.0",
+      "@fastify/busboy@<3.2.1": "^3.2.1"
     },
     "onlyBuiltDependencies": [
       "@clerk/shared",
