@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/navigation";
-import type { Locale } from "@/i18n/locales";
 import { FileText, Scale, ShieldCheck } from "lucide-react";
 
-type Props = { params: Promise<{ locale: Locale }> };
+// Next 15.5 types route params as plain strings.
+type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
