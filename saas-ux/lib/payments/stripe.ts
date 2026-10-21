@@ -7,9 +7,18 @@ import {
   getUser,
   updateTeamSubscription
 } from '@/lib/db/queries';
+import { createCheckoutSession as buildCheckoutSession } from '@/lib/server/payments/checkout';
+import { targetForPriceId } from '@/config/billing/catalogue';
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+/**
+ * Legacy (password sign-in / sign-up form) checkout entry point. It shares the
+ * session builder with the Clerk checkout route, so a purchase carries the
+ * team_id / plan_slug / billing metadata the Stripe webhook needs to fulfil it.
+ * Only catalogue prices are accepted (the price id comes from a form field), and
+ * there is no trial.
+ */
 export async function createCheckoutSession({
   team,
   priceId
@@ -20,29 +29,29 @@ export async function createCheckoutSession({
   const user = await getUser();
 
   if (!team || !user) {
-    redirect(`/sign-up?redirect=checkout&priceId=${priceId}`);
+    redirect(`/sign-up?redirect=checkout&priceId=${encodeURIComponent(priceId)}`);
   }
 
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
-    line_items: [
-      {
-        price: priceId,
-        quantity: 1
-      }
-    ],
-    mode: 'subscription',
-    success_url: `${process.env.BASE_URL}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.BASE_URL}/pricing`,
-    customer: team.stripeCustomerId || undefined,
-    client_reference_id: user.id.toString(),
-    allow_promotion_codes: true,
-    subscription_data: {
-      trial_period_days: 14
-    }
+  const target = targetForPriceId(priceId);
+  if (!target) throw new Error('Unknown price.');
+
+  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+  const session = await buildCheckoutSession({
+    customerId: team.stripeCustomerId || undefined,
+    customerEmail: user.email || undefined,
+    priceId,
+    mode: target.kind === 'plan' ? 'subscription' : 'payment',
+    successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: `${baseUrl}/pricing`,
+    teamId: team.id,
+    planSlug: target.kind === 'plan' ? target.plan : undefined,
+    billing: target.kind === 'plan' ? target.billing : undefined,
+    packSlug: target.kind === 'pack' ? target.pack : undefined,
+    allowPromotionCodes: true
   });
 
-  redirect(session.url!);
+  if (!session.url) throw new Error('Stripe returned no checkout URL.');
+  redirect(session.url);
 }
 
 export async function createCustomerPortalSession(

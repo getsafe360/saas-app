@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
+import { guardPublicWrite } from '@/lib/api/public-write-guard';
 
 export const runtime = 'nodejs';
 
@@ -46,7 +47,9 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: Request) {
-  const data = await req.json().catch(() => null);
+  const guard = await guardPublicWrite(req, 'stash');
+  if (!guard.ok) return jsonWithCors({ error: guard.error }, { status: guard.status });
+  const data = guard.data;
 
   if (!isValidPayload(data)) {
     return jsonWithCors(

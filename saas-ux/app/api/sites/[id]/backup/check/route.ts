@@ -5,6 +5,7 @@ import postgres from 'postgres';
 import { eq, and, desc } from 'drizzle-orm';
 import * as schema from '@/lib/db/schema';
 import { siteBackups } from '@/lib/db/schema';
+import { requireSiteOwner } from '@/lib/auth/site-access';
 
 const queryClient = postgres(process.env.DATABASE_URL!);
 const db = drizzle(queryClient, { schema });
@@ -14,6 +15,9 @@ export async function GET(
   props: { params: Promise<{ id: string }> }
 ) {
   const { id } = await props.params;
+
+  const access = await requireSiteOwner(id);
+  if (!access.ok) return access.response;
 
   try {
     const backups = await db

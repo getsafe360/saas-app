@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sites } from '@/lib/db/schema/sites/sites';
 import { eq } from 'drizzle-orm';
+import { requireSiteOwner } from '@/lib/auth/site-access';
 
 /**
  * GET /api/sites/[id]/health
@@ -22,6 +23,11 @@ export async function GET(
 ) {
   const params = await props.params;
   const { id } = params;
+
+  // Only the owner may probe a site (this makes the server call out to it with the
+  // site's API key).
+  const access = await requireSiteOwner(id);
+  if (!access.ok) return access.response;
 
   try {
     // Get site from database

@@ -2,6 +2,8 @@
 import { preScan } from "@/lib/analyzer/preScan";
 import { buildPrompt } from "@/lib/analyzer/prompt";
 import { kvGet, kvSet } from "@/lib/kv";
+// Edge runtime: pure IP/hostname check only. The DNS-resolving check runs where the
+// fetch happens (Node routes such as analyze-facts).
 import { isPublicUrl } from "@/lib/net/isPublicUrl";
 import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { Ratelimit } from "@upstash/ratelimit";
