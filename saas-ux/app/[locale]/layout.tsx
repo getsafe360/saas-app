@@ -14,6 +14,9 @@ import { Footer } from "@/components/ui/footer";
 import BackToTopButton from "@/components/ui/back-to-top-button";
 import { HtmlLang } from "@/components/HtmlLang";
 
+// Next 15.5 types route params as plain strings, so narrow before using them as a Locale.
+const isLocale = (value: string): value is Locale => (locales as readonly string[]).includes(value);
+
 // Absolute base for OG/canonical
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://getsafe360.ai";
@@ -37,13 +40,13 @@ const ogLocaleMap: Record<Locale, string> = {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
   // Paths like /favicon.ico or /apple-touch-icon.png skip the i18n middleware (they
   // contain a dot) and would otherwise render the app with that string as the
   // locale, crashing in Intl. Anything that is not a supported locale is a 404.
-  if (!(locales as readonly string[]).includes(locale)) notFound();
+  if (!isLocale(locale)) notFound();
 
   // Pull strings from messages.metaRoot.*
   const t = await getTranslations({ locale, namespace: "metaRoot" });
@@ -110,13 +113,13 @@ export default async function LocaleLayout({
   params,
 }: {
   children: ReactNode;
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   // Paths like /favicon.ico or /apple-touch-icon.png skip the i18n middleware (they
   // contain a dot) and would otherwise render the app with that string as the
   // locale, crashing in Intl. Anything that is not a supported locale is a 404.
-  if (!(locales as readonly string[]).includes(locale)) notFound();
+  if (!isLocale(locale)) notFound();
 
   setRequestLocale(locale);
 
