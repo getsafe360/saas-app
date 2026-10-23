@@ -96,6 +96,14 @@ class FetchTimeoutError extends Error {
   }
 }
 const FETCH_MAX_BYTES = 300_000;
+
+/** The page is larger than the quick analysis handles (e.g. big shop front pages). */
+class FetchTooLargeError extends Error {
+  constructor() {
+    super("HTML exceeded size limit.");
+    this.name = "FetchTooLargeError";
+  }
+}
 const LLM_TIMEOUT_MS = 90_000;
 const CACHE_TTL_SECONDS = 60 * 60;
 const GEMINI_MODEL =
@@ -300,6 +308,8 @@ type TerminalMsgs = {
   htmlFetched: string;
   /** Shown when the target site is too slow; "{site}" is replaced. Optional: falls back to English. */
   fetchTimeout?: string;
+  /** Shown when the page exceeds the quick-analysis size limit; "{site}" is replaced. Optional: falls back to English. */
+  fetchTooLarge?: string;
   extractingSignals: string;
   runningAnalysis: string;
   analysisComplete: string;
@@ -424,7 +434,7 @@ async function limitedHtmlFetch(url: string): Promise<FetchSnapshot> {
       total += value.byteLength;
       if (total > FETCH_MAX_BYTES) {
         controller.abort("max-size");
-        throw new Error("HTML exceeded size limit.");
+        throw new FetchTooLargeError();
       }
       chunks.push(value);
     }
@@ -1387,6 +1397,11 @@ export async function GET(req: NextRequest) {
         const message =
           error instanceof FetchTimeoutError
             ? (getTerminalMsgs(locale).fetchTimeout ?? TERMINAL_MSGS.en.fetchTimeout ?? error.message).replace(
+                "{site}",
+                hostnameForMessage(normalizedUrl),
+              )
+            : error instanceof FetchTooLargeError
+            ? (getTerminalMsgs(locale).fetchTooLarge ?? TERMINAL_MSGS.en.fetchTooLarge ?? error.message).replace(
                 "{site}",
                 hostnameForMessage(normalizedUrl),
               )

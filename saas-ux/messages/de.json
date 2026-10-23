@@ -488,6 +488,7 @@
     "fetchingHtml": "HTML wird abgerufen\u2026",
     "htmlFetched": "HTML in {ms} ms abgerufen",
     "fetchTimeout": "{site} antwortet zu langsam → Versuche es gleich noch einmal.",
+    "fetchTooLarge": "{site} ist für die Schnellanalyse zu umfangreich → Versuche es mit einer kleineren Seite der Website.",
     "extractingSignals": "Schl\u00fcsselsignale werden extrahiert\u2026",
     "runningAnalysis": "Mehrschichtige Analyse l\u00e4uft\u2026",
     "analysisComplete": "Analyse abgeschlossen",

@@ -480,6 +480,7 @@
     "fetchingHtml": "Recupero HTML in corso\u2026",
     "htmlFetched": "HTML recuperato in {ms} ms",
     "fetchTimeout": "{site} risponde troppo lentamente → Riprova tra un momento.",
+    "fetchTooLarge": "{site} è troppo grande per l’analisi rapida → Prova con una pagina più leggera del sito.",
     "extractingSignals": "Estrazione dei segnali chiave\u2026",
     "runningAnalysis": "Analisi multi-livello in corso\u2026",
     "analysisComplete": "Analisi completata",
