@@ -18,7 +18,9 @@ const log = logger('jobs/cleanup');
  * answering. Without this they sit in `queued`/`running` forever, the UI polls
  * indefinitely, and held tokens are never released.
  *
- * Wire this to a Vercel Cron entry (see vercel.json) every 10 minutes.
+ * Wired to a Vercel Cron entry (see vercel.json) that runs once a day at 04:00 UTC,
+ * the most the Hobby plan allows. On a Pro plan, change the schedule to "*/10 * * * *" so
+ * stuck jobs and their token holds are released within minutes instead of hours.
  * Authorised either by CRON_SECRET (Vercel sends it as a Bearer token) or by
  * an admin session, so it can also be triggered by hand during an incident.
  */
