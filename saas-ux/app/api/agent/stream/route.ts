@@ -13,8 +13,6 @@ import itMessages from "@/messages/it.json";
 import ptMessages from "@/messages/pt.json";
 
 export const runtime = "nodejs";
-// Fetch (up to FETCH_TIMEOUT_MS) + Gemini analysis must fit in one invocation.
-export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 type SnapshotSections = {
