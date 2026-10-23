@@ -3,6 +3,8 @@
 // Re-scores from live page HTML without running a full GetSafe scan.
 // Fast (~1s), covers only the category being optimized.
 
+import { balanceTags } from '@/lib/net/sanitizeHtml';
+
 // ── SEO scorer ────────────────────────────────────────────────────────────────
 
 interface SeoSignal {
@@ -79,7 +81,8 @@ async function fetchPageHtml(siteUrl: string): Promise<string | null> {
       signal: controller.signal,
     }).finally(() => clearTimeout(timeout));
     if (!res.ok) return null;
-    return res.text();
+    // Cap and neutralise unclosed "<" so the scoring regexes stay linear on odd pages.
+    return balanceTags((await res.text()).slice(0, 2_000_000));
   } catch {
     return null;
   }

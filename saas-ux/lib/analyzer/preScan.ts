@@ -1,4 +1,5 @@
 import { fetchWithTimeout } from "@/lib/net/fetchWithTimeout";
+import { balanceTags, extractTitle, restoreLt } from "@/lib/net/sanitizeHtml";
 
 type CmsInfo =
   | { type: "wordpress"; signals: string[]; wp: { version?: string | null; jsonApi: boolean | null; xmlrpc: boolean | null } }
@@ -30,10 +31,11 @@ export async function preScan(inputUrl: string) {
   const headers: Record<string, string> = {};
   res.headers.forEach((v, k) => (headers[k.toLowerCase()] = v));
 
-  const html = (await res.text()).slice(0, 300_000); // cap
-  const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "").trim();
-  const metaDesc = (html.match(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/i)?.[1] || "").trim();
-  const robotsMeta = (html.match(/<meta[^>]+name=["']robots["'][^>]*content=["']([^"']*)["'][^>]*>/i)?.[1] || "").trim();
+  // cap, then neutralise unclosed "<" so the regexes below stay linear on hostile pages
+  const html = balanceTags((await res.text()).slice(0, 300_000));
+  const title = extractTitle(html);
+  const metaDesc = restoreLt((html.match(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/i)?.[1] || "").trim());
+  const robotsMeta = restoreLt((html.match(/<meta[^>]+name=["']robots["'][^>]*content=["']([^"']*)["'][^>]*>/i)?.[1] || "").trim());
   const hasCanonical = /<link[^>]+rel=["']canonical["']/i.test(html);
 
   const scripts = html.match(/<script\b[^>]*>/gi)?.length ?? 0;
