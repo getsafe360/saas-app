@@ -10,50 +10,74 @@ import { users } from '@/lib/db/schema/auth/users';
 import { eq } from 'drizzle-orm';
 import { list } from '@vercel/blob';
 import { kvGet, kvSet } from '@/lib/kv';
+import { getDbUserFromClerk } from '@/lib/auth/current';
 import { sendScanCompleteEmail, type ScanFinding } from '@/lib/email/send';
+import type { ScanReport } from '@/lib/scan/types';
+import { logger } from '@/lib/logger';
 
-const DEV = process.env.NODE_ENV !== 'production';
+const log = logger('scan/result');
 
-async function readReportBlob(key: string): Promise<any | null> {
+async function readReportBlob(key: string): Promise<{ report?: ScanReport } | null> {
   const { blobs } = await list({ prefix: key });
-  const match = blobs.find(b => b.pathname === key) || blobs[0];
+  const match = blobs.find((b) => b.pathname === key) || blobs[0];
   if (!match) return null;
   const r = await fetch(match.url, { cache: 'no-store' });
-  const j = await r.json().catch(() => null);
-  return j;
+  return (await r.json().catch(() => null)) as { report?: ScanReport } | null;
 }
 
 /** Extract top N findings from the report's issues array. */
-function extractFindings(report: any, max = 3): { findings: ScanFinding[]; remaining: number } {
-  const issues: any[] = report?.issues ?? [];
+function extractFindings(
+  report: ScanReport,
+  max = 3
+): { findings: ScanFinding[]; remaining: number } {
+  const issues = report.issues ?? [];
   const severityRank: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
   const sorted = [...issues].sort(
-    (a, b) => (severityRank[a.severity] ?? 9) - (severityRank[b.severity] ?? 9),
+    (a, b) => (severityRank[a.severity] ?? 9) - (severityRank[b.severity] ?? 9)
   );
   const top = sorted.slice(0, max).map((i) => ({
     severity: String(i.severity ?? 'medium'),
     title: String(i.title ?? i.id ?? ''),
-    description: String(i.description ?? i.detail ?? '').slice(0, 120),
+    description: String(i.description ?? '').slice(0, 120),
   }));
   return { findings: top, remaining: Math.max(0, issues.length - max) };
 }
 
 export async function GET(req: NextRequest) {
   const db = getDb();
+
+  const user = await getDbUserFromClerk();
+  if (!user) return NextResponse.json({ ok: false, error: 'auth required' }, { status: 401 });
+
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ ok: false, error: 'id required' }, { status: 400 });
 
-  const [job] = await db.select().from(scanJobs).where(eq(scanJobs.id, id)).limit(1);
-  if (!job) return NextResponse.json({ ok: false, error: 'job not found' }, { status: 404 });
+  const [row] = await db
+    .select({
+      job: scanJobs,
+      ownerId: sites.userId,
+      siteUrl: sites.siteUrl,
+    })
+    .from(scanJobs)
+    .innerJoin(sites, eq(sites.id, scanJobs.siteId))
+    .where(eq(scanJobs.id, id))
+    .limit(1);
 
+  if (!row) return NextResponse.json({ ok: false, error: 'job not found' }, { status: 404 });
+  if (row.ownerId !== user.id) {
+    return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
+  }
+
+  const job = row.job;
   const key = job.reportBlobKey || `scan-results/${id}.json`;
 
   try {
     const data = await readReportBlob(key);
-    if (!data?.report) {
+    const report = data?.report;
+    if (!report) {
       return NextResponse.json(
         { ok: false, notReady: true, error: 'report blob missing', key, status: job.status },
-        { status: 202 },
+        { status: 202 }
       );
     }
 
@@ -63,45 +87,49 @@ export async function GET(req: NextRequest) {
     if (!alreadySent) {
       // Mark first — prevents double-send if this request races with another poll
       await kvSet(emailKey, '1', 60 * 60 * 24 * 7); // 7-day TTL
-      const report = data.report;
-      // Join site → user to get recipient
-      const [siteRow] = await db
-        .select({ siteUrl: sites.siteUrl, userId: sites.userId })
-        .from(sites)
-        .where(eq(sites.id, job.siteId))
+
+      const [userRow] = await db
+        .select({ email: users.email, name: users.name, language: users.language })
+        .from(users)
+        .where(eq(users.id, row.ownerId))
         .limit(1);
-      if (siteRow) {
-        const [userRow] = await db
-          .select({ email: users.email, name: users.name, language: users.language })
-          .from(users)
-          .where(eq(users.id, siteRow.userId))
-          .limit(1);
-        if (userRow) {
-          const { findings, remaining } = extractFindings(report);
-          sendScanCompleteEmail({
-            to: userRow.email,
-            firstName: (userRow.name ?? userRow.email).split(' ')[0],
-            siteUrl: new URL(siteRow.siteUrl).hostname,
-            siteId: job.siteId,
-            overallScore: report.summary?.score ?? 0,
-            seoScore: 0,
-            perfScore: 0,
-            secScore: 0,
-            a11yScore: 0,
-            topFindings: findings,
-            remainingCount: remaining,
-            language: userRow.language,
-          }).catch((e) => console.error('[scan/result] email failed', e));
-        }
+
+      if (userRow) {
+        const { findings, remaining } = extractFindings(report);
+        // These used to be hardcoded to 0, so every recipient was told all four
+        // of their category scores were zero. Read them off the report instead.
+        const scores = report.summary?.categoryScores;
+        // Awaited so the send is not dropped when the serverless invocation is frozen
+        // right after the response (the helper never throws).
+        await sendScanCompleteEmail({
+          to: userRow.email,
+          firstName: (userRow.name ?? userRow.email).split(' ')[0],
+          siteUrl: (() => {
+            try {
+              return new URL(row.siteUrl).hostname;
+            } catch {
+              return row.siteUrl;
+            }
+          })(),
+          siteId: job.siteId,
+          overallScore: report.summary?.score ?? 0,
+          seoScore: scores?.seo ?? 0,
+          perfScore: scores?.performance ?? 0,
+          secScore: scores?.security ?? 0,
+          a11yScore: scores?.accessibility ?? 0,
+          topFindings: findings,
+          remainingCount: remaining,
+          language: userRow.language,
+        }).catch((e) => log.error('scan complete email failed', e, { jobId: id }));
       }
     }
 
-    return NextResponse.json({ ok: true, report: data.report, key });
-  } catch (e: any) {
-    if (DEV) console.error('[scan/result] read error', e);
+    return NextResponse.json({ ok: true, report, key });
+  } catch (e) {
+    log.error('result read failed', e, { jobId: id, key });
     return NextResponse.json(
-      { ok: false, error: 'failed to read result', message: String(e?.message ?? e), key },
-      { status: 500 },
+      { ok: false, error: 'failed to read result', key },
+      { status: 500 }
     );
   }
 }
