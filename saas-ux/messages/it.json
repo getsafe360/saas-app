@@ -479,6 +479,7 @@
     "analyzingSite": "Analisi di {site} in corso\u2026",
     "fetchingHtml": "Recupero HTML in corso\u2026",
     "htmlFetched": "HTML recuperato in {ms} ms",
+    "fetchTimeout": "{site} risponde troppo lentamente → Riprova tra un momento.",
     "extractingSignals": "Estrazione dei segnali chiave\u2026",
     "runningAnalysis": "Analisi multi-livello in corso\u2026",
     "analysisComplete": "Analisi completata",

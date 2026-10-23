@@ -487,6 +487,7 @@
     "analyzingSite": "{site} wird analysiert\u2026",
     "fetchingHtml": "HTML wird abgerufen\u2026",
     "htmlFetched": "HTML in {ms} ms abgerufen",
+    "fetchTimeout": "{site} antwortet zu langsam → Versuche es gleich noch einmal.",
     "extractingSignals": "Schl\u00fcsselsignale werden extrahiert\u2026",
     "runningAnalysis": "Mehrschichtige Analyse l\u00e4uft\u2026",
     "analysisComplete": "Analyse abgeschlossen",
