@@ -1240,7 +1240,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const cacheKey = `sparky:snapshot:${await hashKey(`${normalizedUrl}|${locale}`)}`;
+  const cacheKey = `sparky:snapshot:v2:${await hashKey(`${normalizedUrl}|${locale}`)}`;
   const encoder = new TextEncoder();
 
   const cachedRaw = await kvGet(cacheKey);

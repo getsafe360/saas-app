@@ -46,6 +46,21 @@ function hostnameFromUrl(input: string): string {
   }
 }
 
+// Heuristic: a section that mentions a gap or risk gets "medium" severity. The report
+// is written in the visitor's language, so the hint words cover all six: en, de, es,
+// fr, it, pt. ("no signal" is also the English fallback copy from the stream route.)
+const SEVERITY_HINT = new RegExp(
+  [
+    "missing", "no (?:[a-zà-ÿ]+ )?signal", "risk", "issue", "slow", "weak", // en
+    "fehl", "kein(?:e)? (?:[a-zà-ÿ]+ )?signal", "risiko", "problem", "langsam", "schwach", "lück", // de
+    "falta", "sin (?:[a-zà-ÿ]+ )?se[nñ]al", "riesgo", "d[eé]bil", "(?<![a-zà-ÿ])lent[aeo]?(?![a-zà-ÿ])", // es (+ lento in es/it/pt)
+    "manqu", "aucun(?:e)? (?:[a-zà-ÿ]+ )?signal", "risque", "probl[eè]me", "faible", // fr
+    "(?<![a-zà-ÿ])manc(?:a|ano|anza)(?![a-zà-ÿ])", "nessun (?:[a-zà-ÿ]+ )?segnale", "rischio", "debol", // it
+    "sem (?:[a-zà-ÿ]+ )?sinal", "risco", "fraco", // pt
+  ].join("|"),
+  "i",
+);
+
 const GUEST_SCAN_KEY = "gs360_guest_scans";
 const GUEST_SCAN_LIMIT = 100;
 
@@ -161,7 +176,7 @@ export default function DirectAgentStreamCard() {
         testId: `sparky-${Date.now()}`,
         categories: sections.map((section) => ({
           id: section.id,
-          severity: /missing|no signal|risk|issue|slow|weak/i.test(section.text)
+          severity: SEVERITY_HINT.test(section.text)
             ? "medium"
             : "low",
           issues: [{ summary: section.text }],

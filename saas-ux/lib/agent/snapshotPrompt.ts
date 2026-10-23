@@ -5,15 +5,33 @@ type SnapshotPromptInput = {
   isWordPress?: boolean;
 };
 
+// The model answers in the language of the prompt unless told otherwise, and our
+// instructions are in English, so the output language must be stated explicitly.
+// 'pt' is Brazilian Portuguese in this app.
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English",
+  de: "German",
+  es: "Spanish",
+  fr: "French",
+  it: "Italian",
+  pt: "Brazilian Portuguese",
+};
+
+export function languageNameForLocale(locale: string): string {
+  return LANGUAGE_NAMES[locale.toLowerCase().split("-")[0]] ?? "English";
+}
+
 export function buildGeminiSnapshotPrompt({
   locale,
   url,
   facts,
   isWordPress = false,
 }: SnapshotPromptInput): string {
-  
+  const language = languageNameForLocale(locale);
+
 return `Act as a Senior Web Auditor. Analyze the facts for ${url} and return a JSON audit.
-Locale: ${locale}. 
+Locale: ${locale}.
+OUTPUT LANGUAGE: ${language}. Write EVERY string value in the JSON (greeting, summaryText, all sections, ctaLine) in ${language}. Keep the JSON keys, URLs and standard technical terms (e.g. HSTS, CSP, ARIA, SEO, GEO, Core Web Vitals) unchanged. Do not answer in English unless ${language} is English.
 Tone: Authoritative, direct, zero-fluff. 
 Rules: No hedges (may/might). Use PageSpeed scores if present.
 
@@ -49,5 +67,7 @@ Rules: No hedges (may/might). Use PageSpeed scores if present.
 
 <facts>
 ${facts}
-</facts>`;
+</facts>
+
+Reminder: every text value must be written in ${language}.`;
 }
