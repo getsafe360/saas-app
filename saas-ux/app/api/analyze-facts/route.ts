@@ -2,6 +2,7 @@
 import { NextRequest } from "next/server";
 import { preScan } from "@/lib/analyzer/preScan";
 import { isPublicUrlResolved } from "@/lib/net/isPublicUrlResolved";
+import { balanceTags } from "@/lib/net/sanitizeHtml";
 import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
@@ -150,7 +151,9 @@ async function getFavicon(url: string): Promise<string> {
       });
       
       if (htmlResponse.ok) {
-        const html = await htmlResponse.text();
+        // The favicon patterns below need only the head, so cap the body and neutralise
+        // unclosed "<" (hostile pages make these regexes catastrophically slow).
+        const html = balanceTags((await htmlResponse.text()).slice(0, 1_000_000));
         
         // Comprehensive favicon patterns - order matters (most specific first)
         const iconPatterns = [

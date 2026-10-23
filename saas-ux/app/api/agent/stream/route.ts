@@ -5,6 +5,7 @@ import { kvGet, kvIncr, kvSet } from "@/lib/kv";
 import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { PageSpeedSummary } from "@/lib/analyzer/pageSpeed";
 import { buildGeminiSnapshotPrompt } from "@/lib/agent/snapshotPrompt";
+import { balanceTags, extractTitle } from "@/lib/net/sanitizeHtml";
 import enMessages from "@/messages/en.json";
 import deMessages from "@/messages/de.json";
 import esMessages from "@/messages/es.json";
@@ -448,7 +449,9 @@ async function limitedHtmlFetch(url: string): Promise<FetchSnapshot> {
 
     const headers = Object.fromEntries(response.headers.entries());
     return {
-      html: new TextDecoder().decode(merged),
+      // Neutralise unclosed "<" so the regex extraction below stays linear-time on
+      // hostile pages (see lib/net/sanitizeHtml.ts).
+      html: balanceTags(new TextDecoder().decode(merged)),
       finalUrl: response.url || url,
       status: response.status,
       fetchMs: Date.now() - started,
@@ -482,7 +485,7 @@ function buildFacts(
   pageSpeed: PageSpeedSummary | null,
 ): string {
   const { html, status, finalUrl, fetchMs, bytes, headers } = fetchSnapshot;
-  const title = extractTagContent(html, /<title[^>]*>([\s\S]*?)<\/title>/i);
+  const title = extractTitle(html);
   const description = parseMetaContent(html, "description");
   const robots = parseMetaContent(html, "robots");
   const canonical = extractTagContent(

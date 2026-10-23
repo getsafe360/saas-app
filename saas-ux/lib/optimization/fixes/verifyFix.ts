@@ -3,6 +3,7 @@
 
 import type { FixPlan } from '../loops/types';
 import type { ApplyFixResult } from './applyFix';
+import { balanceTags } from '@/lib/net/sanitizeHtml';
 
 export interface VerifyFixInput {
   siteUrl: string;
@@ -55,7 +56,7 @@ export async function verifyFix(input: VerifyFixInput): Promise<VerifyFixResult>
       };
     }
 
-    const html = await response.text();
+    const html = balanceTags((await response.text()).slice(0, 2_000_000));
 
     // Check for WordPress fatal error markers
     const hasError = FATAL_ERROR_PATTERNS.some((p) => p.test(html));
