@@ -480,6 +480,7 @@
     "fetchingHtml": "Obtendo HTML\u2026",
     "htmlFetched": "HTML obtido em {ms} ms",
     "fetchTimeout": "{site} está respondendo muito devagar → Tente novamente em instantes.",
+    "fetchTooLarge": "{site} é grande demais para a análise rápida → Tente uma página menor do site.",
     "extractingSignals": "Extraindo sinais essenciais\u2026",
     "runningAnalysis": "Executando an\u00e1lise multicamadas\u2026",
     "analysisComplete": "An\u00e1lise conclu\u00edda",
