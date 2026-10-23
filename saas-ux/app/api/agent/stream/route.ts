@@ -13,6 +13,8 @@ import itMessages from "@/messages/it.json";
 import ptMessages from "@/messages/pt.json";
 
 export const runtime = "nodejs";
+// Fetch (up to FETCH_TIMEOUT_MS) + Gemini analysis must fit in one invocation.
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 type SnapshotSections = {
@@ -84,7 +86,17 @@ type GeminiResponsePayload = {
 };
 
 const MAX_URL_LENGTH = 2048;
-const FETCH_TIMEOUT_MS = 8_000;
+// Real customer sites can be slow (shared hosting + security plugins routinely
+// take 3-6 s to first byte), so allow generous time before giving up.
+const FETCH_TIMEOUT_MS = 15_000;
+
+/** The target site did not answer in time (as opposed to refusing or erroring). */
+class FetchTimeoutError extends Error {
+  constructor() {
+    super(`HTML fetch timed out after ${FETCH_TIMEOUT_MS}ms`);
+    this.name = "FetchTimeoutError";
+  }
+}
 const FETCH_MAX_BYTES = 300_000;
 const LLM_TIMEOUT_MS = 90_000;
 const CACHE_TTL_SECONDS = 60 * 60;
@@ -288,6 +300,8 @@ type TerminalMsgs = {
   analyzingSite: string;
   fetchingHtml: string;
   htmlFetched: string;
+  /** Shown when the target site is too slow; "{site}" is replaced. Optional: falls back to English. */
+  fetchTimeout?: string;
   extractingSignals: string;
   runningAnalysis: string;
   analysisComplete: string;
@@ -304,6 +318,14 @@ const TERMINAL_MSGS: Record<string, TerminalMsgs> = {
   it: itMessages.Terminal as TerminalMsgs,
   pt: ptMessages.Terminal as TerminalMsgs,
 };
+
+function hostnameForMessage(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
 
 function getTerminalMsgs(locale: string): TerminalMsgs {
   return TERMINAL_MSGS[locale] ?? TERMINAL_MSGS.en;
@@ -376,7 +398,7 @@ async function assertPublicDestination(urlString: string): Promise<void> {
 async function limitedHtmlFetch(url: string): Promise<FetchSnapshot> {
   const controller = new AbortController();
   const timeout = setTimeout(
-    () => controller.abort(new Error(`HTML fetch timed out after ${FETCH_TIMEOUT_MS}ms`)),
+    () => controller.abort(new FetchTimeoutError()),
     FETCH_TIMEOUT_MS,
   );
   const started = Date.now();
@@ -385,7 +407,7 @@ async function limitedHtmlFetch(url: string): Promise<FetchSnapshot> {
       redirect: "follow",
       signal: controller.signal,
       headers: {
-        "User-Agent": "SparkySiteAnalyzer/1.0 (https://www.getsafe360.ai)",
+        "User-Agent": "Mozilla/5.0 (compatible; SparkySiteAnalyzer/1.0; +https://www.getsafe360.ai)",
       },
       cache: "no-store",
     });
@@ -1365,7 +1387,12 @@ export async function GET(req: NextRequest) {
         controller.close();
       } catch (error) {
         const message =
-          error instanceof Error
+          error instanceof FetchTimeoutError
+            ? (getTerminalMsgs(locale).fetchTimeout ?? TERMINAL_MSGS.en.fetchTimeout ?? error.message).replace(
+                "{site}",
+                hostnameForMessage(normalizedUrl),
+              )
+            : error instanceof Error
             ? error.message || error.name || "LLM error (empty message)"
             : typeof error === "string"
             ? error

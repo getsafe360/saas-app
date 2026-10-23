@@ -510,6 +510,7 @@
     "analyzingSite": "Analyzing {site}\u2026",
     "fetchingHtml": "Fetching HTML\u2026",
     "htmlFetched": "HTML fetched in {ms}ms",
+    "fetchTimeout": "{site} is responding too slowly → Try again in a moment.",
     "extractingSignals": "Extracting key signals\u2026",
     "runningAnalysis": "Running multi-layer analysis\u2026",
     "analysisComplete": "Analysis complete",

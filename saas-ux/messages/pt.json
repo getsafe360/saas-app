@@ -479,6 +479,7 @@
     "analyzingSite": "Analisando {site}\u2026",
     "fetchingHtml": "Obtendo HTML\u2026",
     "htmlFetched": "HTML obtido em {ms} ms",
+    "fetchTimeout": "{site} está respondendo muito devagar → Tente novamente em instantes.",
     "extractingSignals": "Extraindo sinais essenciais\u2026",
     "runningAnalysis": "Executando an\u00e1lise multicamadas\u2026",
     "analysisComplete": "An\u00e1lise conclu\u00edda",
