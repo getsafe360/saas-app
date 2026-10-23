@@ -39,6 +39,7 @@ export function IssueCard({
   severity,
   fixAvailable,
   estTokens,
+  evidence,
   onFix,
   fixState = 'idle',
   disabled = false
@@ -50,22 +51,32 @@ export function IssueCard({
   severity: Sev;
   fixAvailable: boolean;
   estTokens: number;
+  /** The value on the page that triggered this finding, shown as proof. */
+  evidence?: string;
   onFix?: () => void;
-  // ✅ allow "accepted"
-  fixState?: 'idle' | 'working' | 'done' | 'insufficient' | 'accepted';
+  fixState?: 'idle' | 'working' | 'review' | 'applying' | 'applied' | 'insufficient' | 'failed';
   disabled?: boolean;
 }) {
   const c = catStyles[category];
 
+  // 'review' is the approval gate: we have prepared the change and are waiting
+  // for the user to look at it. Nothing has touched their site and no tokens
+  // have been spent at this point.
   const label =
-    fixState === 'working'      ? 'Fixing…' :
-    fixState === 'done'         ? 'Fixed ✓' :
-    fixState === 'accepted'     ? 'Accepted ✓' :
+    fixState === 'working'      ? 'Preparing…' :
+    fixState === 'review'       ? 'Review below' :
+    fixState === 'applying'     ? 'Applying…' :
+    fixState === 'applied'      ? 'Applied ✓' :
+    fixState === 'failed'       ? 'Try again' :
     fixState === 'insufficient' ? 'Not enough tokens' :
-    'Fix now';
+    'Prepare fix';
 
-  // ✅ accepted is also disabled
-  const isDisabled = disabled || fixState === 'working' || fixState === 'done' || fixState === 'accepted';
+  const isDisabled =
+    disabled ||
+    fixState === 'working' ||
+    fixState === 'review' ||
+    fixState === 'applying' ||
+    fixState === 'applied';
 
   return (
     <article className={`rounded-2xl border p-4 bg-white/60 dark:bg-slate-900/40 backdrop-blur ${c.wrap}`}>
@@ -84,6 +95,12 @@ export function IssueCard({
           <span className="opacity-70">Severity:</span>
           <span className={`${sevPill[severity]} px-2 py-0.5 rounded-md`}>{severity}</span>
         </div>
+        {evidence ? (
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="opacity-70">Found:</span>{' '}
+            <code className="font-mono break-all">{evidence.slice(0, 160)}</code>
+          </p>
+        ) : null}
       </div>
 
       {/* Divider */}
@@ -97,7 +114,9 @@ export function IssueCard({
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-slate-600 dark:text-slate-300">
-            Estimated tokens:&nbsp;<span className="font-medium">~{estTokens.toLocaleString()}</span>
+            {fixAvailable
+              ? <>Estimated tokens:&nbsp;<span className="font-medium">~{estTokens.toLocaleString()}</span></>
+              : <span className="opacity-70">No token cost</span>}
           </span>
 
           {fixAvailable ? (
@@ -111,7 +130,9 @@ export function IssueCard({
               {label}
             </button>
           ) : (
-            <span className="text-sm opacity-60">Manual step</span>
+            <span className="text-sm opacity-60" title="This change is outside what the WordPress connector can do today.">
+              Manual step
+            </span>
           )}
         </div>
       </div>

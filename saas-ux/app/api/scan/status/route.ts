@@ -7,147 +7,76 @@ import { getDb } from '@/lib/db/drizzle';
 import { scanJobs } from '@/lib/db/schema';
 import { sites } from '@/lib/db/schema/sites';
 import { eq } from 'drizzle-orm';
-import { list, put, type ListBlobResultBlob } from '@vercel/blob';
+import { getDbUserFromClerk } from '@/lib/auth/current';
 import { publishEvent } from '@/lib/cockpit/event-bus';
 
-const DEV = process.env.NODE_ENV !== 'production';
+// This route used to *perform* the scan on every GET — generating a hardcoded
+// sample report, writing it to Blob and flipping the job to done. It is now
+// strictly read-only; /api/scan/start owns execution. A GET must never mutate
+// state or spend money.
 
-async function getSiteUrl(db: ReturnType<typeof getDb>, siteId: string): Promise<string | null> {
-  try {
-    const [row] = await db.select({ siteUrl: sites.siteUrl }).from(sites).where(eq(sites.id, siteId)).limit(1);
-    if (row?.siteUrl) return row.siteUrl;
-  } catch {}
-  try {
-    const { blobs } = await list({ prefix: `sites/${siteId}.json` });
-    const b = blobs?.[0] as ListBlobResultBlob | undefined;
-    if (!b) return null;
-    const r = await fetch(b.url, { cache: 'no-store' });
-    const j = await r.json().catch(() => null);
-    return j?.siteUrl ?? null;
-  } catch {}
-  return null;
-}
-
-function makeSampleReport(siteUrl: string) {
-  return {
-    siteUrl,
-    summary: {
-      score: 87,
-      counts: { seo: 3, performance: 2, accessibility: 4, security: 1 },
-      estTotalTokens: 12450,
-      prose: `This site is generally well-structured and loads over HTTPS with a solid performance baseline. The main opportunities are around image compression, missing security headers, and a few SEO gaps — all of which are fixable in a single optimization pass. Accessibility checks out well for core content areas, though a few contrast ratios and missing alt attributes need attention.`,
-    },
-    issues: [
-      {
-        id: 'seo-meta-desc',
-        category: 'seo',
-        title: 'Missing or short meta description',
-        severity: 'medium',
-        description: 'Some pages are missing a meta description or it’s too short.',
-        suggestion: 'Add a descriptive meta description (120–160 chars).',
-        fixAvailable: true,
-        estTokens: 700
-      },
-      {
-        id: 'perf-images',
-        category: 'performance',
-        title: 'Unoptimized images',
-        severity: 'high',
-        description: 'Large images increase load time.',
-        suggestion: 'Serve responsive images and compress assets.',
-        fixAvailable: true,
-        estTokens: 2200
-      },
-      {
-        id: 'a11y-contrast',
-        category: 'accessibility',
-        title: 'Insufficient color contrast',
-        severity: 'high',
-        description: 'Text and background colors fail WCAG contrast ratios.',
-        suggestion: 'Adjust colors to meet WCAG AA contrast.',
-        fixAvailable: false,
-        estTokens: 1800
-      }
-    ],
-    pagesAnalyzed: [siteUrl, `${siteUrl}/about`, `${siteUrl}/contact`]
-  };
-}
+/** How long a job may sit in queued/running before we call it stalled. */
+const STALE_AFTER_MS = 10 * 60 * 1000;
 
 export async function GET(req: NextRequest) {
   const db = getDb();
+
+  const user = await getDbUserFromClerk();
+  if (!user) return NextResponse.json({ ok: false, error: 'auth required' }, { status: 401 });
+
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ ok: false, error: 'id required' }, { status: 400 });
 
-  // Load job
-  const [job] = await db.select().from(scanJobs).where(eq(scanJobs.id, id)).limit(1);
-  if (!job) return NextResponse.json({ ok: false, error: 'job not found' }, { status: 404 });
+  const [row] = await db
+    .select({ job: scanJobs, ownerId: sites.userId })
+    .from(scanJobs)
+    .innerJoin(sites, eq(sites.id, scanJobs.siteId))
+    .where(eq(scanJobs.id, id))
+    .limit(1);
 
-  // If already done, just echo status
-  if (job.status === 'done') {
-    publishEvent(job.siteId, { type: 'status', state: 'completed' });
-
-    return NextResponse.json({
-      ok: true,
-      id: job.id,
-      status: job.status,
-      agentUsed: job.agentUsed ?? 'fallback',
-      reportBlobKey: job.reportBlobKey ?? null
-    });
+  if (!row) return NextResponse.json({ ok: false, error: 'job not found' }, { status: 404 });
+  if (row.ownerId !== user.id) {
+    return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
   }
 
-  // Simulate/perform scan when queued/running
-  try {
-    const siteUrl = await getSiteUrl(db, job.siteId);
-    if (!siteUrl) {
-      return NextResponse.json({ ok: false, error: 'site url missing for job' }, { status: 409 });
-    }
+  const job = row.job;
 
-    // Produce a report (replace with your real analyzer if/when available)
-    const report = makeSampleReport(siteUrl);
-    const key = `scan-results/${job.id}.json`;
-    await put(key, JSON.stringify({ report }, null, 2), {
-      access: 'public',
-      contentType: 'application/json'
-    });
-
-    publishEvent(job.siteId, { type: 'progress', state: 'in_progress', progress: 72 });
-    for (const category of Object.keys(report.summary.counts)) {
-      const issues = report.issues.filter((issue) => issue.category === category);
-      publishEvent(job.siteId, { type: 'category', state: 'in_progress', category, issues });
-    }
-
-    // Update job → done
+  // If the worker died mid-scan the row would sit in `running` forever and the
+  // client would poll indefinitely. Surface it as an error instead. The cron
+  // in /api/jobs/cleanup does the same thing for jobs nobody is polling.
+  const age = Date.now() - new Date(job.updatedAt).getTime();
+  if ((job.status === 'queued' || job.status === 'running') && age > STALE_AFTER_MS) {
     await db
       .update(scanJobs)
       .set({
-        status: 'done',
-        agentUsed: job.agentUsed ?? 'fallback',
-        reportBlobKey: key,
-        updatedAt: new Date()
+        status: 'error',
+        errorMessage: 'The scan timed out. Please try again.',
+        endedAt: new Date(),
+        updatedAt: new Date(),
       })
       .where(eq(scanJobs.id, job.id));
 
-    // Persist the AI prose summary to the site row so the cockpit can display it
-    const proseSummary = report.summary.prose ?? null;
-    if (proseSummary && job.siteId) {
-      await db
-        .update(sites)
-        .set({ lastSummary: proseSummary })
-        .where(eq(sites.id, job.siteId));
-    }
-
-    publishEvent(job.siteId, { type: 'savings', savings: { score_before: 62, score_after: report.summary.score, time_saved: '3.5h/week', cost_saved: '$180/mo', tokens_used: report.summary.estTotalTokens } });
-    publishEvent(job.siteId, { type: 'status', state: 'completed' });
+    publishEvent(job.siteId, { type: 'status', state: 'errors_found' });
 
     return NextResponse.json({
       ok: true,
       id: job.id,
-      status: 'done',
-      agentUsed: 'fallback',
-      reportBlobKey: key
+      status: 'error',
+      errorMessage: 'The scan timed out. Please try again.',
     });
-  } catch (e: any) {
-    if (DEV) console.error('[scan/status] job run failed', e);
-    return NextResponse.json({ ok: false, error: 'scan run failed', message: String(e?.message ?? e) }, { status: 500 });
   }
+
+  if (job.status === 'done') {
+    publishEvent(job.siteId, { type: 'status', state: 'completed' });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    id: job.id,
+    status: job.status,
+    agentUsed: job.agentUsed ?? null,
+    reportBlobKey: job.reportBlobKey ?? null,
+    errorMessage: job.errorMessage ?? null,
+    updatedAt: job.updatedAt,
+  });
 }

@@ -1,6 +1,7 @@
 // app/api/connect/handshake/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
+import { getRedisCredentials } from '@/lib/api/redis';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites';
 import { and, eq } from 'drizzle-orm';
@@ -8,16 +9,18 @@ import { generateSiteToken, hashToken, createWordPressConnection } from '@/lib/w
 import { logPairingComplete, logConnectionError } from '@/lib/wordpress/logger';
 import { put } from '@vercel/blob';
 import crypto from 'crypto';
+import { clientIp, rateLimit, tooManyRequests } from '@/lib/api/rate-limit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const PAIRING_TTL_SEC = 10 * 60;
 
-const redis = new Redis({
-  url: (process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL)!,
-  token: (process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN)!,
-});
+// Pairing records live in Redis. Constructing the client with undefined
+// credentials used to produce an opaque 500 on every handshake; fail with a
+// clear 503 instead so a missing binding is obvious in the logs.
+const redisCreds = getRedisCredentials();
+const redis = redisCreds ? new Redis(redisCreds) : null;
 
 function normalizeInput(u: string): string {
   try {
@@ -62,6 +65,21 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   let claimKey: string | undefined;
   try {
+    // Pairing codes are six digits and live for ten minutes. Without a limit,
+    // an attacker can walk the whole keyspace and adopt somebody else's site.
+    // 20 attempts per 10 minutes per IP makes that infeasible while leaving
+    // plenty of room for a person mistyping the code from their WP admin.
+    const ip = clientIp(req);
+    const rl = await rateLimit(`wp-handshake:${ip}`, 20, 10 * 60 * 1000);
+    if (!rl.ok) return tooManyRequests(rl);
+
+    if (!redis) {
+      return jsonNoStore(
+        { error: 'pairing_unavailable', code: 'E_NO_REDIS' },
+        { status: 503 }
+      );
+    }
+
     let payload: unknown;
     try {
       payload = await req.json();
@@ -278,7 +296,7 @@ export async function POST(req: NextRequest) {
     return jsonNoStore({ siteId, siteToken });
   } catch (e: any) {
     console.error('[handshake] unhandled error', e);
-    if (claimKey) await redis.del(claimKey).catch(() => {});
+    if (claimKey && redis) await redis.del(claimKey).catch(() => {});
     return jsonNoStore({ error: 'handshake_failed', code: 'E_UNCAUGHT' }, { status: 500 });
   }
 }
