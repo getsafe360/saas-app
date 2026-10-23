@@ -5,7 +5,7 @@ import { kvGet, kvIncr, kvSet } from "@/lib/kv";
 import { isAdminRequest } from "@/lib/server/isAdminRequest";
 import { PageSpeedSummary } from "@/lib/analyzer/pageSpeed";
 import { buildGeminiSnapshotPrompt } from "@/lib/agent/snapshotPrompt";
-import { balanceTags, extractTitle } from "@/lib/net/sanitizeHtml";
+import { balanceTags, extractTitle, restoreLt } from "@/lib/net/sanitizeHtml";
 import enMessages from "@/messages/en.json";
 import deMessages from "@/messages/de.json";
 import esMessages from "@/messages/es.json";
@@ -96,7 +96,10 @@ class FetchTimeoutError extends Error {
     this.name = "FetchTimeoutError";
   }
 }
-const FETCH_MAX_BYTES = 300_000;
+// 1 MB covers large shop front pages (e.g. ~470 KB, 4,300+ lines). Safe because signal
+// extraction is linear-time (lib/net/sanitizeHtml.ts: <=0.4 s for hostile 2 MB pages) and the
+// AI only ever sees a <=5,000-character facts summary, never the raw HTML.
+const FETCH_MAX_BYTES = 1_000_000;
 
 /** The page is larger than the quick analysis handles (e.g. big shop front pages). */
 class FetchTooLargeError extends Error {
@@ -464,7 +467,7 @@ async function limitedHtmlFetch(url: string): Promise<FetchSnapshot> {
 }
 
 function extractTagContent(html: string, regex: RegExp): string {
-  const matched = html.match(regex)?.[1] ?? "";
+  const matched = restoreLt(html.match(regex)?.[1] ?? "");
   return matched.replace(/\s+/g, " ").trim();
 }
 
