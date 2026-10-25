@@ -1,8 +1,9 @@
 import { fetchWithTimeout } from "@/lib/net/fetchWithTimeout";
+import { fetchFollowingSafely, type UrlValidator } from "@/lib/net/safeFetch";
 import { balanceTags, extractTitle, restoreLt } from "@/lib/net/sanitizeHtml";
 
 type CmsInfo =
-  | { type: "wordpress"; signals: string[]; wp: { version?: string | null; jsonApi: boolean | null; xmlrpc: boolean | null } }
+  | { type: "wordpress"; signals: string[]; wp: { version?: string | null; jsonApi: boolean | null; xmlrpc: boolean | null; usersExposed?: boolean | null } }
   | { type: "unknown" };
 
 function detectLang(html: string): string | null {
@@ -16,15 +17,42 @@ function getOrigin(u: string) {
   try { return new URL(u).origin; } catch { return null; }
 }
 
-async function headOk(url: string, timeoutMs = 1000) {
+async function headOk(url: string, timeoutMs = 1000, validate?: UrlValidator) {
   try {
-    const res = await fetchWithTimeout(url, { method: "HEAD", timeoutMs });
+    const res = await fetchFollowingSafely(url, { method: "HEAD", timeoutMs, validate });
     return res.ok ? res : null;
   } catch { return null; }
 }
 
-export async function preScan(inputUrl: string) {
-  const res = await fetchWithTimeout(inputUrl, { timeoutMs: 5000, redirect: "follow" as RequestRedirect });
+/**
+ * true  = anonymous GET /wp-json/wp/v2/users returned user records (enumeration possible)
+ * false = the route is blocked or absent (401/403/404, or no records)
+ * null  = could not tell (timeout, odd status)
+ */
+export async function usersEndpointExposed(origin: string, validate?: UrlValidator): Promise<boolean | null> {
+  try {
+    const res = await fetchFollowingSafely(`${origin}/wp-json/wp/v2/users?per_page=1`, {
+      timeoutMs: 2500,
+      validate,
+    });
+    if (res.status === 401 || res.status === 403 || res.status === 404) return false;
+    if (res.status !== 200) return null;
+    const text = (await res.text()).slice(0, 50_000);
+    const body = JSON.parse(text);
+    return Array.isArray(body) && body.some((u) => u && typeof u === "object" && ("slug" in u || "id" in u));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * `validate` decides whether a URL may be fetched, and is applied to the first URL and every
+ * redirect hop. The default is the synchronous, Edge-safe isPublicUrl; Node callers pass
+ * isPublicUrlResolved so public names that resolve to private addresses are refused too.
+ */
+export async function preScan(inputUrl: string, opts: { validate?: UrlValidator } = {}) {
+  const { validate } = opts;
+  const res = await fetchFollowingSafely(inputUrl, { timeoutMs: 5000, validate });
   const finalUrl = res.url;
   const status = res.status;
   const isHttps = finalUrl.startsWith("https://");
@@ -37,6 +65,13 @@ export async function preScan(inputUrl: string) {
   const metaDesc = restoreLt((html.match(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["'][^>]*>/i)?.[1] || "").trim());
   const robotsMeta = restoreLt((html.match(/<meta[^>]+name=["']robots["'][^>]*content=["']([^"']*)["'][^>]*>/i)?.[1] || "").trim());
   const hasCanonical = /<link[^>]+rel=["']canonical["']/i.test(html);
+  // Signals the SEO fix planner needs. All three are things the WordPress
+  // connector can inject into <head>, so detecting them is what makes a
+  // "fix available" claim honest.
+  const hasJsonLd = /<script[^>]+type=["']application\/ld\+json["']/i.test(html);
+  const hasOgTitle = /<meta[^>]+property=["']og:title["']/i.test(html);
+  const hasOgImage = /<meta[^>]+property=["']og:image["']/i.test(html);
+  const hasTwitterCard = /<meta[^>]+name=["']twitter:card["']/i.test(html);
 
   const scripts = html.match(/<script\b[^>]*>/gi)?.length ?? 0;
   const imgs = html.match(/<img\b[^>]*>/gi)?.length ?? 0;
@@ -72,8 +107,13 @@ export async function preScan(inputUrl: string) {
     if (gen) { wpVersion = gen; signals.push(`version:${gen}`); }
 
     // quick heads (fast timeout)
-    const jsonApiHead = origin ? await headOk(`${origin}/wp-json/`, 800) : null;
-    const xmlrpcHead = origin ? await headOk(`${origin}/xmlrpc.php`, 800) : null;
+    const jsonApiHead = origin ? await headOk(`${origin}/wp-json/`, 800, validate) : null;
+    const xmlrpcHead = origin ? await headOk(`${origin}/xmlrpc.php`, 800, validate) : null;
+
+    // Is user enumeration actually possible? /wp-json/ answering says nothing about it: the
+    // users route must return records to an anonymous caller (true), refuse (false), or we
+    // could not tell (null).
+    const usersExposed = origin ? await usersEndpointExposed(origin, validate) : null;
 
     cms = {
       type: "wordpress",
@@ -82,6 +122,7 @@ export async function preScan(inputUrl: string) {
         version: wpVersion,
         jsonApi: jsonApiHead ? true : null,   // null = unknown (timeout)
         xmlrpc: xmlrpcHead ? true : null,
+        usersExposed,
       }
     };
   }
@@ -101,7 +142,11 @@ export async function preScan(inputUrl: string) {
       titleLen: title.length,
       descriptionLen: metaDesc.length,
       robotsMeta,
-      hasCanonical
+      hasCanonical,
+      hasJsonLd,
+      hasOgTitle,
+      hasOgImage,
+      hasTwitterCard
     },
     dom: {
       h1Count: h1s,

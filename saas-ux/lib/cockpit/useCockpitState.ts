@@ -108,16 +108,11 @@ export function useCockpitState(siteId: string) {
     });
   }, [siteId]);
 
-  const startRepair = useCallback(
-    async (categoryId: string) => {
-      await fetch('/api/fix/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ siteId, issueIds: [categoryId] }),
-      });
-    },
-    [siteId],
-  );
+  // Fixes are a two-step flow now (propose -> approve) on the analysis screen, using real
+  // finding ids. This used to POST a CATEGORY name as an issue id, which the server rejects
+  // (not_fixable) with no feedback, so the call is gone. The Fix Now button's separate
+  // WordPress remediation request is unaffected. Signature kept for existing callers.
+  const startRepair = useCallback(async (_categoryId: string) => {}, []);
 
   const categories = useMemo(
     () => (categoryFilter ? store.categories.filter((category) => category.id === categoryFilter) : store.categories),

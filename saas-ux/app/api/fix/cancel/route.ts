@@ -3,40 +3,86 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
 import { fixJobs } from '@/lib/db/schema';
-import { findCurrentUserTeam } from '@/lib/auth/current';
+import { findCurrentUserTeam, getDbUserFromClerk } from '@/lib/auth/current';
+import { publishEvent } from '@/lib/cockpit/event-bus';
+import { getAvailableTokens } from '@/lib/fix/tokens';
+import { logger } from '@/lib/logger';
+
+const log = logger('fix/cancel');
 
 export async function POST(req: NextRequest) {
   const db = getDb();
 
-  // Parse body
+  const user = await getDbUserFromClerk();
+  if (!user) return NextResponse.json({ ok: false, error: 'auth_required' }, { status: 401 });
+
   let jobId: string | undefined;
   try {
-    const body = await req.json();
-    jobId = body?.jobId;
-  } catch {}
-  if (!jobId) {
-    return NextResponse.json({ error: 'jobId required' }, { status: 400 });
+    jobId = (await req.json())?.jobId;
+  } catch {
+    /* handled below */
   }
+  if (!jobId) return NextResponse.json({ ok: false, error: 'jobId required' }, { status: 400 });
 
-  // Auth / team
   const team = await findCurrentUserTeam();
-  if (!team) {
-    return NextResponse.json({ error: 'not authorized' }, { status: 403 });
+  if (!team?.id) return NextResponse.json({ ok: false, error: 'not authorized' }, { status: 403 });
+
+  const [job] = await db.select().from(fixJobs).where(eq(fixJobs.id, jobId)).limit(1);
+  if (!job) return NextResponse.json({ ok: false, error: 'job not found' }, { status: 404 });
+  if (job.teamId !== team.id) {
+    return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
   }
 
-  // Load job and authorize
-  const [job] = await db.select().from(fixJobs).where(eq(fixJobs.id, jobId)).limit(1);
-  if (!job) return NextResponse.json({ error: 'job not found' }, { status: 404 });
-  if (job.teamId !== team.id) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  // Already applied? Cancelling cannot un-charge a change that is live.
+  if (job.approvalState === 'applied') {
+    return NextResponse.json(
+      { ok: false, error: 'already_applied', message: 'This fix has already been applied.' },
+      { status: 409 }
+    );
+  }
 
-  // Mark touched (optionally set status: 'cancelled' if you add that enum)
-  await db
+  // Declining releases the hold. Nothing was ever deducted, so there is
+  // nothing to refund — which is the whole point of the escrow model.
+  // One conditional update: it only succeeds while the proposal is still 'pending'. If
+  // /api/fix/accept has already claimed the job ('executing'), the site is being changed
+  // and the fix can no longer be declined.
+  const released = await db
     .update(fixJobs)
-    .set({ updatedAt: new Date(), status: 'cancelled' })
-    .where(eq(fixJobs.id, jobId));
+    .set({
+      status: 'cancelled',
+      approvalState: 'cancelled',
+      holdTokens: 0,
+      endedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(and(eq(fixJobs.id, jobId), eq(fixJobs.teamId, team.id), eq(fixJobs.approvalState, 'pending')))
+    .returning({ id: fixJobs.id });
 
-  return NextResponse.json({ ok: true });
+  if (released.length === 0) {
+    const [now] = await db.select({ s: fixJobs.approvalState }).from(fixJobs).where(eq(fixJobs.id, jobId)).limit(1);
+    const message =
+      now?.s === 'executing'
+        ? 'This fix is being applied right now and can no longer be cancelled.'
+        : now?.s === 'applied'
+          ? 'This fix has already been applied.'
+          : 'This fix has already been resolved.';
+    return NextResponse.json(
+      { ok: false, error: now?.s === 'executing' ? 'in_progress' : now?.s === 'applied' ? 'already_applied' : 'already_resolved', message },
+      { status: 409 }
+    );
+  }
+
+  publishEvent(job.siteId, {
+    type: 'repair',
+    state: 'idle',
+    message: 'Fix declined. No tokens were used.',
+  });
+
+  log.info('fix declined', { jobId, releasedTokens: job.holdTokens });
+
+  const { available } = await getAvailableTokens(team.id);
+  return NextResponse.json({ ok: true, availableTokens: available });
 }
