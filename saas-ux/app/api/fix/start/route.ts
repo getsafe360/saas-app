@@ -5,7 +5,7 @@ export const maxDuration = 60;
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { list, put } from '@vercel/blob';
 
 import { getDb } from '@/lib/db/drizzle';
@@ -18,6 +18,9 @@ import { planFixes } from '@/lib/fix/planner';
 import { getAvailableTokens } from '@/lib/fix/tokens';
 import type { ScanReport } from '@/lib/scan/types';
 import { logger } from '@/lib/logger';
+
+/** Namespace for the per-team advisory lock that serialises token reservation. */
+const FIX_RESERVE_LOCK = 4207;
 
 const log = logger('fix/start');
 
@@ -152,7 +155,16 @@ export async function POST(req: NextRequest) {
     allowOverwrite: true,
   });
 
-  await db.insert(fixJobs).values({
+  // The check above is only a fast path. Two requests from one team can both pass it, so the
+  // authoritative balance check and the hold insert run together inside a transaction that is
+  // serialised per team (advisory lock): proposals can never reserve more than the balance.
+  const reserved = await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${FIX_RESERVE_LOCK}::int, ${team.id}::int)`);
+    const fresh = await getAvailableTokens(team.id);
+    if (!isAdmin && fresh.available < proposal.estTokens) {
+      return { ok: false as const, available: fresh.available };
+    }
+  await tx.insert(fixJobs).values({
     id: fixJobId,
     teamId: team.id,
     siteId,
@@ -171,6 +183,15 @@ export async function POST(req: NextRequest) {
     createdAt: new Date(),
     updatedAt: new Date(),
   });
+    return { ok: true as const };
+  });
+
+  if (!reserved.ok) {
+    return NextResponse.json(
+      { ok: false, error: 'insufficient_tokens', have: reserved.available, need: proposal.estTokens },
+      { status: 422 }
+    );
+  }
 
   publishEvent(siteId, {
     type: 'repair',

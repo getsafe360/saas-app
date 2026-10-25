@@ -83,11 +83,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ── Apply ─────────────────────────────────────────────────────────────────
-  await db
+  // ── Claim ─────────────────────────────────────────────────────────────────
+  // One conditional update moves pending -> executing. It is the only way into the apply
+  // step and the mirror image of /api/fix/cancel (which only succeeds from 'pending'), so
+  // a fix can never be both cancelled and applied, nor applied twice. 'executing' keeps
+  // the token hold counted while the site is being changed.
+  const claimed = await db
     .update(fixJobs)
-    .set({ status: 'running', startedAt: new Date(), updatedAt: new Date() })
-    .where(eq(fixJobs.id, jobId));
+    .set({ approvalState: 'executing', status: 'running', startedAt: new Date(), updatedAt: new Date() })
+    .where(and(eq(fixJobs.id, jobId), eq(fixJobs.teamId, team.id), eq(fixJobs.approvalState, 'pending')))
+    .returning({ id: fixJobs.id });
+  if (claimed.length === 0) {
+    const [now] = await db.select({ s: fixJobs.approvalState }).from(fixJobs).where(eq(fixJobs.id, jobId)).limit(1);
+    return NextResponse.json(
+      { ok: false, error: now?.s === 'executing' ? 'in_progress' : 'already_resolved', approvalState: now?.s ?? null },
+      { status: 409 }
+    );
+  }
+
+  // ── Apply ─────────────────────────────────────────────────────────────────
 
   const results = await executeFixProposal({
     proposal,

@@ -3,7 +3,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
 import { fixJobs } from '@/lib/db/schema';
 import { findCurrentUserTeam, getDbUserFromClerk } from '@/lib/auth/current';
@@ -46,7 +46,10 @@ export async function POST(req: NextRequest) {
 
   // Declining releases the hold. Nothing was ever deducted, so there is
   // nothing to refund — which is the whole point of the escrow model.
-  await db
+  // One conditional update: it only succeeds while the proposal is still 'pending'. If
+  // /api/fix/accept has already claimed the job ('executing'), the site is being changed
+  // and the fix can no longer be declined.
+  const released = await db
     .update(fixJobs)
     .set({
       status: 'cancelled',
@@ -55,7 +58,22 @@ export async function POST(req: NextRequest) {
       endedAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(fixJobs.id, jobId));
+    .where(and(eq(fixJobs.id, jobId), eq(fixJobs.teamId, team.id), eq(fixJobs.approvalState, 'pending')))
+    .returning({ id: fixJobs.id });
+
+  if (released.length === 0) {
+    const [now] = await db.select({ s: fixJobs.approvalState }).from(fixJobs).where(eq(fixJobs.id, jobId)).limit(1);
+    const message =
+      now?.s === 'executing'
+        ? 'This fix is being applied right now and can no longer be cancelled.'
+        : now?.s === 'applied'
+          ? 'This fix has already been applied.'
+          : 'This fix has already been resolved.';
+    return NextResponse.json(
+      { ok: false, error: now?.s === 'executing' ? 'in_progress' : now?.s === 'applied' ? 'already_applied' : 'already_resolved', message },
+      { status: 409 }
+    );
+  }
 
   publishEvent(job.siteId, {
     type: 'repair',

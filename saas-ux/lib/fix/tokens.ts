@@ -5,12 +5,13 @@
 // teams.tokensRemaining is the authoritative balance. Held tokens (fix jobs
 // waiting for approval) are *not* subtracted from it — otherwise a user who
 // never clicks Apply would silently lose their balance. Instead the available
-// balance is computed as `tokensRemaining - sum(hold_tokens where pending)`,
-// so a pending proposal reserves capacity without spending it.
+// balance is computed as `tokensRemaining - sum(hold_tokens where pending or executing)`,
+// so a proposal reserves capacity without spending it. 'executing' (being applied right now)
+// still holds its tokens, otherwise capacity would be freed mid-apply.
 
 import 'server-only';
 
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { getDb } from '@/lib/db/drizzle';
 import { fixJobs } from '@/lib/db/schema';
 import { teams } from '@/lib/db/schema/auth';
@@ -20,7 +21,7 @@ export async function getHeldTokens(teamId: number): Promise<number> {
   const [row] = await db
     .select({ held: sql<number>`coalesce(sum(${fixJobs.holdTokens}), 0)::int` })
     .from(fixJobs)
-    .where(and(eq(fixJobs.teamId, teamId), eq(fixJobs.approvalState, 'pending')));
+    .where(and(eq(fixJobs.teamId, teamId), inArray(fixJobs.approvalState, ['pending', 'executing'])));
   return row?.held ?? 0;
 }
 
