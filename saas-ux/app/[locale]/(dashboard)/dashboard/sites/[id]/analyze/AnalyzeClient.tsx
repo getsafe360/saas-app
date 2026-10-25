@@ -296,11 +296,40 @@ export default function AnalyzeClient() {
   async function discardFix(issue: Issue) {
     const proposal = proposals[issue.id];
     if (!proposal) return;
-    await fetch("/api/fix/cancel", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jobId: proposal.fixJobId }),
-    }).catch(() => {});
+
+    // Only drop the proposal once the server confirms the hold is released. On a network or
+    // server error we keep it (and its job id) so the user can retry; dropping it would
+    // leave the tokens reserved with no way to cancel until the cleanup job expires them.
+    let released = false;
+    let message = "We could not cancel this proposal. Please try again.";
+    try {
+      const res = await fetch("/api/fix/cancel", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jobId: proposal.fixJobId }),
+      });
+      const j = await res.json().catch(() => null);
+      if (res.ok || res.status === 404 || j?.error === "already_resolved") {
+        released = true; // cancelled now, or nothing left to cancel
+      } else if (j?.error === "in_progress") {
+        message = "This fix is being applied right now and can no longer be cancelled.";
+      } else if (j?.error === "already_applied") {
+        setFixing((s) => ({ ...s, [issue.id]: "applied" }));
+        void refreshTokens();
+        return;
+      }
+    } catch {
+      /* network error: keep the proposal so cancelling can be retried */
+    }
+    if (!released) {
+      setFixError((s) => ({ ...s, [issue.id]: message }));
+      return;
+    }
+    setFixError((s) => {
+      const next = { ...s };
+      delete next[issue.id];
+      return next;
+    });
     setProposals((s) => {
       const next = { ...s };
       delete next[issue.id];

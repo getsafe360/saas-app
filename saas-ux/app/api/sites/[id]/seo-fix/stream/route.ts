@@ -23,6 +23,7 @@ import { getDrizzle } from "@/lib/db/postgres";
 import { sites } from "@/lib/db/schema/sites/sites";
 import { users } from "@/lib/db/schema/auth/users";
 import { teams, teamMembers } from "@/lib/db/schema/auth/teams";
+import { getAvailableTokens } from "@/lib/fix/tokens";
 import { aiAnalysisJobs, aiRepairActions } from "@/lib/db/schema/ai/analysis";
 import type { AiRepairAction } from "@/lib/db/schema/ai/analysis";
 import { WordPressClient } from "@/lib/wordpress/client";
@@ -138,6 +139,15 @@ export async function POST(
     .innerJoin(teams, eq(teams.id, teamMembers.teamId))
     .where(eq(teamMembers.userId, dbUser.id))
     .limit(1);
+
+  // Tokens reserved by prepared fix proposals are not spendable here; without this a team
+  // could burn the tokens a fix proposal is holding, and that fix would later go uncharged.
+  if (teamRow) {
+    const { available } = await getAvailableTokens(teamRow.id);
+    if (available <= 0) {
+      return new Response(enc({ type: "error", message: "INSUFFICIENT_TOKENS" }), { status: 402 });
+    }
+  }
 
   // Only fetch pending items — excludes rows already completed/failed by a
   // previous fixer run on the same job, preventing token double-charging.

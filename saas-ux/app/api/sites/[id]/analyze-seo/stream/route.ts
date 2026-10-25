@@ -27,6 +27,7 @@ import {
 } from "@/lib/ai/models";
 import { preScan } from "@/lib/analyzer/preScan";
 import { isPublicUrlResolved } from "@/lib/net/isPublicUrlResolved";
+import { getAvailableTokens } from "@/lib/fix/tokens";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -242,11 +243,16 @@ export async function POST(
   const tier = await getUserTier();
   const estimatedCost = ANALYSIS_TOKEN_COST[tier];
 
-  if (teamRow && teamRow.tokensRemaining < estimatedCost) {
-    return new Response(
-      JSON.stringify({ error: "INSUFFICIENT_TOKENS", tokensRemaining: teamRow.tokensRemaining }),
-      { status: 402 },
-    );
+  // Tokens reserved by prepared fix proposals are not spendable here (they are charged when
+  // the fix is applied), so compare against the AVAILABLE balance, not the raw one.
+  if (teamRow) {
+    const { available } = await getAvailableTokens(teamRow.id);
+    if (available < estimatedCost) {
+      return new Response(
+        JSON.stringify({ error: "INSUFFICIENT_TOKENS", tokensRemaining: available }),
+        { status: 402 },
+      );
+    }
   }
 
   // Fetch live site data (lightweight HTML scan for the prompt)
