@@ -2,7 +2,7 @@ import { fetchWithTimeout } from "@/lib/net/fetchWithTimeout";
 import { balanceTags, extractTitle, restoreLt } from "@/lib/net/sanitizeHtml";
 
 type CmsInfo =
-  | { type: "wordpress"; signals: string[]; wp: { version?: string | null; jsonApi: boolean | null; xmlrpc: boolean | null } }
+  | { type: "wordpress"; signals: string[]; wp: { version?: string | null; jsonApi: boolean | null; xmlrpc: boolean | null; usersExposed?: boolean | null } }
   | { type: "unknown" };
 
 function detectLang(html: string): string | null {
@@ -21,6 +21,27 @@ async function headOk(url: string, timeoutMs = 1000) {
     const res = await fetchWithTimeout(url, { method: "HEAD", timeoutMs });
     return res.ok ? res : null;
   } catch { return null; }
+}
+
+/**
+ * true  = anonymous GET /wp-json/wp/v2/users returned user records (enumeration possible)
+ * false = the route is blocked or absent (401/403/404, or no records)
+ * null  = could not tell (timeout, odd status)
+ */
+export async function usersEndpointExposed(origin: string): Promise<boolean | null> {
+  try {
+    const res = await fetchWithTimeout(`${origin}/wp-json/wp/v2/users?per_page=1`, {
+      timeoutMs: 2500,
+      redirect: "manual" as RequestRedirect,
+    });
+    if (res.status === 401 || res.status === 403 || res.status === 404) return false;
+    if (res.status !== 200) return null;
+    const text = (await res.text()).slice(0, 50_000);
+    const body = JSON.parse(text);
+    return Array.isArray(body) && body.some((u) => u && typeof u === "object" && ("slug" in u || "id" in u));
+  } catch {
+    return null;
+  }
 }
 
 export async function preScan(inputUrl: string) {
@@ -82,6 +103,11 @@ export async function preScan(inputUrl: string) {
     const jsonApiHead = origin ? await headOk(`${origin}/wp-json/`, 800) : null;
     const xmlrpcHead = origin ? await headOk(`${origin}/xmlrpc.php`, 800) : null;
 
+    // Is user enumeration actually possible? /wp-json/ answering says nothing about it: the
+    // users route must return records to an anonymous caller (true), refuse (false), or we
+    // could not tell (null).
+    const usersExposed = origin ? await usersEndpointExposed(origin) : null;
+
     cms = {
       type: "wordpress",
       signals,
@@ -89,6 +115,7 @@ export async function preScan(inputUrl: string) {
         version: wpVersion,
         jsonApi: jsonApiHead ? true : null,   // null = unknown (timeout)
         xmlrpc: xmlrpcHead ? true : null,
+        usersExposed,
       }
     };
   }

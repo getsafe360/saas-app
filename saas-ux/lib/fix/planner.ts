@@ -26,12 +26,12 @@ import { openai } from '@ai-sdk/openai';
 const log = logger('fix/planner');
 
 /** Issue IDs the connector can actually act on. */
+// Fixes that apply to the whole site. Page-specific head snippets (meta description, canonical,
+// Open Graph) are deliberately NOT here: the connector emits every stored snippet on every
+// page, so they would be published site-wide with the homepage's values. Add them back once
+// the plugin can scope a snippet to the page it was written for.
 export const FIXABLE_ISSUE_IDS = new Set([
-  'seo-meta-desc-missing',
-  'seo-meta-desc-short',
-  'seo-canonical-missing',
   'seo-schema-missing',
-  'seo-og-missing',
   'sec-wp-xmlrpc',
   'sec-wp-user-enum',
 ]);
@@ -180,9 +180,7 @@ export async function planFixes({
   }
 
   const needsCopy = actionable.some((i) =>
-    ['seo-meta-desc-missing', 'seo-meta-desc-short', 'seo-schema-missing', 'seo-og-missing'].includes(
-      i.id
-    )
+    ['seo-schema-missing'].includes(i.id)
   );
 
   let ctx: PageContext | null = null;
@@ -204,33 +202,6 @@ export async function planFixes({
 
   for (const issue of actionable) {
     switch (issue.id) {
-      case 'seo-meta-desc-missing':
-      case 'seo-meta-desc-short': {
-        if (!ctx || !description) break;
-        operations.push({
-          kind: 'head_snippet',
-          issueId: issue.id,
-          title: 'Add meta description',
-          snippet: `<meta name="description" content="${escapeAttr(description)}">`,
-          effect:
-            'Search engines will use this text as the snippet under your result instead of picking arbitrary page content.',
-        });
-        break;
-      }
-
-      case 'seo-canonical-missing': {
-        const origin = ctx?.origin ?? new URL(siteUrl).origin;
-        operations.push({
-          kind: 'head_snippet',
-          issueId: issue.id,
-          title: 'Declare canonical URL',
-          snippet: `<link rel="canonical" href="${escapeAttr(`${origin}/`)}">`,
-          effect:
-            'Tells search engines which URL is the real one, so duplicate variants stop competing with each other.',
-        });
-        break;
-      }
-
       case 'seo-schema-missing': {
         if (!ctx) break;
         operations.push({
@@ -240,26 +211,6 @@ export async function planFixes({
           snippet: buildOrganizationSchema(ctx, description ?? ctx.description),
           effect:
             'Gives search engines and AI answer engines a machine-readable description of your organisation.',
-        });
-        break;
-      }
-
-      case 'seo-og-missing': {
-        if (!ctx || !description) break;
-        const ogTitle = ctx.title || ctx.host;
-        operations.push({
-          kind: 'head_snippet',
-          issueId: issue.id,
-          title: 'Add social sharing tags',
-          snippet: [
-            `<meta property="og:title" content="${escapeAttr(ogTitle)}">`,
-            `<meta property="og:description" content="${escapeAttr(description)}">`,
-            `<meta property="og:url" content="${escapeAttr(`${ctx.origin}/`)}">`,
-            `<meta property="og:type" content="website">`,
-            `<meta name="twitter:card" content="summary_large_image">`,
-          ].join('\n'),
-          effect:
-            'Links to your site shared on social platforms and messaging apps will show a proper title and description.',
         });
         break;
       }

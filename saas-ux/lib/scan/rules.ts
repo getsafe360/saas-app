@@ -57,6 +57,11 @@ function seoRules({ pre }: RuleContext): ScanIssue[] {
     hasOgImage,
   } = pre.meta;
 
+  // Meta description, canonical and social-sharing findings are ADVICE ONLY for now. The
+  // connector prints every stored head snippet on every page (no page scoping), so an
+  // automated fix would stamp the homepage's description/canonical/OG values onto every
+  // page — a canonical pointing at the homepage on every URL is actively harmful for
+  // indexing. Re-enable once the plugin supports page-scoped snippets.
   // Note on fixAvailable for title rules: the connector injects into <head>
   // through wp_kses with a meta/link allowlist, so it cannot emit or replace a
   // <title> element — the theme owns that. These stay advice-only. Offering a
@@ -108,7 +113,7 @@ function seoRules({ pre }: RuleContext): ScanIssue[] {
         'Missing meta description',
         'No meta description was found, so search engines generate their own snippet from page text.',
         'Add a 120–160 character meta description summarising the page.',
-        { fixAvailable: true, estTokens: 700 }
+        {}
       )
     );
   } else if (descriptionLen < 80) {
@@ -120,7 +125,7 @@ function seoRules({ pre }: RuleContext): ScanIssue[] {
         'Meta description is too short',
         `The meta description is ${descriptionLen} characters — too short to use the available snippet space.`,
         'Expand it to 120–160 characters.',
-        { fixAvailable: true, estTokens: 700, evidence: description }
+        { evidence: description }
       )
     );
   }
@@ -134,7 +139,7 @@ function seoRules({ pre }: RuleContext): ScanIssue[] {
         'No canonical URL declared',
         'Without a canonical link, duplicate URLs (with and without trailing slash, query parameters, or www) can compete with each other.',
         'Add <link rel="canonical"> pointing at the preferred URL.',
-        { fixAvailable: true, estTokens: 500 }
+        {}
       )
     );
   }
@@ -176,7 +181,7 @@ function seoRules({ pre }: RuleContext): ScanIssue[] {
         'Incomplete social sharing tags',
         `Open Graph tags are ${!hasOgTitle && !hasOgImage ? 'missing' : 'incomplete'}, so links shared on social platforms and messaging apps render without a proper title or preview image.`,
         'Add og:title, og:description, og:image and twitter:card tags.',
-        { fixAvailable: true, estTokens: 700 }
+        {}
       )
     );
   }
@@ -323,7 +328,8 @@ function securityRules({ pre, headers }: RuleContext): ScanIssue[] {
         )
       );
     }
-    if (pre.cms.wp.jsonApi) {
+    // Only when the users route really answers an anonymous caller (see preScan).
+    if (pre.cms.wp.usersExposed) {
       found.push(
         issue(
           'sec-wp-user-enum',
