@@ -16,7 +16,9 @@
 
 import 'server-only';
 
-import { fetchWithTimeout } from '@/lib/net/fetchWithTimeout';
+import { fetchFollowingSafely } from '@/lib/net/safeFetch';
+import { isPublicUrlResolved } from '@/lib/net/isPublicUrlResolved';
+import { balanceTags } from '@/lib/net/sanitizeHtml';
 import { logger } from '@/lib/logger';
 import type { FixOperation, FixProposal } from '@/lib/fix/types';
 import type { ScanIssue, ScanReport } from '@/lib/scan/types';
@@ -57,8 +59,10 @@ function stripHtml(html: string): string {
 
 async function loadPageContext(siteUrl: string): Promise<PageContext> {
   const url = new URL(siteUrl);
-  const res = await fetchWithTimeout(siteUrl, { timeoutMs: 8000 });
-  const html = (await res.text()).slice(0, 300_000);
+  // The page is user-controlled: validate every redirect hop (and DNS), and neutralise
+  // unclosed "<" so the extraction regexes below stay linear on hostile pages.
+  const res = await fetchFollowingSafely(siteUrl, { timeoutMs: 8000, validate: isPublicUrlResolved });
+  const html = balanceTags((await res.text()).slice(0, 300_000));
 
   return {
     title: (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '').trim(),

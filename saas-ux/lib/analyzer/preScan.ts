@@ -1,4 +1,5 @@
 import { fetchWithTimeout } from "@/lib/net/fetchWithTimeout";
+import { fetchFollowingSafely, type UrlValidator } from "@/lib/net/safeFetch";
 import { balanceTags, extractTitle, restoreLt } from "@/lib/net/sanitizeHtml";
 
 type CmsInfo =
@@ -16,9 +17,9 @@ function getOrigin(u: string) {
   try { return new URL(u).origin; } catch { return null; }
 }
 
-async function headOk(url: string, timeoutMs = 1000) {
+async function headOk(url: string, timeoutMs = 1000, validate?: UrlValidator) {
   try {
-    const res = await fetchWithTimeout(url, { method: "HEAD", timeoutMs });
+    const res = await fetchFollowingSafely(url, { method: "HEAD", timeoutMs, validate });
     return res.ok ? res : null;
   } catch { return null; }
 }
@@ -28,11 +29,11 @@ async function headOk(url: string, timeoutMs = 1000) {
  * false = the route is blocked or absent (401/403/404, or no records)
  * null  = could not tell (timeout, odd status)
  */
-export async function usersEndpointExposed(origin: string): Promise<boolean | null> {
+export async function usersEndpointExposed(origin: string, validate?: UrlValidator): Promise<boolean | null> {
   try {
-    const res = await fetchWithTimeout(`${origin}/wp-json/wp/v2/users?per_page=1`, {
+    const res = await fetchFollowingSafely(`${origin}/wp-json/wp/v2/users?per_page=1`, {
       timeoutMs: 2500,
-      redirect: "manual" as RequestRedirect,
+      validate,
     });
     if (res.status === 401 || res.status === 403 || res.status === 404) return false;
     if (res.status !== 200) return null;
@@ -44,8 +45,14 @@ export async function usersEndpointExposed(origin: string): Promise<boolean | nu
   }
 }
 
-export async function preScan(inputUrl: string) {
-  const res = await fetchWithTimeout(inputUrl, { timeoutMs: 5000, redirect: "follow" as RequestRedirect });
+/**
+ * `validate` decides whether a URL may be fetched, and is applied to the first URL and every
+ * redirect hop. The default is the synchronous, Edge-safe isPublicUrl; Node callers pass
+ * isPublicUrlResolved so public names that resolve to private addresses are refused too.
+ */
+export async function preScan(inputUrl: string, opts: { validate?: UrlValidator } = {}) {
+  const { validate } = opts;
+  const res = await fetchFollowingSafely(inputUrl, { timeoutMs: 5000, validate });
   const finalUrl = res.url;
   const status = res.status;
   const isHttps = finalUrl.startsWith("https://");
@@ -100,13 +107,13 @@ export async function preScan(inputUrl: string) {
     if (gen) { wpVersion = gen; signals.push(`version:${gen}`); }
 
     // quick heads (fast timeout)
-    const jsonApiHead = origin ? await headOk(`${origin}/wp-json/`, 800) : null;
-    const xmlrpcHead = origin ? await headOk(`${origin}/xmlrpc.php`, 800) : null;
+    const jsonApiHead = origin ? await headOk(`${origin}/wp-json/`, 800, validate) : null;
+    const xmlrpcHead = origin ? await headOk(`${origin}/xmlrpc.php`, 800, validate) : null;
 
     // Is user enumeration actually possible? /wp-json/ answering says nothing about it: the
     // users route must return records to an anonymous caller (true), refuse (false), or we
     // could not tell (null).
-    const usersExposed = origin ? await usersEndpointExposed(origin) : null;
+    const usersExposed = origin ? await usersEndpointExposed(origin, validate) : null;
 
     cms = {
       type: "wordpress",

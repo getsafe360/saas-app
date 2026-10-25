@@ -160,7 +160,9 @@ export async function POST(req: NextRequest) {
   // serialised per team (advisory lock): proposals can never reserve more than the balance.
   const reserved = await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(${FIX_RESERVE_LOCK}::int, ${team.id}::int)`);
-    const fresh = await getAvailableTokens(team.id);
+    // Read through `tx`: a second pooled connection could starve the (small) pool when
+    // several requests hold a transaction connection and each wait for another.
+    const fresh = await getAvailableTokens(team.id, tx);
     if (!isAdmin && fresh.available < proposal.estTokens) {
       return { ok: false as const, available: fresh.available };
     }

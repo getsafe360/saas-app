@@ -16,6 +16,7 @@
 import 'server-only';
 
 import { preScan } from '@/lib/analyzer/preScan';
+import { isPublicUrlResolved } from '@/lib/net/isPublicUrlResolved';
 import { getPageSpeedSummary, type PageSpeedSummary } from '@/lib/analyzer/pageSpeed';
 import { isPublicUrl } from '@/lib/net/isPublicUrl';
 import { runRules } from '@/lib/scan/rules';
@@ -189,7 +190,7 @@ export async function runScan({
 
   let pre: Awaited<ReturnType<typeof preScan>>;
   try {
-    pre = await preScan(siteUrl);
+    pre = await preScan(siteUrl, { validate: isPublicUrlResolved });
   } catch (err) {
     log.error('preScan failed', err, { siteUrl });
     throw new ScanError(

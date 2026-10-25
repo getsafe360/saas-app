@@ -26,6 +26,7 @@ import {
   AGENT_NAME,
 } from "@/lib/ai/models";
 import { preScan } from "@/lib/analyzer/preScan";
+import { isPublicUrlResolved } from "@/lib/net/isPublicUrlResolved";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -251,7 +252,7 @@ export async function POST(
   // Fetch live site data (lightweight HTML scan for the prompt)
   let siteData: Record<string, unknown> = { url: site.siteUrl };
   try {
-    const facts = await preScan(site.siteUrl);
+    const facts = await preScan(site.siteUrl, { validate: isPublicUrlResolved });
     siteData = { url: site.siteUrl, ...facts };
   } catch {
     // Proceed with minimal data if preScan fails

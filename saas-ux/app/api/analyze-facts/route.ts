@@ -533,7 +533,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const [facts, hostIP, faviconUrl, connectedWordPress] = await Promise.all([
-      preScan(target),
+      preScan(target, { validate: isPublicUrlResolved }),
       hostIPPromise,
       faviconPromise,
       connectedWordPressPromise,

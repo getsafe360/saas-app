@@ -16,8 +16,11 @@ import { getDb } from '@/lib/db/drizzle';
 import { fixJobs } from '@/lib/db/schema';
 import { teams } from '@/lib/db/schema/auth';
 
-export async function getHeldTokens(teamId: number): Promise<number> {
-  const db = getDb();
+/** The pool or a transaction: both can run selects. Lets callers read inside their own tx. */
+type Executor = Pick<ReturnType<typeof getDb>, 'select'>;
+
+export async function getHeldTokens(teamId: number, executor?: Executor): Promise<number> {
+  const db = executor ?? getDb();
   const [row] = await db
     .select({ held: sql<number>`coalesce(sum(${fixJobs.holdTokens}), 0)::int` })
     .from(fixJobs)
@@ -25,12 +28,12 @@ export async function getHeldTokens(teamId: number): Promise<number> {
   return row?.held ?? 0;
 }
 
-export async function getAvailableTokens(teamId: number): Promise<{
+export async function getAvailableTokens(teamId: number, executor?: Executor): Promise<{
   balance: number;
   held: number;
   available: number;
 }> {
-  const db = getDb();
+  const db = executor ?? getDb();
   const [team] = await db
     .select({ tokensRemaining: teams.tokensRemaining })
     .from(teams)
@@ -38,6 +41,6 @@ export async function getAvailableTokens(teamId: number): Promise<{
     .limit(1);
 
   const balance = team?.tokensRemaining ?? 0;
-  const held = await getHeldTokens(teamId);
+  const held = await getHeldTokens(teamId, db);
   return { balance, held, available: Math.max(0, balance - held) };
 }
