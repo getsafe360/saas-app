@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       siteUrl,
       canonicalHost,
       canonicalRoot,
-      status: 'connected',
+      status: 'pending',
       createdAt: new Date(),
       updatedAt: new Date(),
       userId
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     const record = {
       siteId,
       siteUrl,
-      status: 'connected',
+      status: 'pending',
       createdAt: Date.now(),
       updatedAt: Date.now()
     };

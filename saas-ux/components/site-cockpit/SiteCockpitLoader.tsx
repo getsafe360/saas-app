@@ -167,6 +167,7 @@ export function SiteCockpitLoader({
             screenshotUrl,
             faviconUrl: cockpitData.faviconUrl || undefined,
             pageTitle: cockpitData.meta?.title || "",
+            cms: cockpitData.cms?.type || undefined,
             scores: {
               overall: overallScore,
               seo: categoryScores.seo,
