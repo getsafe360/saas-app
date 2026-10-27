@@ -11,8 +11,15 @@ import { eq, and } from 'drizzle-orm';
 import { getUser } from '@/lib/db/queries';
 import { currentUser } from '@clerk/nextjs/server';
 import { del } from '@vercel/blob';
+import { decodeHtmlEntities } from '@/lib/net/sanitizeHtml';
 
 const DEV = process.env.NODE_ENV !== 'production';
+
+// Platform ids the detector can report; anything else (incl. "unknown") is not stored.
+const KNOWN_CMS = new Set([
+  'wordpress', 'drupal', 'joomla', 'shopify', 'wix', 'squarespace', 'hubspot',
+  'magento', 'webflow', 'contentful', 'ghost', 'strapi', 'custom',
+]);
 
 // Get the app user ID (same logic as add endpoint)
 async function getAppUserId(db: ReturnType<typeof getDb>): Promise<number | null> {
@@ -57,6 +64,7 @@ export async function PATCH(
     screenshotUrl?: string;
     faviconUrl?: string;
     pageTitle?: string;
+    cms?: string;
     scores?: {
       overall?: number;
       seo?: number;
@@ -79,12 +87,17 @@ export async function PATCH(
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (body.screenshotUrl) updates.lastScreenshotUrl = body.screenshotUrl;
   if (body.faviconUrl) updates.lastFaviconUrl = body.faviconUrl;
+  const cms = typeof body.cms === 'string' ? body.cms.trim().toLowerCase() : '';
+  if (KNOWN_CMS.has(cms)) {
+    updates.cms = cms;
+    updates.lastCms = cms;
+  }
   if (body.pageTitle !== undefined || body.scores !== undefined) {
     const currentScores = (existing.lastScores as Record<string, unknown>) ?? {};
     updates.lastScores = {
       ...currentScores,
       ...(body.scores !== undefined ? body.scores : {}),
-      ...(body.pageTitle !== undefined ? { pageTitle: body.pageTitle } : {}),
+      ...(body.pageTitle !== undefined ? { pageTitle: decodeHtmlEntities(String(body.pageTitle)).slice(0, 300) } : {}),
     };
   }
 

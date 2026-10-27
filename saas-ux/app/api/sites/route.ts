@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
       siteUrl,
       canonicalHost,
       canonicalRoot,
-      status: 'connected' as const,
+      status: 'pending' as const,
       cms: body?.platform || null,
       lastCms: body?.platform || null,
       lastScores: scores
@@ -184,9 +184,11 @@ export async function POST(request: NextRequest) {
     };
 
     if (existingSite?.id) {
+      // Re-adding a known site must not reset its connection status or blank a detected CMS.
+      const { status: _status, cms, lastCms, ...refresh } = commonValues;
       await db
         .update(sites)
-        .set(commonValues as any)
+        .set({ ...refresh, ...(cms ? { cms, lastCms } : {}) } as any)
         .where(eq(sites.id, existingSite.id));
 
       return NextResponse.json({ success: true, siteId: existingSite.id, reused: true });

@@ -193,3 +193,37 @@ export function extractTitle(html: string): string {
 
   return restoreLt(html.slice(start, m.index)).replace(/\s+/g, " ").trim();
 }
+
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+  ndash: "–",
+  mdash: "—",
+  hellip: "…",
+  lsquo: "‘",
+  rsquo: "’",
+  ldquo: "“",
+  rdquo: "”",
+  copy: "©",
+  reg: "®",
+  trade: "™",
+};
+
+/**
+ * Decode HTML character references in extracted text (e.g. a page title that reads
+ * "SEO &amp; UX"). One pass, so "&amp;lt;" becomes "&lt;", not "<". Unknown or
+ * out-of-range references are left as they are. The result is plain text: render it
+ * through React (which escapes) and never as HTML.
+ */
+export function decodeHtmlEntities(text: string): string {
+  return text.replace(/&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|([a-zA-Z]{2,8}));/g, (match, dec, hex, name) => {
+    if (name) return NAMED_ENTITIES[name.toLowerCase()] ?? match;
+    const code = dec ? parseInt(dec, 10) : parseInt(hex, 16);
+    if (code < 32 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) return match;
+    return String.fromCodePoint(code);
+  });
+}
