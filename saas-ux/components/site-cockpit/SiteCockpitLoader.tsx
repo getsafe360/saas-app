@@ -7,6 +7,7 @@ import { SiteCockpit } from "./SiteCockpit";
 import { transformToSiteCockpitResponse } from "@/lib/cockpit/transform-api-data";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type { ConnectionStatus } from "./cards/wordpress/types";
+import type { PlanName } from "@/lib/plans/config";
 
 interface SiteCockpitLoaderProps {
   siteId: string;
@@ -17,6 +18,7 @@ interface SiteCockpitLoaderProps {
   wordpressOnly?: boolean;
   wpVersion?: string;
   pluginVersion?: string;
+  planName?: PlanName;
 }
 
 function SkeletonBox({ className }: { className?: string }) {
@@ -124,6 +126,7 @@ export function SiteCockpitLoader({
   wordpressOnly = false,
   wpVersion,
   pluginVersion,
+  planName,
 }: SiteCockpitLoaderProps) {
   const [data, setData] = useState<SiteCockpitResponse | null>(null);
   const [failed, setFailed] = useState(false);
@@ -203,6 +206,7 @@ export function SiteCockpitLoader({
       wordpressOnly={wordpressOnly}
       wpVersion={wpVersion}
       pluginVersion={pluginVersion}
+      planName={planName}
     />
   );
 }

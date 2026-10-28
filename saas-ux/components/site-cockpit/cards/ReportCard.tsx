@@ -153,7 +153,7 @@ interface ReportCardProps {
   planName?: "free" | "pro" | "agent" | "agency" | "business";
 }
 
-export function ReportCard({ siteId, siteName, planName = "agency" }: ReportCardProps) {
+export function ReportCard({ siteId, siteName, planName = "free" }: ReportCardProps) {
   const [showInfoModal, setShowInfoModal] = useState(false);
 
   return (

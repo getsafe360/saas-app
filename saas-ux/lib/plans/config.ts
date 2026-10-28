@@ -6,6 +6,13 @@ import { PLAN_PRICE_IDS } from '@/config/billing/catalogue';
 
 export type PlanName = 'free' | 'pro' | 'agent' | 'business' | 'agency';
 
+const PLAN_NAMES: readonly string[] = ['free', 'pro', 'agent', 'business', 'agency'];
+
+/** Narrow an untrusted value (e.g. a DB column) to a known plan name. */
+export function isPlanName(value: unknown): value is PlanName {
+  return typeof value === 'string' && PLAN_NAMES.includes(value);
+}
+
 export interface PlanConfig {
   name: PlanName;
   displayName: string;

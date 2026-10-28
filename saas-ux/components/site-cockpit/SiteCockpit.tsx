@@ -39,6 +39,7 @@ import { OverallScoreHero } from "./OverallScoreHero";
 import { NextStepBanner } from "./NextStepBanner";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type { ConnectionStatus } from "./cards/wordpress/types";
+import type { PlanName } from "@/lib/plans/config";
 import type {
   CockpitLayoutData,
   CockpitCardLayout,
@@ -63,6 +64,7 @@ interface SiteCockpitProps {
   wordpressOnly?: boolean;
   wpVersion?: string;
   pluginVersion?: string;
+  planName?: PlanName;
 }
 
 interface CardConfig {
@@ -134,6 +136,7 @@ export function SiteCockpit({
   wordpressOnly = false,
   wpVersion,
   pluginVersion,
+  planName = "free",
 }: SiteCockpitProps) {
   const t = useTranslations("SiteCockpit");
   const router = useRouter();
@@ -557,7 +560,7 @@ export function SiteCockpit({
                 <ReportCard
                   siteId={siteId}
                   siteName={data.domain}
-                  planName="agency"
+                  planName={planName}
                 />
               </div>
             )}
