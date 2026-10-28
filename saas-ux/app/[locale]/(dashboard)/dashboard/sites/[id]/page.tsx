@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 import { list, type ListBlobResultBlob } from "@vercel/blob";
 import { notFound } from "next/navigation";
+import { getOwnedSite } from "@/lib/auth/site-access";
 import Link from "next/link";
 import StatusBadge from "@/components/ui/StatusBadge";
 import type { Metadata } from "next";
@@ -34,25 +35,12 @@ export async function generateMetadata({
   // locale-aware translations
   const t = await getTranslations({ locale, namespace: "Sites" });
 
-  // Try DB first (good when your sites table is populated)
+  // The URL only goes into the title for the site's owner
   let siteUrl: string | null = null;
   try {
-    const db = getDb();
-    // Select only the needed column to avoid accidental type issues
-    const [row] = await db
-      .select({ siteUrl: sites.siteUrl })
-      .from(sites)
-      .where(eq(sites.id, id))
-      .limit(1);
-    siteUrl = row?.siteUrl ?? null;
+    siteUrl = (await getOwnedSite(id))?.siteUrl ?? null;
   } catch {
     // ignore DB errors in metadata
-  }
-
-  // Fallback to Blob if DB record is missing (keeps metadata in sync with the page)
-  if (!siteUrl) {
-    const blobSite = await getSite(id);
-    siteUrl = blobSite?.siteUrl ?? null;
   }
 
   const title = siteUrl
@@ -135,6 +123,8 @@ export default async function SiteDetail({
   const justConnected = Array.isArray(sp.connected)
     ? sp.connected[0] === "1"
     : sp.connected === "1";
+  // The detail record is a public blob, so ownership is checked in the database first.
+  if (!(await getOwnedSite(id))) return notFound();
   const site = await getSite(id);
   if (!site) return notFound();
 

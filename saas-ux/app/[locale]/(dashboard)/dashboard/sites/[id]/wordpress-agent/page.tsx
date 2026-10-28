@@ -2,6 +2,7 @@ import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import { getOwnedSite } from "@/lib/auth/site-access";
 import type { Metadata } from "next";
 import { SiteCockpitLoader } from "@/components/site-cockpit/SiteCockpitLoader";
 import type { ConnectionStatus } from "@/components/site-cockpit/cards/wordpress/types";
@@ -22,14 +23,8 @@ function toConnectionStatus(site: Awaited<ReturnType<typeof getSiteFromDB>>): Co
   return "disconnected";
 }
 
-async function getSiteFromDB(id: string) {
-  const db = getDb();
-  const [row] = await db
-    .select()
-    .from(sites)
-    .where(eq(sites.id, id))
-    .limit(1);
-  return row ?? null;
+function getSiteFromDB(id: string) {
+  return getOwnedSite(id);
 }
 
 export async function generateMetadata({
