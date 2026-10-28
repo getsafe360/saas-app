@@ -44,6 +44,18 @@ async function getAppUserId(db: ReturnType<typeof getDb>): Promise<number | null
   return row?.id ?? null;
 }
 
+/** Keep only finite numbers within 0..max, rounded; anything else is dropped. */
+function cleanNumbers(input: unknown, max: number): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!input || typeof input !== 'object') return out;
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    if (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max) {
+      out[key] = Math.round(value);
+    }
+  }
+  return out;
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -71,7 +83,9 @@ export async function PATCH(
       performance?: number;
       security?: number;
       accessibility?: number;
+      content?: number;
     };
+    counts?: { passed?: number; warnings?: number; critical?: number };
   };
 
   const [existing] = await db
@@ -94,9 +108,13 @@ export async function PATCH(
   }
   if (body.pageTitle !== undefined || body.scores !== undefined) {
     const currentScores = (existing.lastScores as Record<string, unknown>) ?? {};
+    const scores = cleanNumbers(body.scores, 100);
+    const counts = cleanNumbers(body.counts, 10000);
     updates.lastScores = {
       ...currentScores,
-      ...(body.scores !== undefined ? body.scores : {}),
+      ...scores,
+      ...(Object.keys(counts).length ? { counts } : {}),
+      ...(Object.keys(scores).length ? { checkedAt: new Date().toISOString() } : {}),
       ...(body.pageTitle !== undefined ? { pageTitle: decodeHtmlEntities(String(body.pageTitle)).slice(0, 300) } : {}),
     };
   }

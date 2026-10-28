@@ -23,6 +23,8 @@ interface OverallScoreHeroProps {
   finalUrl: string;
   metaTitle?: string;
   wordpressScore?: number;
+  /** False while only saved scores are known (no passed/warning/critical counts yet). */
+  showCounts?: boolean;
   cms?: {
     type: string;
     name?: string;
@@ -104,6 +106,7 @@ export function OverallScoreHero({
   metaTitle,
   wordpressScore,
   cms,
+  showCounts = true,
 }: OverallScoreHeroProps) {
   const t = useTranslations("SiteCockpit");
   const [imageError, setImageError] = useState(false);
@@ -156,13 +159,17 @@ export function OverallScoreHero({
       icon: Accessibility,
       targetId: "card-accessibility",
     },
-    {
-      label: "Content",
-      score: scores.content,
-      color: "var(--category-content)",
-      icon: FileText,
-      targetId: "card-content",
-    },
+    ...(typeof scores.content === "number"
+      ? [
+          {
+            label: "Content",
+            score: scores.content,
+            color: "var(--category-content)",
+            icon: FileText,
+            targetId: "card-content",
+          },
+        ]
+      : []),
     ...(isWordPress && wordpressScore !== undefined
       ? [
           {
@@ -312,6 +319,7 @@ export function OverallScoreHero({
                   <div className="text-[10px]">{summary.grade}</div>
                 </div>
               </div>
+              {showCounts && (
               <div className="grid grid-cols-1 gap-2 text-sm">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
@@ -326,6 +334,7 @@ export function OverallScoreHero({
                   {t("summary.criticalIssues")}: {summary.criticalIssues}
                 </div>
               </div>
+              )}
             </div>
           </div>
         </div>

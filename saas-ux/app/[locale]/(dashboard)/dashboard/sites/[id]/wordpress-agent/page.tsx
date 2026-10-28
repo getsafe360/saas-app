@@ -3,6 +3,7 @@ import { sites } from "@/lib/db/schema/sites";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getOwnedSite } from "@/lib/auth/site-access";
+import { parseStoredSite } from "@/lib/cockpit/stored";
 import type { Metadata } from "next";
 import { SiteCockpitLoader } from "@/components/site-cockpit/SiteCockpitLoader";
 import type { ConnectionStatus } from "@/components/site-cockpit/cards/wordpress/types";
@@ -59,6 +60,8 @@ export default async function WordPressAgentPage({
     <SiteCockpitLoader
       siteId={id}
       siteUrl={site.siteUrl}
+      stored={parseStoredSite(site.lastScores)}
+      storedCms={site.cms ?? site.lastCms}
       siteSummary={site.lastSummary ?? undefined}
       wordpressConnectionStatus={toConnectionStatus(site)}
       wordpressLastConnected={site.lastConnectedAt?.toISOString()}

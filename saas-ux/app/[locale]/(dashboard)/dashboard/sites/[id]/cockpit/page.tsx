@@ -5,6 +5,7 @@ import { teams, teamMembers } from "@/lib/db/schema";
 import { isPlanName, type PlanName } from "@/lib/plans/config";
 import { eq } from "drizzle-orm";
 import { getOwnedSite } from "@/lib/auth/site-access";
+import { parseStoredSite } from "@/lib/cockpit/stored";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -120,6 +121,8 @@ export default async function SiteCockpitPage({
       siteId={id}
       planName={planName}
       siteUrl={site.siteUrl}
+      stored={parseStoredSite(site.lastScores)}
+      storedCms={site.cms ?? site.lastCms}
       siteSummary={site.lastSummary ?? undefined}
       wordpressConnectionStatus={toConnectionStatus(site)}
       wordpressLastConnected={site.lastConnectedAt?.toISOString()}
