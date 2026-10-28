@@ -12,15 +12,10 @@ import {
   Search,
   Accessibility,
   FileText,
-  PenLine,
-  Languages,
-  Code2,
-  Bot,
-  Lock,
 } from "lucide-react";
 import { getCMSInfo } from "@/components/analyzer/cms/cms-signatures";
 import { WordPressAIIcon } from "@/components/icons/WordPressAI";
-import type { CategoryType, Summary } from "@/types/site-cockpit";
+import type { Summary } from "@/types/site-cockpit";
 
 interface OverallScoreHeroProps {
   summary: Summary;
@@ -33,23 +28,7 @@ interface OverallScoreHeroProps {
     name?: string;
     version?: string;
   };
-  onOptimizeCategory?: (
-    category: Extract<
-      CategoryType,
-      "performance" | "security" | "seo" | "accessibility" | "wordpress"
-    >,
-  ) => Promise<void>;
-  optimizingCategory?: string | null;
 }
-
-const COCKPIT_CATEGORIES = [
-  { key: "performance", label: "Performance", benefit: "Speed and Core Web Vitals that lift rankings and reduce bounce rate" },
-  { key: "security",    label: "Security",    benefit: "HTTP headers, HTTPS, and vulnerability fixes that protect users and build trust" },
-  { key: "seo",        label: "SEO",         benefit: "On-page signals, structured data, and metadata that drive sustainable organic growth" },
-  { key: "a11y",       label: "Accessibility", benefit: "WCAG compliance that opens your site to every visitor and mitigates legal risk" },
-  { key: "content",    label: "Content",     benefit: "Readability, keyword alignment, and structure that keeps readers engaged" },
-  { key: "cms",        label: "CMS",         benefit: "WordPress-specific diagnostics, plugin management, and deep performance tuning" },
-] as const;
 
 // ─── Mini arc for one category score ────────────────────────────────────────
 
@@ -61,19 +40,22 @@ interface CategoryArcProps {
   score: number;
   color: string;
   icon: ComponentType<{ className?: string; size?: number }>;
-  onOptimize?: () => void;
-  optimizing?: boolean;
+  /** Id of the card this arc jumps to when clicked. */
+  targetId?: string;
 }
 
-function CategoryArc({ label, score, color, icon: Icon, onOptimize, optimizing }: CategoryArcProps) {
+function CategoryArc({ label, score, color, icon: Icon, targetId }: CategoryArcProps) {
+  const jump = targetId
+    ? () => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" })
+    : undefined;
   const dash = (score / 100) * ARC_CIRC;
   return (
     <div className="flex flex-col items-center gap-1.5">
       <div
         className="relative h-14 w-14 cursor-default"
-        onClick={onOptimize}
-        title={onOptimize ? `Optimize ${label}` : undefined}
-        style={{ cursor: onOptimize ? "pointer" : "default" }}
+        onClick={jump}
+        title={jump ? `Jump to ${label}` : undefined}
+        style={{ cursor: jump ? "pointer" : "default" }}
       >
         <svg className="h-14 w-14 -rotate-90" viewBox="0 0 56 56">
           <circle
@@ -98,7 +80,7 @@ function CategoryArc({ label, score, color, icon: Icon, onOptimize, optimizing }
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-[11px] font-bold leading-none" style={{ color }}>
-            {optimizing ? "…" : score}
+            {score}
           </span>
         </div>
       </div>
@@ -113,47 +95,6 @@ function CategoryArc({ label, score, color, icon: Icon, onOptimize, optimizing }
   );
 }
 
-// ─── Future-tool chip ────────────────────────────────────────────────────────
-
-interface ToolChipProps {
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  available?: boolean;
-}
-
-function ToolChip({ icon: Icon, label, available = false }: ToolChipProps) {
-  return (
-    <div
-      className="flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition-colors select-none"
-      style={{
-        borderColor: available
-          ? "var(--color-primary-500)"
-          : "var(--border-default)",
-        background: available
-          ? "oklch(from var(--color-primary-500) l c h / 0.08)"
-          : "var(--background-default)",
-        color: available ? "var(--color-primary-500)" : "var(--text-subtle)",
-        opacity: available ? 1 : 0.6,
-      }}
-    >
-      <Icon className="h-3.5 w-3.5 shrink-0" />
-      <span>{label}</span>
-      {!available && (
-        <span
-          className="ml-auto flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tracking-wide"
-          style={{
-            background: "var(--border-default)",
-            color: "var(--text-subtle)",
-          }}
-        >
-          <Lock className="h-2 w-2" />
-          Soon
-        </span>
-      )}
-    </div>
-  );
-}
-
 // ─── Main component ──────────────────────────────────────────────────────────
 
 export function OverallScoreHero({
@@ -163,8 +104,6 @@ export function OverallScoreHero({
   metaTitle,
   wordpressScore,
   cms,
-  onOptimizeCategory,
-  optimizingCategory,
 }: OverallScoreHeroProps) {
   const t = useTranslations("SiteCockpit");
   const [imageError, setImageError] = useState(false);
@@ -194,46 +133,35 @@ export function OverallScoreHero({
       score: scores.performance,
       color: "var(--category-performance)",
       icon: Zap,
-      onOptimize: onOptimizeCategory
-        ? () => onOptimizeCategory("performance")
-        : undefined,
-      optimizing: optimizingCategory === "performance",
+      targetId: "card-performance",
     },
     {
       label: "Security",
       score: scores.security,
       color: "var(--category-security)",
       icon: Shield,
-      onOptimize: onOptimizeCategory
-        ? () => onOptimizeCategory("security")
-        : undefined,
-      optimizing: optimizingCategory === "security",
+      targetId: "card-security",
     },
     {
       label: "SEO",
       score: scores.seo,
       color: "var(--category-seo)",
       icon: Search,
-      onOptimize: onOptimizeCategory
-        ? () => onOptimizeCategory("seo")
-        : undefined,
-      optimizing: optimizingCategory === "seo",
+      targetId: "card-seo",
     },
     {
       label: "Accessibility",
       score: scores.accessibility,
       color: "var(--category-accessibility)",
       icon: Accessibility,
-      onOptimize: onOptimizeCategory
-        ? () => onOptimizeCategory("accessibility")
-        : undefined,
-      optimizing: optimizingCategory === "accessibility",
+      targetId: "card-accessibility",
     },
     {
       label: "Content",
       score: scores.content,
       color: "var(--category-content)",
       icon: FileText,
+      targetId: "card-content",
     },
     ...(isWordPress && wordpressScore !== undefined
       ? [
@@ -242,10 +170,7 @@ export function OverallScoreHero({
             score: wordpressScore,
             color: "var(--category-wordpress)",
             icon: WordPressAIIcon as ComponentType<{ className?: string; size?: number }>,
-            onOptimize: onOptimizeCategory
-              ? () => onOptimizeCategory("wordpress")
-              : undefined,
-            optimizing: optimizingCategory === "wordpress",
+            targetId: "card-wordpress",
           },
         ]
       : []),
@@ -265,58 +190,6 @@ export function OverallScoreHero({
         >
           Site Cockpit for {domain}
         </h1>
-
-        {/* ── Cockpit intro ── */}
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <h2
-              className="text-base font-semibold"
-              style={{ color: "var(--text-default)" }}
-            >
-              Welcome to your AI-powered website intelligence cockpit.
-            </h2>
-            <p
-              className="text-sm leading-relaxed max-w-3xl"
-              style={{ color: "var(--text-subtle)" }}
-            >
-              Monitor and improve the critical systems that influence rankings,
-              conversions, trust, accessibility, and user experience. Each
-              category can be analyzed in depth to surface hidden inefficiencies,
-              technical risks, and missed growth opportunities.{" "}
-              <span style={{ color: "var(--text-default)" }}>
-                Press Optimize to let the AI fix issues automatically and keep
-                your site running at peak performance.
-              </span>
-            </p>
-          </div>
-
-          {/* Category benefit cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {COCKPIT_CATEGORIES.map(({ key, label, benefit }) => (
-              <div
-                key={key}
-                className="rounded-xl border px-3 py-2.5 space-y-0.5"
-                style={{
-                  borderColor: "var(--border-default)",
-                  background: "var(--header-bg)",
-                }}
-              >
-                <p
-                  className="text-xs font-semibold"
-                  style={{ color: "var(--text-default)" }}
-                >
-                  {label}
-                </p>
-                <p
-                  className="text-[11px] leading-snug"
-                  style={{ color: "var(--text-subtle)" }}
-                >
-                  {benefit}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* ── Row 1: Site info + Overall arc ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -475,29 +348,6 @@ export function OverallScoreHero({
             {categoryArcs.map((arc) => (
               <CategoryArc key={arc.label} {...arc} />
             ))}
-          </div>
-        </div>
-
-        {/* ── Row 3: AI tool strip ── */}
-        <div
-          className="rounded-2xl border p-5"
-          style={{
-            background: "var(--header-bg)",
-            borderColor: "var(--border-default)",
-          }}
-        >
-          <div
-            className="text-[10px] font-semibold uppercase tracking-[0.15em] mb-3"
-            style={{ color: "var(--text-subtle)" }}
-          >
-            AI Optimization Toolkit
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-            <ToolChip icon={FileText} label="Content Analysis" available />
-            <ToolChip icon={PenLine} label="AI Rewriter" />
-            <ToolChip icon={Languages} label="Multi-language" />
-            <ToolChip icon={Code2} label="Schema Builder" />
-            <ToolChip icon={Bot} label="AI Chatbot" />
           </div>
         </div>
       </div>

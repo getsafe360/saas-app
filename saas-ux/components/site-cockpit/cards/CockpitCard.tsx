@@ -9,6 +9,7 @@ import {
   FileText,
   GripVertical,
   Loader2,
+  Lock,
   Search,
   Shield,
   Wrench,
@@ -38,6 +39,10 @@ interface CockpitCardProps {
   };
   onOptimize?: () => void;
   optimizing?: boolean;
+  /** Nothing here can be fixed automatically: show an "advice only" note instead of a button. */
+  advisory?: boolean;
+  /** Fixing needs a connected site: show a "connect to fix" button that calls this. */
+  onUnlock?: () => void;
 }
 
 const CATEGORY_STYLES: Record<
@@ -120,6 +125,8 @@ export function CockpitCard({
   stats,
   onOptimize,
   optimizing,
+  advisory,
+  onUnlock,
 }: CockpitCardProps) {
   const t = useTranslations("SiteCockpit");
   const {
@@ -142,9 +149,10 @@ export function CockpitCard({
   return (
     <div
       ref={setNodeRef}
+      id={`card-${id}`}
       style={style}
       className={cn(
-        "relative group h-full",
+        "relative group h-full scroll-mt-24",
         isDragging && "z-50 opacity-50",
         className,
       )}
@@ -277,6 +285,31 @@ export function CockpitCard({
 
             {/* ── Card body ── */}
             <div className="flex-1 px-6 pb-4">{children}</div>
+
+            {/* ── Footer: fix button, connect prompt, or advice-only note ── */}
+            {!onOptimize && onUnlock && (
+              <div className="px-6 pb-6 pt-2">
+                <button
+                  className="w-full rounded-xl px-3 py-2.5 text-sm font-semibold border transition-colors cursor-pointer inline-flex items-center justify-center gap-2 hover:bg-white/5"
+                  style={{
+                    borderColor: "var(--border-default)",
+                    color: "var(--text-subtle)",
+                  }}
+                  onClick={onUnlock}
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                  Connect to fix
+                </button>
+              </div>
+            )}
+            {!onOptimize && !onUnlock && advisory && (
+              <div
+                className="px-6 pb-6 pt-2 text-xs"
+                style={{ color: "var(--text-subtle)" }}
+              >
+                Advice only — these changes are made on your site.
+              </div>
+            )}
 
             {/* ── Optimize button pinned to bottom ── */}
             {onOptimize && (

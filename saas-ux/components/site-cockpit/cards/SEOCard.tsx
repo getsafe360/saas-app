@@ -12,11 +12,13 @@ interface SEOCardProps {
     topIssues?: string[];
   };
   onOptimize?: () => void;
+  advisory?: boolean;
+  onUnlock?: () => void;
   /** True while the SEO-GEO analysis drawer is open / streaming */
   optimizing?: boolean;
 }
 
-export function SEOCard({ data, stats, onOptimize, optimizing }: SEOCardProps) {
+export function SEOCard({ data, stats, onOptimize, optimizing, advisory, onUnlock, }: SEOCardProps) {
   const title = data.meta?.title;
   const description = data.meta?.description;
 
@@ -30,6 +32,8 @@ export function SEOCard({ data, stats, onOptimize, optimizing }: SEOCardProps) {
       stats={stats}
       onOptimize={onOptimize}
       optimizing={optimizing}
+      advisory={advisory}
+      onUnlock={onUnlock}
     >
       <div className="space-y-4">
         {title && (
@@ -55,10 +59,12 @@ export function SEOCard({ data, stats, onOptimize, optimizing }: SEOCardProps) {
         )}
 
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="rounded-lg border border-slate-700/40 p-2">
-            <div className="text-slate-400">Word Count</div>
-            <div className="font-medium">{data.content.wordCount}</div>
-          </div>
+          {data.content.wordCount > 0 && (
+            <div className="rounded-lg border border-slate-700/40 p-2">
+              <div className="text-slate-400">Word Count</div>
+              <div className="font-medium">{data.content.wordCount}</div>
+            </div>
+          )}
           <div className="rounded-lg border border-slate-700/40 p-2">
             <div className="text-slate-400">Missing Alt</div>
             <div className="font-medium">{data.images.missingAlt}</div>

@@ -508,7 +508,7 @@ function transformSEOData(apiData: any, seoScore: number) {
       present: false,
     },
     structuredData: {
-      present: false,
+      present: !!apiData.meta?.hasJsonLd,
       types: [],
       schemas: [],
       valid: false,
@@ -614,9 +614,20 @@ function transformPerformanceData(apiData: any, performanceScore: number) {
   const compressedBytes = hasCompression ? effectiveBytes * 0.3 : effectiveBytes;
   const estimatedLoadTime = Math.max(0.5, compressedBytes / (1024 * 1024) * 2 + 0.3);
 
+  const pageRead = !!apiData.dom && (scriptCount > 0 || imgCount > 0 || htmlBytes > 0);
+
   return {
     score: performanceScore,
     grade: getScoreGrade(performanceScore),
+    facts: pageRead
+      ? {
+          scripts: scriptCount,
+          images: imgCount,
+          htmlKb: htmlBytes > 0 ? Math.round(htmlBytes / 1024) : null,
+          heavyScripts: !!apiData.perfHints?.heavyScriptHint,
+          heavyImages: !!apiData.perfHints?.heavyImageHint,
+        }
+      : undefined,
     metrics: {
       loadTime: Math.round(estimatedLoadTime * 10) / 10,
       timeToFirstByte: 0.3,

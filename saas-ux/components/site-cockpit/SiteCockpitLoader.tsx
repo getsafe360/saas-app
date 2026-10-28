@@ -101,19 +101,6 @@ function CockpitSkeleton({ domain }: { domain: string }) {
             ))}
           </div>
         </div>
-
-        {/* Row 3: AI toolkit strip */}
-        <div
-          className="rounded-2xl border p-5"
-          style={{ background: "var(--header-bg)", borderColor: "var(--border-default)" }}
-        >
-          <SkeletonBox className="h-3 w-40 mb-4" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <SkeletonBox key={i} className="h-9" />
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* ── Card grid ── */}

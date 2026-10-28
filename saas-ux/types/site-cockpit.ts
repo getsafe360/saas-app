@@ -322,6 +322,15 @@ export interface SEOData {
 }
 
 // ===== PERFORMANCE =====
+export interface PerformanceFacts {
+  scripts: number;
+  images: number;
+  /** Size of the HTML document in KB, when the server reported it. */
+  htmlKb: number | null;
+  heavyScripts: boolean;
+  heavyImages: boolean;
+}
+
 export interface PerformanceMetrics {
   loadTime: number;
   timeToFirstByte: number;
@@ -362,7 +371,10 @@ export interface WebVitalMetric {
 export interface Performance {
   score: number;
   grade: ScoreGrade;
+  /** Estimates derived from page counts, not measurements: do not show them as real timings. */
   metrics: PerformanceMetrics;
+  /** Counts read from the fetched page. Absent when the page could not be read. */
+  facts?: PerformanceFacts;
   pageWeight: PageWeight;
   requests: Requests;
   caching: {
