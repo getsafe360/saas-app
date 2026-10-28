@@ -11,6 +11,8 @@ interface PerformanceCardProps {
     topIssues?: string[];
   };
   onOptimize?: () => void;
+  advisory?: boolean;
+  onUnlock?: () => void;
   optimizing?: boolean;
 }
 
@@ -19,6 +21,8 @@ export function PerformanceCard({
   stats,
   onOptimize,
   optimizing,
+  advisory,
+  onUnlock,
 }: PerformanceCardProps) {
   const recommendations = (data as any).recommendations as string[] | undefined;
 
@@ -32,25 +36,38 @@ export function PerformanceCard({
       stats={stats}
       onOptimize={onOptimize}
       optimizing={optimizing}
+      advisory={advisory}
+      onUnlock={onUnlock}
     >
       <div className="space-y-4">
         <div>
-          <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Core Metrics
-          </h4>
-          <div className="space-y-2">
-            {data.metrics &&
-              Object.entries(data.metrics).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600 dark:text-slate-400 capitalize">
-                    {key.replace(/([A-Z])/g, " $1").trim()}
-                  </span>
-                  <span className="text-sm font-medium">
-                    {typeof value === "number" ? `${value}ms` : value}
-                  </span>
+          {data.facts ? (
+            <>
+              <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Page makeup
+              </h4>
+              <div className="grid grid-cols-3 gap-3 text-sm">
+                <div className="rounded-lg border border-slate-700/40 p-2">
+                  <div className="text-slate-400 text-xs mb-0.5">Scripts</div>
+                  <div className={`font-medium ${data.facts.heavyScripts ? "text-yellow-400" : ""}`}>
+                    {data.facts.scripts}
+                  </div>
                 </div>
-              ))}
-          </div>
+                <div className="rounded-lg border border-slate-700/40 p-2">
+                  <div className="text-slate-400 text-xs mb-0.5">Images</div>
+                  <div className={`font-medium ${data.facts.heavyImages ? "text-yellow-400" : ""}`}>
+                    {data.facts.images}
+                  </div>
+                </div>
+                {data.facts.htmlKb !== null && (
+                  <div className="rounded-lg border border-slate-700/40 p-2">
+                    <div className="text-slate-400 text-xs mb-0.5">HTML size</div>
+                    <div className="font-medium">{data.facts.htmlKb} KB</div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : null}
 
           {recommendations && recommendations.length > 0 && (
             <div className="pt-3 border-t border-slate-200 dark:border-slate-700 mt-3">

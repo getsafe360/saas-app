@@ -1,6 +1,8 @@
 // saas-ux/app/[locale]/(dashboard)/dashboard/sites/[id]/cockpit/page.tsx
 import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
+import { teams, teamMembers } from "@/lib/db/schema";
+import { isPlanName, type PlanName } from "@/lib/plans/config";
 import { eq } from "drizzle-orm";
 import { getOwnedSite } from "@/lib/auth/site-access";
 import { getTranslations } from "next-intl/server";
@@ -81,6 +83,19 @@ function getSiteFromDB(id: string) {
 }
 
 
+// Plan of the team that owns the site; drives which report features the card promises.
+async function getOwnerPlan(userId: number | null): Promise<PlanName> {
+  if (!userId) return "free";
+  const db = getDb();
+  const [row] = await db
+    .select({ planName: teams.planName })
+    .from(teamMembers)
+    .innerJoin(teams, eq(teams.id, teamMembers.teamId))
+    .where(eq(teamMembers.userId, userId))
+    .limit(1);
+  return isPlanName(row?.planName) ? row.planName : "free";
+}
+
 // ============================================
 // Main Page Component
 // ============================================
@@ -98,9 +113,12 @@ export default async function SiteCockpitPage({
     return notFound();
   }
 
+  const planName = await getOwnerPlan(site.userId ?? null);
+
   return (
     <SiteCockpitLoader
       siteId={id}
+      planName={planName}
       siteUrl={site.siteUrl}
       siteSummary={site.lastSummary ?? undefined}
       wordpressConnectionStatus={toConnectionStatus(site)}

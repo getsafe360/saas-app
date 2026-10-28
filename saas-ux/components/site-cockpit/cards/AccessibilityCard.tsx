@@ -12,6 +12,8 @@ interface AccessibilityCardProps {
     topIssues?: string[];
   };
   onOptimize?: () => void;
+  advisory?: boolean;
+  onUnlock?: () => void;
   optimizing?: boolean;
 }
 
@@ -20,6 +22,8 @@ export function AccessibilityCard({
   stats,
   onOptimize,
   optimizing,
+  advisory,
+  onUnlock,
 }: AccessibilityCardProps) {
   return (
     <CockpitCard
@@ -31,6 +35,8 @@ export function AccessibilityCard({
       stats={stats}
       onOptimize={onOptimize}
       optimizing={optimizing}
+      advisory={advisory}
+      onUnlock={onUnlock}
     >
       <div className="space-y-4">
         {data.wcagLevel && (

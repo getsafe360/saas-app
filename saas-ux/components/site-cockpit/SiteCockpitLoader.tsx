@@ -7,6 +7,7 @@ import { SiteCockpit } from "./SiteCockpit";
 import { transformToSiteCockpitResponse } from "@/lib/cockpit/transform-api-data";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type { ConnectionStatus } from "./cards/wordpress/types";
+import type { PlanName } from "@/lib/plans/config";
 
 interface SiteCockpitLoaderProps {
   siteId: string;
@@ -17,6 +18,7 @@ interface SiteCockpitLoaderProps {
   wordpressOnly?: boolean;
   wpVersion?: string;
   pluginVersion?: string;
+  planName?: PlanName;
 }
 
 function SkeletonBox({ className }: { className?: string }) {
@@ -101,19 +103,6 @@ function CockpitSkeleton({ domain }: { domain: string }) {
             ))}
           </div>
         </div>
-
-        {/* Row 3: AI toolkit strip */}
-        <div
-          className="rounded-2xl border p-5"
-          style={{ background: "var(--header-bg)", borderColor: "var(--border-default)" }}
-        >
-          <SkeletonBox className="h-3 w-40 mb-4" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <SkeletonBox key={i} className="h-9" />
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* ── Card grid ── */}
@@ -137,6 +126,7 @@ export function SiteCockpitLoader({
   wordpressOnly = false,
   wpVersion,
   pluginVersion,
+  planName,
 }: SiteCockpitLoaderProps) {
   const [data, setData] = useState<SiteCockpitResponse | null>(null);
   const [failed, setFailed] = useState(false);
@@ -216,6 +206,7 @@ export function SiteCockpitLoader({
       wordpressOnly={wordpressOnly}
       wpVersion={wpVersion}
       pluginVersion={pluginVersion}
+      planName={planName}
     />
   );
 }

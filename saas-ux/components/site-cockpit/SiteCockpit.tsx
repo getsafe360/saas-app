@@ -36,8 +36,10 @@ import { SiteSummaryCard } from "./cards/SiteSummaryCard";
 import { ConnectionCard } from "./cards/ConnectionCard";
 import { ReportCard } from "./cards/ReportCard";
 import { OverallScoreHero } from "./OverallScoreHero";
+import { NextStepBanner } from "./NextStepBanner";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type { ConnectionStatus } from "./cards/wordpress/types";
+import type { PlanName } from "@/lib/plans/config";
 import type {
   CockpitLayoutData,
   CockpitCardLayout,
@@ -62,6 +64,7 @@ interface SiteCockpitProps {
   wordpressOnly?: boolean;
   wpVersion?: string;
   pluginVersion?: string;
+  planName?: PlanName;
 }
 
 interface CardConfig {
@@ -133,6 +136,7 @@ export function SiteCockpit({
   wordpressOnly = false,
   wpVersion,
   pluginVersion,
+  planName = "free",
 }: SiteCockpitProps) {
   const t = useTranslations("SiteCockpit");
   const router = useRouter();
@@ -288,7 +292,14 @@ export function SiteCockpit({
   }, [searchParams, siteId, handleOptimizeCategory]);
 
   const isWordPress = data.cms.type === "wordpress";
-  const isWordPressOptimizing = optimizingCategory === "wordpress";
+  const isConnected = wordpressConnectionStatus === "connected";
+  // Automatic fixes need a paired WordPress connector; everything else is advice for now.
+  const canFix = isConnected && isWordPress;
+  const scrollToConnection = useCallback(() => {
+    document
+      .getElementById("connection-card")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   const visibleCards = cards.filter((card) => {
     if (!card.visible) return false;
@@ -301,9 +312,10 @@ export function SiteCockpit({
       return card.id === "wordpress" && isWordPress;
     }
 
-    // WordPress card: show whenever the site is WordPress
+    // WordPress telemetry only exists for a paired site. Before that the connection card
+    // above is the single place to connect, so no half-empty WordPress card is shown.
     if (card.id === "wordpress") {
-      return isWordPress;
+      return isWordPress && isConnected;
     }
 
     // Optimization card: only when any category optimization is active
@@ -324,13 +336,25 @@ export function SiteCockpit({
         domain={data.domain}
         finalUrl={data.finalUrl}
         metaTitle={data.meta?.title}
-        wordpressScore={data.wordpress?.score}
+        wordpressScore={isConnected ? data.wordpress?.score : undefined}
         cms={data.cms}
-        onOptimizeCategory={handleOptimizeCategory}
-        optimizingCategory={optimizingCategory}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* The one thing to do next */}
+        {siteId && (
+          <div className="mb-6">
+            <NextStepBanner
+              siteId={siteId}
+              locale={locale}
+              connectionStatus={wordpressConnectionStatus}
+              cmsType={data.cms.type}
+              criticalIssues={data.summary.criticalIssues}
+              warnings={data.summary.warnings}
+            />
+          </div>
+        )}
+
         {/* AI Site Summary — shown between hero and card grid when available */}
         {siteSummary && (
           <div className="mb-6">
@@ -349,17 +373,6 @@ export function SiteCockpit({
               lastConnected={wordpressLastConnected}
               wpVersion={wpVersion}
               pluginVersion={pluginVersion}
-            />
-          </div>
-        )}
-
-        {/* Report Card — always visible after connection card */}
-        {siteId && (
-          <div className="mb-6">
-            <ReportCard
-              siteId={siteId}
-              siteName={data.domain}
-              planName="agency"
             />
           </div>
         )}
@@ -410,7 +423,7 @@ export function SiteCockpit({
             )}
 
             {/* WordPress AI banner — expanded for the dedicated agent workspace */}
-            {(wordpressOnly || isWordPressOptimizing) && (
+            {wordpressOnly && (
               <div
                 className="mb-6 rounded-2xl border p-5 backdrop-blur-sm"
                 style={{
@@ -428,14 +441,10 @@ export function SiteCockpit({
                   className="mt-2 text-2xl font-semibold"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  {wordpressOnly
-                    ? "WordPress Optimization Agent"
-                    : "Ultimate AI WP Optimizer"}
+                  WordPress Optimization Agent
                 </h2>
                 <p className="mt-2 text-sm" style={{ color: "var(--text-subtle)" }}>
-                  {wordpressOnly
-                    ? "A focused workspace for truthful WordPress telemetry, guided fixes, and verification history."
-                    : "Focused WordPress diagnostics and remediation workflow built for reliable checks today and plugin packaging next."}
+                  A focused workspace for WordPress telemetry, guided fixes, and verification history.
                 </p>
               </div>
             )}
@@ -448,8 +457,7 @@ export function SiteCockpit({
                       key={card.id}
                       data={data.performance}
                       stats={data.summary.categoryInsights?.performance}
-                      onOptimize={() => handleOptimizeCategory("performance")}
-                      optimizing={optimizingCategory === "performance"}
+                      advisory
                     />
                   );
                 }
@@ -459,8 +467,10 @@ export function SiteCockpit({
                       key={card.id}
                       data={data.security}
                       stats={data.summary.categoryInsights?.security}
-                      onOptimize={() => handleOptimizeCategory("security")}
+                      onOptimize={canFix ? () => handleOptimizeCategory("security") : undefined}
                       optimizing={optimizingCategory === "security"}
+                      onUnlock={isConnected ? undefined : scrollToConnection}
+                      advisory={isConnected && !canFix}
                     />
                   );
                 }
@@ -470,8 +480,10 @@ export function SiteCockpit({
                       key={card.id}
                       data={data.seo}
                       stats={data.summary.categoryInsights?.seo}
-                      onOptimize={() => handleOptimizeCategory("seo")}
+                      onOptimize={canFix ? () => handleOptimizeCategory("seo") : undefined}
                       optimizing={optimizingCategory === "seo"}
+                      onUnlock={isConnected ? undefined : scrollToConnection}
+                      advisory={isConnected && !canFix}
                     />
                   );
                 }
@@ -481,8 +493,7 @@ export function SiteCockpit({
                       key={card.id}
                       data={data.accessibility}
                       stats={data.summary.categoryInsights?.accessibility}
-                      onOptimize={() => handleOptimizeCategory("accessibility")}
-                      optimizing={optimizingCategory === "accessibility"}
+                      advisory
                     />
                   );
                 }
@@ -493,8 +504,7 @@ export function SiteCockpit({
                       key={card.id}
                       data={data.content}
                       stats={data.summary.categoryInsights?.content}
-                      onOptimize={() => handleOptimizeCategory("content")}
-                      optimizing={optimizingCategory === "content"}
+                      advisory
                     />
                   );
                 }
@@ -543,7 +553,19 @@ export function SiteCockpit({
                 return null;
               })}
             </div>
-          </div>
+
+            {/* Reports sit below the findings, not above them */}
+            {siteId && (
+              <div className="mb-6">
+                <ReportCard
+                  siteId={siteId}
+                  siteName={data.domain}
+                  planName={planName}
+                />
+              </div>
+            )}
+
+              </div>
         </SortableContext>
       </DndContext>
 

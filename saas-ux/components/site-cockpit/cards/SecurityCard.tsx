@@ -12,6 +12,8 @@ interface SecurityCardProps {
     topIssues?: string[];
   };
   onOptimize?: () => void;
+  advisory?: boolean;
+  onUnlock?: () => void;
   optimizing?: boolean;
 }
 
@@ -20,6 +22,8 @@ export function SecurityCard({
   stats,
   onOptimize,
   optimizing,
+  advisory,
+  onUnlock,
 }: SecurityCardProps) {
   const httpsEnabled = data.https?.enabled;
   const headerEntries = [
@@ -39,6 +43,8 @@ export function SecurityCard({
       stats={stats}
       onOptimize={onOptimize}
       optimizing={optimizing}
+      advisory={advisory}
+      onUnlock={onUnlock}
     >
       <div className="space-y-4">
         <div className="flex items-center justify-between">

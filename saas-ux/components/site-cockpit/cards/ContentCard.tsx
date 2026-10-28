@@ -12,6 +12,8 @@ interface ContentCardProps {
     topIssues?: string[];
   };
   onOptimize?: () => void;
+  advisory?: boolean;
+  onUnlock?: () => void;
   optimizing?: boolean;
 }
 
@@ -34,6 +36,8 @@ export function ContentCard({
   stats,
   onOptimize,
   optimizing,
+  advisory,
+  onUnlock,
 }: ContentCardProps) {
   return (
     <CockpitCard
@@ -45,6 +49,8 @@ export function ContentCard({
       stats={stats}
       onOptimize={onOptimize}
       optimizing={optimizing}
+      advisory={advisory}
+      onUnlock={onUnlock}
     >
       <div className="space-y-4">
         {/* Quality + Language row */}
