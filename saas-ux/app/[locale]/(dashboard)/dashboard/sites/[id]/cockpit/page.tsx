@@ -2,6 +2,7 @@
 import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
 import { eq } from "drizzle-orm";
+import { getOwnedSite } from "@/lib/auth/site-access";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -41,16 +42,10 @@ export async function generateMetadata({
   const { id, locale } = await params;
   const t = await getTranslations({ locale, namespace: "SiteCockpit" });
 
-  // Get site info from DB
+  // Only the owner gets the site URL in the title
   let siteUrl: string | null = null;
   try {
-    const db = getDb();
-    const [row] = await db
-      .select({ siteUrl: sites.siteUrl })
-      .from(sites)
-      .where(eq(sites.id, id))
-      .limit(1);
-    siteUrl = row?.siteUrl ?? null;
+    siteUrl = (await getOwnedSite(id))?.siteUrl ?? null;
   } catch {
     // ignore DB errors in metadata
   }
@@ -81,14 +76,8 @@ export async function generateMetadata({
 // Data Fetching Helpers
 // ============================================
 
-async function getSiteFromDB(id: string) {
-  const db = getDb();
-  const [row] = await db
-    .select()
-    .from(sites)
-    .where(eq(sites.id, id))
-    .limit(1);
-  return row ?? null;
+function getSiteFromDB(id: string) {
+  return getOwnedSite(id);
 }
 
 

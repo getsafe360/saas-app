@@ -1,8 +1,7 @@
 // app/[locale]/(dashboard)/dashboard/sites/[id]/analyze/page.tsx
 import type { Metadata } from "next";
-import { getDb } from "@/lib/db/drizzle";
-import { sites } from "@/lib/db/schema/sites";
-import { eq } from "drizzle-orm";
+import { notFound } from "next/navigation";
+import { getOwnedSite } from "@/lib/auth/site-access";
 import { getTranslations } from "next-intl/server";
 import AnalyzeClient from "./AnalyzeClient";
 
@@ -16,16 +15,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, id } = await params;
 
-  // Try to read siteUrl for a nicer title
-  const db = getDb();
+  // Try to read siteUrl for a nicer title (owner only)
   let siteUrl: string | null = null;
   try {
-    const [row] = await db
-      .select({ siteUrl: sites.siteUrl })
-      .from(sites)
-      .where(eq(sites.id, id))
-      .limit(1);
-    siteUrl = row?.siteUrl ?? null;
+    siteUrl = (await getOwnedSite(id))?.siteUrl ?? null;
   } catch {}
 
   const t = await getTranslations("AnalyzeMeta");
@@ -45,6 +38,12 @@ export async function generateMetadata({
 }
 
 // Keep this server component tiny; the UI sits in the client component.
-export default function Page() {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}) {
+  const { id } = await params;
+  if (!(await getOwnedSite(id))) notFound();
   return <AnalyzeClient />;
 }
