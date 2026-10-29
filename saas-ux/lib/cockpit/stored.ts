@@ -22,6 +22,9 @@ export interface StoredCounts {
 export interface StoredScan {
   jobId: string;
   at: string;
+  /** The scan's own overall score, when it saved one. */
+  overall?: number;
+  categoryScores?: Partial<Record<"performance" | "security" | "seo" | "accessibility", number>>;
   issueCount: number;
   fixableCount: number;
 }
@@ -67,6 +70,13 @@ export function parseStoredSite(lastScores: unknown): StoredSiteState {
       ? {
           jobId: s.jobId,
           at: s.at,
+          overall: num(s.overall),
+          categoryScores: {
+            performance: num(s.categoryScores?.performance),
+            security: num(s.categoryScores?.security),
+            seo: num(s.categoryScores?.seo),
+            accessibility: num(s.categoryScores?.accessibility),
+          },
           issueCount: s.issueCount,
           fixableCount: num(s.fixableCount) ?? 0,
         }

@@ -10,6 +10,7 @@ import { NextStepBanner } from "./NextStepBanner";
 import { useSiteScan } from "@/lib/cockpit/useSiteScan";
 import type { StoredSiteState } from "@/lib/cockpit/stored";
 import { getScoreGrade } from "@/lib/cockpit/transform-api-data";
+import { applyScanScores } from "@/lib/cockpit/applyScanScores";
 import { transformToSiteCockpitResponse } from "@/lib/cockpit/transform-api-data";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type { ConnectionStatus } from "./cards/wordpress/types";
@@ -159,18 +160,21 @@ function StoredPreview({
   scanState: ReturnType<typeof useSiteScan>["state"];
   onScan: () => void;
 }) {
+  // Scan scores win over the saved quick-analysis ones once a scan exists.
+  const scan = stored.scan;
   const scores = stored.scores!;
+  const pick = (scanValue: number | undefined, quick: number | undefined) => scanValue ?? quick ?? 0;
   let domain = siteUrl;
   try { domain = new URL(siteUrl).hostname; } catch {}
   const checked = ago(stored.checkedAt, locale);
   const summary = {
-    overallScore: scores.overall,
-    grade: getScoreGrade(scores.overall),
+    overallScore: scan?.overall ?? scores.overall,
+    grade: getScoreGrade(scan?.overall ?? scores.overall),
     categoryScores: {
-      performance: scores.performance ?? 0,
-      security: scores.security ?? 0,
-      seo: scores.seo ?? 0,
-      accessibility: scores.accessibility ?? 0,
+      performance: pick(scan?.categoryScores?.performance, scores.performance),
+      security: pick(scan?.categoryScores?.security, scores.security),
+      seo: pick(scan?.categoryScores?.seo, scores.seo),
+      accessibility: pick(scan?.categoryScores?.accessibility, scores.accessibility),
       content: scores.content as number,
     },
     strengths: [],
@@ -320,7 +324,7 @@ export function SiteCockpitLoader({
 
   return (
     <SiteCockpit
-      data={data}
+      data={applyScanScores(data, stored?.scan ?? null)}
       siteId={siteId}
       editable={false}
       siteSummary={siteSummary}
