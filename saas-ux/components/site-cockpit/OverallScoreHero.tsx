@@ -110,6 +110,9 @@ export function OverallScoreHero({
 }: OverallScoreHeroProps) {
   const t = useTranslations("SiteCockpit");
   const [imageError, setImageError] = useState(false);
+  // The screenshot route cold-starts a browser and answers 204 when it fails, so the first
+  // request can miss. Retry a couple of times before falling back to the globe.
+  const [shotAttempt, setShotAttempt] = useState(0);
 
   // Animate the overall arc from 0 → real score on mount
   const [displayScore, setDisplayScore] = useState(0);
@@ -119,8 +122,9 @@ export function OverallScoreHero({
   }, [summary.overallScore]);
 
   const screenshotUrl = useMemo(
-    () => `/api/screenshot?w=360&q=55&url=${encodeURIComponent(finalUrl)}`,
-    [finalUrl],
+    () =>
+      `/api/screenshot?w=360&q=55&url=${encodeURIComponent(finalUrl)}${shotAttempt ? `&r=${shotAttempt}` : ""}`,
+    [finalUrl, shotAttempt],
   );
 
   const cmsInfo = getCMSInfo((cms?.type || "custom") as any);
@@ -223,7 +227,10 @@ export function OverallScoreHero({
                         src={screenshotUrl}
                         alt={`Screenshot for ${metaTitle || domain}`}
                         className="h-full w-full object-cover"
-                        onError={() => setImageError(true)}
+                        onError={() => {
+                          if (shotAttempt < 2) setTimeout(() => setShotAttempt((n) => n + 1), 1500);
+                          else setImageError(true);
+                        }}
                       />
                       <div
                         className="absolute inset-0 bg-black/50 transition-opacity duration-[300ms] group-hover/screenshot:opacity-0"
