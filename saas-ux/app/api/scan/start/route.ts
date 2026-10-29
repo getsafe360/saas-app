@@ -7,7 +7,7 @@ export const maxDuration = 60;
 import { NextRequest, NextResponse, after } from 'next/server';
 import crypto from 'crypto';
 import { list, put } from '@vercel/blob';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 import { getDb } from '@/lib/db/drizzle';
 import { sites } from '@/lib/db/schema/sites';
@@ -121,12 +121,27 @@ async function executeScan(params: {
       })
       .where(eq(scanJobs.id, jobId));
 
-    if (report.summary.prose) {
-      await db
-        .update(sites)
-        .set({ lastSummary: report.summary.prose })
-        .where(eq(sites.id, siteId));
-    }
+    // Snapshot for the cockpit: the latest job, how many findings, and the scan's own
+    // scores under their own key so they never overwrite the quick-analysis numbers.
+    const scanSnapshot = {
+      scan: {
+        jobId,
+        at: new Date().toISOString(),
+        overall: report.summary.score,
+        categoryScores: report.summary.categoryScores,
+        issueCount: report.issues.length,
+        fixableCount: report.issues.filter((issue) => issue.fixAvailable).length,
+      },
+    };
+    await db
+      .update(sites)
+      .set({
+        lastScanJobId: jobId,
+        lastFindingCount: report.issues.length,
+        lastScores: sql`coalesce(${sites.lastScores}, '{}'::jsonb) || ${JSON.stringify(scanSnapshot)}::jsonb`,
+        ...(report.summary.prose ? { lastSummary: report.summary.prose } : {}),
+      })
+      .where(eq(sites.id, siteId));
 
     publishEvent(siteId, { type: 'status', state: 'completed' });
   } catch (err) {

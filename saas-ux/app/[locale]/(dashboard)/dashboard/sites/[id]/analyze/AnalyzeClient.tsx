@@ -2,7 +2,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, RotateCw } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -91,6 +91,9 @@ export default function AnalyzeClient() {
     : (params as any).id;
   const locale = typeof (params as any).locale === "string" ? (params as any).locale : "en";
 
+  // A scan started from the cockpit is passed along as ?job=, so opening this page reviews
+  // it instead of running (and spending) a second scan. "Run again" still starts a new one.
+  const existingJob = useSearchParams().get("job");
   const [jobId, setJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<StatusResp | null>(null);
   const [report, setReport] = useState<Report | null>(null);
@@ -118,6 +121,11 @@ export default function AnalyzeClient() {
   useEffect(() => {
     if (!siteId) return;
     let cancelled = false;
+
+    if (existingJob && runToken === 0) {
+      setJobId(existingJob);
+      return;
+    }
 
     (async () => {
       setStartError(null);

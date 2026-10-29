@@ -37,6 +37,8 @@ import { ConnectionCard } from "./cards/ConnectionCard";
 import { ReportCard } from "./cards/ReportCard";
 import { OverallScoreHero } from "./OverallScoreHero";
 import { NextStepBanner } from "./NextStepBanner";
+import type { StoredScan } from "@/lib/cockpit/stored";
+import type { SiteScanState } from "@/lib/cockpit/useSiteScan";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type { ConnectionStatus } from "./cards/wordpress/types";
 import type { PlanName } from "@/lib/plans/config";
@@ -65,6 +67,9 @@ interface SiteCockpitProps {
   wpVersion?: string;
   pluginVersion?: string;
   planName?: PlanName;
+  scan?: StoredScan | null;
+  scanState?: SiteScanState;
+  onScan?: () => void;
 }
 
 interface CardConfig {
@@ -137,6 +142,9 @@ export function SiteCockpit({
   wpVersion,
   pluginVersion,
   planName = "free",
+  scan = null,
+  scanState = { phase: "idle" },
+  onScan = () => {},
 }: SiteCockpitProps) {
   const t = useTranslations("SiteCockpit");
   const router = useRouter();
@@ -349,8 +357,9 @@ export function SiteCockpit({
               locale={locale}
               connectionStatus={wordpressConnectionStatus}
               cmsType={data.cms.type}
-              criticalIssues={data.summary.criticalIssues}
-              warnings={data.summary.warnings}
+              scan={scan}
+              scanState={scanState}
+              onScan={onScan}
             />
           </div>
         )}

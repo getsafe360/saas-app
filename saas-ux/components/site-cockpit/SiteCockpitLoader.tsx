@@ -2,8 +2,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { SiteCockpit } from "./SiteCockpit";
+import { OverallScoreHero } from "./OverallScoreHero";
+import { NextStepBanner } from "./NextStepBanner";
+import { useSiteScan } from "@/lib/cockpit/useSiteScan";
+import type { StoredSiteState } from "@/lib/cockpit/stored";
+import { getScoreGrade } from "@/lib/cockpit/transform-api-data";
 import { transformToSiteCockpitResponse } from "@/lib/cockpit/transform-api-data";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 import type { ConnectionStatus } from "./cards/wordpress/types";
@@ -19,6 +25,10 @@ interface SiteCockpitLoaderProps {
   wpVersion?: string;
   pluginVersion?: string;
   planName?: PlanName;
+  /** What earlier visits and scans saved; lets the page show numbers before the live check ends. */
+  stored?: StoredSiteState;
+  /** CMS saved on the site, if one was detected before. */
+  storedCms?: string | null;
 }
 
 function SkeletonBox({ className }: { className?: string }) {
@@ -117,6 +127,92 @@ function CockpitSkeleton({ domain }: { domain: string }) {
   );
 }
 
+function ago(iso: string | null, locale: string): string | null {
+  if (!iso) return null;
+  const ms = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(ms) || ms < 0) return null;
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  const minutes = Math.round(ms / 60000);
+  if (minutes < 60) return rtf.format(-Math.max(minutes, 1), "minute");
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return rtf.format(-hours, "hour");
+  return rtf.format(-Math.round(hours / 24), "day");
+}
+
+/** Saved numbers shown right away while the live analysis runs. */
+function StoredPreview({
+  stored,
+  storedCms,
+  siteUrl,
+  locale,
+  siteId,
+  connectionStatus,
+  scanState,
+  onScan,
+}: {
+  stored: StoredSiteState;
+  storedCms?: string | null;
+  siteUrl: string;
+  locale: string;
+  siteId: string;
+  connectionStatus: ConnectionStatus;
+  scanState: ReturnType<typeof useSiteScan>["state"];
+  onScan: () => void;
+}) {
+  const scores = stored.scores!;
+  let domain = siteUrl;
+  try { domain = new URL(siteUrl).hostname; } catch {}
+  const checked = ago(stored.checkedAt, locale);
+  const summary = {
+    overallScore: scores.overall,
+    grade: getScoreGrade(scores.overall),
+    categoryScores: {
+      performance: scores.performance ?? 0,
+      security: scores.security ?? 0,
+      seo: scores.seo ?? 0,
+      accessibility: scores.accessibility ?? 0,
+      content: scores.content as number,
+    },
+    strengths: [],
+    passed: stored.counts?.passed ?? 0,
+    warnings: stored.counts?.warnings ?? 0,
+    criticalIssues: stored.counts?.critical ?? 0,
+  } as any;
+
+  return (
+    <div className="min-h-screen" style={{ background: "var(--background-default)" }}>
+      <OverallScoreHero
+        summary={summary}
+        domain={domain}
+        finalUrl={siteUrl}
+        metaTitle={stored.pageTitle ?? undefined}
+        cms={storedCms && storedCms !== "unknown" ? { type: storedCms } : undefined}
+        showCounts={!!stored.counts}
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-12">
+        <NextStepBanner
+          siteId={siteId}
+          locale={locale}
+          connectionStatus={connectionStatus}
+          cmsType={storedCms ?? "unknown"}
+          scan={stored.scan}
+          scanState={scanState}
+          onScan={onScan}
+        />
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--text-subtle)" }}>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {checked ? `Showing saved results from ${checked} · refreshing…` : "Showing saved results · refreshing…"}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <SkeletonBox key={i} className="h-72 rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SiteCockpitLoader({
   siteId,
   siteUrl,
@@ -127,7 +223,13 @@ export function SiteCockpitLoader({
   wpVersion,
   pluginVersion,
   planName,
+  stored,
+  storedCms,
 }: SiteCockpitLoaderProps) {
+  const router = useRouter();
+  const locale = (useParams().locale as string) || "en";
+  // A finished scan changes what the server knows (finding count, summary), so reload it.
+  const { state: scanState, start: startScan } = useSiteScan(siteId, locale, () => router.refresh());
   const [data, setData] = useState<SiteCockpitResponse | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -158,8 +260,14 @@ export function SiteCockpitLoader({
             faviconUrl: cockpitData.faviconUrl || undefined,
             pageTitle: cockpitData.meta?.title || "",
             cms: cockpitData.cms?.type || undefined,
+            counts: {
+              passed: cockpitData.summary.passed,
+              warnings: cockpitData.summary.warnings,
+              critical: cockpitData.summary.criticalIssues,
+            },
             scores: {
               overall: overallScore,
+              content: categoryScores.content,
               seo: categoryScores.seo,
               performance: categoryScores.performance,
               security: categoryScores.security,
@@ -189,6 +297,21 @@ export function SiteCockpitLoader({
     );
   }
 
+  if (!data && stored?.scores) {
+    return (
+      <StoredPreview
+        stored={stored}
+        storedCms={storedCms}
+        siteUrl={siteUrl}
+        locale={locale}
+        siteId={siteId}
+        connectionStatus={wordpressConnectionStatus}
+        scanState={scanState}
+        onScan={startScan}
+      />
+    );
+  }
+
   if (!data) {
     let domain = siteUrl;
     try { domain = new URL(siteUrl).hostname; } catch {}
@@ -207,6 +330,9 @@ export function SiteCockpitLoader({
       wpVersion={wpVersion}
       pluginVersion={pluginVersion}
       planName={planName}
+      scan={stored?.scan ?? null}
+      scanState={scanState}
+      onScan={startScan}
     />
   );
 }
