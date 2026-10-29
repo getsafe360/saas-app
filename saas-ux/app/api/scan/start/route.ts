@@ -21,6 +21,8 @@ import { logger } from '@/lib/logger';
 
 const log = logger('scan/start');
 
+const ALL_CATEGORIES: ScanCategory[] = ['seo', 'performance', 'accessibility', 'security'];
+
 type Body = { siteId?: string; categories?: ScanCategory[]; locale?: string };
 
 function dbErr(e: unknown) {
@@ -123,12 +125,17 @@ async function executeScan(params: {
 
     // Snapshot for the cockpit: the latest job, how many findings, and the scan's own
     // scores under their own key so they never overwrite the quick-analysis numbers.
+    const scannedAll = ALL_CATEGORIES.every((category) => categories.includes(category));
     const scanSnapshot = {
       scan: {
         jobId,
         at: new Date().toISOString(),
-        overall: report.summary.score,
-        categoryScores: report.summary.categoryScores,
+        // Categories outside the request get a perfect score from an empty issue list, so
+        // only the scanned ones are stored, and the overall only for a full scan.
+        ...(scannedAll ? { overall: report.summary.score } : {}),
+        categoryScores: Object.fromEntries(
+          Object.entries(report.summary.categoryScores).filter(([key]) => categories.includes(key as ScanCategory)),
+        ),
         issueCount: report.issues.length,
         fixableCount: report.issues.filter((issue) => issue.fixAvailable).length,
       },
@@ -189,7 +196,7 @@ export async function POST(req: NextRequest) {
   }
   const cats: ScanCategory[] = body?.categories?.length
     ? body.categories
-    : ['seo', 'performance', 'accessibility', 'security'];
+    : ALL_CATEGORIES;
   const locale = typeof body?.locale === 'string' ? body.locale.slice(0, 8) : 'en';
 
   // 4) Make sure the site row exists and is owned by this user
