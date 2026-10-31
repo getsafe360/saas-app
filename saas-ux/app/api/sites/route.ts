@@ -4,6 +4,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { effectiveScores } from "@/lib/cockpit/stored";
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getDb } from '@/lib/db/drizzle';
@@ -88,7 +89,7 @@ export async function GET(_request: NextRequest) {
         id: site.id,
         siteUrl: site.siteUrl,
         canonicalHost,
-        lastScores: site.lastScores as {
+        lastScores: effectiveScores(site.lastScores) as {
           performance?: number;
           security?: number;
           seo?: number;

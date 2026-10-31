@@ -9,6 +9,7 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+import { effectiveScores } from "@/lib/cockpit/stored";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
@@ -46,7 +47,7 @@ function buildMarkdown(
 ): string {
   const host = site.canonicalHost || site.siteUrl;
   const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-  const scores = (site.lastScores ?? {}) as Record<string, number>;
+  const scores = (effectiveScores(site.lastScores) ?? {}) as Record<string, number>;
 
   const completed = actions.filter((a) => a.status === "completed");
   const skipped   = actions.filter((a) => a.status === "skipped" || (a.automatedFix as { type?: string } | null)?.type === "manual");

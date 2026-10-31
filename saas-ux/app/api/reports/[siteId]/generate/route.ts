@@ -4,6 +4,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { effectiveScores } from "@/lib/cockpit/stored";
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db/drizzle';
 import { sites, teams, teamMembers, users, generatedReports, reportBranding, aiAnalysisJobs, aiRepairActions } from '@/lib/db/schema';
@@ -427,7 +428,7 @@ async function fetchCockpitData(siteId: string, locale: string): Promise<any> {
 
   // Return the last scores and any additional cockpit data
   return {
-    scores: site.lastScores,
+    scores: effectiveScores(site.lastScores),
     screenshotUrl: site.lastScreenshotUrl,
     faviconUrl: site.lastFaviconUrl,
     findingCount: site.lastFindingCount,
