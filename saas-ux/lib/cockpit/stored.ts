@@ -90,3 +90,21 @@ export function parseStoredSite(lastScores: unknown): StoredSiteState {
     scan,
   };
 }
+
+/**
+ * last_scores with the latest scan's numbers laid over the quick-analysis ones, in the same
+ * flat shape, so every reader (dashboard cards, reports) agrees with the cockpit.
+ * Anything the scan did not cover keeps its quick-analysis value.
+ */
+export function effectiveScores(lastScores: unknown): Record<string, any> | null {
+  if (!lastScores || typeof lastScores !== "object") return null;
+  const raw = lastScores as Record<string, any>;
+  const scan = parseStoredSite(raw).scan;
+  if (!scan) return raw;
+  const out: Record<string, any> = { ...raw };
+  if (scan.overall !== undefined) out.overall = scan.overall;
+  for (const [key, value] of Object.entries(scan.categoryScores ?? {})) {
+    if (value !== undefined) out[key] = value;
+  }
+  return out;
+}

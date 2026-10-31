@@ -1,4 +1,5 @@
 // app/[locale]/(dashboard)/dashboard/page.tsx (SERVER)
+import { effectiveScores } from "@/lib/cockpit/stored";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { currentUser } from "@clerk/nextjs/server";
@@ -144,8 +145,8 @@ export default async function DashboardPage({
       domain: site.canonicalHost || new URL(site.siteUrl).hostname,
       status: site.status,
       cms: site.cms,
-      overallScore: site.lastScores ? (site.lastScores as any).overall || 0 : 0,
-      scores: site.lastScores as any,
+      overallScore: effectiveScores(site.lastScores)?.overall || 0,
+      scores: effectiveScores(site.lastScores) as any,
       findingCount: site.lastFindingCount || 0,
       lastUpdated: site.updatedAt?.toISOString() || site.createdAt.toISOString(),
       faviconUrl: site.lastFaviconUrl,
