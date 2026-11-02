@@ -1,5 +1,7 @@
 // app/[locale]/(dashboard)/dashboard/sites/page.tsx  (server component)
 import { redirect } from "next/navigation";
+import { withLocale } from "@/navigation";
+import type { Locale } from "@/i18n/locales";
 import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
 import { eq, desc } from "drizzle-orm";
@@ -8,7 +10,8 @@ import { ensureAppUserId } from "@/lib/auth/ensure-app-user";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export default async function SitesPage() {
+export default async function SitesPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const appUserId = await ensureAppUserId();
   if (!appUserId) redirect("/sign-in");
 
@@ -38,7 +41,7 @@ export default async function SitesPage() {
               <div className="text-sm opacity-70 mt-1">Status: {s.status}</div>
               <a
                 className="inline-block mt-3 text-blue-600 hover:underline"
-                href={`/dashboard/sites/${s.id}`}
+                href={withLocale(`/dashboard/sites/${s.id}`, locale as Locale)}
               >
                 Open
               </a>

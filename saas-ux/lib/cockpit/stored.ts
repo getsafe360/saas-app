@@ -19,12 +19,22 @@ export interface StoredCounts {
   critical: number;
 }
 
+export interface StoredTopIssue {
+  id: string;
+  title: string;
+  severity: "high" | "medium" | "low";
+  category: string;
+  fixAvailable: boolean;
+}
+
 export interface StoredScan {
   jobId: string;
   at: string;
   /** The scan's own overall score, when it saved one. */
   overall?: number;
   categoryScores?: Partial<Record<"performance" | "security" | "seo" | "accessibility", number>>;
+  /** The first few issues to look at; absent on scans saved before this was recorded. */
+  top?: StoredTopIssue[];
   issueCount: number;
   fixableCount: number;
 }
@@ -79,6 +89,24 @@ export function parseStoredSite(lastScores: unknown): StoredSiteState {
           },
           issueCount: s.issueCount,
           fixableCount: num(s.fixableCount) ?? 0,
+          top: Array.isArray(s.top)
+            ? s.top
+                .filter(
+                  (t: any) =>
+                    t &&
+                    typeof t.id === "string" &&
+                    typeof t.title === "string" &&
+                    (t.severity === "high" || t.severity === "medium" || t.severity === "low"),
+                )
+                .slice(0, 3)
+                .map((t: any) => ({
+                  id: t.id,
+                  title: t.title,
+                  severity: t.severity,
+                  category: typeof t.category === "string" ? t.category : "",
+                  fixAvailable: t.fixAvailable === true,
+                }))
+            : undefined,
         }
       : null;
 

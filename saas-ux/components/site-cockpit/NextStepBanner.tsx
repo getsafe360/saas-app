@@ -42,6 +42,12 @@ function scrollToConnection() {
     ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+const SEVERITY_DOT: Record<string, string> = {
+  high: "#ef4444",
+  medium: "#f59e0b",
+  low: "#94a3b8",
+};
+
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 /**
@@ -127,6 +133,7 @@ export function NextStepBanner({
   }
 
   const Icon = step.icon;
+  const top = scan && scanState.phase === "idle" && scan.issueCount > 0 ? (scan.top ?? []) : [];
   const accent =
     step.tone === "ok"
       ? "var(--category-performance)"
@@ -162,6 +169,39 @@ export function NextStepBanner({
         <p className="mt-0.5 text-sm" style={{ color: "var(--text-subtle)" }}>
           {step.detail}
         </p>
+        {top.length > 0 && (
+          <div className="mt-3">
+            <div className="text-xs font-semibold" style={{ color: "var(--text-subtle)" }}>
+              Top {top.length} {plural(top.length, "thing", "things")} to fix
+            </div>
+            <ol className="mt-1.5 space-y-1">
+              {top.map((issue) => (
+                <li key={issue.id}>
+                  <Link
+                    href={reportHref}
+                    className="flex cursor-pointer items-center gap-2 text-sm hover:underline"
+                    style={{ color: "var(--text-default)" }}
+                  >
+                    <span
+                      className="inline-block h-2 w-2 shrink-0 rounded-full"
+                      style={{ background: SEVERITY_DOT[issue.severity] }}
+                      title={`${issue.severity} severity`}
+                    />
+                    <span className="min-w-0 truncate">{issue.title}</span>
+                    {issue.fixAvailable && (
+                      <span
+                        className="shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium"
+                        style={{ borderColor: accent, color: accent }}
+                      >
+                        auto-fix
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
       </div>
       <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
         {step.cta &&
