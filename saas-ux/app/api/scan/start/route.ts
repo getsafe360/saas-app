@@ -23,6 +23,26 @@ const log = logger('scan/start');
 
 const ALL_CATEGORIES: ScanCategory[] = ['seo', 'performance', 'accessibility', 'security'];
 
+const SEVERITY_RANK: Record<string, number> = { high: 0, medium: 1, low: 2 };
+
+/** The three issues worth doing first: most severe, auto-fixable ones ahead of advice-only. */
+function topIssues(issues: Array<{ id: string; title: string; severity: string; category: string; fixAvailable?: boolean }>) {
+  return [...issues]
+    .sort(
+      (a, b) =>
+        (SEVERITY_RANK[a.severity] ?? 3) - (SEVERITY_RANK[b.severity] ?? 3) ||
+        Number(!!b.fixAvailable) - Number(!!a.fixAvailable),
+    )
+    .slice(0, 3)
+    .map((i) => ({
+      id: i.id,
+      title: String(i.title).slice(0, 140),
+      severity: i.severity,
+      category: i.category,
+      fixAvailable: !!i.fixAvailable,
+    }));
+}
+
 type Body = { siteId?: string; categories?: ScanCategory[]; locale?: string };
 
 function dbErr(e: unknown) {
@@ -136,6 +156,7 @@ async function executeScan(params: {
         categoryScores: Object.fromEntries(
           Object.entries(report.summary.categoryScores).filter(([key]) => categories.includes(key as ScanCategory)),
         ),
+        top: topIssues(report.issues),
         issueCount: report.issues.length,
         fixableCount: report.issues.filter((issue) => issue.fixAvailable).length,
       },

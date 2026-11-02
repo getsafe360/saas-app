@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { withLocale } from "@/navigation";
+import type { Locale } from "@/i18n/locales";
 import { getDb } from "@/lib/db/drizzle";
 import { sites } from "@/lib/db/schema/sites";
 import { users } from "@/lib/db/schema/auth/users";
@@ -36,10 +38,13 @@ function normalizeSiteUrl(raw: string) {
 }
 
 export default async function DashboardPage({
+  params: routeParams,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ testedUrl?: string; testId?: string; newSite?: string }>;
 }) {
+  const { locale } = await routeParams;
   const params = await searchParams;
   const testedUrl = params.testedUrl?.trim();
   const newSiteId = params.newSite?.trim() || null;
@@ -95,7 +100,7 @@ export default async function DashboardPage({
         )[0]?.id;
 
       if (siteId) {
-        redirect(`/dashboard/sites/${siteId}/cockpit`);
+        redirect(withLocale(`/dashboard/sites/${siteId}/cockpit`, locale as Locale));
       }
     } catch {
       // Ignore handoff failure and continue to dashboard.

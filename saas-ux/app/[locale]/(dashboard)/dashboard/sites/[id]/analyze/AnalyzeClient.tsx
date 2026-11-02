@@ -395,31 +395,53 @@ export default function AnalyzeClient() {
           </p>
         </div>
         <Link
-          href={`/dashboard/sites/${siteId}`}
+          href={`/${locale}/dashboard/sites/${siteId}/cockpit`}
           className="text-sm text-slate-600 hover:underline"
         >
-          ← Back to site
+          ← Back to Site Cockpit
         </Link>
       </div>
 
-      {/* Status bar */}
-      <div className="border rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 bg-white/60 dark:bg-slate-900/40 backdrop-blur">
-        <div className="flex items-center gap-3">
+      {/* Status: one card for progress, tokens and the way back to the cockpit */}
+      <div
+        className={`border rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 ${
+          report
+            ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20"
+            : "bg-white/60 dark:bg-slate-900/40 backdrop-blur"
+        }`}
+      >
+        <div className="flex items-center gap-3 min-w-0">
           <StatusBadge status={(startError ? "error" : status?.status ?? "queued") as any} />
-          <div className="text-sm text-slate-700 dark:text-slate-300">
-            {startError
-              ? "Could not start"
-              : busy
-                ? "Running analysis…"
-                : status?.status === "done"
-                  ? "Complete"
-                  : "Error"}
+          <div className="min-w-0">
+            <div className="font-semibold text-slate-900 dark:text-slate-100">
+              {startError
+                ? "Could not start"
+                : busy
+                  ? "Running analysis…"
+                  : status?.status === "done"
+                    ? "Analysis complete"
+                    : "Error"}
+            </div>
+            {report && (
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                View your site&apos;s health dashboard with detailed insights and quick wins.
+              </p>
+            )}
           </div>
         </div>
-        <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
           <span className="rounded-md border px-2 py-1 bg-white/70 dark:bg-slate-900/40">
             Tokens: <span className="font-semibold">{tokens ?? "—"}</span>
           </span>
+          {report && (
+            <Link
+              href={`/${locale}/dashboard/sites/${siteId}/cockpit`}
+              className="flex-shrink-0 inline-flex cursor-pointer items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+            >
+              Open Cockpit
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          )}
         </div>
       </div>
 
@@ -440,24 +462,6 @@ export default function AnalyzeClient() {
           >
             <RotateCw className="w-4 h-4" /> Retry scan
           </button>
-        </div>
-      )}
-
-      {report && (
-        <div className="border rounded-xl p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 flex items-center justify-between gap-4">
-          <div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100">Analysis complete</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              View your site&apos;s health dashboard with detailed insights and quick wins.
-            </p>
-          </div>
-          <Link
-            href={`/dashboard/sites/${siteId}/cockpit`}
-            className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
-          >
-            Open Cockpit
-            <ArrowRight className="w-4 h-4" />
-          </Link>
         </div>
       )}
 

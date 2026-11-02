@@ -36,7 +36,7 @@ const STATUS_THEME: Record<StatusKey, { badge: string; dot: string }> = {
 
 function toKey(status?: string): StatusKey {
   const k = (status || "").toLowerCase().trim();
-  if (k === "connected") return "connected";
+  if (k === "connected" || k === "done" || k === "complete" || k === "completed") return "connected";
   if (k === "pending" || k === "connecting") return "pending";
   if (k === "error" || k === "failed" || k === "disconnected") return "error";
   return "unknown";

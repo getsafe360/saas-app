@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 import { list, type ListBlobResultBlob } from "@vercel/blob";
 import { notFound } from "next/navigation";
 import { getOwnedSite } from "@/lib/auth/site-access";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import StatusBadge from "@/components/ui/StatusBadge";
 import type { Metadata } from "next";
 const DEFAULT_LOCALE = "en";
