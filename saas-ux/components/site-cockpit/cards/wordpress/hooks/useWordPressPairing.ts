@@ -113,9 +113,12 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPairingFlow, pairingStatus]);
 
-  // Poll for handshake completion once code is ready
+  // Poll for handshake completion while a code is outstanding. The effect keys on
+  // "polling" rather than the raw status: it moves ready -> waiting itself, and a status
+  // dependency would re-run it and clear the interval it just started.
+  const polling = (pairingStatus === 'ready' || pairingStatus === 'waiting') && !!pairCode;
   useEffect(() => {
-    if (pairingStatus !== 'ready' || !pairCode) return;
+    if (!polling || !pairCode) return;
 
     setPairingStatus('waiting');
     setPairingMessage('Waiting for plugin confirmation…');
@@ -175,7 +178,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
 
     return stopPolling;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pairingStatus, pairCode, siteId]);
+  }, [polling, pairCode, siteId]);
 
   return {
     showPairingFlow,
