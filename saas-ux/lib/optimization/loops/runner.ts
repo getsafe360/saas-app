@@ -4,7 +4,8 @@
 //   Tier 2 (every iteration): lightweight category-only rescore from fetched HTML
 //   Tier 3 (end of loop): enqueue full site scan to refresh all cockpit scores
 
-import { eq, desc } from 'drizzle-orm';
+import { and, eq, desc } from 'drizzle-orm';
+import { list } from '@vercel/blob';
 import { randomUUID } from 'crypto';
 import { getDb } from '@/lib/db/drizzle';
 import {
@@ -349,6 +350,48 @@ async function enqueueTier3Scan(siteId: string): Promise<void> {
 
 // ── Snapshot builder ──────────────────────────────────────────────────────────
 
+/** Scores and findings from the site's latest finished scan report in Blob, or null if none. */
+async function loadLatestReportInputs(
+  siteId: string,
+): Promise<{ scores: Record<string, number>; findings: unknown[] } | null> {
+  const db = getDb();
+  const [job] = await db
+    .select()
+    .from(scanJobs)
+    .where(and(eq(scanJobs.siteId, siteId), eq(scanJobs.status, 'done')))
+    .orderBy(desc(scanJobs.updatedAt))
+    .limit(1);
+  if (!job) return null;
+
+  try {
+    const key = job.reportBlobKey || `scan-results/${job.id}.json`;
+    const { blobs } = await list({ prefix: key });
+    const match = blobs.find((b) => b.pathname === key) || blobs[0];
+    if (!match) return null;
+
+    const res = await fetch(match.url, { cache: 'no-store' });
+    const json = (await res.json().catch(() => null)) as {
+      report?: { issues?: Array<Record<string, unknown>>; summary?: { categoryScores?: Record<string, number> } };
+    } | null;
+    const report = json?.report;
+    if (!report) return null;
+
+    return {
+      scores: report.summary?.categoryScores ?? {},
+      // A scan report lists only what failed, so every entry is an open finding.
+      findings: (report.issues ?? []).map((issue) => ({
+        id: issue.id,
+        category: issue.category,
+        title: issue.title,
+        severity: issue.severity,
+        passed: false,
+      })),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function buildSnapshotForSite(siteId: string, siteUrl: string): Promise<SiteSnapshot | null> {
   const db = getDb();
 
@@ -359,10 +402,12 @@ export async function buildSnapshotForSite(siteId: string, siteUrl: string): Pro
     .orderBy(desc(scanSummaries.createdAt))
     .limit(1);
 
-  if (!summary) return null;
+  // Scans run from the cockpit save their report to Blob, not to scan_summaries.
+  const fromReport = summary ? null : await loadLatestReportInputs(siteId);
+  if (!summary && !fromReport) return null;
 
-  const scores = (summary.scores as Record<string, number>) ?? {};
-  const findings = (summary.findings as unknown[]) ?? [];
+  const scores = summary ? ((summary.scores as Record<string, number>) ?? {}) : fromReport!.scores;
+  const findings = summary ? ((summary.findings as unknown[]) ?? []) : fromReport!.findings;
 
   const { extractSeoFacts } = await import('./categories/seoLoop');
   const seoFacts = extractSeoFacts(siteUrl, scores, findings);
