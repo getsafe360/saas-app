@@ -644,7 +644,7 @@ export function ConnectionCard({
           {/* WordPress Plugin */}
           <button
             onClick={() => { setSelectedMethod("wordpress"); setStep("setup"); }}
-            className="w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all"
+            className="w-full flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-left transition-all hover:brightness-125"
             style={{
               borderColor: selectedMethod === "wordpress" && platform.id === "wordpress"
                 ? "var(--color-primary-500, #3b82f6)"
@@ -678,7 +678,7 @@ export function ConnectionCard({
           {/* JS Snippet */}
           <button
             onClick={() => { setSelectedMethod("snippet"); setStep("setup"); }}
-            className="w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all"
+            className="w-full flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-left transition-all hover:brightness-125"
             style={{ borderColor: "var(--border-default)", background: "var(--background-default)" }}
           >
             <span
@@ -707,7 +707,7 @@ export function ConnectionCard({
           {/* API Key */}
           <button
             onClick={() => { setSelectedMethod("apikey"); setStep("setup"); }}
-            className="w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all"
+            className="w-full flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-left transition-all hover:brightness-125"
             style={{ borderColor: "var(--border-default)", background: "var(--background-default)" }}
           >
             <span
@@ -806,6 +806,10 @@ export function ConnectionCard({
 
 // ─── WordPress pairing setup ──────────────────────────────────────────────────
 
+// Secondary action button: same look for Download Plugin, Generate Code and Copy.
+const SECONDARY_BTN =
+  "inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--background-default)] font-medium text-[var(--text-subtle)] transition-colors hover:border-[var(--color-primary-500)] hover:bg-white/10 hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-50";
+
 function PluginDetectedBadge({ detected, version }: { detected: boolean | null; version?: string | null }) {
   if (detected === null) return null;
   return detected ? (
@@ -850,12 +854,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
               <a
                 href="/wp-plugin/getsafe360-connector.zip"
                 download
-                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
-                style={{
-                  background: "var(--background-default)",
-                  border: "1px solid var(--border-default)",
-                  color: "var(--text-subtle)",
-                }}
+                className={`${SECONDARY_BTN} text-xs px-3 py-1.5`}
               >
                 <ExternalLink className="h-3 w-3" />
                 Download Plugin
@@ -869,8 +868,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
               <button
                 onClick={() => pairing.startPairing()}
                 disabled={isGenerating}
-                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-white transition-colors disabled:opacity-50"
-                style={{ background: "var(--color-primary-500, #3b82f6)" }}
+                className={`${SECONDARY_BTN} text-xs px-3 py-1.5`}
               >
                 {isGenerating ? (
                   <><Loader2 className="h-3 w-3 animate-spin" />Generating…</>
@@ -892,8 +890,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
                   </span>
                   <button
                     onClick={pairing.copyToClipboard}
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs transition-colors"
-                    style={{ color: "var(--text-subtle)", background: "var(--header-bg)" }}
+                    className={`${SECONDARY_BTN} px-2 py-1 text-xs`}
                   >
                     {pairing.copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
                     {pairing.copied ? "Copied!" : "Copy"}
@@ -951,8 +948,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
           </div>
           <button
             onClick={() => pairing.startPairing()}
-            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold text-white transition-colors"
-            style={{ background: "var(--color-primary-500, #3b82f6)" }}
+            className={`${SECONDARY_BTN} text-xs px-3 py-1.5`}
           >
             <RefreshCw className="h-3 w-3" />
             Generate new code
