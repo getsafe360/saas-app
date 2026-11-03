@@ -8,6 +8,8 @@ import crypto from "crypto";
 import { getDrizzle } from "@/lib/db/postgres";
 import { users } from '@/lib/db/schema/auth/users';
 import { sites } from "@/lib/db/schema/sites";
+import { fetchFollowingSafely } from "@/lib/net/safeFetch";
+import { isPublicUrlResolved } from "@/lib/net/isPublicUrlResolved";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,29 +36,32 @@ function normalizeInput(u: string): string {
   }
 }
 
-async function probeOnce(siteUrl: string, path: string, signal: AbortSignal) {
-  const timer = new AbortController();
-  const t = setTimeout(() => timer.abort(), 1500);
-  // Link shared cancellation signal so a win by a sibling probe cancels this fetch
-  signal.addEventListener("abort", () => { clearTimeout(t); timer.abort(); }, { once: true });
+type PluginProbe = { detected: boolean; version: string | null };
+
+// The plugin answers { pong: true, version, site }; older builds answered { ok: true }.
+async function probeOnce(siteUrl: string, path: string, signal: AbortSignal): Promise<PluginProbe> {
   try {
-    const res = await fetch(new URL(path, siteUrl).toString(), {
+    // Redirects are followed hop by hop and every hop must be a public address, so a
+    // typed-in URL cannot make this server reach internal hosts.
+    const res = await fetchFollowingSafely(new URL(path, siteUrl).toString(), {
       method: "GET",
       headers: { "user-agent": "GetSafe360/0.1 (+connect-probe)" },
       cache: "no-store",
-      signal: timer.signal,
+      timeoutMs: 3500, // WordPress REST can take 2s+ on shared hosting
+      signal,
+      validate: isPublicUrlResolved,
     });
-    clearTimeout(t);
-    if (!res.ok) return false;
+    if (!res.ok) return { detected: false, version: null };
     const j = await res.json().catch(() => null);
-    return !!(j && j.ok === true);
+    if (!j || (j.pong !== true && j.ok !== true)) return { detected: false, version: null };
+    const version = typeof j.version === "string" ? j.version.slice(0, 32) : null;
+    return { detected: true, version };
   } catch {
-    clearTimeout(t);
-    return false;
+    return { detected: false, version: null };
   }
 }
 
-async function probePlugin(siteUrl: string, externalSignal?: AbortSignal): Promise<boolean> {
+async function probePlugin(siteUrl: string, signal: AbortSignal): Promise<PluginProbe> {
   const paths = [
     "/wp-json/getsafe360/v1/ping",
     "/?rest_route=/getsafe360/v1/ping",
@@ -66,37 +71,42 @@ async function probePlugin(siteUrl: string, externalSignal?: AbortSignal): Promi
   ];
   const urls = [siteUrl];
   try {
-    const u = new URL(siteUrl);
     const flipped = new URL(siteUrl);
-    flipped.protocol = u.protocol === "http:" ? "https:" : "http:";
+    flipped.protocol = flipped.protocol === "http:" ? "https:" : "http:";
     urls.push(flipped.toString());
   } catch { /* ignore */ }
 
-  // Shared controller: aborted as soon as any probe succeeds so losers stop immediately
-  const shared = new AbortController();
-  externalSignal?.addEventListener("abort", () => shared.abort(), { once: true });
+  // First probe that finds the plugin wins; misses reject so Promise.any keeps waiting.
   const probes = urls.flatMap((u) =>
     paths.map((p) =>
-      probeOnce(u, p, shared.signal)
-        .catch(() => false)
-        .then((ok) => { if (!ok) throw new Error("miss"); shared.abort(); return true; }),
+      probeOnce(u, p, signal).then((r) => {
+        if (!r.detected) throw new Error("miss");
+        return r;
+      }),
     ),
   );
-  return Promise.any(probes).catch(() => false);
+  return Promise.any(probes).catch(() => ({ detected: false, version: null }));
 }
 
-
-async function probePluginWithDeadline(siteUrl: string, deadlineMs: number): Promise<boolean> {
-  const deadline = new AbortController();
-  const timer = setTimeout(() => deadline.abort(), deadlineMs);
-
+/** Best-effort UX signal: gives up after deadlineMs so pairing is never held up by a slow site. */
+async function probePluginWithDeadline(siteUrl: string, deadlineMs: number): Promise<PluginProbe> {
+  const miss: PluginProbe = { detected: false, version: null };
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  // One controller for every probe: aborted on the first hit, on the deadline, or on error,
+  // so no request or body read outlives the pairing response.
+  const shared = new AbortController();
   try {
-    return await probePlugin(siteUrl, deadline.signal);
+    return await Promise.race([
+      probePlugin(siteUrl, shared.signal),
+      new Promise<PluginProbe>((resolve) => {
+        timer = setTimeout(() => resolve(miss), deadlineMs);
+      }),
+    ]);
   } catch {
-    return false;
+    return miss;
   } finally {
     clearTimeout(timer);
-    deadline.abort();
+    shared.abort();
   }
 }
 function sixDigitCode() {
@@ -239,13 +249,13 @@ async function postHandler(req: NextRequest) {
   }
 
   // 6) Reserve code + probe plugin in parallel so neither blocks the other.
-  //    Probe is a best-effort UX signal; 800 ms deadline keeps latency tight.
+  //    Probe is a best-effort UX signal; 4 s deadline keeps latency bounded.
   const id = crypto.randomUUID();
   const now = Date.now();
 
-  const [pairCode, pluginDetected] = await Promise.all([
+  const [pairCode, plugin] = await Promise.all([
     reserveUniquePairCode(),
-    probePluginWithDeadline(normalizedUrl, 800),
+    probePluginWithDeadline(normalizedUrl, 4000),
   ]);
 
   // 7) Write full pairing record to Redis (two keys: by-code + by-id)
@@ -267,7 +277,8 @@ async function postHandler(req: NextRequest) {
   return NextResponse.json(
     {
       pairCode,
-      pluginDetected,
+      pluginDetected: plugin.detected,
+      pluginVersion: plugin.version,
       recordedSiteUrl: normalizedUrl,
       existingSiteId: existingSiteId || null,
     },
