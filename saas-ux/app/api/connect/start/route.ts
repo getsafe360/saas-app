@@ -39,7 +39,7 @@ function normalizeInput(u: string): string {
 type PluginProbe = { detected: boolean; version: string | null };
 
 // The plugin answers { pong: true, version, site }; older builds answered { ok: true }.
-async function probeOnce(siteUrl: string, path: string): Promise<PluginProbe> {
+async function probeOnce(siteUrl: string, path: string, signal: AbortSignal): Promise<PluginProbe> {
   try {
     // Redirects are followed hop by hop and every hop must be a public address, so a
     // typed-in URL cannot make this server reach internal hosts.
@@ -48,6 +48,7 @@ async function probeOnce(siteUrl: string, path: string): Promise<PluginProbe> {
       headers: { "user-agent": "GetSafe360/0.1 (+connect-probe)" },
       cache: "no-store",
       timeoutMs: 3500, // WordPress REST can take 2s+ on shared hosting
+      signal,
       validate: isPublicUrlResolved,
     });
     if (!res.ok) return { detected: false, version: null };
@@ -60,7 +61,7 @@ async function probeOnce(siteUrl: string, path: string): Promise<PluginProbe> {
   }
 }
 
-async function probePlugin(siteUrl: string): Promise<PluginProbe> {
+async function probePlugin(siteUrl: string, signal: AbortSignal): Promise<PluginProbe> {
   const paths = [
     "/wp-json/getsafe360/v1/ping",
     "/?rest_route=/getsafe360/v1/ping",
@@ -78,7 +79,7 @@ async function probePlugin(siteUrl: string): Promise<PluginProbe> {
   // First probe that finds the plugin wins; misses reject so Promise.any keeps waiting.
   const probes = urls.flatMap((u) =>
     paths.map((p) =>
-      probeOnce(u, p).then((r) => {
+      probeOnce(u, p, signal).then((r) => {
         if (!r.detected) throw new Error("miss");
         return r;
       }),
@@ -91,9 +92,12 @@ async function probePlugin(siteUrl: string): Promise<PluginProbe> {
 async function probePluginWithDeadline(siteUrl: string, deadlineMs: number): Promise<PluginProbe> {
   const miss: PluginProbe = { detected: false, version: null };
   let timer: ReturnType<typeof setTimeout> | undefined;
+  // One controller for every probe: aborted on the first hit, on the deadline, or on error,
+  // so no request or body read outlives the pairing response.
+  const shared = new AbortController();
   try {
     return await Promise.race([
-      probePlugin(siteUrl),
+      probePlugin(siteUrl, shared.signal),
       new Promise<PluginProbe>((resolve) => {
         timer = setTimeout(() => resolve(miss), deadlineMs);
       }),
@@ -102,6 +106,7 @@ async function probePluginWithDeadline(siteUrl: string, deadlineMs: number): Pro
     return miss;
   } finally {
     clearTimeout(timer);
+    shared.abort();
   }
 }
 function sixDigitCode() {
