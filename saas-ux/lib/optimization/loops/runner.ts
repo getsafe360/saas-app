@@ -377,7 +377,13 @@ async function loadLatestReportInputs(
     if (!report) return null;
 
     return {
-      scores: report.summary?.categoryScores ?? {},
+      // Unrequested categories get a perfect score from an empty issue list, so keep
+      // only the ones this job actually scanned.
+      scores: Object.fromEntries(
+        Object.entries(report.summary?.categoryScores ?? {}).filter(
+          ([category]) => !job.categories || job.categories.split(',').includes(category),
+        ),
+      ),
       // A scan report lists only what failed, so every entry is an open finding.
       findings: (report.issues ?? []).map((issue) => ({
         id: issue.id,
@@ -430,6 +436,8 @@ export async function buildSnapshotForSite(siteId: string, siteUrl: string): Pro
     siteId,
     siteUrl,
     scores,
+    // A scan report only lists failures, so it cannot tell us what the page already has.
+    seoFactsVerified: !!summary,
     seoFacts,
     findings: findings as SiteSnapshot['findings'],
   };

@@ -355,6 +355,9 @@ export function selectNextSeoIssue(
   snapshot: SiteSnapshot,
   attemptedIssueIds: string[],
 ): { issue: SeoIssue; fixPlan: FixPlan } | null {
+  // Never guess at missing tags: with unverified facts an empty object looks like "nothing present".
+  if (snapshot.seoFactsVerified === false) return null;
+
   const attempted = new Set(attemptedIssueIds);
 
   for (const issue of SEO_ISSUES) {
