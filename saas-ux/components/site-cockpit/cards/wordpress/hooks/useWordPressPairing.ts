@@ -23,6 +23,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
   const [pairCode, setPairCode] = useState<string | null>(null);
   const [pairingMessage, setPairingMessage] = useState('');
   const [pluginDetected, setPluginDetected] = useState<boolean | null>(null);
+  const [pluginVersion, setPluginVersion] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const pollRef = useRef<number | null>(null);
   const pollAttemptsRef = useRef(0);
@@ -42,6 +43,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
       setPairingStatus('generating');
       setPairCode(null);
       setPluginDetected(null);
+      setPluginVersion(null);
 
       const res = await fetch('/api/connect/start', {
         method: 'POST',
@@ -63,6 +65,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
       const detected: boolean | null =
         typeof responseData.pluginDetected === 'boolean' ? responseData.pluginDetected : null;
       setPluginDetected(detected);
+      setPluginVersion(typeof responseData.pluginVersion === 'string' ? responseData.pluginVersion : null);
       setPairCode(responseData.pairCode);
       setPairingMessage(
         detected === true
@@ -181,6 +184,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
     pairCode,
     pairingMessage,
     pluginDetected,
+    pluginVersion,
     copied,
     copyToClipboard,
     startPairing,

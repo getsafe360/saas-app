@@ -806,7 +806,7 @@ export function ConnectionCard({
 
 // ─── WordPress pairing setup ──────────────────────────────────────────────────
 
-function PluginDetectedBadge({ detected }: { detected: boolean | null }) {
+function PluginDetectedBadge({ detected, version }: { detected: boolean | null; version?: string | null }) {
   if (detected === null) return null;
   return detected ? (
     <div
@@ -814,7 +814,7 @@ function PluginDetectedBadge({ detected }: { detected: boolean | null }) {
       style={{ background: "oklch(from var(--category-performance) l c h / 0.1)", border: "1px solid oklch(from var(--category-performance) l c h / 0.25)", color: "var(--category-performance)" }}
     >
       <CheckCircle className="h-3.5 w-3.5 shrink-0" />
-      Plugin detected on your site
+      {version ? `Plugin detected — version ${version}` : "Plugin detected on your site"}
     </div>
   ) : (
     <div
@@ -927,7 +927,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
       </ol>
 
       {/* Plugin detection badge — once connected treat plugin as detected; hide warning when connected */}
-      {hasCode && !isConnected && <PluginDetectedBadge detected={isConnected ? true : pairing.pluginDetected} />}
+      {hasCode && !isConnected && <PluginDetectedBadge detected={isConnected ? true : pairing.pluginDetected} version={pairing.pluginVersion} />}
 
       {/* Status messages */}
       {isWaiting && (
