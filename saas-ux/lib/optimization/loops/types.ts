@@ -55,6 +55,8 @@ export interface SiteSnapshot {
   siteId: string;
   siteUrl: string;
   scores: Record<string, number>;
+  /** False when seoFacts could not be read from the page, so absent facts mean "unknown", not "missing". */
+  seoFactsVerified?: boolean;
   // SEO facts extracted from the page
   seoFacts: {
     pageTitle?: string;
