@@ -41,8 +41,12 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const includes: string[] = body.includes ?? ['database', 'files', 'plugins', 'themes'];
+    const body = await request.json().catch(() => ({}));
+    // A restore point captures GetSafe 360's own record of the site (scores,
+    // summary). It does not copy WordPress files or the database, so it must
+    // not claim to. WordPress changes are undone per action (wordpress/rollback).
+    void body;
+    const includes: string[] = ['scan-state'];
 
     const [site] = await db
       .select()
@@ -76,13 +80,9 @@ export async function POST(
         siteUrl: site.siteUrl,
         canonicalHost: site.canonicalHost,
         canonicalRoot: site.canonicalRoot,
-        status: site.status,
-        cms: site.cms,
-        wpVersion: site.wpVersion,
-        pluginVersion: site.pluginVersion,
-        isConnected: site.isConnected,
-        connectionStatus: site.connectionStatus,
-        wordpressConnection: site.wordpressConnection,
+        // Never include connection state or credentials (wordpressConnection
+        // holds the connector key): blobs are public, and restoring an old
+        // token would undo a reconnect or revive a revoked connection.
         aiRepairEnabled: site.aiRepairEnabled,
         lastScores: site.lastScores,
         lastSummary: site.lastSummary,
@@ -98,7 +98,8 @@ export async function POST(
     const blob = await put(blobKey, payload, {
       access: 'public',
       contentType: 'application/json',
-      addRandomSuffix: false,
+      // Unguessable URL; the SDK version in use has no private blobs.
+      addRandomSuffix: true,
       allowOverwrite: false,
     });
 
@@ -119,7 +120,6 @@ export async function POST(
       method: 'checkpoint',
       size: Buffer.byteLength(payload, 'utf8'),
       includes,
-      downloadUrl: blob.url,
       expiresAt: record.expiresAt?.toISOString(),
     });
 

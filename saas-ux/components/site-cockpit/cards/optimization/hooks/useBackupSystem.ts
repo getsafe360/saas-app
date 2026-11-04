@@ -144,7 +144,6 @@ export function useBackupSystem(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           method: backupSystem.method,
-          includes: ["database", "files", "plugins", "themes"],
         }),
       });
 

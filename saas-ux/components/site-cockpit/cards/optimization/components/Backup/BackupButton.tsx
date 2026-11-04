@@ -7,7 +7,6 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
-  Download,
 } from "lucide-react";
 import type { BackupButtonProps } from "../../types";
 
@@ -32,12 +31,11 @@ export function BackupButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           method: backupSystem.method,
-          includes: ["database", "files", "plugins", "themes"],
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Backup creation failed");
+        throw new Error("Could not save the restore point");
       }
 
       const data = await response.json();
@@ -58,7 +56,7 @@ export function BackupButton({
       // Reset success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Backup failed");
+      setError(err instanceof Error ? err.message : "Restore point failed");
     } finally {
       setIsCreating(false);
     }
@@ -101,7 +99,7 @@ export function BackupButton({
               </div>
               <div>
                 <div className="text-sm font-semibold text-white">
-                  Last Backup
+                  Last restore point
                 </div>
                 <div className="text-xs text-gray-400">
                   {backupSystem.lastBackup.timestamp.toLocaleString("en-US", {
@@ -113,15 +111,6 @@ export function BackupButton({
                 </div>
               </div>
             </div>
-            {backupSystem.lastBackup.downloadUrl && (
-              <a
-                href={backupSystem.lastBackup.downloadUrl}
-                download
-                className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                <Download className="h-4 w-4 text-gray-400" />
-              </a>
-            )}
           </div>
         </div>
       )}
@@ -141,17 +130,17 @@ export function BackupButton({
         {isCreating ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Creating Backup...
+            Saving restore point...
           </>
         ) : success ? (
           <>
             <CheckCircle className="h-4 w-4" />
-            Backup Created!
+            Restore point saved
           </>
         ) : (
           <>
             <Shield className="h-4 w-4" />
-            Create Backup Before Optimizing
+            Save restore point
           </>
         )}
       </button>

@@ -105,13 +105,7 @@ export async function POST(
     await db
       .update(sites)
       .set({
-        status: snap.status,
-        cms: snap.cms,
-        wpVersion: snap.wpVersion,
-        pluginVersion: snap.pluginVersion,
-        isConnected: snap.isConnected,
-        connectionStatus: snap.connectionStatus,
-        wordpressConnection: snap.wordpressConnection,
+        // Connection state and credentials are never restored (see create route).
         aiRepairEnabled: snap.aiRepairEnabled,
         lastScores: snap.lastScores,
         lastSummary: snap.lastSummary,
