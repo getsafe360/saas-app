@@ -68,8 +68,10 @@ export function WordPressCard({
     () =>
       (wordpress?.healthFindings ?? [])
         .filter(
+          // Only observed problems: an unmeasured integrity check is not evidence of compromise.
           (finding) =>
-            finding.category === "red-flags" && finding.status !== "pass",
+            finding.category === "red-flags" &&
+            (finding.status === "fail" || finding.status === "warning"),
         )
         .slice(0, 5),
     [wordpress?.healthFindings],
