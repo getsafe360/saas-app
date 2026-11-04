@@ -1,3 +1,4 @@
+import { getFixer } from '@/lib/engine/fixers/registry';
 import { createWordPressClient } from '@/lib/wordpress/client';
 import type {
   WordPressActionExecutionResult,
@@ -8,23 +9,7 @@ import type {
 import { verifyWordPressAction } from '@/lib/wordpress/verify';
 
 function toConnectorRequest(action: WordPressPlannedAction): WordPressConnectorActionRequest | null {
-  if (action.type !== 'update_connector_setting') {
-    return null;
-  }
-
-  const setting = action.payload.setting as WordPressConnectorActionRequest['payload'] | undefined;
-  if (!setting?.key) {
-    return null;
-  }
-
-  return {
-    id: action.id,
-    type: 'update_connector_setting',
-    payload: {
-      key: setting.key,
-      enabled: setting.enabled !== false,
-    },
-  };
+  return getFixer(action.id)?.toConnectorRequest(action) ?? null;
 }
 
 function buildSkippedResult(

@@ -93,6 +93,7 @@ export type WordPressActionType =
   | 'fix_broken_images'
   | 'apply_schema'
   | 'update_connector_setting'
+  | 'set_security_headers'
   | 'flush_cache'
   | 'verify_render';
 
@@ -148,18 +149,22 @@ export interface WordPressActionPlan {
   actions: WordPressPlannedAction[];
 }
 
-export interface WordPressConnectorActionRequest {
-  id: string;
-  type: 'update_connector_setting';
-  payload: WordPressConnectorSettingPayload;
+/** Header name → value; null removes it. `replace` swaps the whole set (rollback). */
+export interface WordPressSecurityHeadersPayload {
+  headers: Record<string, string | null>;
+  replace?: boolean;
 }
+
+export type WordPressConnectorActionRequest =
+  | { id: string; type: 'update_connector_setting'; payload: WordPressConnectorSettingPayload }
+  | { id: string; type: 'set_security_headers'; payload: WordPressSecurityHeadersPayload };
 
 export interface WordPressConnectorActionResult {
   id: string;
   type: WordPressConnectorActionRequest['type'];
   status: 'applied' | 'skipped' | 'failed';
   message: string;
-  state?: WordPressConnectorProtectionState;
+  state?: WordPressConnectorProtectionState | { securityHeaders?: Record<string, string> };
   rollback?: WordPressConnectorActionRequest | null;
 }
 

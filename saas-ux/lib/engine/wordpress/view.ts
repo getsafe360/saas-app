@@ -10,6 +10,7 @@ import type {
 } from '@/types/site-cockpit';
 import type { EngineCategory, EngineScore, Finding, FixRisk } from '../contracts';
 import { evaluateRules } from '../rules';
+import { SECURITY_HEADER_RULES, type SiteHeaderFacts } from '../security/headers';
 import { scoreFindings } from '../scoring';
 import type { WordPressFacts } from './facts';
 import { WORDPRESS_CATEGORY_WEIGHTS, WORDPRESS_RULES } from './rules';
@@ -36,6 +37,7 @@ const DEPTH_TIER: Record<string, NonNullable<WordPressHealthFinding['depthTier']
   'seo-sitemap': 'balanced',
   'red-flag-hidden-plugins': 'deep',
   'red-flag-core-modifications': 'deep',
+  'sec-csp': 'balanced',
 };
 
 export function toWordPressHealthFinding(finding: Finding): WordPressHealthFinding {
@@ -92,8 +94,17 @@ export interface WordPressHealthReport {
   };
 }
 
-export function evaluateWordPressHealth(facts: WordPressFacts, checkedAt?: string): WordPressHealthReport {
-  const findings = evaluateRules(WORDPRESS_RULES, facts, { checkedAt: checkedAt ?? facts.observedAt ?? undefined });
+export function evaluateWordPressHealth(
+  facts: WordPressFacts,
+  headerFacts?: SiteHeaderFacts,
+  checkedAt?: string,
+): WordPressHealthReport {
+  const context = { checkedAt: checkedAt ?? facts.observedAt ?? undefined };
+  const findings = [
+    ...evaluateRules(WORDPRESS_RULES, facts, context),
+    // Header fixes run through the connector, so they belong in the WordPress fix tray.
+    ...(headerFacts ? evaluateRules(SECURITY_HEADER_RULES, headerFacts, context) : []),
+  ];
   const score = scoreFindings(findings, WORDPRESS_CATEGORY_WEIGHTS);
   return {
     findings,

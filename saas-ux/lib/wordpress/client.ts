@@ -121,6 +121,8 @@ export interface WordPressPullResponse {
   siteUrl: string;
   timestamp: string;
   protections?: WordPressConnectorProtectionState;
+  /** Security headers configured by the connector (≥1.5). */
+  securityHeaders?: Record<string, string>;
 }
 
 /**
