@@ -82,13 +82,14 @@ export interface WordPressTheme {
   childTheme: boolean;
 }
 
+/** Each flag is null when it has not been observed. */
 export interface WordPressSecurity {
-  defaultLoginExposed: boolean;
-  userEnumerationBlocked: boolean;
-  xmlrpcEnabled: boolean;
-  xmlrpcVulnerable: boolean;
-  wpDebugMode: boolean;
-  directoryListingDisabled: boolean;
+  defaultLoginExposed: boolean | null;
+  userEnumerationBlocked: boolean | null;
+  xmlrpcEnabled: boolean | null;
+  xmlrpcVulnerable: boolean | null;
+  wpDebugMode: boolean | null;
+  directoryListingDisabled: boolean | null;
   securityPlugins: string[];
 }
 
@@ -114,6 +115,13 @@ export interface WordPressHealthFinding {
   severity: ImpactLevel;
   checkedByDefault: boolean;
   status: "pass" | "warning" | "fail" | "unknown";
+  /** How sure we are of `status`; unknown checks are always "low". */
+  confidence?: "high" | "medium" | "low";
+  evidence?: {
+    source: "connector" | "external-probe" | "pagespeed" | "dns" | "crew";
+    observed?: string;
+    checkedAt?: string;
+  };
   action: string;
   remediationActionId?: string;
   automationLevel?: "auto" | "guided" | "manual";
@@ -124,12 +132,13 @@ export interface WordPressHealthFinding {
   safetyLevel?: "safe" | "review" | "sensitive";
 }
 
+/** null = nothing in this category could be observed yet. */
 export interface WordPressCategoryScores {
-  security: number;
-  performance: number;
-  stability: number;
-  "seo-ux": number;
-  "red-flags": number;
+  security: number | null;
+  performance: number | null;
+  stability: number | null;
+  "seo-ux": number | null;
+  "red-flags": number | null;
 }
 
 export interface WordPressScoreTrend {
@@ -149,7 +158,10 @@ export interface WordPressConnectionMetadata {
 }
 
 export interface WordPress {
-  score: number;
+  /** null until at least one weighted category has an observed result. */
+  score: number | null;
+  /** Share of health checks with an observed result, 0–1. */
+  coverage?: number;
   grade: ScoreGrade;
   version: {
     current: string;
@@ -176,10 +188,10 @@ export interface WordPress {
     wpCron: boolean;
   };
   performanceData: {
-    objectCache: boolean;
-    opcacheEnabled: boolean;
-    gzipEnabled: boolean;
-    lazyLoadEnabled: boolean;
+    objectCache: boolean | null;
+    opcacheEnabled: boolean | null;
+    gzipEnabled: boolean | null;
+    lazyLoadEnabled: boolean | null;
     cdn: string | null;
   };
   categoryScores?: WordPressCategoryScores;

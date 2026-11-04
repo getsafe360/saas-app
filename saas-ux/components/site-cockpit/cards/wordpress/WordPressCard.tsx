@@ -237,8 +237,8 @@ export function WordPressCard({
         </div>
       }
       category="wordpress"
-      score={wordpress.score}
-      grade={wordpress.grade}
+      score={wordpress.score ?? undefined}
+      grade={wordpress.score === null ? undefined : wordpress.grade}
       minimized={minimized}
       onToggleMinimize={onToggleMinimize}
       editable={editable}
@@ -343,14 +343,17 @@ export function WordPressCard({
                     </div>
                     <div
                       className={
-                        value >= 80
-                          ? "text-emerald-300"
-                          : value >= 60
-                            ? "text-yellow-300"
-                            : "text-red-300"
+                        value === null
+                          ? "text-[var(--text-subtle)]"
+                          : value >= 80
+                            ? "text-emerald-300"
+                            : value >= 60
+                              ? "text-yellow-300"
+                              : "text-red-300"
                       }
+                      title={value === null ? "Not measured yet" : undefined}
                     >
-                      {value}/100
+                      {value === null ? "—" : `${value}/100`}
                     </div>
                   </div>
                 ),
@@ -385,7 +388,7 @@ export function WordPressCard({
           findings={wordpress.healthFindings ?? []}
           onOptimize={handleOptimize}
           optimizing={isOptimizing}
-          currentScore={wordpress.score}
+          currentScore={wordpress.score ?? undefined}
         />
       </div>
     </CockpitCard>

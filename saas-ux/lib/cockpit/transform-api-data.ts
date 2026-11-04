@@ -12,11 +12,9 @@
  */
 
 import type { SiteCockpitResponse, ScoreGrade, WordPress, ContentData } from "@/types/site-cockpit";
-import {
-  buildWordPressHealthFindings,
-  calculateWordPressCategoryScores,
-  calculateWordPressWeightedScore,
-} from "@/components/site-cockpit/cards/wordpress/utils/healthEngine";
+import { buildWordPressFacts } from "@/lib/engine/wordpress/facts";
+import { evaluateWordPressHealth } from "@/lib/engine/wordpress/view";
+import { computeTrend } from "@/lib/engine/scoring";
 
 // ============================================
 // SCORING SYSTEM
@@ -373,55 +371,62 @@ function evaluateCategoryChecks(data: any): Record<"performance" | "security" | 
 // Future: Extract these to separate files for massive expansion
 // ============================================
 
-function transformWordPressData(apiData: any) {
+function transformWordPressData(apiData: any): WordPress {
   const wpTelemetry = apiData.wordpressTelemetry ?? {};
   const crewWordPress = parseCrewWordPressPayload(apiData);
-  const baselineWordPressScore = typeof apiData.summary?.categoryScores?.wordpress === "number"
-    ? apiData.summary.categoryScores.wordpress
-    : 68;
+  const facts = buildWordPressFacts(apiData);
+  const health = evaluateWordPressHealth(facts);
+
+  // Deterministic checks decide status and score. Crew output only feeds the
+  // recommendation backlog; it never overrides an observed result.
+  const weightedScore = health.score.overall;
+
   const snapshot = wpTelemetry.snapshot ?? {};
-  const currentVersion = snapshot.wpVersion || apiData.cms.wp.version || "Unknown";
-  const latestVersion = wpTelemetry.latestVersion || currentVersion;
-  const outdated = currentVersion !== "Unknown" && latestVersion !== "Unknown"
-    ? compareVersionStrings(currentVersion, latestVersion) < 0
+  const currentVersion = facts.core.version ?? "Unknown";
+  const latestVersion = facts.core.latest ?? currentVersion;
+  const outdated = facts.core.version !== null && facts.core.latest !== null
+    ? compareVersionStrings(facts.core.version, facts.core.latest) < 0
     : false;
   const pluginList = Array.isArray(wpTelemetry.plugins?.list) ? wpTelemetry.plugins.list : [];
-  const pluginTotal = typeof wpTelemetry.plugins?.total === "number" ? wpTelemetry.plugins.total : pluginList.length;
-  const pluginActive = typeof wpTelemetry.plugins?.active === "number" ? wpTelemetry.plugins.active : pluginList.length;
-  const pluginOutdated = typeof wpTelemetry.plugins?.outdated === "number" ? wpTelemetry.plugins.outdated : 0;
-  const pluginVulnerable = typeof wpTelemetry.plugins?.vulnerable === "number" ? wpTelemetry.plugins.vulnerable : 0;
+  const activePlugins = facts.plugins.active ?? pluginList.length;
 
-  const wordpressData: WordPress = {
-    score: baselineWordPressScore,
-    grade: getScoreGrade(baselineWordPressScore),
+  const previousScore = typeof wpTelemetry.trend?.previousScore === "number" ? wpTelemetry.trend.previousScore : null;
+  const trend = computeTrend(previousScore, weightedScore);
+
+  return {
+    score: weightedScore,
+    coverage: health.score.coverage,
+    grade: getScoreGrade(weightedScore ?? 0),
     version: {
       current: currentVersion,
       latest: latestVersion,
       outdated,
       securityRisk: outdated ? "high" as const : "low" as const,
-      releaseDate: wpTelemetry.latestReleaseDate || "",
-      daysOld: outdated ? daysSince(wpTelemetry.latestReleaseDate) : 0,
+      releaseDate: facts.core.latestReleaseDate ?? "",
+      daysOld: outdated ? daysSince(facts.core.latestReleaseDate ?? undefined) : 0,
     },
     security: {
-      defaultLoginExposed: false,
-      userEnumerationBlocked: true,
-      xmlrpcEnabled: apiData.cms.wp.xmlrpc ?? false,
-      xmlrpcVulnerable: false,
-      wpDebugMode: !!wpTelemetry.security?.wpDebugMode,
-      directoryListingDisabled: true,
+      defaultLoginExposed: facts.security.loginProtected === null ? null : !facts.security.loginProtected,
+      userEnumerationBlocked: facts.protections.userEnumerationBlocked,
+      xmlrpcEnabled: facts.protections.xmlrpcDisabled === true
+        ? false
+        : facts.security.xmlrpcReachable,
+      xmlrpcVulnerable: null,
+      wpDebugMode: facts.security.debugMode,
+      directoryListingDisabled: null,
       securityPlugins: [],
     },
     plugins: {
-      total: pluginTotal,
-      active: pluginActive,
-      outdated: pluginOutdated,
-      vulnerable: pluginVulnerable,
+      total: activePlugins,
+      active: activePlugins,
+      outdated: facts.plugins.outdated ?? 0,
+      vulnerable: facts.plugins.vulnerable ?? 0,
       list: pluginList,
     },
     themes: {
       active: wpTelemetry.theme?.active || snapshot.activeTheme?.name || "Unknown Theme",
-      version: "1.0",
-      latest: "1.0",
+      version: "",
+      latest: "",
       outdated: false,
       parent: null,
       childTheme: Boolean(wpTelemetry.theme?.childTheme ?? snapshot.activeTheme?.hasChildTheme),
@@ -434,10 +439,12 @@ function transformWordPressData(apiData: any) {
       wpCron: true,
     },
     performanceData: {
-      objectCache: false,
-      opcacheEnabled: wpTelemetry.performance?.opcacheEnabled ?? true,
-      gzipEnabled: apiData.headers?.["content-encoding"]?.includes("gzip") || false,
-      lazyLoadEnabled: false,
+      objectCache: facts.performance.objectCache,
+      opcacheEnabled: facts.performance.opcache,
+      gzipEnabled: facts.performance.compression === null
+        ? null
+        : /\b(gzip|br|zstd)\b/i.test(facts.performance.compression),
+      lazyLoadEnabled: null,
       cdn: null,
     },
     connection: {
@@ -457,31 +464,17 @@ function transformWordPressData(apiData: any) {
       description: `Owner: ${item.owner ?? "wp_engineer"} · ETA: ${item.eta ?? "TBD"}`,
       action: item.task ?? "Review remediation task",
     })),
-  };
-
-  const healthFindings = crewWordPress.findings.length > 0
-    ? crewWordPress.findings
-    : buildWordPressHealthFindings(wordpressData);
-  const categoryScores = calculateWordPressCategoryScores(healthFindings);
-  const weightedScore = typeof crewWordPress.overallScore === "number"
-    ? Math.max(0, Math.min(100, Math.round(crewWordPress.overallScore)))
-    : calculateWordPressWeightedScore(categoryScores);
-  const previousScore = wpTelemetry.trend?.previousScore ?? Math.max(0, weightedScore - 4);
-  const scoreDelta = weightedScore - previousScore;
-
-  return {
-    ...wordpressData,
-    score: weightedScore,
-    grade: getScoreGrade(weightedScore),
-    categoryScores,
-    trend: {
-      previous: previousScore,
-      current: weightedScore,
-      delta: scoreDelta,
-      direction: (scoreDelta > 0 ? "up" : scoreDelta < 0 ? "down" : "flat") as "up" | "down" | "flat",
-      scannedAt: new Date().toISOString(),
-    },
-    healthFindings,
+    categoryScores: health.view.categoryScores,
+    ...(trend
+      ? {
+          trend: {
+            ...trend,
+            direction: (trend.delta > 0 ? "up" : trend.delta < 0 ? "down" : "flat") as "up" | "down" | "flat",
+            scannedAt: facts.observedAt ?? new Date().toISOString(),
+          },
+        }
+      : {}),
+    healthFindings: health.view.findings,
   };
 }
 
@@ -1004,6 +997,10 @@ export function transformToSiteCockpitResponse(apiData: any): SiteCockpitRespons
   const warnings = Object.values(categoryInsights).reduce((sum, item) => sum + item.warnings, 0);
   const passed = Object.values(categoryInsights).reduce((sum, item) => sum + item.passed, 0);
 
+  const wordpressData = apiData.cms?.type === "wordpress" && apiData.cms?.wp
+    ? transformWordPressData(apiData)
+    : undefined;
+
   return {
     // === BASIC INFO ===
     inputUrl: apiData.inputUrl || apiData.finalUrl,
@@ -1025,7 +1022,7 @@ export function transformToSiteCockpitResponse(apiData: any): SiteCockpitRespons
         seo: seoScore,
         accessibility: accessibilityScore,
         content: contentScore,
-        ...(apiData.cms?.type === "wordpress" ? { wordpress: 68 } : {}),
+        ...(typeof wordpressData?.score === "number" ? { wordpress: wordpressData.score } : {}),
       },
       strengths: generateStrengths(apiData, performanceScore, securityScore, seoScore, accessibilityScore),
       categoryInsights,
@@ -1046,9 +1043,7 @@ export function transformToSiteCockpitResponse(apiData: any): SiteCockpitRespons
     cms: apiData.cms || { type: "unknown", signals: [] },
 
     // === WORDPRESS SPOTLIGHT (Conditional) ===
-    ...(apiData.cms?.type === "wordpress" && apiData.cms?.wp
-      ? { wordpress: transformWordPressData(apiData) }
-      : {}),
+    ...(wordpressData ? { wordpress: wordpressData } : {}),
 
     // === CORE CATEGORIES ===
     seo: transformSEOData(apiData, seoScore),

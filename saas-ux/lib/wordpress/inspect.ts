@@ -104,6 +104,8 @@ export function buildSnapshot(
     seoPlugin: detectSeoPlugin(pull.plugins),
     activePlugins: pull.plugins,
     capabilities: normalizeCapabilities(capabilities),
+    // Connector ≥1.4 reports which GetSafe 360 protections are switched on.
+    ...(pull.protections ? { protections: pull.protections } : {}),
     issues: [],
   };
 }

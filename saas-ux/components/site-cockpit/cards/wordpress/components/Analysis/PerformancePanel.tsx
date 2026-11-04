@@ -4,10 +4,10 @@
 import { CheckCircle, AlertTriangle } from "lucide-react";
 
 interface PerformanceData {
-  objectCache: boolean;
-  opcacheEnabled: boolean;
-  gzipEnabled: boolean;
-  lazyLoadEnabled: boolean;
+  objectCache: boolean | null;
+  opcacheEnabled: boolean | null;
+  gzipEnabled: boolean | null;
+  lazyLoadEnabled: boolean | null;
 }
 
 interface PerformancePanelProps {
@@ -21,7 +21,7 @@ export function PerformancePanel({ performance }: PerformancePanelProps) {
         label="Object Cache"
         value={performance.objectCache}
         recommendation={
-          !performance.objectCache ? "Enable for 40% speed boost" : undefined
+          performance.objectCache === false ? "Enable for 40% speed boost" : undefined
         }
       />
       <PerformanceMetric label="OPcache" value={performance.opcacheEnabled} />
@@ -40,7 +40,8 @@ export function PerformancePanel({ performance }: PerformancePanelProps) {
 // Performance Metric Component
 interface PerformanceMetricProps {
   label: string;
-  value: boolean;
+  /** null = not observed yet. */
+  value: boolean | null;
   recommendation?: string;
 }
 
@@ -49,6 +50,17 @@ function PerformanceMetric({
   value,
   recommendation,
 }: PerformanceMetricProps) {
+  if (value === null) {
+    return (
+      <div className="p-3 rounded-lg border border-white/10">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-gray-400">{label}</span>
+        </div>
+        <div className="text-sm font-semibold text-gray-500">Unknown</div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`p-3 rounded-lg border ${
