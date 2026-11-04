@@ -1,0 +1,35 @@
+name: Backend tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crewai_backend/**"
+      - ".github/workflows/backend-tests.yml"
+  pull_request:
+    paths:
+      - "crewai_backend/**"
+      - ".github/workflows/backend-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: crewai_backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # The gateway tests stub CrewService, so the heavy crewai stack is not needed here.
+      - name: Install test dependencies
+        run: pip install "Flask>=2.2.3" flask-cors python-dotenv pyyaml gunicorn pytest
+      - name: Check gunicorn config loads
+        run: python -c "import runpy; runpy.run_path('gunicorn.conf.py')"
+      - name: Run tests
+        run: python -m pytest -q tests
