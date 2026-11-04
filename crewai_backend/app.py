@@ -364,12 +364,18 @@ def get_test_results(test_id: str):
 
 @app.route("/analyze", methods=["POST"])
 def legacy_analyze():
-    data = request.get_json(force=True)
-    url = data.get("url") if isinstance(data, dict) else None
-    if not url:
+    data = request.get_json(silent=True) or {}
+    # The Next.js agents service sends `siteUrl`; older callers send `url`.
+    url = (data.get("url") or data.get("siteUrl")) if isinstance(data, dict) else None
+    if not isinstance(url, str) or not url:
         return jsonify({"error": "Missing URL"}), 400
 
-    result = CREW.run_full_audit(url)
+    try:
+        validated_url = validate_url(url)
+    except ValueError as err:
+        return jsonify({"error": str(err)}), 400
+
+    result = CREW.run_full_audit(validated_url)
     return jsonify(result)
 
 
