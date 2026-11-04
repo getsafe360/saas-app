@@ -71,7 +71,7 @@ GetSafe360 is an **AI-powered website optimization platform** that empowers webs
 |------------|---------|
 | CrewAI (Python) | Multi-agent orchestration (SEO, Performance, Security, A11y) |
 | Flask | HTTP gateway for AI agents |
-| Anthropic API | LLM inference (claude-opus-4-6 default) |
+| Anthropic API | LLM inference (model set in `crewai_backend/config/models.yaml`; `CREW_MODEL` env overrides) |
 
 ### Database
 

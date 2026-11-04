@@ -8,6 +8,8 @@ from typing import Dict
 
 from dotenv import load_dotenv
 
+from model_config import resolve_model
+
 class ConfigError(RuntimeError):
     """Raised when mandatory runtime configuration is missing or invalid."""
 
@@ -25,7 +27,7 @@ class Settings:
         settings = cls(
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
             crewai_api_key=os.getenv("CREWAI_API_KEY") or None,
-            default_model=os.getenv("CREW_DEFAULT_MODEL", "anthropic/claude-opus-4-6"),
+            default_model=resolve_model(),
             app_env=os.getenv("APP_ENV", "development"),
         )
         settings.validate_required()

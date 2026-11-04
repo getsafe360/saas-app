@@ -26,17 +26,6 @@ performance_audit_task:
     Key performance metrics and a prioritized list of recommendations to improve load speed and user experience.
   agent: performance_agent
 
-performance_task:
-  description: |
-    Analyze the web performance profile for {url} with a Core Web Vitals focus.
-    Evaluate LCP, INP, CLS, TTFB, render-blocking resources, image/font optimization, caching strategy,
-    bundle size, third-party script cost, and server/network bottlenecks.
-    Return strict JSON only with fields: module, score, vitals, bottlenecks, recommendations, validation_steps.
-    Every recommendation must include priority, estimated impact, implementation_effort, and quick_win flag.
-  expected_output: >
-    Strict JSON performance audit with Core Web Vitals assessment and prioritized, high-impact optimizations.
-  agent: performance_agent
-
 accessibility_audit_task:
   description: >
     Audit the website at {url} for accessibility issues according to WCAG guidelines. Identify missing ARIA labels, navigation issues, color contrast, etc.
@@ -62,17 +51,6 @@ security_audit_task:
     Security findings, severity level, and actionable recommendations for each issue.
   agent: security_agent
 
-security_task:
-  description: |
-    Perform a high-level website security assessment for {url}.
-    Review transport security (TLS/SSL), HTTP security headers, cookie flags, authentication/session risks,
-    exposed admin or debug surfaces, dependency/configuration weaknesses, and common OWASP-style misconfigurations.
-    Return strict JSON only with fields: module, security_score, risks, mitigations, verification_steps.
-    Each risk must include severity, confidence, evidence, exploitation_likelihood, and business_impact.
-  expected_output: >
-    Strict JSON security report with prioritized vulnerabilities and practical mitigation guidance.
-  agent: security_agent
-
 content_audit_task:
   description: >
     Review the website content at {url}. Analyze for grammar, keyword distribution, clarity, and user engagement. Highlight strengths and weaknesses.
@@ -81,25 +59,30 @@ content_audit_task:
   agent: content_agent
 
 wordpress_audit_task:
-  description: >
-    Perform an engineering-grade WordPress diagnostic for {url}.
-    The output MUST be strict JSON for deterministic downstream parsing and include:
-    module, overall_score, findings[], repair_backlog[], and validation checks.
-    Include confidence for each finding and place weak-evidence findings in a manual-verification queue.
+  description: |
+    Perform a WordPress diagnostic for {url} from public evidence only.
+    You only have public access to {url}: HTTP responses, HTML, headers, robots.txt, sitemap and public REST routes.
+    Report only what that public evidence shows, and quote the evidence. Server-side state (plugin versions,
+    database, cron, debug settings, file integrity, backups) is invisible to you: list such items under
+    needs_connector instead of guessing. Never assign a pass/fail status without evidence.
+    Return strict JSON only with fields: module, findings, repair_backlog, needs_connector.
+    For each finding include: id, title, severity (critical|high|medium|low), confidence (high|medium|low), evidence, recommended_fix.
   expected_output: >
-    Strict JSON WordPress diagnostic with policy checks, prioritized findings, remediation backlog, and validation status.
+    Strict JSON WordPress diagnostic: evidence-backed findings, remediation backlog, and items that need the connector.
   agent: wordpress_agent
 
 wordpress_audit:
   description: |
-    Perform a production-grade WordPress platform audit for {url}.
-    Inspect update posture (core/themes/plugins), backup reliability, plugin/theme risk, cron health,
-    database and media hygiene, caching/CDN behavior, uptime resilience, and observability readiness.
-    Return strict JSON only with fields: module, overall_score, findings, repair_backlog, validation_checks.
+    Perform a WordPress platform audit for {url} from public evidence only.
+    You only have public access to {url}: HTTP responses, HTML, headers, robots.txt, sitemap and public REST routes.
+    Report only what that public evidence shows, and quote the evidence. Server-side state (plugin versions,
+    database, cron, debug settings, file integrity, backups) is invisible to you: list such items under
+    needs_connector instead of guessing. Never assign a pass/fail status without evidence.
+    Return strict JSON only with fields: module, findings, repair_backlog, needs_connector.
     For each finding include: id, title, severity (critical|high|medium|low), confidence (high|medium|low),
     evidence, business_impact, and fix_summary.
   expected_output: >
-    Strict JSON with prioritized WordPress findings, scored risk overview, and verifiable remediation steps.
+    Strict JSON with evidence-backed WordPress findings, a remediation backlog, and items that need the connector.
   agent: wordpress_auditor
 
 affiliate_expansion_task:
@@ -127,7 +110,6 @@ reporting_task:
     and optimization/repair steps for SEO, performance, accessibility, security, and WordPress platform health.
   agent: reporting_agent
 
-
 site_snapshot_task:
   description: |
     Produce a fast Pareto-style homepage snapshot for {url} with minimal token usage.
@@ -152,11 +134,14 @@ site_snapshot:
 
 wordpress_snapshot:
   description: |
-    Run a lightweight WordPress-focused snapshot for {url}.
-    Focus on admin/backend security posture, outdated plugins/themes risk, and backend performance bottlenecks.
-    Return strict JSON only with fields: module, wordpress_findings.
+    Run a lightweight WordPress snapshot for {url} from public evidence only.
+    You only have public access to {url}: HTTP responses, HTML, headers, robots.txt, sitemap and public REST routes.
+    Report only what that public evidence shows, and quote the evidence. Server-side state (plugin versions,
+    database, cron, debug settings, file integrity, backups) is invisible to you: list such items under
+    needs_connector instead of guessing. Never assign a pass/fail status without evidence.
+    Return strict JSON only with fields: module, wordpress_findings, needs_connector.
   expected_output: >
-    Strict JSON WordPress snapshot with concise, high-impact findings.
+    Strict JSON WordPress snapshot with concise, evidence-backed findings.
   agent: wordpress_auditor
 
 sparky_summary:
