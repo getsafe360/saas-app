@@ -51,25 +51,64 @@ export function parseRollbackRequest(raw: unknown): WordPressConnectorActionRequ
   return null;
 }
 
-export function planRollback(runs: ReadonlyArray<RollbackCandidate>): {
+/**
+ * A run can be undone when the connector returned a valid inverse. That only
+ * happens when it applied the change, so this includes runs recorded as
+ * `failed` because live verification failed afterwards (e.g. a CDN still
+ * serving cached headers): WordPress was modified and must stay undoable.
+ */
+function isUndoable(run: RollbackCandidate): boolean {
+  return (run.status === 'applied' || run.status === 'failed') && parseRollbackRequest(run.rollbackPayload) !== null;
+}
+
+const newestFirst = (a: RollbackCandidate, b: RollbackCandidate) =>
+  new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime();
+
+export interface RollbackBlock {
+  runId: string;
+  /** Newer, still-applied runs of the same fixer that must be undone first. */
+  newerRunIds: string[];
+}
+
+/**
+ * Plan an undo of `selected`. Inverses are full snapshots of the fixer's state
+ * before that run, so replaying one while a newer run of the same fixer is
+ * still applied would also wipe the newer change. `siteRuns` (every run of
+ * those fixers on the site) lets us refuse that instead of corrupting state.
+ */
+export function planRollback(
+  selected: ReadonlyArray<RollbackCandidate>,
+  siteRuns: ReadonlyArray<RollbackCandidate> = selected,
+): {
   planned: PlannedRollback[];
   notReversible: string[];
+  blocked: RollbackBlock[];
 } {
-  const planned: PlannedRollback[] = [];
-  const notReversible: string[] = [];
+  const selectedIds = new Set(selected.map((run) => run.id));
+  const candidates = selected.filter((run) => run.status === 'applied' || run.status === 'failed');
+  const notReversible = candidates.filter((run) => !isUndoable(run)).map((run) => run.id);
+  const undoable = candidates.filter(isUndoable).sort(newestFirst);
 
-  const applied = runs
-    .filter((run) => run.status === 'applied')
-    .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
-
-  for (const run of applied) {
-    const request = parseRollbackRequest(run.rollbackPayload);
-    if (request) {
-      planned.push({ runId: run.id, request });
-    } else {
-      notReversible.push(run.id);
-    }
+  const blocked: RollbackBlock[] = [];
+  for (const run of undoable) {
+    const startedAt = new Date(run.startedAt).getTime();
+    const newerRunIds = siteRuns
+      .filter(
+        (other) =>
+          other.actionId === run.actionId &&
+          !selectedIds.has(other.id) &&
+          isUndoable(other) &&
+          new Date(other.startedAt).getTime() > startedAt,
+      )
+      .map((other) => other.id);
+    if (newerRunIds.length > 0) blocked.push({ runId: run.id, newerRunIds });
   }
 
-  return { planned, notReversible };
+  return {
+    planned: blocked.length > 0
+      ? []
+      : undoable.map((run) => ({ runId: run.id, request: parseRollbackRequest(run.rollbackPayload)! })),
+    notReversible,
+    blocked,
+  };
 }

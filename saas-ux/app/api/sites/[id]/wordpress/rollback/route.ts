@@ -84,7 +84,34 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
       ),
     );
 
-  const { planned, notReversible } = planRollback(runs);
+  // Every run of the same fixers on this site, to detect newer changes that
+  // replaying an older snapshot would overwrite.
+  const fixerIds = [...new Set(runs.map((run) => run.actionId))];
+  const siteRuns = fixerIds.length === 0
+    ? []
+    : await db
+        .select({
+          id: wordpressActionRuns.id,
+          actionId: wordpressActionRuns.actionId,
+          status: wordpressActionRuns.status,
+          rollbackPayload: wordpressActionRuns.rollbackPayload,
+          startedAt: wordpressActionRuns.startedAt,
+        })
+        .from(wordpressActionRuns)
+        .where(and(eq(wordpressActionRuns.siteId, siteId), inArray(wordpressActionRuns.actionId, fixerIds)));
+
+  const { planned, notReversible, blocked } = planRollback(runs, siteRuns);
+  if (blocked.length > 0) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'UNDO_NEWER_CHANGES_FIRST',
+        message: 'Newer changes to the same setting are still applied → undo those first.',
+        blocked,
+      },
+      { status: 409 },
+    );
+  }
   if (planned.length === 0) {
     return NextResponse.json(
       { success: false, error: 'NO_REVERSIBLE_ACTIONS', notReversible },

@@ -189,3 +189,32 @@ test('rollback replays stored inverses newest first and rejects unknown shapes',
   assert.equal(parseRollbackRequest({ id: 'a', type: 'run_php', payload: {} }), null);
   assert.equal(parseRollbackRequest({ id: 'a', type: 'set_security_headers', payload: { headers: { X: 1 } } }), null);
 });
+
+const headersRun = (id: string, startedAt: string, status = 'applied') => ({
+  id,
+  actionId: 'security-headers',
+  status,
+  startedAt,
+  rollbackPayload: { id: 'security-headers-rollback', type: 'set_security_headers', payload: { replace: true, headers: {} } },
+});
+
+test('rollback includes changes the connector applied even if verification failed', () => {
+  const { planned } = planRollback([headersRun('cdn-cached', '2026-11-01T10:00:00Z', 'failed')]);
+  assert.deepEqual(planned.map((entry) => entry.runId), ['cdn-cached']);
+});
+
+test('rollback refuses to replay an older snapshot under a newer change', () => {
+  const older = headersRun('a', '2026-11-01T10:00:00Z');
+  const newer = headersRun('b', '2026-11-02T10:00:00Z');
+
+  const outOfOrder = planRollback([older], [older, newer]);
+  assert.deepEqual(outOfOrder.planned, []);
+  assert.deepEqual(outOfOrder.blocked, [{ runId: 'a', newerRunIds: ['b'] }]);
+
+  const together = planRollback([older, newer], [older, newer]);
+  assert.deepEqual(together.blocked, []);
+  assert.deepEqual(together.planned.map((entry) => entry.runId), ['b', 'a']);
+
+  const alreadyUndone = planRollback([older], [older, { ...newer, status: 'rolled_back' }]);
+  assert.deepEqual(alreadyUndone.planned.map((entry) => entry.runId), ['a']);
+});
