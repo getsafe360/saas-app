@@ -13,7 +13,6 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { hashPassword } from '@/lib/auth/session';
 import { ensureAppUserId } from '@/lib/auth/ensure-app-user';
 import { isPublicUrlResolved } from '@/lib/net/isPublicUrlResolved';
-import { put } from '@vercel/blob';
 
 const DEV = process.env.NODE_ENV !== 'production';
 
@@ -96,23 +95,6 @@ export async function POST(req: NextRequest) {
       { ok: false, error: 'DB_INSERT_FAILED', message: String(e?.message ?? e) },
       { status: 500, headers: { 'X-Request-Id': requestId } }
     );
-  }
-
-  // Also write a Blob record so detail pages load instantly
-  try {
-    const record = {
-      siteId,
-      siteUrl,
-      status: 'pending',
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    };
-    await put(`sites/${siteId}.json`, JSON.stringify(record, null, 2), {
-      access: 'public',
-      contentType: 'application/json'
-    });
-  } catch (e) {
-    if (DEV) console.warn('[sites/add] Blob write failed (non-fatal)', e);
   }
 
   return NextResponse.json(

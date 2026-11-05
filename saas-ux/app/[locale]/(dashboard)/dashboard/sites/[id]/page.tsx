@@ -1,7 +1,4 @@
 // app/[locale]/(dashboard)/dashboard/sites/[id]/page.tsx
-import { getDb } from "@/lib/db/drizzle";
-import { sites } from "@/lib/db/schema/sites";
-import { eq } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,14 +64,19 @@ export async function generateMetadata({
   };
 }
 
+/** The site's database row, mapped to what this page shows. Only the owner gets it. */
 async function getSite(id: string): Promise<SiteRecord | null> {
-  const { blobs } = await list({ prefix: `sites/${id}.json` });
-  const b = blobs[0];
-  if (!b) return null;
-  const r = await fetch(b.url, { cache: "no-store" });
-  const j = await r.json().catch(() => null);
-  if (!j || !j.siteId || !j.siteUrl) return null;
-  return j as SiteRecord;
+  const row = await getOwnedSite(id);
+  if (!row) return null;
+  return {
+    siteId: row.id,
+    siteUrl: row.siteUrl,
+    status: row.status,
+    wpVersion: row.wpVersion ?? null,
+    pluginVersion: row.pluginVersion ?? null,
+    createdAt: new Date(row.createdAt).getTime(),
+    updatedAt: new Date(row.updatedAt).getTime(),
+  };
 }
 
 async function getFaviconUrl(siteId: string): Promise<string | null> {
@@ -123,8 +125,6 @@ export default async function SiteDetail({
   const justConnected = Array.isArray(sp.connected)
     ? sp.connected[0] === "1"
     : sp.connected === "1";
-  // The detail record is a public blob, so ownership is checked in the database first.
-  if (!(await getOwnedSite(id))) return notFound();
   const site = await getSite(id);
   if (!site) return notFound();
 

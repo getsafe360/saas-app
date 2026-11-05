@@ -7,7 +7,6 @@ import { sites } from '@/lib/db/schema/sites';
 import { and, eq } from 'drizzle-orm';
 import { generateSiteToken, hashToken, createWordPressConnection } from '@/lib/wordpress/auth';
 import { logPairingComplete, logConnectionError } from '@/lib/wordpress/logger';
-import { put } from '@vercel/blob';
 import crypto from 'crypto';
 import { clientIp, rateLimit, tooManyRequests } from '@/lib/api/rate-limit';
 
@@ -234,23 +233,6 @@ export async function POST(req: NextRequest) {
               redis.set(`pairing:code:${pairCode}`, JSON.stringify(conflictUsedRecord), { ex: PAIRING_TTL_SEC }),
               redis.set(`pairing:id:${record.id}`, JSON.stringify(conflictUsedRecord), { ex: PAIRING_TTL_SEC }),
             ]);
-            try {
-              await put(
-                `sites/${conflict.id}.json`,
-                JSON.stringify({
-                  siteId: conflict.id,
-                  siteUrl: finalSiteUrl,
-                  status: 'connected',
-                  wpVersion: wpVersion || null,
-                  pluginVersion: pluginVersion || null,
-                  createdAt: now,
-                  updatedAt: now,
-                }),
-                { access: 'public', contentType: 'application/json' }
-              );
-            } catch (e) {
-              console.error('[handshake] write site blob failed', e);
-            }
             await logPairingComplete(conflict.id);
             return jsonNoStore({ siteId: conflict.id, siteToken });
           }
@@ -275,23 +257,6 @@ export async function POST(req: NextRequest) {
       redis.set(`pairing:code:${pairCode}`, JSON.stringify(usedRecord), { ex: PAIRING_TTL_SEC }),
       redis.set(`pairing:id:${record.id}`, JSON.stringify(usedRecord), { ex: PAIRING_TTL_SEC }),
     ]);
-    try {
-      await put(
-        `sites/${siteId}.json`,
-        JSON.stringify({
-          siteId,
-          siteUrl: finalSiteUrl,
-          status: 'connected',
-          wpVersion: wpVersion || null,
-          pluginVersion: pluginVersion || null,
-          createdAt: now,
-          updatedAt: now,
-        }),
-        { access: 'public', contentType: 'application/json' }
-      );
-    } catch (e) {
-      console.error('[handshake] write site blob failed', e);
-    }
     await logPairingComplete(siteId);
     return jsonNoStore({ siteId, siteToken });
   } catch (e: any) {
