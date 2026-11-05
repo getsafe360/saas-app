@@ -22,7 +22,7 @@ import {
 } from "@/lib/wordpress/inspect";
 import type { WordPressSiteSnapshot } from "@/lib/wordpress/types";
 import { parseWordPressAudit } from "@/lib/wordpress/audit-types";
-import { probeEmailDns } from "@/lib/engine/security/email-dns";
+import { probeEmailDns } from "@/lib/engine/security/email-dns-probe";
 import { evaluateWordPressHealthFromApiData } from "@/lib/engine/wordpress/view";
 
 export const runtime = "nodejs";

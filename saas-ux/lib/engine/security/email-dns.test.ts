@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { evaluateRules } from '../rules';
-import { EMAIL_DNS_RULES, buildEmailDnsFacts, mailDomainFor, probeEmailDns } from './email-dns';
+import { EMAIL_DNS_RULES, buildEmailDnsFacts, mailDomainFor } from './email-dns';
+import { probeEmailDns } from './email-dns-probe';
 
 const dnsError = (code: string) => Object.assign(new Error(code), { code });
 
