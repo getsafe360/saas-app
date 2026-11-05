@@ -9,14 +9,17 @@ export interface EmailDnsFacts {
   domain: string | null;
   /** TXT records at the domain starting with v=spf1; null when the lookup failed. */
   spf: string[] | null;
-  /** TXT records at _dmarc.<domain> starting with v=DMARC1; null when the lookup failed. */
+  /** DMARC records that apply (own or inherited); null when the lookup failed. */
   dmarc: string[] | null;
+  /** Domain whose _dmarc record applies; differs from `domain` when inherited. */
+  dmarcSource: string | null;
 }
 
 export interface EmailDnsProbe {
   domain: string;
   spf: string[] | null;
   dmarc: string[] | null;
+  dmarcSource: string | null;
   checkedAt: string;
 }
 
@@ -39,11 +42,12 @@ export function buildEmailDnsFacts(apiData: Record<string, any> | null | undefin
     domain: typeof probe?.domain === 'string' ? probe.domain : null,
     spf: list(probe?.spf),
     dmarc: list(probe?.dmarc),
+    dmarcSource: typeof probe?.dmarcSource === 'string' ? probe.dmarcSource : null,
   };
 }
 
-function dmarcPolicy(record: string): string | null {
-  const match = /(?:^|;)\s*p\s*=\s*([a-z]+)/i.exec(record);
+function dmarcTag(record: string, tag: string): string | null {
+  const match = new RegExp(`(?:^|;)\\s*${tag}\\s*=\\s*([a-z]+)`, 'i').exec(record);
   return match ? match[1].toLowerCase() : null;
 }
 
@@ -95,7 +99,7 @@ export const EMAIL_DNS_RULES: ReadonlyArray<Rule<EmailDnsFacts>> = [
     recommendation:
       'Publish a DMARC record at _dmarc.<domain>; start with p=none and a reporting address, then move to p=quarantine or p=reject.',
     fix: { fixerId: 'dns-publish-dmarc', automation: 'guided', risk: 'medium', reversible: true },
-    evaluate: ({ domain, dmarc }) => {
+    evaluate: ({ domain, dmarc, dmarcSource }) => {
       if (!domain || dmarc === null) return unknown('The DMARC record could not be looked up.');
       if (dmarc.length === 0) {
         return {
@@ -104,14 +108,28 @@ export const EMAIL_DNS_RULES: ReadonlyArray<Rule<EmailDnsFacts>> = [
           impact: { riskReduction: 12 },
         };
       }
+      if (dmarc.length > 1) {
+        return {
+          status: 'fail',
+          summary: `${dmarcSource ?? domain} publishes ${dmarc.length} DMARC records; receivers then apply none of them.`,
+          observed: dmarc.join(' | '),
+          impact: { riskReduction: 12 },
+        };
+      }
       const record = dmarc[0];
-      const policy = dmarcPolicy(record);
+      const inherited = dmarcSource !== null && dmarcSource !== domain;
+      // A parent domain's record governs subdomains through sp=, falling back to p=.
+      const policy = (inherited ? dmarcTag(record, 'sp') : null) ?? dmarcTag(record, 'p');
+      const from = inherited ? ` (inherited from ${dmarcSource})` : '';
       if (policy === 'quarantine' || policy === 'reject') {
-        return { status: 'pass', summary: `DMARC policy is "${policy}".`, observed: record };
+        return { status: 'pass', summary: `DMARC policy is "${policy}"${from}.`, observed: record };
       }
       return {
         status: 'warn',
-        summary: policy === 'none' ? 'DMARC only monitors (p=none); spoofed mail is still delivered.' : 'The DMARC record has no valid policy.',
+        summary:
+          policy === 'none'
+            ? `DMARC only monitors (p=none)${from}; spoofed mail is still delivered.`
+            : `The DMARC record has no valid policy${from}.`,
         observed: record,
         impact: { riskReduction: 6 },
       };

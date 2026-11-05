@@ -46,9 +46,10 @@ export async function probeEmailDns(
     Promise.race([promise, new Promise<null>((done) => setTimeout(() => done(null), timeoutMs))]);
 
   const failed: TxtLookup = { kind: 'failed' };
+  const DMARC_PREFIX = /^v=DMARC1\s*;?/i;
   const [apex, dmarcName] = await Promise.all([
     withTimeout(lookupTxt(resolve, domain, /^v=spf1(\s|$)/i)).then((r) => r ?? failed),
-    withTimeout(lookupTxt(resolve, `_dmarc.${domain}`, /^v=DMARC1\s*;?/i)).then((r) => r ?? failed),
+    withTimeout(lookupTxt(resolve, `_dmarc.${domain}`, DMARC_PREFIX)).then((r) => r ?? failed),
   ]);
 
   // An answer for the site's own domain proves the resolver works. Only then
@@ -56,13 +57,33 @@ export async function probeEmailDns(
   // answers "not found" for everything must not fail every site.
   const resolverWorks = apex.kind === 'records';
   const spf = apex.kind === 'records' ? apex.records : null;
-  const dmarc =
-    dmarcName.kind === 'records'
-      ? dmarcName.records
-      : dmarcName.kind === 'nxdomain' && resolverWorks
-        ? []
-        : null;
 
-  return { domain, spf, dmarc, checkedAt: new Date().toISOString() };
+  let dmarc: string[] | null = null;
+  let dmarcSource: string | null = null;
+  if (dmarcName.kind === 'records' && dmarcName.records.length > 0) {
+    dmarc = dmarcName.records;
+    dmarcSource = domain;
+  } else if (dmarcName.kind === 'failed' || !resolverWorks) {
+    dmarc = null;
+  } else {
+    // No record for the host itself: walk up to the parent domains, whose
+    // policy covers subdomains (DMARC tree walk, RFC 7489 §6.6.3 / DMARCbis).
+    dmarc = [];
+    const labels = domain.split('.');
+    for (let i = 1; i <= Math.min(labels.length - 2, 5); i += 1) {
+      const parent = labels.slice(i).join('.');
+      const lookup = (await withTimeout(lookupTxt(resolve, `_dmarc.${parent}`, DMARC_PREFIX))) ?? failed;
+      if (lookup.kind === 'failed') {
+        dmarc = null;
+        break;
+      }
+      if (lookup.kind === 'records' && lookup.records.length > 0) {
+        dmarc = lookup.records;
+        dmarcSource = parent;
+        break;
+      }
+    }
+  }
+
+  return { domain, spf, dmarc, dmarcSource, checkedAt: new Date().toISOString() };
 }
-

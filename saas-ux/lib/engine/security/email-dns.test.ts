@@ -89,3 +89,45 @@ test('weak SPF and monitoring-only DMARC warn; duplicate SPF fails', () => {
   const duplicate = evaluate({ domain: 'a.com', spf: ['v=spf1 -all', 'v=spf1 include:x.com -all'], dmarc: [] });
   assert.equal(duplicate.get('email-spf')?.status, 'fail');
 });
+
+test('subdomains inherit the parent DMARC policy, using sp= when set', async () => {
+  const probe = await probeEmailDns('https://shop.example.com', {
+    resolveTxt: resolver({
+      'shop.example.com': dnsError('ENODATA'),
+      '_dmarc.example.com': [['v=DMARC1; p=reject; sp=quarantine']],
+    }),
+  });
+  assert.equal(probe?.dmarcSource, 'example.com');
+  const finding = evaluate(probe).get('email-dmarc');
+  assert.equal(finding?.status, 'pass');
+  assert.match(finding?.summary ?? '', /"quarantine" \(inherited from example\.com\)/);
+
+  const monitorOnly = await probeEmailDns('https://shop.example.com', {
+    resolveTxt: resolver({
+      'shop.example.com': dnsError('ENODATA'),
+      '_dmarc.example.com': [['v=DMARC1; p=reject; sp=none']],
+    }),
+  });
+  assert.equal(evaluate(monitorOnly).get('email-dmarc')?.status, 'warn', 'sp=none overrides p for subdomains');
+
+  const nowhere = await probeEmailDns('https://a.b.example.com', {
+    resolveTxt: resolver({ 'a.b.example.com': dnsError('ENODATA') }),
+  });
+  assert.deepEqual(nowhere?.dmarc, [], 'walked b.example.com and example.com, found nothing');
+  assert.equal(evaluate(nowhere).get('email-dmarc')?.status, 'fail');
+
+  const brokenParent = await probeEmailDns('https://shop.example.com', {
+    resolveTxt: resolver({ 'shop.example.com': dnsError('ENODATA'), '_dmarc.example.com': dnsError('ESERVFAIL') }),
+  });
+  assert.equal(brokenParent?.dmarc, null, 'a failed parent lookup is unknown, not "missing"');
+});
+
+test('multiple DMARC records fail even when one would pass', () => {
+  const byId = evaluate({
+    domain: 'a.com',
+    spf: ['v=spf1 -all'],
+    dmarc: ['v=DMARC1; p=reject', 'v=DMARC1; p=none'],
+    dmarcSource: 'a.com',
+  });
+  assert.equal(byId.get('email-dmarc')?.status, 'fail');
+});
