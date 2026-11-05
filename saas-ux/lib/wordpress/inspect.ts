@@ -167,7 +167,8 @@ export function buildWordPressTelemetry(snapshot: WordPressSiteSnapshot, latestV
 
   return {
     snapshot,
-    latestVersion: latestVersion ?? snapshot.wpVersion ?? null,
+    // Unknown when the wordpress.org lookup failed; never the site's own version.
+    latestVersion: latestVersion ?? null,
     latestReleaseDate: latestReleaseDate ?? null,
     plugins: {
       total: pluginList.length,

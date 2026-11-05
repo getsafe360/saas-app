@@ -9,7 +9,7 @@ import { Redis } from "@upstash/redis";
 import { getRedisCredentials } from "@/lib/api/redis";
 import { getDb } from "@/lib/db/drizzle";
 import { sites, users, wordpressSiteSnapshots } from "@/lib/db/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { getUser } from "@/lib/db/queries";
 import { currentUser } from "@clerk/nextjs/server";
 import type { WordPressConnection } from "@/lib/wordpress/auth";
@@ -21,9 +21,14 @@ import {
   persistWordPressSnapshot,
 } from "@/lib/wordpress/inspect";
 import type { WordPressSiteSnapshot } from "@/lib/wordpress/types";
+import { parseWordPressAudit } from "@/lib/wordpress/audit-types";
+import { probeEmailDns } from "@/lib/engine/security/email-dns";
+import { evaluateWordPressHealthFromApiData } from "@/lib/engine/wordpress/view";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Connector pull + read-only audit (file scans capped at 4 s plugin-side) + pre-scan.
+export const maxDuration = 60;
 
 // Accepts both KV_REST_API_* and UPSTASH_REDIS_REST_* naming — see
 // lib/api/redis.ts. Reading only the latter meant rate limiting was off in
@@ -362,11 +367,18 @@ async function getConnectedWordPressTelemetry(siteId: string) {
 
       snapshot = buildSnapshot(status, capabilities, pull);
       live = true;
-      try {
-        await persistWordPressSnapshot(db, site.id, snapshot, 'cockpit_enrichment');
-      } catch (persistError) {
-        console.warn('[analyze-facts] wordpress snapshot persistence skipped:', persistError);
+
+      // Connector ≥ 1.6: read-only audit. Optional; a failure only leaves checks unknown.
+      if (capabilities.capabilities?.siteAudit) {
+        try {
+          const auditClient = createWordPressClient({ siteUrl: site.siteUrl, tokenHash, timeout: 15000 });
+          const audit = parseWordPressAudit(await auditClient.audit());
+          if (audit) snapshot.audit = audit;
+        } catch (auditError) {
+          console.warn('[analyze-facts] wordpress audit unavailable:', auditError);
+        }
       }
+      // Persisted by the handler once the health score is known (score history).
 
       await db
         .update(sites)
@@ -395,6 +407,30 @@ async function getConnectedWordPressTelemetry(siteId: string) {
     snapshot = (latestSnapshot?.snapshot as WordPressSiteSnapshot | undefined) ?? null;
   }
 
+  // Previous real score for the trend; only meaningful for a fresh (live) snapshot.
+  let previousHealth: { previousScore: number; previousAt: string } | null = null;
+  if (snapshot && live) {
+    try {
+      const [previous] = await db
+        .select({ snapshot: wordpressSiteSnapshots.snapshot, createdAt: wordpressSiteSnapshots.createdAt })
+        .from(wordpressSiteSnapshots)
+        .where(
+          and(
+            eq(wordpressSiteSnapshots.siteId, site.id),
+            sql`jsonb_typeof(${wordpressSiteSnapshots.snapshot}->'health'->'overall') = 'number'`,
+          ),
+        )
+        .orderBy(desc(wordpressSiteSnapshots.createdAt))
+        .limit(1);
+      const score = (previous?.snapshot as WordPressSiteSnapshot | undefined)?.health?.overall;
+      if (typeof score === 'number') {
+        previousHealth = { previousScore: score, previousAt: previous.createdAt.toISOString() };
+      }
+    } catch (historyError) {
+      console.warn('[analyze-facts] wordpress score history unavailable:', historyError);
+    }
+  }
+
   if (!snapshot) {
     return {
       wordpressSiteId: site.id,
@@ -418,6 +454,7 @@ async function getConnectedWordPressTelemetry(siteId: string) {
     wordpressTelemetry: {
       ...buildWordPressTelemetry(snapshot, latestCore.version, latestCore.releaseDate),
       live,
+      ...(previousHealth ? { trend: previousHealth } : {}),
     },
     cms: {
       type: 'wordpress',
@@ -428,6 +465,38 @@ async function getConnectedWordPressTelemetry(siteId: string) {
       },
     },
   };
+}
+
+/**
+ * Store a freshly pulled WordPress snapshot. With a complete pre-scan the
+ * health score is stored with it so later scans can show a trend; a partial
+ * pre-scan stores the snapshot without a score rather than a skewed one.
+ */
+async function persistLiveSnapshot(
+  connected: Awaited<ReturnType<typeof getConnectedWordPressTelemetry>>,
+  enrichedFacts: Record<string, any> | null,
+  completeScan: boolean,
+) {
+  const telemetry = connected?.wordpressTelemetry as { snapshot?: WordPressSiteSnapshot; live?: boolean } | undefined;
+  if (!connected?.wordpressSiteId || !telemetry?.snapshot || !telemetry.live) return;
+
+  const snapshot = telemetry.snapshot;
+  if (completeScan && enrichedFacts) {
+    const { score } = evaluateWordPressHealthFromApiData(enrichedFacts);
+    snapshot.health = {
+      overall: score.overall,
+      coverage: Math.round(score.coverage * 1000) / 1000,
+      categories: Object.fromEntries(
+        Object.entries(score.categories).map(([category, value]) => [category, value?.score ?? null]),
+      ),
+    };
+  }
+
+  try {
+    await persistWordPressSnapshot(getDb(), connected.wordpressSiteId, snapshot, 'cockpit_enrichment');
+  } catch (persistError) {
+    console.warn('[analyze-facts] wordpress snapshot persistence skipped:', persistError);
+  }
 }
 
 function minimalFacts(target: string, hostIP?: string, faviconUrl?: string) {
@@ -530,13 +599,15 @@ export async function GET(req: NextRequest) {
   const connectedWordPressPromise = siteId
     ? getConnectedWordPressTelemetry(siteId).catch(() => null)
     : Promise.resolve(null);
+  const emailDnsPromise = probeEmailDns(target).catch(() => null);
 
   try {
-    const [facts, hostIP, faviconUrl, connectedWordPress] = await Promise.all([
+    const [facts, hostIP, faviconUrl, connectedWordPress, emailDns] = await Promise.all([
       preScan(target, { validate: isPublicUrlResolved }),
       hostIPPromise,
       faviconPromise,
       connectedWordPressPromise,
+      emailDnsPromise,
     ]);
 
     const wordpressModule = (facts.cms?.type === "wordpress" || forceWordPress)
@@ -550,9 +621,12 @@ export async function GET(req: NextRequest) {
       // Always use our reliable favicon fetching
       faviconUrl: faviconUrl,
       wordpressModule,
+      emailDns,
       ...(connectedWordPress ?? {}),
       cms: connectedWordPress?.cms ?? facts.cms,
     };
+
+    await persistLiveSnapshot(connectedWordPress, enrichedFacts, true);
     
     return Response.json(enrichedFacts, {
       headers: {
@@ -562,15 +636,18 @@ export async function GET(req: NextRequest) {
     });
   } catch {
     // Preserve connected WordPress telemetry even if the generic pre-scan fails.
-    const [hostIP, faviconUrl, connectedWordPress] = await Promise.all([
+    const [hostIP, faviconUrl, connectedWordPress, emailDns] = await Promise.all([
       hostIPPromise,
       faviconPromise,
       connectedWordPressPromise,
+      emailDnsPromise,
     ]);
+    await persistLiveSnapshot(connectedWordPress, null, false);
     
     const fallbackBase = minimalFacts(target, hostIP, faviconUrl);
     const fallback = {
       ...fallbackBase,
+      emailDns,
       ...(connectedWordPress ?? {}),
       cms: connectedWordPress?.cms ?? fallbackBase.cms,
     };
