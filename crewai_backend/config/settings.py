@@ -16,7 +16,7 @@ load_dotenv()
 @dataclass(frozen=True)
 class Settings:
     anthropic_api_key: str
-    crewai_api_key: str | None
+    crewai_api_key: str | None  # optional: only for CrewAI cloud tracing
     default_model: str
     app_env: str
 
@@ -35,8 +35,6 @@ class Settings:
         missing = []
         if not self.anthropic_api_key:
             missing.append("ANTHROPIC_API_KEY")
-        if not self.crewai_api_key:
-            missing.append("CREWAI_API_KEY")
         if missing:
             raise ConfigError("Missing required environment variables: " + ", ".join(missing))
 

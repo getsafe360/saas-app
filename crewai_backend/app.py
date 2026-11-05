@@ -6,22 +6,20 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Iterator
-from urllib.parse import urlparse
 
 try:
     from dotenv import load_dotenv
 except Exception:  # noqa: BLE001
     load_dotenv = None
 from flask import Flask, Response, jsonify, request, stream_with_context
-from flask_cors import CORS
-
 from crew import CrewService
+from security import app_environment, init_security, validate_public_url
 
 if load_dotenv is not None:
     load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+init_security(app)
 
 
 @dataclass
@@ -90,10 +88,8 @@ def purge_expired_jobs() -> int:
 
 
 def validate_url(url: str) -> str:
-    parsed = urlparse(url)
-    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-        raise ValueError("url must be a valid http/https URL")
-    return url
+    """Accept only public http(s) targets (blocks SSRF into private networks)."""
+    return validate_public_url(url)
 
 
 def to_sse(event: str, payload: dict[str, Any]) -> str:
@@ -368,28 +364,29 @@ def get_test_results(test_id: str):
 
 @app.route("/analyze", methods=["POST"])
 def legacy_analyze():
-    data = request.get_json(force=True)
-    url = data.get("url") if isinstance(data, dict) else None
-    if not url:
+    data = request.get_json(silent=True) or {}
+    # The Next.js agents service sends `siteUrl`; older callers send `url`.
+    url = (data.get("url") or data.get("siteUrl")) if isinstance(data, dict) else None
+    if not isinstance(url, str) or not url:
         return jsonify({"error": "Missing URL"}), 400
 
-    result = CREW.run_full_audit(url)
+    try:
+        validated_url = validate_url(url)
+    except ValueError as err:
+        return jsonify({"error": str(err)}), 400
+
+    result = CREW.run_full_audit(validated_url)
     return jsonify(result)
 
 
 @app.route("/api/health", methods=["GET"])
 def backend_health():
-    crew_ok = CREW is not None
-    api_key_ok = bool(os.environ.get("ANTHROPIC_API_KEY"))
-    jobs_ok = isinstance(JOBS, dict)
-    healthy = crew_ok and api_key_ok and jobs_ok
-
+    # Public route (Railway health check): report readiness without config details.
+    healthy = CREW is not None and bool(os.environ.get("ANTHROPIC_API_KEY")) and isinstance(JOBS, dict)
     return jsonify({
         "status": "ok" if healthy else "error",
-        "crew_service": crew_ok,
-        "anthropic_key_present": api_key_ok,
-        "jobs_registry": jobs_ok,
-        "message": "Backend is running and healthy" if healthy else "Backend dependencies are not ready",
+        "environment": app_environment(),
+        "version": (os.environ.get("RAILWAY_GIT_COMMIT_SHA") or "local")[:12],
     }), 200 if healthy else 503
 
 

@@ -52,6 +52,10 @@ class TestSSEContract(unittest.TestCase):
         cls.client = cls.app_module.app.test_client()
 
     def setUp(self):
+        # Target-URL validation resolves DNS; keep the contract tests offline and deterministic.
+        resolver = patch("security._resolve", return_value=["93.184.215.14"])
+        resolver.start()
+        self.addCleanup(resolver.stop)
         with self.app_module.JOBS_LOCK:
             self.app_module.JOBS.clear()
 

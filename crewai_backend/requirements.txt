@@ -5,3 +5,4 @@ crewai
 pyyaml
 anthropic
 requests
+gunicorn>=22.0
