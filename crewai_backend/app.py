@@ -38,7 +38,7 @@ class TestJob:
 
 JOBS: dict[str, TestJob] = {}
 JOBS_LOCK = threading.Lock()
-CREW = CrewService(model=os.environ.get("CREW_MODEL", "anthropic/claude-opus-4-6"))
+CREW = CrewService()  # model: CREW_MODEL env, else config/models.yaml
 JOB_TTL_SECONDS = int(os.environ.get("TEST_JOB_TTL_SECONDS", "1800"))
 HEARTBEAT_INTERVAL_SECONDS = int(os.environ.get("TEST_SSE_HEARTBEAT_SECONDS", "10"))
 TERMINAL_JOB_STATUSES = {"completed", "failed", "error"}

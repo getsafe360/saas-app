@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 import yaml
 from crewai import Agent, Crew, Process, Task
 
+from model_config import load_model_settings, resolve_model
+
 logger = logging.getLogger(__name__)
 
 class ConfigurationError(Exception):
@@ -37,8 +39,8 @@ class WebsiteAnalyzerCrew:
         self.agents_config = self._read_yaml("agents.yaml")
         self.tasks_config = self._read_yaml("tasks.yaml")
         self.models_config = self._read_yaml("models.yaml")
-        self.default_model_name = self.models_config.get("default_model", "claude_opus")
-        self.model_settings = self.models_config["models"][self.default_model_name]
+        self.model_settings = load_model_settings(self.CONFIG_DIR)
+        self.model_settings["provider_model"] = resolve_model(self.CONFIG_DIR)
         self._validate_configuration()
 
     def _read_yaml(self, filename: str) -> Dict[str, Any]:
@@ -62,11 +64,6 @@ class WebsiteAnalyzerCrew:
             if not agent_id or agent_id not in self.agents_config:
                 raise ConfigurationError(f"Task '{task_id}' references unknown agent '{agent_id}'")
 
-        provider_model = self.model_settings.get("provider_model")
-        if provider_model != "anthropic/claude-opus-4-6":
-            raise ConfigurationError(
-                "Production model drift detected: default model must resolve to anthropic/claude-opus-4-6"
-            )
 
     def _normalize_modules(self, selected: List[str]) -> List[str]:
         if not selected:
@@ -208,9 +205,9 @@ class CrewService:
 
     CONFIG_DIR = WebsiteAnalyzerCrew.CONFIG_DIR
 
-    def __init__(self, model: str = "anthropic/claude-opus-4-6", config_dir: Optional[Path] = None) -> None:
+    def __init__(self, model: Optional[str] = None, config_dir: Optional[Path] = None) -> None:
         self.config_dir = config_dir or self.CONFIG_DIR
-        self.model = model
+        self.model = model or resolve_model(self.config_dir)
         self.agents_config = self._read_yaml("agents.yaml")
         self.tasks_config = self._read_yaml("tasks.yaml")
         self._validate()
@@ -447,6 +444,6 @@ class CrewService:
             return {}
 
 
-def create_wordpress_crew(model: str = "anthropic/claude-opus-4-6") -> CrewService:
+def create_wordpress_crew(model: Optional[str] = None) -> CrewService:
     """Factory for microservice-compatible WordPress task execution."""
     return CrewService(model=model)
