@@ -43,6 +43,8 @@ file_put_contents($version_file, $original . "\n// tampered by integration test\
 $uploads = wp_upload_dir();
 wp_mkdir_p($uploads['basedir'] . '/2026/11');
 file_put_contents($uploads['basedir'] . '/2026/11/planted.php', '<?php // test');
+file_put_contents($uploads['basedir'] . '/2026/11/index.php', "<?php\n// Silence is golden.\n");
+file_put_contents($uploads['basedir'] . '/2026/11/index2.php', '<?php echo 1;');
 
 try {
   $res = audit_request($key, true);
@@ -57,7 +59,7 @@ try {
   check($data['security']['hasAdminUsername'] === true, 'flags the "admin" login (installed as admin)');
   check(is_int($data['security']['adminCount']) && $data['security']['adminCount'] >= 1, 'counts administrators');
   check($data['security']['saltsConfigured'] === true, 'detects configured salts');
-  check($data['redFlags']['uploadsPhpFiles'] === $baseline_uploads_php + 1, 'counts PHP files in uploads');
+  check($data['redFlags']['uploadsPhpFiles'] === $baseline_uploads_php + 2, 'counts PHP files in uploads, ignores silence index.php');
   check($data['redFlags']['coreModifiedFiles'] === 1, 'detects one modified core file, ignores wp-content');
   check(is_int($data['database']['autoloadBytes']) && $data['database']['autoloadBytes'] > 0, 'measures autoloaded options');
   check(is_int($data['cron']['events']), 'counts cron events');
@@ -78,6 +80,8 @@ try {
 } finally {
   file_put_contents($version_file, $original);
   @unlink($uploads['basedir'] . '/2026/11/planted.php');
+  @unlink($uploads['basedir'] . '/2026/11/index.php');
+  @unlink($uploads['basedir'] . '/2026/11/index2.php');
   delete_transient('getsafe360_audit_scans');
 }
 

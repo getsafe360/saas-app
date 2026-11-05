@@ -907,9 +907,18 @@ class GetSafe360_Connector {
         if (microtime(true) > $deadline) {
           return null;
         }
-        if (preg_match('/\.(php[0-9]?|phtml|phar)$/i', $file->getFilename())) {
-          $count++;
+        if (!preg_match('/\.(php[0-9]?|phtml|phar)$/i', $file->getFilename())) {
+          continue;
         }
+        // Plugins drop tiny "Silence is golden" index.php files into upload
+        // folders to block directory listing; those are not a red flag.
+        if (strtolower($file->getFilename()) === 'index.php' && $file->getSize() <= 128) {
+          $silence = (string) @file_get_contents($file->getPathname());
+          if (preg_match('#^<\?php\s*(//[^\r\n]*|/\*.*?\*/)?\s*$#s', $silence)) {
+            continue;
+          }
+        }
+        $count++;
       }
     } catch (\Exception $e) {
       return null;
