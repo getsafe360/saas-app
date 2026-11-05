@@ -49,14 +49,17 @@ const ACTIONABLE_STATUSES: ReadonlySet<CheckStatus> = new Set(['fail', 'warn']);
  * Precheck rule for the fix tray: only problems we observed, that matter
  * (critical/high), and that a fixer can act on. Passing or unknown checks are
  * never preselected, whatever their severity.
+ *
+ * Approval gate: an automatic fix is preselected only when it is low-risk and
+ * reversible. Anything else (e.g. HSTS, which browsers cache) stays available
+ * but needs the user to tick it. Guided fixes change nothing on the site, so
+ * preselecting them only queues instructions.
  */
 export function isSelectedByDefault(finding: Pick<Finding, 'status' | 'severity' | 'fix'>): boolean {
-  return (
-    ACTIONABLE_STATUSES.has(finding.status) &&
-    PRESELECT_SEVERITIES.has(finding.severity) &&
-    finding.fix !== undefined &&
-    finding.fix.automation !== 'manual'
-  );
+  const { fix } = finding;
+  if (!fix || fix.automation === 'manual') return false;
+  if (fix.automation === 'auto' && (fix.risk !== 'low' || !fix.reversible)) return false;
+  return ACTIONABLE_STATUSES.has(finding.status) && PRESELECT_SEVERITIES.has(finding.severity);
 }
 
 /** Shorthand for a check whose input was not observed. */

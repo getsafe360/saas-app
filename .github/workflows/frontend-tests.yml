@@ -1,0 +1,44 @@
+name: Frontend tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "saas-ux/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/frontend-tests.yml"
+  pull_request:
+    paths:
+      - "saas-ux/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/frontend-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: saas-ux
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Type-check
+        run: pnpm type-check
+      - name: Unit tests
+        run: pnpm test
+      - name: Connector plugin checks
+        run: |
+          php -l public/wp-plugin/getsafe360-connector.php
+          php tests/wp-plugin/connector-harness.php public/wp-plugin/getsafe360-connector.php

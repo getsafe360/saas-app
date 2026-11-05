@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GetSafe 360 AI Connector
  * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 1.4.0
+ * Version: 1.5.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
@@ -20,7 +20,8 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '1.4.0';
+  const VERSION = '1.5.0';
+  const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';
   const OPTION = 'getsafe360_connector';
   const ACTION_STATE_OPTION = 'getsafe360_action_state';
   const API_BASE = 'https://saasfly-one-psi.vercel.app';
@@ -34,6 +35,7 @@ class GetSafe360_Connector {
     add_filter('xmlrpc_enabled', [$this, 'filter_xmlrpc_enabled']);
     add_filter('rest_endpoints', [$this, 'filter_rest_endpoints']);
     add_action('template_redirect', [$this, 'block_author_enumeration']);
+    add_action('send_headers', [$this, 'send_security_headers']);
     add_filter('update_plugins_www.getsafe360.ai', [$this, 'check_for_update'], 10, 4);
     add_filter('plugins_api', [$this, 'plugin_api_info'], 10, 3);
     add_filter('plugin_action_links_' . plugin_basename(__FILE__), [$this, 'action_links']);
@@ -476,6 +478,12 @@ class GetSafe360_Connector {
       return $endpoints;
     }
 
+    // Only hide users from anonymous visitors: the block editor and other
+    // logged-in tooling call /wp/v2/users and /wp/v2/users/me.
+    if (is_user_logged_in()) {
+      return $endpoints;
+    }
+
     $keys_to_remove = [
       '/wp/v2/users',
       '/wp/v2/users/(?P<id>[\d]+)',
@@ -507,6 +515,110 @@ class GetSafe360_Connector {
         ['response' => 403]
       );
     }
+  }
+
+  // ---------- security headers ----------
+
+  /**
+   * Allowlisted headers and the values accepted for each. Anything else is
+   * rejected, so the SaaS can never inject arbitrary headers.
+   */
+  private function sanitize_security_header($name, $value) {
+    $value = trim((string) $value);
+    switch ($name) {
+      case 'Strict-Transport-Security':
+        return preg_match('/^max-age=\d{1,9}(; ?includeSubDomains)?(; ?preload)?$/i', $value) ? $value : null;
+      case 'X-Content-Type-Options':
+        return strtolower($value) === 'nosniff' ? 'nosniff' : null;
+      case 'X-Frame-Options':
+        $upper = strtoupper($value);
+        return in_array($upper, ['DENY', 'SAMEORIGIN'], true) ? $upper : null;
+      case 'Referrer-Policy':
+        $allowed = [
+          'no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin',
+          'same-origin', 'strict-origin', 'strict-origin-when-cross-origin',
+        ];
+        return in_array(strtolower($value), $allowed, true) ? strtolower($value) : null;
+      default:
+        return null;
+    }
+  }
+
+  private function get_security_headers() {
+    $headers = get_option(self::SECURITY_HEADERS_OPTION, []);
+    return is_array($headers) ? $headers : [];
+  }
+
+  public function send_security_headers() {
+    if (headers_sent()) {
+      return;
+    }
+    foreach ($this->get_security_headers() as $name => $value) {
+      // HSTS over plain HTTP is ignored by browsers and misleading in reports.
+      if ($name === 'Strict-Transport-Security' && !is_ssl()) {
+        continue;
+      }
+      $clean = $this->sanitize_security_header($name, $value);
+      if ($clean !== null) {
+        header($name . ': ' . $clean);
+      }
+    }
+  }
+
+  /**
+   * Apply a set_security_headers action. `headers` maps header name to value
+   * (null removes it). With `replace`, the stored set is replaced wholesale,
+   * which is how rollback restores the previous configuration exactly.
+   * Validation is all-or-nothing: one rejected header changes nothing.
+   */
+  private function apply_security_headers_action($action_id, $payload) {
+    $previous = $this->get_security_headers();
+    $requested = isset($payload['headers']) && is_array($payload['headers']) ? $payload['headers'] : [];
+    $next = !empty($payload['replace']) ? [] : $previous;
+    $rejected = [];
+
+    foreach ($requested as $name => $value) {
+      $name = sanitize_text_field((string) $name);
+      if ($value === null) {
+        unset($next[$name]);
+        continue;
+      }
+      $clean = $this->sanitize_security_header($name, $value);
+      if ($clean === null) {
+        $rejected[] = $name;
+        continue;
+      }
+      $next[$name] = $clean;
+    }
+
+    if (!empty($rejected)) {
+      return [
+        'id' => $action_id,
+        'type' => 'set_security_headers',
+        'status' => 'failed',
+        'message' => 'Rejected header(s): ' . implode(', ', $rejected) . '. Nothing was changed.',
+        'state' => ['securityHeaders' => $previous],
+        'rollback' => null,
+      ];
+    }
+
+    update_option(self::SECURITY_HEADERS_OPTION, $next, false);
+
+    return [
+      'id' => $action_id,
+      'type' => 'set_security_headers',
+      'status' => 'applied',
+      'message' => sprintf('%d security header(s) configured.', count($next)),
+      'state' => ['securityHeaders' => $next],
+      'rollback' => [
+        'id' => $action_id . '-rollback',
+        'type' => 'set_security_headers',
+        'payload' => [
+          'replace' => true,
+          'headers' => empty($previous) ? new \stdClass() : $previous,
+        ],
+      ],
+    ];
   }
 
   public function routes() {
@@ -748,6 +860,7 @@ class GetSafe360_Connector {
       'siteUrl' => get_site_url(),
       'timestamp' => current_time('mysql'),
       'protections' => $this->get_action_state(),
+      'securityHeaders' => $this->get_security_headers(),
     ];
   }
 
@@ -768,6 +881,14 @@ class GetSafe360_Connector {
 
       $action_id = sanitize_text_field($action['id']);
       $action_type = sanitize_text_field($action['type']);
+
+      if ($action_type === 'set_security_headers') {
+        $results[] = $this->apply_security_headers_action(
+          $action_id,
+          isset($action['payload']) && is_array($action['payload']) ? $action['payload'] : []
+        );
+        continue;
+      }
 
       if ($action_type !== 'update_connector_setting') {
         $results[] = [
@@ -913,6 +1034,7 @@ class GetSafe360_Connector {
         'actionGateway'        => true,
         'securityDisableXmlrpc' => true,
         'securityBlockUserEnumeration' => true,
+        'securityHeaders'      => true,
         'rollback'             => true,
       ],
     ];

@@ -1,3 +1,5 @@
+import { getFixer } from '@/lib/engine/fixers/registry';
+import type { FixerActionTemplate } from '@/lib/engine/fixers/types';
 import type {
   WordPressActionPlan,
   WordPressActionRisk,
@@ -16,21 +18,10 @@ export interface RemediationFindingInput {
   safetyLevel?: 'safe' | 'review' | 'sensitive';
 }
 
-interface ActionTemplate {
-  type: WordPressPlannedAction['type'];
-  title: string;
-  description: string;
-  risk: WordPressActionRisk;
-  autoApplyEligible: boolean;
-  requiresApproval: boolean;
-  requiredCapabilities: string[];
-  verification: NonNullable<WordPressPlannedAction['verification']>;
-  payload: Record<string, unknown>;
-}
-
 const CAPABILITY_LABELS: Record<string, string> = {
   securityDisableXmlrpc: 'disable XML-RPC from the connector',
   securityBlockUserEnumeration: 'block user enumeration from the connector',
+  securityHeaders: 'send security headers (connector 1.5 or newer)',
 };
 
 function makeActionId(finding: RemediationFindingInput): string {
@@ -69,76 +60,12 @@ function buildFallbackAction(finding: RemediationFindingInput): WordPressPlanned
   };
 }
 
-function actionTemplateForFinding(finding: RemediationFindingInput): ActionTemplate | null {
-  const actionId = makeActionId(finding);
-
-  switch (actionId) {
-    case 'wordpress-block-user-enumeration':
-      return {
-        type: 'update_connector_setting',
-        title: 'Block public user enumeration',
-        description:
-          'Enable the connector guard that blocks REST user list exposure and the common ?author=ID enumeration path.',
-        risk: 'low',
-        autoApplyEligible: true,
-        requiresApproval: false,
-        requiredCapabilities: ['securityBlockUserEnumeration'],
-        verification: {
-          kind: 'mixed',
-          expectation: 'The connector reports user enumeration protection as enabled and public user endpoints stop exposing users.',
-          assertions: [
-            'Connector protection state reports blockUserEnumeration = true',
-            'Public /wp-json/wp/v2/users no longer returns a user list',
-            'Public ?author=1 probing is blocked or does not resolve to an author archive',
-          ],
-        },
-        payload: {
-          setting: {
-            key: 'blockUserEnumeration',
-            enabled: true,
-          },
-        },
-      };
-
-    case 'wordpress-disable-xmlrpc':
-      return {
-        type: 'update_connector_setting',
-        title: 'Disable XML-RPC',
-        description:
-          'Enable the connector guard that disables XML-RPC at the WordPress layer unless the site explicitly needs it.',
-        risk: 'low',
-        autoApplyEligible: true,
-        requiresApproval: false,
-        requiredCapabilities: ['securityDisableXmlrpc'],
-        verification: {
-          kind: 'api',
-          expectation: 'The connector reports XML-RPC protection as enabled after the change.',
-          assertions: [
-            'Connector protection state reports disableXmlRpc = true',
-          ],
-        },
-        payload: {
-          setting: {
-            key: 'disableXmlRpc',
-            enabled: true,
-          },
-        },
-      };
-
-    default:
-      return null;
-  }
-}
-
 function buildAction(
-  finding: RemediationFindingInput,
+  actionId: string,
+  findings: RemediationFindingInput[],
+  template: FixerActionTemplate,
   capabilities: WordPressCapabilitySummary
 ): WordPressPlannedAction {
-  const template = actionTemplateForFinding(finding);
-  if (!template) {
-    return buildFallbackAction(finding);
-  }
-
   const missingCapabilities = template.requiredCapabilities.filter(
     (capability) => !capabilities.raw?.[capability]
   );
@@ -152,8 +79,9 @@ function buildAction(
         .join(', ')}.`
     : '';
 
+  const [first] = findings;
   return {
-    id: makeActionId(finding),
+    id: actionId,
     type: template.type,
     title: template.title,
     description: `${template.description}${capabilityNote}`,
@@ -164,12 +92,41 @@ function buildAction(
     verification: template.verification,
     payload: {
       ...template.payload,
-      sourceFindingId: finding.id,
-      sourceActionId: finding.actionId ?? finding.id,
-      sourceTitle: finding.title ?? template.title,
+      fixerId: actionId,
+      sourceFindingId: first.id,
+      sourceFindingIds: findings.map((finding) => finding.id),
+      sourceActionId: first.actionId ?? first.id,
+      sourceTitle: first.title ?? template.title,
       missingCapabilities,
     },
   };
+}
+
+/**
+ * Group selected findings by fixer: one fixer → one action, even when several
+ * findings share it (e.g. four missing security headers). Findings without a
+ * registered fixer each become a guided-review action.
+ */
+function planActions(
+  findings: RemediationFindingInput[],
+  capabilities: WordPressCapabilitySummary
+): WordPressPlannedAction[] {
+  const groups = new Map<string, RemediationFindingInput[]>();
+  for (const finding of findings) {
+    const actionId = makeActionId(finding);
+    groups.set(actionId, [...(groups.get(actionId) ?? []), finding]);
+  }
+
+  const actions: WordPressPlannedAction[] = [];
+  for (const [actionId, group] of groups) {
+    const template = getFixer(actionId)?.plan(group) ?? null;
+    if (template) {
+      actions.push(buildAction(actionId, group, template, capabilities));
+    } else {
+      actions.push(...group.map(buildFallbackAction));
+    }
+  }
+  return actions;
 }
 
 export function createWordPressActionPlan(params: {
@@ -180,7 +137,7 @@ export function createWordPressActionPlan(params: {
   snapshot?: Pick<WordPressSiteSnapshot, 'builder'> | null;
   capabilities: WordPressCapabilitySummary;
 }): WordPressActionPlan {
-  const actions = params.findings.map((finding) => buildAction(finding, params.capabilities));
+  const actions = planActions(params.findings, params.capabilities);
 
   return {
     siteId: params.siteId,

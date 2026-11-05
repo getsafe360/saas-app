@@ -215,7 +215,7 @@ function seoRules({ pre }: RuleContext): ScanIssue[] {
 
 // ─── Security ───────────────────────────────────────────────────────────────
 
-const SECURITY_HEADERS: Array<{
+export const SECURITY_HEADERS: Array<{
   header: string;
   id: string;
   severity: Severity;
