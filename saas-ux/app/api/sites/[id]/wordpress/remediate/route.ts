@@ -123,7 +123,8 @@ export async function POST(
     return NextResponse.json({ success: false, error: 'SITE_NOT_FOUND' }, { status: 404 });
   }
 
-  if (dbUser?.id && site.userId !== dbUser.id) {
+  // Fail closed: without a matching user row we cannot prove ownership.
+  if (!dbUser || site.userId !== dbUser.id) {
     return NextResponse.json({ success: false, error: 'FORBIDDEN' }, { status: 403 });
   }
 
