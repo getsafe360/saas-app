@@ -71,6 +71,19 @@ try {
   check(strpos($json, '"admin"') === false && strpos($json, 'user_login') === false, 'payload contains no username');
   check(strpos($json, AUTH_KEY) === false, 'payload contains no secret keys');
 
+  // A scan budget that is already spent must not trigger the checksum download.
+  $calls = 0;
+  $count_calls = function ($pre, $args, $url) use (&$calls) {
+    if (strpos($url, 'api.wordpress.org/core/checksums') !== false) $calls++;
+    return $pre;
+  };
+  add_filter('pre_http_request', $count_calls, 5, 3);
+  $connector = $GLOBALS['getsafe360_connector_instance'] ?? new GetSafe360_Connector();
+  $method = new ReflectionMethod($connector, 'audit_core_modified_files');
+  $method->setAccessible(true);
+  check($method->invoke($connector, microtime(true) - 1) === null && $calls === 0, 'skips checksums when the budget is spent');
+  remove_filter('pre_http_request', $count_calls, 5);
+
   $again = audit_request($key)->get_data();
   check($again['redFlags']['scannedAt'] === $data['redFlags']['scannedAt'], 'file scans are cached between calls');
 

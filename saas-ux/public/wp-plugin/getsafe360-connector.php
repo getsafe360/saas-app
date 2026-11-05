@@ -930,9 +930,28 @@ class GetSafe360_Connector {
     if (!function_exists('get_core_checksums')) {
       require_once ABSPATH . 'wp-admin/includes/update.php';
     }
-    $checksums = get_core_checksums(get_bloginfo('version'), get_locale());
-    if (!is_array($checksums) || empty($checksums)) {
-      $checksums = get_core_checksums(get_bloginfo('version'), 'en_US');
+
+    // The checksum download counts against the same budget as the scans.
+    $cap_timeout = function ($args, $url) use ($deadline) {
+      if (strpos($url, 'api.wordpress.org/core/checksums') !== false) {
+        $args['timeout'] = max(1, min((float) $args['timeout'], $deadline - microtime(true)));
+      }
+      return $args;
+    };
+    add_filter('http_request_args', $cap_timeout, 10, 2);
+    try {
+      $checksums = null;
+      foreach (array_unique([get_locale(), 'en_US']) as $locale) {
+        if ($deadline - microtime(true) < 1.0) {
+          return null;
+        }
+        $checksums = get_core_checksums(get_bloginfo('version'), $locale);
+        if (is_array($checksums) && !empty($checksums)) {
+          break;
+        }
+      }
+    } finally {
+      remove_filter('http_request_args', $cap_timeout, 10);
     }
     if (!is_array($checksums) || empty($checksums)) {
       return null;
@@ -960,6 +979,10 @@ class GetSafe360_Connector {
 
   private function audit_environment() {
     $active = (array) get_option('active_plugins', []);
+    if (is_multisite()) {
+      // Network-activated plugins live in a site option, not in active_plugins.
+      $active = array_merge($active, array_keys((array) get_site_option('active_sitewide_plugins', [])));
+    }
     $has = function ($needle) use ($active) {
       foreach ($active as $file) {
         if (strpos($file, $needle) === 0) {
