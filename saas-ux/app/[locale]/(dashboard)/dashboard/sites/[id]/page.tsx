@@ -71,7 +71,9 @@ async function getSite(id: string): Promise<SiteRecord | null> {
   return {
     siteId: row.id,
     siteUrl: row.siteUrl,
-    status: row.status,
+    // `status` is the lifecycle field and stays `pending` after pairing; the
+    // handshake records the connection in `isConnected` / `connectionStatus`.
+    status: row.isConnected || row.connectionStatus === 'connected' ? 'connected' : row.status,
     wpVersion: row.wpVersion ?? null,
     pluginVersion: row.pluginVersion ?? null,
     createdAt: new Date(row.createdAt).getTime(),
