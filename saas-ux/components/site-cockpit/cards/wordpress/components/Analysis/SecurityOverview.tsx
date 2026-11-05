@@ -3,39 +3,58 @@
 
 import { Shield } from "lucide-react";
 
+/** null = not observed yet; rendered as "Unknown", never as healthy or failing. */
 interface SecurityData {
-  defaultLoginExposed: boolean;
-  userEnumerationBlocked: boolean;
-  xmlrpcEnabled: boolean;
-  wpDebugMode: boolean;
+  defaultLoginExposed: boolean | null;
+  userEnumerationBlocked: boolean | null;
+  xmlrpcEnabled: boolean | null;
+  wpDebugMode: boolean | null;
 }
+
+type ItemState = "healthy" | "risk" | "unknown";
+
+function stateOf(observed: boolean | null, healthyWhen: boolean): ItemState {
+  if (observed === null) return "unknown";
+  return observed === healthyWhen ? "healthy" : "risk";
+}
+
+const STATE_STYLE: Record<ItemState, { border: string; bg: string; icon: string; text: string }> = {
+  healthy: {
+    border: "oklch(from var(--color-success) l c h / 0.35)",
+    bg: "oklch(from var(--color-success) l c h / 0.08)",
+    icon: "#34d399",
+    text: "#6ee7b7",
+  },
+  risk: {
+    border: "oklch(from var(--color-danger) l c h / 0.35)",
+    bg: "oklch(from var(--color-danger) l c h / 0.08)",
+    icon: "#f87171",
+    text: "#fda4af",
+  },
+  unknown: {
+    border: "var(--border-default)",
+    bg: "transparent",
+    icon: "var(--text-subtle)",
+    text: "var(--text-subtle)",
+  },
+};
 
 interface SecurityOverviewProps {
   security: SecurityData;
 }
 
-const items = (security: SecurityData) => [
-  {
-    label: "Login Page",
-    healthy: !security.defaultLoginExposed,
-    value: security.defaultLoginExposed ? "Exposed" : "Protected",
-  },
-  {
-    label: "User Enumeration",
-    healthy: security.userEnumerationBlocked,
-    value: security.userEnumerationBlocked ? "Blocked" : "Vulnerable",
-  },
-  {
-    label: "XML-RPC",
-    healthy: !security.xmlrpcEnabled,
-    value: security.xmlrpcEnabled ? "Enabled" : "Disabled",
-  },
-  {
-    label: "Debug Mode",
-    healthy: !security.wpDebugMode,
-    value: security.wpDebugMode ? "On" : "Off",
-  },
-];
+const items = (security: SecurityData) => {
+  const login = stateOf(security.defaultLoginExposed, false);
+  const enumeration = stateOf(security.userEnumerationBlocked, true);
+  const xmlrpc = stateOf(security.xmlrpcEnabled, false);
+  const debug = stateOf(security.wpDebugMode, false);
+  return [
+    { label: "Login Page", state: login, value: login === "unknown" ? "Unknown" : login === "healthy" ? "Protected" : "Exposed" },
+    { label: "User Enumeration", state: enumeration, value: enumeration === "unknown" ? "Unknown" : enumeration === "healthy" ? "Blocked" : "Vulnerable" },
+    { label: "XML-RPC", state: xmlrpc, value: xmlrpc === "unknown" ? "Unknown" : xmlrpc === "healthy" ? "Disabled" : "Enabled" },
+    { label: "Debug Mode", state: debug, value: debug === "unknown" ? "Unknown" : debug === "healthy" ? "Off" : "On" },
+  ];
+};
 
 export function SecurityOverview({ security }: SecurityOverviewProps) {
   return (
@@ -50,18 +69,14 @@ export function SecurityOverview({ security }: SecurityOverviewProps) {
             key={item.label}
             className="rounded-lg border p-3 flex items-center justify-between"
             style={{
-              borderColor: item.healthy
-                ? "oklch(from var(--color-success) l c h / 0.35)"
-                : "oklch(from var(--color-danger) l c h / 0.35)",
-              background: item.healthy
-                ? "oklch(from var(--color-success) l c h / 0.08)"
-                : "oklch(from var(--color-danger) l c h / 0.08)",
+              borderColor: STATE_STYLE[item.state].border,
+              background: STATE_STYLE[item.state].bg,
             }}
           >
             <div className="flex items-center gap-2">
               <Shield
                 className="h-4 w-4"
-                style={{ color: item.healthy ? "#34d399" : "#f87171" }}
+                style={{ color: STATE_STYLE[item.state].icon }}
               />
               <span className="text-xs" style={{ color: "var(--text-subtle)" }}>
                 {item.label}
@@ -69,7 +84,7 @@ export function SecurityOverview({ security }: SecurityOverviewProps) {
             </div>
             <span
               className="text-xs font-semibold"
-              style={{ color: item.healthy ? "#6ee7b7" : "#fda4af" }}
+              style={{ color: STATE_STYLE[item.state].text }}
             >
               {item.value}
             </span>

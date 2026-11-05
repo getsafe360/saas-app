@@ -344,7 +344,7 @@ export function SiteCockpit({
         domain={data.domain}
         finalUrl={data.finalUrl}
         metaTitle={data.meta?.title}
-        wordpressScore={isConnected ? data.wordpress?.score : undefined}
+        wordpressScore={isConnected ? (data.wordpress?.score ?? undefined) : undefined}
         cms={data.cms}
       />
 

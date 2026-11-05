@@ -74,6 +74,8 @@ export interface WordPressSiteSnapshot {
   activePlugins: string[];
   frontPage?: WordPressFrontPageInfo;
   capabilities: WordPressCapabilitySummary;
+  /** Protections switched on by the GetSafe 360 connector; absent before 1.4. */
+  protections?: WordPressConnectorProtectionState;
   issues: WordPressIssue[];
 }
 
