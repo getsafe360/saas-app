@@ -1,3 +1,4 @@
+import type { WordPressAuditResponse } from './audit-types';
 export type WordPressBuilder =
   | 'divi'
   | 'elementor'
@@ -76,6 +77,14 @@ export interface WordPressSiteSnapshot {
   capabilities: WordPressCapabilitySummary;
   /** Protections switched on by the GetSafe 360 connector; absent before 1.4. */
   protections?: WordPressConnectorProtectionState;
+  /** Read-only site audit (connector ≥ 1.6, capability `siteAudit`). */
+  audit?: WordPressAuditResponse;
+  /** Health score computed when this snapshot was taken; feeds trends. */
+  health?: {
+    overall: number | null;
+    coverage: number;
+    categories: Partial<Record<string, number | null>>;
+  };
   issues: WordPressIssue[];
 }
 

@@ -346,6 +346,14 @@ export class WordPressClient {
   }
 
   /**
+   * Read-only health and security audit (flags and counts only).
+   * Requires plugin v1.6.0+ (capability `siteAudit`).
+   */
+  async audit(): Promise<unknown> {
+    return this.request<unknown>('audit');
+  }
+
+  /**
    * Apply allowlisted connector actions such as safe security toggles.
    * Requires plugin v1.4.0+.
    */

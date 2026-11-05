@@ -6,6 +6,7 @@
 
 import type { CategoryWeights } from '../scoring';
 import { type Rule, unknown } from '../rules';
+import { WORDPRESS_AUDIT_RULES } from './audit-rules';
 import type { WordPressFacts } from './facts';
 
 export const WORDPRESS_CATEGORY_WEIGHTS: CategoryWeights = {
@@ -39,6 +40,17 @@ export const WORDPRESS_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     recommendation: 'Update WordPress core to the latest stable version.',
     fix: { fixerId: 'wordpress-update-core', automation: 'guided', risk: 'medium', reversible: false },
     evaluate: ({ core }) => {
+      if (core.version && !core.latest && core.updateAvailable !== null) {
+        // Fall back to the site's own update check when wordpress.org could not be reached.
+        return core.updateAvailable
+          ? {
+              status: 'fail',
+              summary: `Running ${core.version}; WordPress reports a newer version is available.`,
+              observed: core.version,
+              impact: { scoreGain: 8, riskReduction: 28 },
+            }
+          : { status: 'pass', summary: `Running the latest version (${core.version}).`, observed: core.version };
+      }
       if (!core.version || !core.latest) return unknown('Core version could not be determined.');
       if (compareVersions(core.version, core.latest) < 0) {
         return {
@@ -114,6 +126,9 @@ export const WORDPRESS_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
       if (protections.xmlrpcDisabled === true) {
         return { status: 'pass', summary: 'XML-RPC is disabled by GetSafe 360.' };
       }
+      if (security.xmlrpcEnabled === false) {
+        return { status: 'pass', summary: 'XML-RPC is turned off on this site.' };
+      }
       if (security.xmlrpcReachable === false) {
         return { status: 'pass', summary: 'XML-RPC endpoint is not reachable.', source: 'external-probe' };
       }
@@ -122,6 +137,13 @@ export const WORDPRESS_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
           status: 'fail',
           summary: 'XML-RPC endpoint responds to public requests.',
           source: 'external-probe',
+          impact: { scoreGain: 6, riskReduction: 16 },
+        };
+      }
+      if (security.xmlrpcEnabled === true) {
+        return {
+          status: 'fail',
+          summary: 'XML-RPC is enabled on this site.',
           impact: { scoreGain: 6, riskReduction: 16 },
         };
       }
@@ -142,12 +164,24 @@ export const WORDPRESS_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     title: 'WP debug mode',
     severity: 'medium',
     source: 'connector',
-    recommendation: 'Set WP_DEBUG and WP_DEBUG_LOG to false on production.',
+    recommendation: 'Set WP_DEBUG to false on production, or at least WP_DEBUG_DISPLAY to false.',
     fix: { fixerId: 'wordpress-disable-debug', automation: 'guided', risk: 'medium', reversible: false },
     evaluate: ({ security }) => {
+      if (security.debugDisplay === true) {
+        return {
+          status: 'fail',
+          severity: 'high',
+          summary: 'PHP errors are shown to visitors, which can reveal file paths and internals.',
+          impact: { scoreGain: 6, riskReduction: 14 },
+        };
+      }
       if (security.debugMode === null) return unknown(NOT_REPORTED);
       return security.debugMode
-        ? { status: 'fail', summary: 'Debug mode is enabled on a live site.', impact: { scoreGain: 4, riskReduction: 10 } }
+        ? {
+            status: 'warn',
+            summary: 'Debug mode is on (errors are not shown to visitors).',
+            impact: { scoreGain: 3, riskReduction: 6 },
+          }
         : { status: 'pass', summary: 'Debug mode is off.' };
     },
   },
@@ -255,7 +289,7 @@ export const WORDPRESS_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     source: 'connector',
     recommendation: 'Cross-check database plugin rows against the admin plugin list.',
     fix: { fixerId: 'wordpress-audit-plugins-integrity', automation: 'manual', risk: 'high', reversible: false },
-    evaluate: () => unknown('Plugin integrity checks require connector telemetry v2.'),
+    evaluate: () => unknown('Not checked yet.'),
   },
   {
     id: 'red-flag-core-modifications',
@@ -263,8 +297,19 @@ export const WORDPRESS_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     title: 'Modified core files',
     severity: 'critical',
     source: 'connector',
-    recommendation: 'Compare wp-admin and wp-includes against the official WordPress checksums.',
+    recommendation: 'Reinstall WordPress core from Dashboard → Updates, then review how the files were changed.',
     fix: { fixerId: 'wordpress-run-integrity-scan', automation: 'guided', risk: 'high', reversible: false },
-    evaluate: () => unknown('Core checksum verification requires connector telemetry v2.'),
+    evaluate: ({ redFlags }) => {
+      if (redFlags.coreModifiedFiles === null) return unknown('Core file checksums could not be verified.');
+      return redFlags.coreModifiedFiles > 0
+        ? {
+            status: 'fail',
+            summary: `${redFlags.coreModifiedFiles} WordPress core file(s) differ from the official release.`,
+            observed: String(redFlags.coreModifiedFiles),
+            impact: { scoreGain: 15, riskReduction: 40 },
+          }
+        : { status: 'pass', summary: 'All core files match the official WordPress checksums.' };
+    },
   },
+  ...WORDPRESS_AUDIT_RULES,
 ];

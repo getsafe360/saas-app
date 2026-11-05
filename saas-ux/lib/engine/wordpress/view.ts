@@ -10,9 +10,10 @@ import type {
 } from '@/types/site-cockpit';
 import type { EngineCategory, EngineScore, Finding, FixRisk } from '../contracts';
 import { evaluateRules } from '../rules';
-import { SECURITY_HEADER_RULES, type SiteHeaderFacts } from '../security/headers';
+import { EMAIL_DNS_RULES, buildEmailDnsFacts, type EmailDnsFacts } from '../security/email-dns';
+import { SECURITY_HEADER_RULES, buildSiteHeaderFacts, type SiteHeaderFacts } from '../security/headers';
 import { scoreFindings } from '../scoring';
-import type { WordPressFacts } from './facts';
+import { buildWordPressFacts, type WordPressFacts } from './facts';
 import { WORDPRESS_CATEGORY_WEIGHTS, WORDPRESS_RULES } from './rules';
 
 const VIEW_CATEGORY: Record<EngineCategory, WordPressHealthCategory> = {
@@ -98,12 +99,14 @@ export function evaluateWordPressHealth(
   facts: WordPressFacts,
   headerFacts?: SiteHeaderFacts,
   checkedAt?: string,
+  emailDnsFacts?: EmailDnsFacts,
 ): WordPressHealthReport {
   const context = { checkedAt: checkedAt ?? facts.observedAt ?? undefined };
   const findings = [
     ...evaluateRules(WORDPRESS_RULES, facts, context),
     // Header fixes run through the connector, so they belong in the WordPress fix tray.
     ...(headerFacts ? evaluateRules(SECURITY_HEADER_RULES, headerFacts, context) : []),
+    ...(emailDnsFacts ? evaluateRules(EMAIL_DNS_RULES, emailDnsFacts, context) : []),
   ];
   const score = scoreFindings(findings, WORDPRESS_CATEGORY_WEIGHTS);
   return {
@@ -114,4 +117,18 @@ export function evaluateWordPressHealth(
       categoryScores: toWordPressCategoryScores(score),
     },
   };
+}
+
+/**
+ * Health report from the cockpit payload (analyze-facts response). The single
+ * entry point for both the server (score history) and the card, so the stored
+ * score and the displayed score are always computed the same way.
+ */
+export function evaluateWordPressHealthFromApiData(apiData: Record<string, any>): WordPressHealthReport {
+  return evaluateWordPressHealth(
+    buildWordPressFacts(apiData),
+    buildSiteHeaderFacts(apiData),
+    undefined,
+    buildEmailDnsFacts(apiData),
+  );
 }

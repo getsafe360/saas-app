@@ -13,9 +13,8 @@
 
 import type { SiteCockpitResponse, ScoreGrade, WordPress, ContentData } from "@/types/site-cockpit";
 import { buildWordPressFacts } from "@/lib/engine/wordpress/facts";
-import { evaluateWordPressHealth } from "@/lib/engine/wordpress/view";
+import { evaluateWordPressHealthFromApiData } from "@/lib/engine/wordpress/view";
 import { computeTrend } from "@/lib/engine/scoring";
-import { buildSiteHeaderFacts } from "@/lib/engine/security/headers";
 
 // ============================================
 // SCORING SYSTEM
@@ -376,7 +375,7 @@ function transformWordPressData(apiData: any): WordPress {
   const wpTelemetry = apiData.wordpressTelemetry ?? {};
   const crewWordPress = parseCrewWordPressPayload(apiData);
   const facts = buildWordPressFacts(apiData);
-  const health = evaluateWordPressHealth(facts, buildSiteHeaderFacts(apiData));
+  const health = evaluateWordPressHealthFromApiData(apiData);
 
   // Deterministic checks decide status and score. Crew output only feeds the
   // recommendation backlog; it never overrides an observed result.
