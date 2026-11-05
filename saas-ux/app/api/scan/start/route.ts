@@ -6,7 +6,7 @@ export const maxDuration = 60;
 
 import { NextRequest, NextResponse, after } from 'next/server';
 import crypto from 'crypto';
-import { list, put } from '@vercel/blob';
+import { put } from '@vercel/blob';
 import { eq, sql } from 'drizzle-orm';
 
 import { getDb } from '@/lib/db/drizzle';
@@ -48,45 +48,6 @@ type Body = { siteId?: string; categories?: ScanCategory[]; locale?: string };
 function dbErr(e: unknown) {
   const any = e as any;
   return { message: any?.message ?? 'db error', code: any?.code, detail: any?.detail };
-}
-
-// Try to load site metadata from Blob and insert a DB row with userId
-async function ensureSiteExistsForUser(
-  db: ReturnType<typeof getDb>,
-  siteId: string,
-  userId: number
-) {
-  const existing = await db.select().from(sites).where(eq(sites.id, siteId)).limit(1);
-  if (existing[0]) return existing[0];
-
-  try {
-    const { blobs } = await list({ prefix: `sites/${siteId}.json`, limit: 1 });
-    const b = blobs[0];
-    if (!b) return null;
-
-    const r = await fetch(b.url, { cache: 'no-store' });
-    if (!r.ok) return null;
-    const j = await r.json().catch(() => null);
-    if (!j || !j.siteUrl) return null;
-
-    await db.insert(sites).values({
-      id: siteId,
-      userId,
-      siteUrl: j.siteUrl,
-      status: (j.status ?? 'connected') as any,
-      cms: (j.cms ?? 'wordpress') as any,
-      wpVersion: j.wpVersion ?? null,
-      pluginVersion: j.pluginVersion ?? null,
-      createdAt: j.createdAt ? new Date(j.createdAt) : new Date(),
-      updatedAt: j.updatedAt ? new Date(j.updatedAt) : new Date(),
-    });
-
-    const [inserted] = await db.select().from(sites).where(eq(sites.id, siteId)).limit(1);
-    return inserted ?? null;
-  } catch (e) {
-    log.error('blob → db site hydration failed', e, { siteId });
-    return null;
-  }
 }
 
 /**
@@ -221,19 +182,17 @@ export async function POST(req: NextRequest) {
   const locale = typeof body?.locale === 'string' ? body.locale.slice(0, 8) : 'en';
 
   // 4) Make sure the site row exists and is owned by this user
-  let site = await db.select().from(sites).where(eq(sites.id, siteId)).limit(1);
+  // The database is the only source of sites. (A removed fallback recreated
+  // missing rows from public blobs and assigned them to whoever asked.)
+  const site = await db.select().from(sites).where(eq(sites.id, siteId)).limit(1);
   if (!site[0]) {
-    const inserted = await ensureSiteExistsForUser(db, siteId, user.id);
-    if (!inserted) {
-      return NextResponse.json(
-        {
-          error: 'site not found; connect it first',
-          hint: 'Run WP plugin handshake or add the site in Dashboard.',
-        },
-        { status: 404 }
-      );
-    }
-    site = [inserted];
+    return NextResponse.json(
+      {
+        error: 'site not found; connect it first',
+        hint: 'Run WP plugin handshake or add the site in Dashboard.',
+      },
+      { status: 404 }
+    );
   } else if (site[0].userId !== user.id) {
     return NextResponse.json(
       { error: 'forbidden: site belongs to another user' },
