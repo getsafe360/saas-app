@@ -1,0 +1,49 @@
+name: Connector plugin
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "saas-ux/public/wp-plugin/**"
+      - "saas-ux/tests/wp-plugin/**"
+      - ".github/workflows/connector-plugin.yml"
+  pull_request:
+    paths:
+      - "saas-ux/public/wp-plugin/**"
+      - "saas-ux/tests/wp-plugin/**"
+      - ".github/workflows/connector-plugin.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  wordpress-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_DATABASE: wp
+          MARIADB_USER: wp
+          MARIADB_PASSWORD: wp
+          MARIADB_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mysqli
+          tools: none
+      - name: Lint
+        run: php -l saas-ux/public/wp-plugin/getsafe360-connector.php
+      - name: Unit harness
+        run: php saas-ux/tests/wp-plugin/connector-harness.php saas-ux/public/wp-plugin/getsafe360-connector.php
+      - name: Real WordPress integration
+        env:
+          DB_HOST: 127.0.0.1
+        run: saas-ux/tests/wp-plugin/integration/run.sh

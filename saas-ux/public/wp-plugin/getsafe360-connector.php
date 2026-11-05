@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GetSafe 360 AI Connector
  * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 1.5.0
+ * Version: 1.6.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
@@ -20,7 +20,7 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '1.5.0';
+  const VERSION = '1.6.0';
   const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';
   const OPTION = 'getsafe360_connector';
   const ACTION_STATE_OPTION = 'getsafe360_action_state';
@@ -621,6 +621,362 @@ class GetSafe360_Connector {
     ];
   }
 
+  // ---------- site audit (read-only) ----------
+
+  const AUDIT_SCHEMA = 1;
+  const AUDIT_CACHE_TTL = 43200; // 12 hours
+  const AUDIT_SCAN_BUDGET_SECONDS = 4.0;
+
+  /**
+   * GET /wp-json/getsafe360/v1/audit
+   *
+   * Read-only health and security telemetry. Sends flags and counts only:
+   * never usernames, emails, file contents or option values. Plugin slugs and
+   * versions are included because outdated-plugin checks need them.
+   * Pass ?refresh=1 to bypass the cached file scans.
+   */
+  public function route_audit(\WP_REST_Request $req) {
+    $started = microtime(true);
+    $refresh = (bool) $req->get_param('refresh');
+
+    return [
+      'success'     => true,
+      'schema'      => self::AUDIT_SCHEMA,
+      'generatedAt' => gmdate('c'),
+      'core'        => $this->audit_core(),
+      'security'    => $this->audit_security(),
+      'plugins'     => $this->audit_plugins(),
+      'themes'      => $this->audit_themes(),
+      'performance' => $this->audit_performance(),
+      'database'    => $this->audit_database(),
+      'cron'        => $this->audit_cron(),
+      'redFlags'    => $this->audit_red_flags($refresh),
+      'environment' => $this->audit_environment(),
+      'durationMs'  => (int) round((microtime(true) - $started) * 1000),
+    ];
+  }
+
+  private function audit_core() {
+    $update = get_site_transient('update_core');
+    $update_available = null;
+    if (is_object($update) && isset($update->updates) && is_array($update->updates)) {
+      $update_available = false;
+      foreach ($update->updates as $offer) {
+        if (isset($offer->response) && $offer->response === 'upgrade') {
+          $update_available = true;
+          break;
+        }
+      }
+    }
+
+    return [
+      'version'         => get_bloginfo('version'),
+      'updateAvailable' => $update_available,
+    ];
+  }
+
+  private function audit_security() {
+    global $wpdb;
+
+    $admins = get_users(['role' => 'administrator', 'fields' => 'ID', 'number' => 100]);
+    $weak_admin_login = false;
+    foreach (['admin', 'administrator'] as $login) {
+      $user = get_user_by('login', $login);
+      if ($user && user_can($user, 'manage_options')) {
+        $weak_admin_login = true;
+        break;
+      }
+    }
+
+    $wp_config = ABSPATH . 'wp-config.php';
+    if (!file_exists($wp_config)) {
+      $wp_config = dirname(ABSPATH) . '/wp-config.php';
+    }
+    $world_readable = null;
+    if (file_exists($wp_config)) {
+      $perms = @fileperms($wp_config);
+      $world_readable = $perms === false ? null : (bool) ($perms & 0x0004);
+    }
+
+    return [
+      'adminCount'           => is_array($admins) ? count($admins) : null,
+      'hasAdminUsername'     => $weak_admin_login,
+      'usersCanRegister'     => (bool) get_option('users_can_register'),
+      'defaultRoleIsAdmin'   => get_option('default_role') === 'administrator',
+      'fileEditDisabled'     => defined('DISALLOW_FILE_EDIT') && DISALLOW_FILE_EDIT,
+      'debug'                => defined('WP_DEBUG') && WP_DEBUG,
+      'debugDisplay'         => defined('WP_DEBUG') && WP_DEBUG && (!defined('WP_DEBUG_DISPLAY') || WP_DEBUG_DISPLAY),
+      'debugLog'             => defined('WP_DEBUG_LOG') && WP_DEBUG_LOG,
+      'saltsConfigured'      => $this->audit_salts_configured(),
+      'dbPrefixDefault'      => $wpdb->prefix === 'wp_',
+      'xmlrpcEnabled'        => (bool) apply_filters('xmlrpc_enabled', true),
+      'homeHttps'            => strpos(home_url(), 'https://') === 0,
+      'adminHttps'           => defined('FORCE_SSL_ADMIN') && FORCE_SSL_ADMIN,
+      'wpConfigWorldReadable' => $world_readable,
+    ];
+  }
+
+  private function audit_salts_configured() {
+    $keys = [
+      'AUTH_KEY', 'SECURE_AUTH_KEY', 'LOGGED_IN_KEY', 'NONCE_KEY',
+      'AUTH_SALT', 'SECURE_AUTH_SALT', 'LOGGED_IN_SALT', 'NONCE_SALT',
+    ];
+    $seen = [];
+    foreach ($keys as $key) {
+      if (!defined($key)) {
+        return false;
+      }
+      $value = (string) constant($key);
+      if (strlen($value) < 32 || stripos($value, 'put your unique phrase here') !== false || isset($seen[$value])) {
+        return false;
+      }
+      $seen[$value] = true;
+    }
+    return true;
+  }
+
+  private function audit_plugins() {
+    if (!function_exists('get_plugins')) {
+      require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+    $all = get_plugins();
+    $active = (array) get_option('active_plugins', []);
+    $updates = get_site_transient('update_plugins');
+    $pending = (is_object($updates) && isset($updates->response) && is_array($updates->response))
+      ? $updates->response
+      : null;
+
+    $items = [];
+    foreach ($all as $file => $data) {
+      $items[] = [
+        'slug'            => strpos($file, '/') !== false ? strstr($file, '/', true) : basename($file, '.php'),
+        'version'         => isset($data['Version']) ? (string) $data['Version'] : '',
+        'active'          => in_array($file, $active, true) || (is_multisite() && is_plugin_active_for_network($file)),
+        'updateAvailable' => $pending === null ? null : isset($pending[$file]),
+      ];
+    }
+
+    $active_count = count(array_filter($items, function ($item) { return $item['active']; }));
+
+    return [
+      'total'            => count($items),
+      'active'           => $active_count,
+      'inactive'         => count($items) - $active_count,
+      'updatesAvailable' => $pending === null ? null : count(array_intersect_key($pending, $all)),
+      'mustUse'          => count(get_mu_plugins()),
+      'items'            => $items,
+    ];
+  }
+
+  private function audit_themes() {
+    $themes = wp_get_themes();
+    $current = wp_get_theme();
+    $updates = get_site_transient('update_themes');
+    $pending = (is_object($updates) && isset($updates->response) && is_array($updates->response))
+      ? $updates->response
+      : null;
+
+    $in_use = [$current->get_stylesheet() => true, $current->get_template() => true];
+
+    return [
+      'total'                 => count($themes),
+      'inactive'              => count(array_diff_key($themes, $in_use)),
+      'childTheme'            => $current->get_stylesheet() !== $current->get_template(),
+      'activeUpdateAvailable' => $pending === null
+        ? null
+        : (isset($pending[$current->get_stylesheet()]) || isset($pending[$current->get_template()])),
+    ];
+  }
+
+  private function audit_performance() {
+    global $wpdb;
+
+    $opcache = null;
+    if (function_exists('opcache_get_status')) {
+      $status = @opcache_get_status(false);
+      $opcache = is_array($status) && !empty($status['opcache_enabled']);
+    } elseif (!extension_loaded('Zend OPcache')) {
+      $opcache = false;
+    }
+
+    $page_cache = (defined('WP_CACHE') && WP_CACHE && file_exists(WP_CONTENT_DIR . '/advanced-cache.php'));
+
+    return [
+      'phpVersion'       => PHP_VERSION,
+      'mysqlVersion'     => $wpdb->db_version(),
+      'memoryLimitBytes' => wp_convert_hr_to_bytes((string) ini_get('memory_limit')),
+      'maxExecutionTime' => (int) ini_get('max_execution_time'),
+      'opcache'          => $opcache,
+      'objectCache'      => (bool) wp_using_ext_object_cache(),
+      'pageCache'        => $page_cache,
+    ];
+  }
+
+  private function audit_database() {
+    global $wpdb;
+
+    $autoload = $wpdb->get_var(
+      "SELECT SUM(LENGTH(option_value)) FROM {$wpdb->options} WHERE autoload IN ('yes','on','auto-on','auto')"
+    );
+    $expired = $wpdb->get_var($wpdb->prepare(
+      "SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE %s AND option_value < %d",
+      $wpdb->esc_like('_transient_timeout_') . '%',
+      time()
+    ));
+    $revisions = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'revision'");
+
+    $size = null;
+    $suppress = $wpdb->suppress_errors(true);
+    $size_value = $wpdb->get_var($wpdb->prepare(
+      'SELECT SUM(data_length + index_length) FROM information_schema.TABLES WHERE table_schema = %s',
+      DB_NAME
+    ));
+    $wpdb->suppress_errors($suppress);
+    if ($size_value !== null) {
+      $size = (int) $size_value;
+    }
+
+    return [
+      'autoloadBytes'     => $autoload === null ? null : (int) $autoload,
+      'expiredTransients' => $expired === null ? null : (int) $expired,
+      'revisions'         => $revisions === null ? null : (int) $revisions,
+      'sizeBytes'         => $size,
+    ];
+  }
+
+  private function audit_cron() {
+    $events = 0;
+    $overdue = 0;
+    $cron = _get_cron_array();
+    $threshold = time() - HOUR_IN_SECONDS;
+    if (is_array($cron)) {
+      foreach ($cron as $timestamp => $hooks) {
+        $count = 0;
+        foreach ((array) $hooks as $instances) {
+          $count += is_array($instances) ? count($instances) : 0;
+        }
+        $events += $count;
+        if ((int) $timestamp < $threshold) {
+          $overdue += $count;
+        }
+      }
+    }
+
+    return [
+      'disabled'  => defined('DISABLE_WP_CRON') && DISABLE_WP_CRON,
+      'alternate' => defined('ALTERNATE_WP_CRON') && ALTERNATE_WP_CRON,
+      'events'    => $events,
+      'overdue'   => $overdue,
+    ];
+  }
+
+  /**
+   * Expensive file scans, each under a time budget and cached for 12 hours.
+   * A scan that runs out of time reports null (unknown), never a partial count.
+   */
+  private function audit_red_flags($refresh) {
+    $cached = $refresh ? false : get_transient('getsafe360_audit_scans');
+    if (is_array($cached)) {
+      return $cached;
+    }
+
+    $deadline = microtime(true) + self::AUDIT_SCAN_BUDGET_SECONDS;
+    $result = [
+      'uploadsPhpFiles'    => $this->audit_count_uploads_php($deadline),
+      'coreModifiedFiles'  => $this->audit_core_modified_files($deadline),
+      'scannedAt'          => gmdate('c'),
+    ];
+    set_transient('getsafe360_audit_scans', $result, self::AUDIT_CACHE_TTL);
+    return $result;
+  }
+
+  private function audit_count_uploads_php($deadline) {
+    $uploads = wp_upload_dir(null, false);
+    $base = isset($uploads['basedir']) ? $uploads['basedir'] : '';
+    if (!$base || !is_dir($base)) {
+      return 0;
+    }
+
+    $count = 0;
+    try {
+      $iterator = new \RecursiveIteratorIterator(
+        new \RecursiveDirectoryIterator($base, \FilesystemIterator::SKIP_DOTS),
+        \RecursiveIteratorIterator::LEAVES_ONLY
+      );
+      foreach ($iterator as $file) {
+        if (microtime(true) > $deadline) {
+          return null;
+        }
+        if (preg_match('/\.(php[0-9]?|phtml|phar)$/i', $file->getFilename())) {
+          $count++;
+        }
+      }
+    } catch (\Exception $e) {
+      return null;
+    }
+    return $count;
+  }
+
+  private function audit_core_modified_files($deadline) {
+    if (!function_exists('get_core_checksums')) {
+      require_once ABSPATH . 'wp-admin/includes/update.php';
+    }
+    $checksums = get_core_checksums(get_bloginfo('version'), get_locale());
+    if (!is_array($checksums) || empty($checksums)) {
+      $checksums = get_core_checksums(get_bloginfo('version'), 'en_US');
+    }
+    if (!is_array($checksums) || empty($checksums)) {
+      return null;
+    }
+
+    $modified = 0;
+    foreach ($checksums as $file => $md5) {
+      if (microtime(true) > $deadline) {
+        return null;
+      }
+      // wp-content is user territory, and bundled themes/plugins may be updated or removed.
+      if (strpos($file, 'wp-content/') === 0) {
+        continue;
+      }
+      $path = ABSPATH . $file;
+      if (!file_exists($path)) {
+        continue;
+      }
+      if (md5_file($path) !== $md5) {
+        $modified++;
+      }
+    }
+    return $modified;
+  }
+
+  private function audit_environment() {
+    $active = (array) get_option('active_plugins', []);
+    $has = function ($needle) use ($active) {
+      foreach ($active as $file) {
+        if (strpos($file, $needle) === 0) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    $multilingual = null;
+    if ($has('sitepress-multilingual-cms/')) {
+      $multilingual = 'wpml';
+    } elseif ($has('polylang/') || $has('polylang-pro/')) {
+      $multilingual = 'polylang';
+    } elseif ($has('translatepress-multilingual/')) {
+      $multilingual = 'translatepress';
+    }
+
+    return [
+      'multisite'    => is_multisite(),
+      'woocommerce'  => $has('woocommerce/'),
+      'multilingual' => $multilingual,
+      'locale'       => get_locale(),
+    ];
+  }
+
   public function routes() {
     // Ping endpoint - check if plugin is installed
     register_rest_route('getsafe360/v1', '/ping', [
@@ -680,6 +1036,13 @@ class GetSafe360_Connector {
     register_rest_route('getsafe360/v1', '/capabilities', [
       'methods' => 'GET',
       'callback' => [$this, 'route_capabilities'],
+      'permission_callback' => [$this, 'auth_api_key']
+    ]);
+
+    // Audit endpoint - read-only health and security telemetry (flags and counts only)
+    register_rest_route('getsafe360/v1', '/audit', [
+      'methods' => 'GET',
+      'callback' => [$this, 'route_audit'],
       'permission_callback' => [$this, 'auth_api_key']
     ]);
 
@@ -1035,6 +1398,7 @@ class GetSafe360_Connector {
         'securityDisableXmlrpc' => true,
         'securityBlockUserEnumeration' => true,
         'securityHeaders'      => true,
+        'siteAudit'            => true,
         'rollback'             => true,
       ],
     ];
