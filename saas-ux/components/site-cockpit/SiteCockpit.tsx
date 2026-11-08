@@ -417,10 +417,9 @@ export function SiteCockpit({
     [selectFocus],
   );
 
-  const renderedCards =
-    focus === "all"
-      ? visibleCards
-      : visibleCards.filter((card) => card.id === focus || card.id === "optimization");
+  // Hidden cards stay mounted, so switching tabs never discards a card's state
+  // (fix results and Undo in the WordPress checklist, an optimization in flight).
+  const isShown = (cardId: string) => focus === "all" || cardId === focus || cardId === "optimization";
 
   return (
     <div
@@ -509,7 +508,7 @@ export function SiteCockpit({
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={renderedCards.map((c) => c.id)}
+          items={visibleCards.filter((c) => isShown(c.id)).map((c) => c.id)}
           strategy={rectSortingStrategy}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
@@ -565,7 +564,8 @@ export function SiteCockpit({
                   : "grid grid-cols-1 gap-6"
               }
             >
-              {renderedCards.map((card) => {
+              {visibleCards.map((card) => {
+                const element = (() => {
                 if (card.id === "performance") {
                   return (
                     <PerformanceCard
@@ -666,6 +666,13 @@ export function SiteCockpit({
                 }
 
                 return null;
+                })();
+                return (
+                  // display: contents keeps the card a direct grid item when shown.
+                  <div key={card.id} className={isShown(card.id) ? "contents" : "hidden"}>
+                    {element}
+                  </div>
+                );
               })}
             </div>
 
