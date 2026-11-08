@@ -5,7 +5,11 @@
       "needsAudit": "Needs the GetSafe 360 plugin 1.6 or newer.",
       "notEvaluated": "This check could not be evaluated.",
       "headersNotCaptured": "Response headers were not captured.",
-      "headerSet": "{header} is set."
+      "headerSet": "{header} is set.",
+      "notWordPress": "Only applies to WordPress sites.",
+      "noTitle": "The page has no title to measure.",
+      "noDescription": "The page has no meta description to measure.",
+      "pageNotRead": "The page content could not be read."
     },
     "wp-core-version": {
       "title": "WordPress core version",
@@ -271,6 +275,168 @@
       "enforced": "DMARC policy is \"{policy}\"{inherited, select, yes { (inherited from {source})} other {}}.",
       "monitoring": "DMARC only monitors (p=none){inherited, select, yes { (inherited from {source})} other {}}; spoofed mail is still delivered.",
       "invalid": "The DMARC record has no valid policy{inherited, select, yes { (inherited from {source})} other {}}."
+    },
+    "seo-title-missing": {
+      "title": "Page has no title tag",
+      "recommendation": "Add a unique 40–60 character title in your theme or SEO plugin settings.",
+      "present": "The page has a title tag.",
+      "missing": "The homepage does not expose a title tag. Search engines and AI answer engines fall back to the domain name or arbitrary page text."
+    },
+    "seo-title-short": {
+      "title": "Title tag is very short",
+      "recommendation": "Expand the title to 40–60 characters including the primary topic and brand.",
+      "short": "The title is {length} characters, which usually means it carries no descriptive keywords.",
+      "ok": "The title is {length} characters."
+    },
+    "seo-title-long": {
+      "title": "Title tag is likely truncated",
+      "recommendation": "Trim the title to about 60 characters, keeping the most important words first.",
+      "long": "The title is {length} characters and will be cut off in most search results.",
+      "ok": "The title is {length} characters."
+    },
+    "seo-meta-desc-missing": {
+      "title": "Missing meta description",
+      "recommendation": "Add a 120–160 character meta description summarising the page.",
+      "present": "The page has a meta description.",
+      "missing": "No meta description was found, so search engines generate their own snippet from page text."
+    },
+    "seo-meta-desc-short": {
+      "title": "Meta description is too short",
+      "recommendation": "Expand it to 120–160 characters.",
+      "short": "The meta description is {length} characters, too short to use the available snippet space.",
+      "ok": "The meta description is {length} characters."
+    },
+    "seo-canonical-missing": {
+      "title": "No canonical URL declared",
+      "recommendation": "Add a canonical link pointing at the preferred URL.",
+      "present": "A canonical URL is declared.",
+      "missing": "Without a canonical link, duplicate URLs (with and without trailing slash, query parameters, or www) can compete with each other."
+    },
+    "seo-noindex": {
+      "title": "Page is marked noindex",
+      "recommendation": "Remove the noindex directive unless this page is intentionally hidden.",
+      "indexable": "Search engines may index the page.",
+      "noindex": "A robots meta tag tells search engines not to index this page. If this is the live homepage, the site is invisible in search."
+    },
+    "seo-schema-missing": {
+      "title": "No structured data (schema.org)",
+      "recommendation": "Publish Organization (or LocalBusiness) structured data in the page head.",
+      "present": "The page publishes JSON-LD structured data.",
+      "missing": "The page publishes no JSON-LD structured data, so search engines and AI answer engines have to infer what the business is, where it operates and how to contact it."
+    },
+    "seo-og-missing": {
+      "title": "Incomplete social sharing tags",
+      "recommendation": "Add og:title, og:description, og:image and twitter:card tags.",
+      "present": "Open Graph title and image are set.",
+      "missing": "Open Graph tags are missing, so links shared on social platforms and messaging apps render without a proper title or preview image.",
+      "incomplete": "Open Graph tags are incomplete, so links shared on social platforms and messaging apps render without a proper title or preview image."
+    },
+    "seo-h1-missing": {
+      "title": "No H1 heading",
+      "recommendation": "Add exactly one H1 that states what the page is about.",
+      "present": "The page has an H1 heading.",
+      "missing": "The page has no H1, so the main topic is not stated in the document outline."
+    },
+    "seo-h1-multiple": {
+      "title": "Multiple H1 headings",
+      "recommendation": "Keep one H1 and demote the rest to H2.",
+      "ok": "The page has no more than one H1.",
+      "multiple": "The page has {count} H1 elements, which dilutes the topical signal."
+    },
+    "sec-no-https": {
+      "title": "Site is not served over HTTPS",
+      "recommendation": "Install a TLS certificate and redirect all HTTP traffic to HTTPS.",
+      "httpsUnknown": "HTTPS status was not observed.",
+      "https": "The site is served over HTTPS.",
+      "http": "The final URL after redirects is plain HTTP. All traffic, including form submissions, travels unencrypted."
+    },
+    "sec-version-disclosure": {
+      "title": "Server software version disclosed",
+      "recommendation": "Suppress version numbers in the Server and X-Powered-By headers.",
+      "hidden": "Response headers do not reveal software versions.",
+      "disclosed": "Response headers reveal exact software versions, which helps an attacker match known exploits."
+    },
+    "sec-wp-xmlrpc": {
+      "title": "XML-RPC is reachable",
+      "recommendation": "Disable XML-RPC unless a connected app depends on it.",
+      "unknown": "Whether xmlrpc.php is reachable could not be determined.",
+      "blocked": "xmlrpc.php is not reachable.",
+      "reachable": "xmlrpc.php is enabled. It is a common target for brute-force amplification and pingback abuse, and almost no modern site needs it."
+    },
+    "sec-wp-user-enum": {
+      "title": "User enumeration is possible",
+      "recommendation": "Block unauthenticated user enumeration.",
+      "unknown": "The WordPress users endpoint could not be checked.",
+      "blocked": "The WordPress users endpoint does not list usernames to anonymous visitors.",
+      "exposed": "The WordPress REST API exposes /wp-json/wp/v2/users, letting anyone list valid usernames for a brute-force attempt."
+    },
+    "sec-wp-version-exposed": {
+      "title": "WordPress version is public",
+      "recommendation": "Remove the generator meta tag.",
+      "hidden": "The page does not advertise the WordPress version.",
+      "exposed": "The generator meta tag advertises WordPress {version}, making it trivial to look up matching vulnerabilities."
+    },
+    "a11y-img-alt": {
+      "title": "Images without alt text",
+      "recommendation": "Add descriptive alt text, or an empty alt attribute for images that are purely decorative.",
+      "ok": "All images have an alt attribute.",
+      "missing": "{missing} of {total} images ({ratio}%) have no alt attribute, so screen readers announce nothing for them."
+    },
+    "a11y-lang-missing": {
+      "title": "No document language declared",
+      "recommendation": "Add the correct language code (for example lang=\"en\") to the html element.",
+      "present": "The document language is declared ({lang}).",
+      "missing": "The html element has no lang attribute, so screen readers cannot choose the right pronunciation rules."
+    },
+    "a11y-heading-structure": {
+      "title": "No top-level heading for navigation",
+      "recommendation": "Add a single H1 as the first heading on the page.",
+      "present": "The page has a top-level heading.",
+      "missing": "Screen reader users navigate by headings. With no H1 there is no entry point to the page structure."
+    },
+    "perf-script-count": {
+      "title": "Large number of script tags",
+      "recommendation": "Bundle or defer non-critical scripts and remove unused plugins.",
+      "ok": "{count} script elements.",
+      "many": "{count} script elements were found in the HTML. Each one is a parse and, usually, a network round trip."
+    },
+    "perf-image-count": {
+      "title": "Very image-heavy page",
+      "recommendation": "Lazy-load below-the-fold images and serve modern formats (WebP/AVIF).",
+      "ok": "{count} images on the page.",
+      "many": "{count} images are referenced on a single page."
+    },
+    "perf-html-size": {
+      "title": "HTML document is very large",
+      "recommendation": "Move inline styles and data blobs out of the document and paginate long pages.",
+      "ok": "The HTML document is about {kb} KB.",
+      "large": "The HTML response is roughly {kb} KB before any assets load."
+    },
+    "perf-no-compression": {
+      "title": "HTML is served uncompressed",
+      "recommendation": "Enable Brotli or gzip compression at the server or CDN.",
+      "compressed": "The HTML is compressed ({encoding}).",
+      "uncompressed": "No Content-Encoding header was returned, so the document transfers at full size."
+    },
+    "perf-no-cache-header": {
+      "title": "No Cache-Control header",
+      "recommendation": "Set an explicit Cache-Control policy for HTML and static assets.",
+      "present": "A Cache-Control header is set.",
+      "missing": "Without explicit caching rules, browsers and CDNs have to guess how long the response stays fresh."
+    },
+    "content-title-length": {
+      "title": "Page title length",
+      "recommendation": "Keep the page title between 30 and 60 characters.",
+      "ok": "The title is {length} characters, within the 30–60 range.",
+      "outside": "The title is {length} characters, outside the 30–60 range.",
+      "missing": "The page has no title."
+    },
+    "content-desc-length": {
+      "title": "Meta description length",
+      "recommendation": "Keep the meta description between 120 and 160 characters.",
+      "ok": "The meta description is {length} characters, within the 120–160 range.",
+      "outside": "The meta description is {length} characters, outside the 120–160 range.",
+      "missing": "The page has no meta description."
     }
   }
 }

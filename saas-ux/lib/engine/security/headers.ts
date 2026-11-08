@@ -1,13 +1,20 @@
 // lib/engine/security/headers.ts
 //
-// HTTP security header rule pack. Detection reuses the deterministic list in
-// lib/scan/rules.ts so the URL scan and the engine agree on ids; the engine's
-// wording lives in messages/Findings like every other rule.
+// HTTP security header rule pack, shared by the WordPress checklist and the
+// page checks (lib/engine/page) that the cockpit cards and the site scan use.
 // The fix values here are the exact headers the connector will send.
 
-import { SECURITY_HEADERS } from '@/lib/scan/rules';
-import type { FixRef } from '../contracts';
+import type { FixRef, Severity } from '../contracts';
 import { type Rule, unknown } from '../rules';
+
+/** The response headers checked, in report order. Wording is in messages/Findings. */
+export const SECURITY_HEADERS: ReadonlyArray<{ header: string; id: string; severity: Severity }> = [
+  { header: 'strict-transport-security', id: 'sec-hsts', severity: 'high' },
+  { header: 'content-security-policy', id: 'sec-csp', severity: 'medium' },
+  { header: 'x-content-type-options', id: 'sec-nosniff', severity: 'medium' },
+  { header: 'referrer-policy', id: 'sec-referrer-policy', severity: 'low' },
+  { header: 'x-frame-options', id: 'sec-frame-options', severity: 'medium' },
+];
 
 export interface SiteHeaderFacts {
   /** Final URL is HTTPS; null when not observed. */

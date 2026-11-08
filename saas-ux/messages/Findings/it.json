@@ -5,7 +5,11 @@
       "needsAudit": "Richiede il plugin GetSafe 360 1.6 o successivo.",
       "notEvaluated": "Non è stato possibile valutare questo controllo.",
       "headersNotCaptured": "Gli header della risposta non sono stati acquisiti.",
-      "headerSet": "{header} è impostato."
+      "headerSet": "{header} è impostato.",
+      "notWordPress": "Si applica solo ai siti WordPress.",
+      "noTitle": "La pagina non ha un titolo da misurare.",
+      "noDescription": "La pagina non ha una meta description da misurare.",
+      "pageNotRead": "Non è stato possibile leggere il contenuto della pagina."
     },
     "wp-core-version": {
       "title": "Versione del core di WordPress",
@@ -271,6 +275,168 @@
       "enforced": "La policy DMARC è \"{policy}\"{inherited, select, yes { (ereditata da {source})} other {}}.",
       "monitoring": "DMARC si limita a monitorare (p=none){inherited, select, yes { (ereditata da {source})} other {}}; le email contraffatte vengono ancora consegnate.",
       "invalid": "Il record DMARC non ha una policy valida{inherited, select, yes { (ereditata da {source})} other {}}."
+    },
+    "seo-title-missing": {
+      "title": "La pagina non ha il tag title",
+      "recommendation": "Aggiungi un titolo univoco di 40–60 caratteri nelle impostazioni del tema o del plugin SEO.",
+      "present": "La pagina ha il tag title.",
+      "missing": "La home page non ha il tag title. Motori di ricerca e motori di risposta IA ripiegano sul nome di dominio o su testo qualsiasi della pagina."
+    },
+    "seo-title-short": {
+      "title": "Il tag title è molto corto",
+      "recommendation": "Allunga il titolo a 40–60 caratteri includendo l’argomento principale e il brand.",
+      "short": "Il titolo è di {length} caratteri, il che di solito significa che non contiene parole chiave descrittive.",
+      "ok": "Il titolo è di {length} caratteri."
+    },
+    "seo-title-long": {
+      "title": "Il tag title viene probabilmente troncato",
+      "recommendation": "Accorcia il titolo a circa 60 caratteri, mettendo all’inizio le parole più importanti.",
+      "long": "Il titolo è di {length} caratteri e verrà troncato nella maggior parte dei risultati di ricerca.",
+      "ok": "Il titolo è di {length} caratteri."
+    },
+    "seo-meta-desc-missing": {
+      "title": "Meta description mancante",
+      "recommendation": "Aggiungi una meta description di 120–160 caratteri che riassuma la pagina.",
+      "present": "La pagina ha una meta description.",
+      "missing": "Non è stata trovata alcuna meta description, quindi i motori di ricerca generano il proprio snippet dal testo della pagina."
+    },
+    "seo-meta-desc-short": {
+      "title": "La meta description è troppo corta",
+      "recommendation": "Allungala a 120–160 caratteri.",
+      "short": "La meta description è di {length} caratteri, troppo corta per sfruttare lo spazio disponibile nello snippet.",
+      "ok": "La meta description è di {length} caratteri."
+    },
+    "seo-canonical-missing": {
+      "title": "Nessun URL canonico dichiarato",
+      "recommendation": "Aggiungi un link canonical che punti all’URL preferito.",
+      "present": "È dichiarato un URL canonico.",
+      "missing": "Senza link canonical, gli URL duplicati (con e senza slash finale, parametri o www) possono farsi concorrenza."
+    },
+    "seo-noindex": {
+      "title": "La pagina è impostata su noindex",
+      "recommendation": "Rimuovi la direttiva noindex, a meno che la pagina non debba restare nascosta di proposito.",
+      "indexable": "I motori di ricerca possono indicizzare la pagina.",
+      "noindex": "Un meta tag robots dice ai motori di ricerca di non indicizzare questa pagina. Se è la home page in produzione, il sito è invisibile nelle ricerche."
+    },
+    "seo-schema-missing": {
+      "title": "Nessun dato strutturato (schema.org)",
+      "recommendation": "Pubblica dati strutturati Organization (o LocalBusiness) nell’head della pagina.",
+      "present": "La pagina pubblica dati strutturati JSON-LD.",
+      "missing": "La pagina non pubblica dati strutturati JSON-LD, quindi motori di ricerca e motori di risposta IA devono dedurre che cos’è l’attività, dove opera e come contattarla."
+    },
+    "seo-og-missing": {
+      "title": "Tag per la condivisione social incompleti",
+      "recommendation": "Aggiungi i tag og:title, og:description, og:image e twitter:card.",
+      "present": "Titolo e immagine Open Graph sono impostati.",
+      "missing": "I tag Open Graph mancano, quindi i link condivisi su social e app di messaggistica appaiono senza un titolo o un’immagine di anteprima adeguati.",
+      "incomplete": "I tag Open Graph sono incompleti, quindi i link condivisi su social e app di messaggistica appaiono senza un titolo o un’immagine di anteprima adeguati."
+    },
+    "seo-h1-missing": {
+      "title": "Nessun titolo H1",
+      "recommendation": "Aggiungi esattamente un H1 che dica di cosa tratta la pagina.",
+      "present": "La pagina ha un titolo H1.",
+      "missing": "La pagina non ha un H1, quindi l’argomento principale non compare nella struttura del documento."
+    },
+    "seo-h1-multiple": {
+      "title": "Più titoli H1",
+      "recommendation": "Mantieni un solo H1 e trasforma gli altri in H2.",
+      "ok": "La pagina non ha più di un H1.",
+      "multiple": "La pagina ha {count} elementi H1, il che diluisce il segnale tematico."
+    },
+    "sec-no-https": {
+      "title": "Il sito non è servito in HTTPS",
+      "recommendation": "Installa un certificato TLS e reindirizza tutto il traffico HTTP su HTTPS.",
+      "httpsUnknown": "Lo stato HTTPS non è stato rilevato.",
+      "https": "Il sito è servito in HTTPS.",
+      "http": "L’URL finale dopo i reindirizzamenti è in HTTP non cifrato. Tutto il traffico, compresi gli invii dei moduli, viaggia senza crittografia."
+    },
+    "sec-version-disclosure": {
+      "title": "Versione del software del server esposta",
+      "recommendation": "Nascondi i numeri di versione negli header Server e X-Powered-By.",
+      "hidden": "Gli header della risposta non rivelano versioni del software.",
+      "disclosed": "Gli header della risposta rivelano versioni esatte del software, il che aiuta un attaccante a trovare exploit noti."
+    },
+    "sec-wp-xmlrpc": {
+      "title": "XML-RPC è raggiungibile",
+      "recommendation": "Disattiva XML-RPC, a meno che un’app collegata non ne abbia bisogno.",
+      "unknown": "Non è stato possibile stabilire se xmlrpc.php sia raggiungibile.",
+      "blocked": "xmlrpc.php non è raggiungibile.",
+      "reachable": "xmlrpc.php è attivo. È un bersaglio comune per attacchi brute force amplificati e abusi dei pingback, e quasi nessun sito moderno ne ha bisogno."
+    },
+    "sec-wp-user-enum": {
+      "title": "È possibile enumerare gli utenti",
+      "recommendation": "Blocca l’enumerazione degli utenti senza autenticazione.",
+      "unknown": "Non è stato possibile verificare l’endpoint utenti di WordPress.",
+      "blocked": "L’endpoint utenti di WordPress non elenca i nomi utente ai visitatori anonimi.",
+      "exposed": "L’API REST di WordPress espone /wp-json/wp/v2/users, permettendo a chiunque di elencare nomi utente validi per un attacco brute force."
+    },
+    "sec-wp-version-exposed": {
+      "title": "La versione di WordPress è pubblica",
+      "recommendation": "Rimuovi il meta tag generator.",
+      "hidden": "La pagina non mostra la versione di WordPress.",
+      "exposed": "Il meta tag generator mostra WordPress {version}, rendendo facile cercare le vulnerabilità corrispondenti."
+    },
+    "a11y-img-alt": {
+      "title": "Immagini senza testo alternativo",
+      "recommendation": "Aggiungi un testo alternativo descrittivo, oppure un attributo alt vuoto per le immagini puramente decorative.",
+      "ok": "Tutte le immagini hanno l’attributo alt.",
+      "missing": "{missing} immagini su {total} ({ratio}%) non hanno l’attributo alt, quindi gli screen reader non annunciano nulla."
+    },
+    "a11y-lang-missing": {
+      "title": "Nessuna lingua del documento dichiarata",
+      "recommendation": "Aggiungi il codice lingua corretto (ad esempio lang=\"it\") all’elemento html.",
+      "present": "La lingua del documento è dichiarata ({lang}).",
+      "missing": "L’elemento html non ha l’attributo lang, quindi gli screen reader non possono scegliere le regole di pronuncia corrette."
+    },
+    "a11y-heading-structure": {
+      "title": "Nessun titolo principale per la navigazione",
+      "recommendation": "Aggiungi un solo H1 come primo titolo della pagina.",
+      "present": "La pagina ha un titolo principale.",
+      "missing": "Chi usa uno screen reader naviga tramite i titoli. Senza H1 non c’è un punto di ingresso nella struttura della pagina."
+    },
+    "perf-script-count": {
+      "title": "Numero elevato di tag script",
+      "recommendation": "Raggruppa o rimanda gli script non critici e rimuovi i plugin inutilizzati.",
+      "ok": "{count} elementi script.",
+      "many": "Nell’HTML sono stati trovati {count} elementi script. Ognuno va analizzato e di solito richiede una richiesta di rete."
+    },
+    "perf-image-count": {
+      "title": "Pagina con moltissime immagini",
+      "recommendation": "Carica in modo differito le immagini fuori dalla vista iniziale e usa formati moderni (WebP/AVIF).",
+      "ok": "{count} immagini nella pagina.",
+      "many": "In una sola pagina sono usate {count} immagini."
+    },
+    "perf-html-size": {
+      "title": "Il documento HTML è molto grande",
+      "recommendation": "Sposta stili inline e blocchi di dati fuori dal documento e suddividi le pagine lunghe.",
+      "ok": "Il documento HTML è di circa {kb} KB.",
+      "large": "La risposta HTML è di circa {kb} KB prima del caricamento di qualsiasi risorsa."
+    },
+    "perf-no-compression": {
+      "title": "L’HTML è servito senza compressione",
+      "recommendation": "Attiva la compressione Brotli o gzip sul server o sulla CDN.",
+      "compressed": "L’HTML è compresso ({encoding}).",
+      "uncompressed": "Non è stato restituito alcun header Content-Encoding, quindi il documento viene trasferito a dimensione piena."
+    },
+    "perf-no-cache-header": {
+      "title": "Nessun header Cache-Control",
+      "recommendation": "Imposta una policy Cache-Control esplicita per l’HTML e le risorse statiche.",
+      "present": "È impostato un header Cache-Control.",
+      "missing": "Senza regole di cache esplicite, browser e CDN devono indovinare per quanto tempo la risposta resta valida."
+    },
+    "content-title-length": {
+      "title": "Lunghezza del titolo della pagina",
+      "recommendation": "Mantieni il titolo della pagina tra 30 e 60 caratteri.",
+      "ok": "Il titolo è di {length} caratteri, nell’intervallo 30–60.",
+      "outside": "Il titolo è di {length} caratteri, fuori dall’intervallo 30–60.",
+      "missing": "La pagina non ha un titolo."
+    },
+    "content-desc-length": {
+      "title": "Lunghezza della meta description",
+      "recommendation": "Mantieni la meta description tra 120 e 160 caratteri.",
+      "ok": "La meta description è di {length} caratteri, nell’intervallo 120–160.",
+      "outside": "La meta description è di {length} caratteri, fuori dall’intervallo 120–160.",
+      "missing": "La pagina non ha una meta description."
     }
   }
 }

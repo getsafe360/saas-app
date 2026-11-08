@@ -16,7 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { CategoryType } from "@/types/site-cockpit";
+import type { CategoryTopFinding, CategoryType } from "@/types/site-cockpit";
 import type { ComponentType, ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
@@ -36,6 +36,8 @@ interface CockpitCardProps {
     warnings: number;
     criticalIssues: number;
     topIssues?: string[];
+    /** Same problems as topIssues, with message keys for translation. */
+    topFindings?: CategoryTopFinding[];
   };
   onOptimize?: () => void;
   optimizing?: boolean;
@@ -129,6 +131,16 @@ export function CockpitCard({
   onUnlock,
 }: CockpitCardProps) {
   const t = useTranslations("SiteCockpit");
+  const tFindings = useTranslations("Findings");
+  const topIssues: Array<{ text: string; critical: boolean }> = stats?.topFindings?.length
+    ? stats.topFindings.map((finding) => ({
+        text:
+          finding.messages?.title && tFindings.has(finding.messages.title)
+            ? tFindings(finding.messages.title)
+            : finding.title,
+        critical: finding.critical,
+      }))
+    : (stats?.topIssues ?? []).map((text, i) => ({ text, critical: i < (stats?.criticalIssues ?? 0) }));
   const {
     attributes,
     listeners,
@@ -259,10 +271,10 @@ export function CockpitCard({
             )}
 
             {/* ── Top issues with severity dots ── */}
-            {stats?.topIssues && stats.topIssues.length > 0 && (
+            {topIssues.length > 0 && (
               <div className="px-6 pb-4 space-y-1.5">
-                {stats.topIssues.map((issue, i) => {
-                  const isCritical = i < stats.criticalIssues;
+                {topIssues.map((issue, i) => {
+                  const isCritical = issue.critical;
                   return (
                     <div key={i} className="flex items-start gap-2">
                       <span
@@ -275,7 +287,7 @@ export function CockpitCard({
                         className="text-xs leading-relaxed"
                         style={{ color: "var(--text-subtle)" }}
                       >
-                        {issue}
+                        {issue.text}
                       </span>
                     </div>
                   );

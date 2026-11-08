@@ -107,6 +107,14 @@ export type WordPressHealthCategory =
   | "seo-ux"
   | "red-flags";
 
+/** A card's top problem with its messages/Findings keys, for translation. */
+export interface CategoryTopFinding {
+  id: string;
+  title: string;
+  critical: boolean;
+  messages?: { title: string; summary: string; values?: Record<string, string | number>; recommendation: string };
+}
+
 export interface WordPressHealthFinding {
   id: string;
   category: WordPressHealthCategory;
@@ -687,30 +695,35 @@ export interface Summary {
       warnings: number;
       passed: number;
       topIssues: string[];
+      topFindings?: CategoryTopFinding[];
     };
     security: {
       criticalIssues: number;
       warnings: number;
       passed: number;
       topIssues: string[];
+      topFindings?: CategoryTopFinding[];
     };
     seo: {
       criticalIssues: number;
       warnings: number;
       passed: number;
       topIssues: string[];
+      topFindings?: CategoryTopFinding[];
     };
     accessibility: {
       criticalIssues: number;
       warnings: number;
       passed: number;
       topIssues: string[];
+      topFindings?: CategoryTopFinding[];
     };
     content: {
       criticalIssues: number;
       warnings: number;
       passed: number;
       topIssues: string[];
+      topFindings?: CategoryTopFinding[];
     };
   };
   criticalIssues: number;

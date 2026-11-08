@@ -17,9 +17,9 @@ import 'server-only';
 
 import { preScan } from '@/lib/analyzer/preScan';
 import { isPublicUrlResolved } from '@/lib/net/isPublicUrlResolved';
-import { getPageSpeedSummary, type PageSpeedSummary } from '@/lib/analyzer/pageSpeed';
+import { getPageSpeedSummary } from '@/lib/analyzer/pageSpeed';
 import { isPublicUrl } from '@/lib/net/isPublicUrl';
-import { runRules } from '@/lib/scan/rules';
+import { blendCategoryScores, evaluatePageScan } from '@/lib/engine/page/scan';
 import type { CategoryScores, ScanCategory, ScanIssue, ScanReport } from '@/lib/scan/types';
 import { logger } from '@/lib/logger';
 import { generateText } from 'ai';
@@ -29,52 +29,11 @@ const log = logger('scan/runner');
 
 const CATEGORIES: ScanCategory[] = ['seo', 'performance', 'accessibility', 'security'];
 
-const SEVERITY_PENALTY: Record<ScanIssue['severity'], number> = {
-  high: 22,
-  medium: 11,
-  low: 4,
-};
-
 export class ScanError extends Error {
   constructor(message: string, readonly code: string) {
     super(message);
     this.name = 'ScanError';
   }
-}
-
-/** Rule-derived score for one category: start at 100, subtract severity weights. */
-function ruleScore(issues: ScanIssue[]): number {
-  const penalty = issues.reduce((acc, i) => acc + SEVERITY_PENALTY[i.severity], 0);
-  return Math.max(0, Math.min(100, 100 - penalty));
-}
-
-/**
- * Blend Lighthouse and rule scores where both exist.
- *
- * Lighthouse is the better measurement for performance (it actually loads the
- * page); our rules are better for security (Lighthouse does not score it at
- * all) and catch things Lighthouse ignores. Weighting Lighthouse at 60% keeps
- * the number recognisable to anyone who also runs PageSpeed Insights, while
- * still moving when we find something it missed.
- */
-function blendScores(
-  issuesByCategory: Record<ScanCategory, ScanIssue[]>,
-  pageSpeed: PageSpeedSummary | null
-): CategoryScores {
-  const scores = {} as CategoryScores;
-
-  for (const category of CATEGORIES) {
-    const fromRules = ruleScore(issuesByCategory[category]);
-    const fromLighthouse =
-      category === 'security' ? undefined : pageSpeed?.categories?.[category];
-
-    scores[category] =
-      typeof fromLighthouse === 'number'
-        ? Math.round(fromLighthouse * 0.6 + fromRules * 0.4)
-        : fromRules;
-  }
-
-  return scores;
 }
 
 function groupByCategory(issues: ScanIssue[]): Record<ScanCategory, ScanIssue[]> {
@@ -215,12 +174,12 @@ export async function runScan({
   );
 
   const requested = categories?.length ? new Set(categories) : new Set(CATEGORIES);
-  const issues = runRules({ pre, headers: pre.headers }).filter((i) =>
-    requested.has(i.category)
-  );
+  // Same checks as the cockpit cards (lib/engine/page), so scores, issue lists
+  // and the "Next step" box always agree.
+  const { issues, ruleScores } = evaluatePageScan(pre, requested);
 
   const grouped = groupByCategory(issues);
-  const categoryScores = blendScores(grouped, pageSpeed);
+  const categoryScores = blendCategoryScores(ruleScores, pageSpeed?.categories);
 
   const requestedList = CATEGORIES.filter((c) => requested.has(c));
   const overall = Math.round(

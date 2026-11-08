@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
   ArrowRight,
@@ -64,6 +65,10 @@ export function NextStepBanner({
   scanState,
   onScan,
 }: NextStepBannerProps) {
+  const tFindings = useTranslations("Findings");
+  // Stored scan issues carry English titles; show them in the user's language by check id.
+  const issueTitle = (issue: { id: string; title: string }) =>
+    tFindings.has(`${issue.id}.title`) ? tFindings(`${issue.id}.title`) : issue.title;
   const connected = connectionStatus === "connected";
   const reportHref = scan
     ? `/${locale}/dashboard/sites/${siteId}/analyze?job=${encodeURIComponent(scan.jobId)}`
@@ -187,7 +192,7 @@ export function NextStepBanner({
                       style={{ background: SEVERITY_DOT[issue.severity] }}
                       title={`${issue.severity} severity`}
                     />
-                    <span className="min-w-0 truncate">{issue.title}</span>
+                    <span className="min-w-0 truncate">{issueTitle(issue)}</span>
                     {issue.fixAvailable && (
                       <span
                         className="shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium"

@@ -14,6 +14,7 @@
 import type { SiteCockpitResponse, ScoreGrade, WordPress, ContentData } from "@/types/site-cockpit";
 import { buildWordPressFacts } from "@/lib/engine/wordpress/facts";
 import { evaluateWordPressHealthFromApiData } from "@/lib/engine/wordpress/view";
+import { evaluatePageCards } from "@/lib/engine/page/view";
 import { computeTrend } from "@/lib/engine/scoring";
 
 // ============================================
@@ -219,66 +220,6 @@ export function getScoreGrade(score: number): ScoreGrade {
 // CATEGORY SCORE CALCULATORS
 // ============================================
 
-export function calculatePerformanceScore(data: any): number {
-  let score = 100;
-  if (data.perfHints?.approxHtmlBytes > 500000) score -= 20;
-  else if (data.perfHints?.approxHtmlBytes > 200000) score -= 10;
-  if (data.perfHints?.heavyScriptHint) score -= 15;
-  if (data.perfHints?.heavyImageHint) score -= 10;
-  return Math.max(0, score);
-}
-
-export function calculateSecurityScore(data: any): number {
-  let score = 100;
-  if (!data.isHttps) score -= 30;
-  if (!data.headers?.["strict-transport-security"]) score -= 15;
-  if (!data.headers?.["content-security-policy"]) score -= 15;
-  if (!data.headers?.["x-frame-options"]) score -= 10;
-  if (!data.headers?.["x-content-type-options"]) score -= 10;
-  return Math.max(0, score);
-}
-
-export function calculateSEOScore(data: any): number {
-  let score = 100;
-  if (!data.meta?.title || data.meta.titleLen === 0) score -= 20;
-  if (!data.meta?.description || data.meta.descriptionLen === 0) score -= 15;
-  if (!data.meta?.hasCanonical) score -= 10;
-  if (data.dom?.h1Count !== 1) score -= 10;
-  if (data.accessibility?.imgMissingAlt > 0) score -= 5;
-  return Math.max(0, score);
-}
-
-export function calculateAccessibilityScore(data: any): number {
-  if (data.accessibility?.imgWithoutAltRatio === 0) return 100;
-  return Math.max(0, 100 - (data.accessibility?.imgWithoutAltRatio || 0) * 100);
-}
-
-export function calculateContentScore(data: any): number {
-  let score = 55; // Base — full content audit requires deep analysis
-
-  const titleLen = data.meta?.titleLen || 0;
-  const descLen = data.meta?.descriptionLen || 0;
-
-  if (data.meta?.title) {
-    if (titleLen >= 30 && titleLen <= 60) score += 15;
-    else if (titleLen > 0) score += 7;
-  }
-
-  if (data.meta?.description) {
-    if (descLen >= 120 && descLen <= 160) score += 12;
-    else if (descLen > 0) score += 6;
-  }
-
-  if (data.dom?.h1Count === 1) score += 10;
-  else if (data.dom?.h1Count > 1) score -= 5;
-
-  if (data.siteLang) score += 5;
-
-  if (data.meta?.hasCanonical) score += 3;
-
-  return Math.min(100, Math.max(0, score));
-}
-
 // ============================================
 // SUMMARY TRANSFORMERS
 // ============================================
@@ -297,73 +238,6 @@ function generateStrengths(
   if (data.isHttps) strengths.push("HTTPS enabled");
   if (data.dom?.h1Count === 1) strengths.push("Proper H1 structure");
   return strengths.slice(0, 4);
-}
-
-type CheckSeverity = "critical" | "warning" | "passed";
-
-type CategoryInsights = {
-  criticalIssues: number;
-  warnings: number;
-  passed: number;
-  topIssues: string[];
-};
-
-function evaluateCategoryChecks(data: any): Record<"performance" | "security" | "seo" | "accessibility" | "content", CategoryInsights> {
-  const checks = {
-    performance: [
-      { ok: !data.perfHints?.heavyScriptHint, severity: "warning" as CheckSeverity, message: "Heavy scripts detected" },
-      { ok: !data.perfHints?.heavyImageHint, severity: "warning" as CheckSeverity, message: "Heavy images detected" },
-      { ok: (data.perfHints?.approxHtmlBytes || 0) <= 500000, severity: "critical" as CheckSeverity, message: "HTML payload is too large" },
-    ],
-    security: [
-      { ok: !!data.isHttps, severity: "critical" as CheckSeverity, message: "HTTPS is not enabled" },
-      { ok: !!data.headers?.["content-security-policy"], severity: "critical" as CheckSeverity, message: "Missing Content-Security-Policy" },
-      { ok: !!data.headers?.["strict-transport-security"], severity: "warning" as CheckSeverity, message: "Missing HSTS header" },
-      { ok: !!data.headers?.["x-frame-options"], severity: "warning" as CheckSeverity, message: "Missing X-Frame-Options" },
-    ],
-    seo: [
-      { ok: !!data.meta?.title && data.meta.titleLen > 0, severity: "critical" as CheckSeverity, message: "Missing page title" },
-      { ok: !!data.meta?.description && data.meta.descriptionLen > 0, severity: "warning" as CheckSeverity, message: "Missing meta description" },
-      { ok: !!data.meta?.hasCanonical, severity: "warning" as CheckSeverity, message: "Missing canonical URL" },
-      { ok: data.dom?.h1Count === 1, severity: "warning" as CheckSeverity, message: "Heading structure should have exactly one H1" },
-    ],
-    accessibility: [
-      { ok: (data.accessibility?.imgMissingAlt || 0) === 0, severity: "critical" as CheckSeverity, message: "Images missing ALT text" },
-      { ok: (data.accessibility?.imgWithoutAltRatio || 0) < 0.2, severity: "warning" as CheckSeverity, message: "High ratio of images without ALT" },
-      { ok: !!data.siteLang, severity: "warning" as CheckSeverity, message: "Missing lang attribute" },
-    ],
-    content: [
-      { ok: !!data.meta?.title && (data.meta?.titleLen || 0) >= 30 && (data.meta?.titleLen || 0) <= 60, severity: "warning" as CheckSeverity, message: "Page title needs optimization (30–60 chars)" },
-      { ok: !!data.meta?.description && (data.meta?.descriptionLen || 0) >= 120 && (data.meta?.descriptionLen || 0) <= 160, severity: "warning" as CheckSeverity, message: "Meta description length outside optimal range (120–160 chars)" },
-      { ok: data.dom?.h1Count === 1, severity: "warning" as CheckSeverity, message: "Heading structure should have exactly one H1" },
-      { ok: !!data.siteLang, severity: "warning" as CheckSeverity, message: "Missing language declaration" },
-    ],
-  };
-
-  const result = {} as Record<"performance" | "security" | "seo" | "accessibility" | "content", CategoryInsights>;
-
-  for (const [category, categoryChecks] of Object.entries(checks) as Array<[keyof typeof checks, Array<{ ok: boolean; severity: CheckSeverity; message: string }>]>) {
-    let criticalIssues = 0;
-    let warnings = 0;
-    let passed = 0;
-    const topIssues: string[] = [];
-
-    for (const check of categoryChecks) {
-      if (check.ok) {
-        passed += 1;
-      } else if (check.severity === "critical") {
-        criticalIssues += 1;
-        topIssues.push(check.message);
-      } else {
-        warnings += 1;
-        topIssues.push(check.message);
-      }
-    }
-
-    result[category] = { criticalIssues, warnings, passed, topIssues: topIssues.slice(0, 3) };
-  }
-
-  return result;
 }
 
 // ============================================
@@ -983,16 +857,18 @@ function transformNetworkData(apiData: any) {
 // ============================================
 
 export function transformToSiteCockpitResponse(apiData: any): SiteCockpitResponse {
-  // Calculate all category scores
-  const performanceScore = calculatePerformanceScore(apiData);
-  const securityScore = calculateSecurityScore(apiData);
-  const seoScore = calculateSEOScore(apiData);
-  const accessibilityScore = calculateAccessibilityScore(apiData);
-  const contentScore = calculateContentScore(apiData);
-  const overallScore = Math.round(
-    (performanceScore + securityScore + seoScore + accessibilityScore + contentScore) / 5
-  );
-  const categoryInsights = evaluateCategoryChecks(apiData);
+  // One set of page checks (lib/engine/page) for scores, card counts and issue
+  // lists; the site scan runs the same checks and blends in Lighthouse.
+  const page = evaluatePageCards(apiData);
+  const {
+    performance: performanceScore,
+    security: securityScore,
+    seo: seoScore,
+    accessibility: accessibilityScore,
+    content: contentScore,
+  } = page.scores;
+  const overallScore = page.overall;
+  const categoryInsights = page.insights;
   const criticalIssues = Object.values(categoryInsights).reduce((sum, item) => sum + item.criticalIssues, 0);
   const warnings = Object.values(categoryInsights).reduce((sum, item) => sum + item.warnings, 0);
   const passed = Object.values(categoryInsights).reduce((sum, item) => sum + item.passed, 0);
