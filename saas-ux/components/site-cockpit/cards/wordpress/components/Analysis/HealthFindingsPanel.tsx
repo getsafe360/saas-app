@@ -282,6 +282,21 @@ export function HealthFindingsPanel({
         </div>
       )}
 
+      {automatic.length === 0 && actionable.length > 0 && (
+        <div
+          className="mb-4 flex items-start gap-2 rounded-lg border p-3 text-xs"
+          style={{ borderColor: "var(--border-default)" }}
+        >
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+          <div>
+            <div className="font-semibold text-white">{t("allAutomaticDone.title")}</div>
+            <div className="mt-0.5" style={{ color: "var(--text-subtle)" }}>
+              {t("allAutomaticDone.description")}
+            </div>
+          </div>
+        </div>
+      )}
+
       {automatic.length > 0 && (
         <>
           <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">

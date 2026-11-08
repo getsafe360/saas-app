@@ -482,6 +482,10 @@
           "stability": "Stability",
           "seoUx": "SEO / UX",
           "redFlags": "Red flags"
+        },
+        "allAutomaticDone": {
+          "title": "All automatic fixes are applied",
+          "description": "Nothing is left that the plugin can fix by itself. The items below need a guided step or your host."
         }
       }
     },

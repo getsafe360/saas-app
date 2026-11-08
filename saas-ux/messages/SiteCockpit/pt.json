@@ -468,6 +468,10 @@
           "stability": "Estabilidade",
           "seoUx": "SEO / UX",
           "redFlags": "Sinais de alerta"
+        },
+        "allAutomaticDone": {
+          "title": "Todas as correções automáticas foram aplicadas",
+          "description": "O plugin não pode corrigir mais nada sozinho. Os itens abaixo precisam de um passo guiado ou da sua hospedagem."
         }
       }
     },
