@@ -65,6 +65,7 @@ export function toWordPressHealthFinding(finding: Finding): WordPressHealthFindi
     estimatedRiskReduction: finding.impact?.riskReduction,
     depthTier: DEPTH_TIER[finding.id] ?? 'quick',
     safetyLevel: finding.fix ? SAFETY_LEVEL[finding.fix.risk] : undefined,
+    messages: finding.messages,
   };
 }
 

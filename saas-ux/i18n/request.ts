@@ -21,6 +21,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const [
     coreMessages,
     siteCockpitMessages,
+    findingsMessages,
     supportMessages,
     privacyMessages,
     termsMessages,
@@ -34,6 +35,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   ] = await Promise.all([
     import(`@/messages/${locale}.json`),
     import(`@/messages/SiteCockpit/${locale}.json`),
+    import(`@/messages/Findings/${locale}.json`),
     import(`@/messages/Support/${locale}.json`),
     import(`@/messages/Privacy/${locale}.json`),
     import(`@/messages/Terms/${locale}.json`),
@@ -53,6 +55,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
       // Add feature-specific translations under namespaces
       SiteCockpit: siteCockpitMessages.default.SiteCockpit,
+      Findings: findingsMessages.default.Findings,
       Support: supportMessages.default.Support,
       privacy: privacyMessages.default.privacy,
       Terms: termsMessages.default.Terms,

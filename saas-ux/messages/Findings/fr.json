@@ -1,0 +1,276 @@
+{
+  "Findings": {
+    "common": {
+      "notReported": "Pas encore signalé par le connecteur.",
+      "needsAudit": "Nécessite le plugin GetSafe 360 1.6 ou plus récent.",
+      "notEvaluated": "Cette vérification n’a pas pu être évaluée.",
+      "headersNotCaptured": "Les en-têtes de réponse n’ont pas été capturés.",
+      "headerSet": "{header} est défini."
+    },
+    "wp-core-version": {
+      "title": "Version du cœur WordPress",
+      "recommendation": "Mettez à jour le cœur WordPress vers la dernière version stable.",
+      "updateAvailable": "Version {version} en service ; WordPress signale qu’une version plus récente est disponible.",
+      "current": "La dernière version est en service ({version}).",
+      "outdated": "Version {version} en service ; la plus récente est {latest}.",
+      "unknown": "La version du cœur n’a pas pu être déterminée."
+    },
+    "wp-login-exposed": {
+      "title": "Protection de la page de connexion",
+      "recommendation": "Restreignez /wp-login.php et ajoutez une limitation des tentatives ainsi qu’un CAPTCHA.",
+      "unknown": "La protection de la connexion n’a pas encore été testée.",
+      "protected": "La connexion est limitée en tentatives ou protégée.",
+      "exposed": "La page de connexion par défaut est accessible sans protection."
+    },
+    "wp-user-enumeration": {
+      "title": "Énumération des utilisateurs",
+      "recommendation": "Bloquez les archives d’auteur et la liste des utilisateurs de l’API REST pour les visiteurs anonymes.",
+      "unknown": "L’état de protection du connecteur n’est pas disponible.",
+      "blocked": "L’énumération des noms d’utilisateur est bloquée par GetSafe 360.",
+      "exposed": "WordPress affiche publiquement les noms d’utilisateur par défaut, et la protection GetSafe 360 est désactivée."
+    },
+    "wp-xmlrpc": {
+      "title": "Exposition de XML-RPC",
+      "recommendation": "Désactivez XML-RPC, sauf si une application ou un service en a explicitement besoin.",
+      "disabledByUs": "XML-RPC est désactivé par GetSafe 360.",
+      "turnedOff": "XML-RPC est désactivé sur ce site.",
+      "notReachable": "L’interface XML-RPC n’est pas accessible.",
+      "reachable": "L’interface XML-RPC répond aux requêtes publiques.",
+      "enabled": "XML-RPC est activé sur ce site.",
+      "defaultOn": "WordPress active XML-RPC par défaut, et la protection GetSafe 360 est désactivée.",
+      "unknown": "L’état de XML-RPC n’a pas pu être déterminé."
+    },
+    "wp-debug-mode": {
+      "title": "Mode débogage de WP",
+      "recommendation": "Mettez WP_DEBUG à false en production, ou au minimum WP_DEBUG_DISPLAY à false.",
+      "display": "Les erreurs PHP sont affichées aux visiteurs et peuvent révéler des chemins de fichiers et des détails internes.",
+      "on": "Le mode débogage est activé (les erreurs ne sont pas affichées aux visiteurs).",
+      "off": "Le mode débogage est désactivé."
+    },
+    "wp-vulnerable-plugins": {
+      "title": "Plugins présentant des vulnérabilités connues",
+      "recommendation": "Corrigez, remplacez ou supprimez immédiatement les plugins vulnérables.",
+      "found": "{count, plural, one {# plugin présente} other {# plugins présentent}} des vulnérabilités connues.",
+      "none": "Aucun plugin ne présente de vulnérabilité connue."
+    },
+    "wp-outdated-plugins": {
+      "title": "Plugins obsolètes",
+      "recommendation": "Mettez à jour les plugins par lots et vérifiez leur compatibilité.",
+      "upToDate": "Tous les plugins sont à jour.",
+      "outdated": "{count, plural, one {Une mise à jour est disponible pour # plugin} other {Des mises à jour sont disponibles pour # plugins}}."
+    },
+    "wp-object-cache": {
+      "title": "Cache d’objets",
+      "recommendation": "Activez un cache d’objets persistant (Redis ou Memcached).",
+      "enabled": "Un cache d’objets persistant est actif.",
+      "missing": "Aucun cache d’objets persistant."
+    },
+    "wp-gzip": {
+      "title": "Compression",
+      "recommendation": "Activez la compression Brotli ou gzip sur le serveur ou le CDN.",
+      "compressed": "Les réponses sont compressées ({encoding}).",
+      "uncompressed": "Les réponses HTML ne sont pas compressées."
+    },
+    "seo-sitemap": {
+      "title": "Disponibilité du sitemap",
+      "recommendation": "Rendez /sitemap.xml accessible et déclarez-le dans robots.txt.",
+      "unknown": "Le sitemap n’a pas encore été testé.",
+      "reachable": "Le sitemap est accessible.",
+      "missing": "Aucun sitemap accessible trouvé."
+    },
+    "red-flag-hidden-plugins": {
+      "title": "Plugins cachés",
+      "recommendation": "Comparez les plugins enregistrés en base de données avec la liste des plugins du tableau de bord.",
+      "unknown": "Pas encore vérifié."
+    },
+    "red-flag-core-modifications": {
+      "title": "Fichiers du cœur modifiés",
+      "recommendation": "Réinstallez le cœur WordPress depuis Tableau de bord → Mises à jour, puis examinez comment les fichiers ont été modifiés.",
+      "unknown": "Les sommes de contrôle des fichiers du cœur n’ont pas pu être vérifiées.",
+      "modified": "{count, plural, one {# fichier du cœur WordPress diffère} other {# fichiers du cœur WordPress diffèrent}} de la version officielle.",
+      "clean": "Tous les fichiers du cœur correspondent aux sommes de contrôle officielles de WordPress."
+    },
+    "wp-admin-username": {
+      "title": "Nom d’administrateur prévisible",
+      "recommendation": "Créez un nouvel administrateur avec un nom d’utilisateur unique, transférez-lui le contenu, puis supprimez le compte \"admin\".",
+      "pass": "Aucun administrateur n’utilise \"admin\" ou \"administrator\" comme nom d’utilisateur.",
+      "fail": "Un compte administrateur utilise le nom \"admin\" ou \"administrator\", le premier essai de toute attaque par force brute."
+    },
+    "wp-admin-count": {
+      "title": "Nombre d’administrateurs",
+      "recommendation": "Réservez les comptes administrateur aux personnes qui en ont besoin ; attribuez aux autres le rôle Éditeur ou Auteur.",
+      "many": "{count} comptes disposent de tous les droits d’administrateur.",
+      "ok": "{count, plural, one {# compte administrateur} other {# comptes administrateur}}."
+    },
+    "wp-open-admin-registration": {
+      "title": "Inscription ouverte en tant qu’administrateur",
+      "recommendation": "Dans Réglages → Général, réglez le rôle par défaut des nouveaux utilisateurs sur Abonné, ou désactivez « Tout le monde peut s’enregistrer ».",
+      "pass": "Les nouvelles inscriptions ne peuvent pas devenir administrateurs.",
+      "fail": "Tout le monde peut s’inscrire, et les nouveaux comptes deviennent administrateurs. C’est un signe fréquent de site piraté."
+    },
+    "wp-file-editing": {
+      "title": "Éditeur de fichiers des thèmes et plugins",
+      "recommendation": "Ajoutez define('DISALLOW_FILE_EDIT', true); à wp-config.php.",
+      "pass": "L’éditeur de code intégré est désactivé.",
+      "fail": "Les administrateurs peuvent modifier le code des thèmes et plugins depuis le tableau de bord ; un identifiant volé devient une exécution de code."
+    },
+    "wp-salts": {
+      "title": "Clés de sécurité et salts",
+      "recommendation": "Générez de nouvelles clés sur api.wordpress.org/secret-key/1.1/salt/ et remplacez-les dans wp-config.php.",
+      "pass": "Les huit clés de sécurité et salts sont définies et uniques.",
+      "fail": "Des clés de sécurité ou salts manquent, sont par défaut ou en double, ce qui affaiblit les cookies de connexion."
+    },
+    "wp-db-prefix": {
+      "title": "Préfixe des tables de la base de données",
+      "recommendation": "Utilisez un préfixe personnalisé sur les nouvelles installations ; le changer sur un site en ligne demande une migration soigneuse.",
+      "default": "Les tables utilisent le préfixe par défaut \"wp_\", ce qui facilite les attaques automatisées par injection SQL.",
+      "custom": "Les tables utilisent un préfixe personnalisé."
+    },
+    "wp-https": {
+      "title": "Adresse du site en HTTPS",
+      "recommendation": "Installez un certificat TLS et passez l’adresse de WordPress et l’adresse du site en https:// dans Réglages → Général.",
+      "pass": "L’adresse du site utilise HTTPS.",
+      "fail": "L’adresse du site est configurée en http://, donc les connexions et formulaires circulent sans chiffrement."
+    },
+    "wp-config-permissions": {
+      "title": "Permissions de wp-config.php",
+      "recommendation": "Réglez les permissions de wp-config.php sur 640 ou 600 pour que les autres comptes du serveur ne puissent pas le lire.",
+      "unknown": "Les permissions de wp-config.php n’ont pas pu être lues.",
+      "worldReadable": "wp-config.php, qui contient le mot de passe de la base de données, est lisible par tous les comptes du serveur.",
+      "ok": "wp-config.php n’est pas lisible par tous."
+    },
+    "wp-php-version": {
+      "title": "Version de PHP",
+      "recommendation": "Demandez à votre hébergeur de passer le site à PHP 8.3 ou plus récent, après un test sur une copie de préproduction.",
+      "unknown": "La version de PHP n’a pas été signalée.",
+      "eol": "PHP {branch} ne reçoit plus de correctifs de sécurité{hasEnd, select, yes { (fin le {endsOn})} other {}}.",
+      "ending": "PHP {branch} ne recevra plus de correctifs de sécurité à partir du {endsOn}.",
+      "supported": "PHP {branch} est pris en charge.",
+      "uninterpretable": "La version de PHP \"{version}\" n’a pas pu être interprétée."
+    },
+    "wp-debug-log": {
+      "title": "Journal de débogage",
+      "recommendation": "Désactivez WP_DEBUG_LOG en production, ou écrivez le journal en dehors de la racine web.",
+      "on": "Les erreurs sont consignées dans wp-content/debug.log, téléchargeable publiquement par défaut.",
+      "off": "Le journal de débogage est désactivé."
+    },
+    "wp-inactive-plugins": {
+      "title": "Plugins inactifs",
+      "recommendation": "Supprimez les plugins que vous n’utilisez plus ; du code inactif peut quand même être exploité.",
+      "found": "{count, plural, one {# plugin installé est inactif} other {# plugins installés sont inactifs}}.",
+      "none": "Aucun plugin inactif."
+    },
+    "wp-unused-themes": {
+      "title": "Thèmes inutilisés",
+      "recommendation": "Conservez le thème actif et un thème par défaut de secours ; supprimez les autres.",
+      "found": "{count} thèmes inutilisés sont installés.",
+      "none": "Aucun thème superflu installé."
+    },
+    "wp-theme-update": {
+      "title": "Mises à jour du thème actif",
+      "recommendation": "Mettez à jour le thème actif (utilisez un thème enfant pour les personnalisations afin que les mises à jour soient sûres).",
+      "unknown": "Les données de mise à jour du thème ne sont pas encore disponibles.",
+      "available": "Une mise à jour est disponible pour le thème actif.",
+      "upToDate": "Le thème actif est à jour."
+    },
+    "wp-autoload-size": {
+      "title": "Options chargées automatiquement",
+      "recommendation": "Repérez les grosses options chargées automatiquement (souvent laissées par des plugins supprimés) et désactivez leur chargement automatique ou supprimez-les.",
+      "large": "{size} d’options sont chargées à chaque requête ; au-delà de 1 Mo, cela ralentit toutes les pages.",
+      "elevated": "{size} d’options sont chargées à chaque requête.",
+      "ok": "{size} d’options chargées automatiquement."
+    },
+    "wp-expired-transients": {
+      "title": "Transients expirés",
+      "recommendation": "Nettoyez les transients expirés ; un cache d’objets persistant évite leur accumulation.",
+      "many": "{count, number} transients expirés sont encore stockés.",
+      "ok": "Les transients expirés sont sous contrôle."
+    },
+    "wp-revisions": {
+      "title": "Révisions d’articles",
+      "recommendation": "Limitez les révisions avec define('WP_POST_REVISIONS', 10); et supprimez les anciennes.",
+      "many": "{count, number} révisions d’articles sont stockées.",
+      "ok": "{count, plural, one {# révision d’article} other {# révisions d’articles}}."
+    },
+    "wp-cron": {
+      "title": "Tâches planifiées (WP-Cron)",
+      "recommendation": "Si DISABLE_WP_CRON est défini, ajoutez un vrai cron serveur qui appelle wp-cron.php toutes les 5 minutes.",
+      "disabledOverdue": "WP-Cron est désactivé et {count, plural, one {# tâche a} other {# tâches ont}} plus d’une heure de retard ; aucun cron de remplacement ne semble tourner.",
+      "overdue": "{count} tâches planifiées ont plus d’une heure de retard.",
+      "ok": "Les tâches planifiées s’exécutent à l’heure."
+    },
+    "wp-page-cache": {
+      "title": "Cache de pages",
+      "recommendation": "Activez un plugin de cache de pages ou le cache de pages intégré de votre hébergeur.",
+      "active": "Un cache de pages WordPress est actif.",
+      "missing": "Aucun cache de pages WordPress trouvé. Un cache serveur ou CDN peut toutefois être en place."
+    },
+    "wp-opcache": {
+      "title": "PHP OPcache",
+      "recommendation": "Demandez à votre hébergeur d’activer OPcache.",
+      "on": "OPcache est activé.",
+      "off": "OPcache est désactivé, donc PHP recompile le code à chaque requête."
+    },
+    "wp-memory-limit": {
+      "title": "Limite de mémoire PHP",
+      "recommendation": "Faites passer memory_limit à au moins 256M avec votre hébergeur.",
+      "unlimited": "Aucune limite de mémoire PHP n’est définie.",
+      "low": "PHP ne peut utiliser que {size} ; les sites plus importants manquent de mémoire.",
+      "ok": "La limite de mémoire PHP est de {size}."
+    },
+    "red-flag-uploads-php": {
+      "title": "Fichiers PHP dans uploads",
+      "recommendation": "Examinez les fichiers PHP de wp-content/uploads ; ce dossier ne doit contenir que des médias. Bloquez-y l’exécution de PHP au niveau du serveur.",
+      "unknown": "Le dossier uploads n’a pas pu être analysé à temps.",
+      "found": "{count, plural, one {# fichier PHP trouvé} other {# fichiers PHP trouvés}} dans le dossier uploads, une cachette fréquente pour les portes dérobées.",
+      "none": "Aucun fichier PHP dans le dossier uploads."
+    },
+    "sec-hsts": {
+      "title": "En-tête HSTS manquant",
+      "recommendation": "Envoyez Strict-Transport-Security: max-age=31536000.",
+      "missing": "Strict-Transport-Security n’est pas défini, donc la première requête d’un visiteur peut être rétrogradée en HTTP non chiffré et interceptée.",
+      "httpsUnknown": "L’état HTTPS n’a pas été observé.",
+      "notApplicable": "HSTS nécessite HTTPS, que le site ne propose pas encore."
+    },
+    "sec-csp": {
+      "title": "Pas de Content-Security-Policy",
+      "recommendation": "Commencez par une politique en mode report-only, puis renforcez-la une fois les violations comprises.",
+      "missing": "Sans CSP, tout script injecté dans la page s’exécute avec tous les privilèges."
+    },
+    "sec-nosniff": {
+      "title": "X-Content-Type-Options manquant",
+      "recommendation": "Envoyez X-Content-Type-Options: nosniff.",
+      "missing": "Les navigateurs peuvent deviner le type de contenu (MIME sniffing), ce qui peut transformer un fichier envoyé en script exécutable."
+    },
+    "sec-referrer-policy": {
+      "title": "Pas de Referrer-Policy",
+      "recommendation": "Envoyez Referrer-Policy: strict-origin-when-cross-origin.",
+      "missing": "Les URL complètes sont transmises aux sites tiers dans l’en-tête Referer."
+    },
+    "sec-frame-options": {
+      "title": "Pas de protection contre le clickjacking",
+      "recommendation": "Envoyez X-Frame-Options: SAMEORIGIN ou une directive CSP frame-ancestors.",
+      "missing": "Ni X-Frame-Options ni directive CSP frame-ancestors n’a été trouvé, donc un attaquant peut intégrer la page dans un cadre.",
+      "frameAncestors": "L’intégration dans un cadre est restreinte par CSP frame-ancestors."
+    },
+    "email-spf": {
+      "title": "Enregistrement SPF",
+      "recommendation": "Publiez un seul enregistrement TXT SPF qui liste vos expéditeurs de courriel et se termine par -all (ou ~all pendant les tests). Les domaines qui n’envoient pas de courriel peuvent utiliser \"v=spf1 -all\".",
+      "unknown": "L’enregistrement SPF n’a pas pu être consulté.",
+      "missing": "{domain} n’a pas d’enregistrement SPF, donc n’importe qui peut envoyer des courriels prétendant en provenir.",
+      "multiple": "{domain} a {count} enregistrements SPF ; les destinataires y voient une erreur et les ignorent tous.",
+      "weak": "L’enregistrement SPF ne rejette pas les expéditeurs non listés.",
+      "valid": "Un enregistrement SPF valide est publié."
+    },
+    "email-dmarc": {
+      "title": "Politique DMARC",
+      "recommendation": "Publiez un enregistrement DMARC sur _dmarc de votre domaine ; commencez par p=none et une adresse de rapport, puis passez à p=quarantine ou p=reject.",
+      "unknown": "L’enregistrement DMARC n’a pas pu être consulté.",
+      "missing": "{domain} n’a pas de politique DMARC, donc les destinataires n’ont aucune consigne pour les courriels usurpés.",
+      "multiple": "{domain} publie {count} enregistrements DMARC ; les destinataires n’en appliquent alors aucun.",
+      "enforced": "La politique DMARC est \"{policy}\"{inherited, select, yes { (héritée de {source})} other {}}.",
+      "monitoring": "DMARC ne fait que surveiller (p=none){inherited, select, yes { (héritée de {source})} other {}} ; les courriels usurpés sont toujours distribués.",
+      "invalid": "L’enregistrement DMARC n’a pas de politique valide{inherited, select, yes { (héritée de {source})} other {}}."
+    }
+  }
+}
