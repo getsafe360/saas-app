@@ -1,0 +1,72 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import test from 'node:test';
+
+import { IntlMessageFormat } from 'intl-messageformat';
+import { FOCUS_CATEGORIES } from './focus';
+
+const root = path.resolve(__dirname, '../..');
+const LOCALES = ['en', 'de', 'es', 'fr', 'it', 'pt'];
+const catalogs = Object.fromEntries(
+  LOCALES.map((locale) => [
+    locale,
+    JSON.parse(readFileSync(path.join(root, 'messages/SiteCockpit', `${locale}.json`), 'utf8')).SiteCockpit,
+  ]),
+);
+
+function lookup(catalog: any, key: string): unknown {
+  return key.split('.').reduce((node, part) => (node && typeof node === 'object' ? node[part] : undefined), catalog);
+}
+
+/** Component → the namespace its `t` is bound to. */
+const COMPONENTS: Array<[file: string, namespace: string]> = [
+  ['components/site-cockpit/CategoryFocusTabs.tsx', ''],
+  ['components/site-cockpit/OverallScoreHero.tsx', ''],
+  ['components/site-cockpit/NextStepBanner.tsx', 'nextStep.'],
+  ['components/site-cockpit/SiteCockpit.tsx', ''],
+  ['components/site-cockpit/cards/CockpitCard.tsx', ''],
+  ['components/site-cockpit/cards/wordpress/WordPressCard.tsx', ''],
+  ['components/site-cockpit/cards/wordpress/components/Analysis/SecurityOverview.tsx', ''],
+  ['components/site-cockpit/cards/wordpress/components/Analysis/HealthFindingsPanel.tsx', 'wordpress.findings.'],
+  ['components/site-cockpit/cards/wordpress/components/Analysis/VersionStatus.tsx', 'wordpress.version.'],
+  ['components/site-cockpit/cards/wordpress/components/Analysis/PluginsPanel.tsx', 'wordpress.plugins.'],
+  ['components/site-cockpit/cards/wordpress/components/ConnectionStatus/ConnectionBanner.tsx', 'wordpress.connection.'],
+];
+
+test('every literal translation key used by the cockpit exists in all six languages', () => {
+  for (const [file, namespace] of COMPONENTS) {
+    const source = readFileSync(path.join(root, file), 'utf8');
+    const keys = [...source.matchAll(/\bt\(\s*"([\w.]+)"/g)].map((m) => namespace + m[1]);
+    assert.ok(keys.length > 0, `${file}: no keys found`);
+    for (const key of keys) {
+      for (const locale of LOCALES) {
+        assert.equal(typeof lookup(catalogs[locale], key), 'string', `${locale}: ${key} (${file})`);
+      }
+    }
+  }
+});
+
+test('keys built from known lists exist, and every message parses', () => {
+  const dynamic = [
+    ...FOCUS_CATEGORIES.map((c) => `focus.labels.${c}`),
+    ...['high', 'medium', 'low'].map((s) => `nextStep.severity.${s}`),
+    ...['loginPage', 'userEnum', 'xmlrpc', 'debugMode', 'protected', 'exposed', 'blocked', 'vulnerable', 'enabled', 'disabled', 'on', 'off'].map(
+      (k) => `wordpress.security.${k}`,
+    ),
+    ...['security', 'performance', 'stability', 'seoUx', 'redFlags'].map((k) => `wordpress.findings.categories.${k}`),
+  ];
+  for (const locale of LOCALES) {
+    for (const key of dynamic) assert.equal(typeof lookup(catalogs[locale], key), 'string', `${locale}: ${key}`);
+    for (const section of ['focus', 'nextStep', 'wordpress']) {
+      const walk = (node: any, prefix: string) => {
+        for (const [k, v] of Object.entries(node)) {
+          // Parsing with tags enabled (as next-intl does) catches broken ICU syntax.
+          if (typeof v === 'string') new IntlMessageFormat(v, locale).getAst();
+          else walk(v, `${prefix}.${k}`);
+        }
+      };
+      walk(catalogs[locale][section], section);
+    }
+  }
+});

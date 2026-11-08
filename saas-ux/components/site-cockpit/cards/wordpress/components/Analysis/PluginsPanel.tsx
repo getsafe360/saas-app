@@ -2,6 +2,7 @@
 "use client";
 
 import { Package } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Plugin {
   slug: string;
@@ -27,6 +28,7 @@ interface PluginsPanelProps {
 }
 
 export function PluginsPanel({ plugins }: PluginsPanelProps) {
+  const t = useTranslations("SiteCockpit.wordpress.plugins");
   const vulnerablePlugins = plugins.list.filter((p) => p.vulnerable);
   const outdatedPlugins = plugins.list.filter(
     (p) => !p.vulnerable && p.version !== p.latest,
@@ -43,14 +45,14 @@ export function PluginsPanel({ plugins }: PluginsPanelProps) {
           Plugins
         </h5>
         <div className="text-xs" style={{ color: "var(--text-subtle)" }}>
-          {plugins.active}/{plugins.total} active
+          {t("activeOf", { active: plugins.active, total: plugins.total })}
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2 mb-3">
-        <StatBadge label="Outdated" value={plugins.outdated} />
-        <StatBadge label="Vulnerable" value={plugins.vulnerable} />
-        <StatBadge label="Healthy" value={Math.max(plugins.total - plugins.outdated, 0)} />
+        <StatBadge label={t("outdated")} value={plugins.outdated} />
+        <StatBadge label={t("vulnerable")} value={plugins.vulnerable} />
+        <StatBadge label={t("healthy")} value={Math.max(plugins.total - plugins.outdated, 0)} />
       </div>
 
       {vulnerablePlugins.length > 0 && (

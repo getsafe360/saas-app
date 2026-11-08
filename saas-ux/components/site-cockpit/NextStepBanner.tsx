@@ -49,7 +49,6 @@ const SEVERITY_DOT: Record<string, string> = {
   low: "#94a3b8",
 };
 
-const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 /**
  * One sentence, one button: the most useful thing to do next on this site.
@@ -65,6 +64,7 @@ export function NextStepBanner({
   scanState,
   onScan,
 }: NextStepBannerProps) {
+  const t = useTranslations("SiteCockpit.nextStep");
   const tFindings = useTranslations("Findings");
   // Stored scan issues carry English titles; show them in the user's language by check id.
   const issueTitle = (issue: { id: string; title: string }) =>
@@ -73,67 +73,66 @@ export function NextStepBanner({
   const reportHref = scan
     ? `/${locale}/dashboard/sites/${siteId}/analyze?job=${encodeURIComponent(scan.jobId)}`
     : `/${locale}/dashboard/sites/${siteId}/analyze`;
-  const connectCta: Cta = { label: "Connect now", onClick: scrollToConnection };
+  const connectCta: Cta = { label: t("cta.connect"), onClick: scrollToConnection };
 
   let step: Step;
   if (scanState.phase === "running") {
     step = {
       tone: "busy",
       icon: Loader2,
-      title: "Scanning your site…",
-      detail: "Checking SEO, performance, accessibility and security. This takes about 30 seconds.",
+      title: t("scanning.title"),
+      detail: t("scanning.detail"),
     };
   } else if (scanState.phase === "error") {
     step = {
       tone: "warn",
       icon: AlertTriangle,
-      title: "The scan didn't finish",
+      title: t("failed.title"),
       detail: scanState.message,
-      cta: { label: "Try again", onClick: onScan },
+      cta: { label: t("cta.tryAgain"), onClick: onScan },
     };
   } else if (!scan) {
     step = {
       tone: "action",
       icon: ScanSearch,
-      title: "Run your first scan",
-      detail:
-        "A full check of SEO, performance, accessibility and security, with a list of what to fix. It works without connecting your site.",
-      cta: { label: "Run scan", onClick: onScan },
+      title: t("firstScan.title"),
+      detail: t("firstScan.detail"),
+      cta: { label: t("cta.runScan"), onClick: onScan },
     };
   } else if (scan.issueCount > 0 && !connected) {
     const wp = cmsType === "wordpress";
     step = {
       tone: "action",
       icon: Link2,
-      title: `${scan.issueCount} ${plural(scan.issueCount, "issue", "issues")} found`,
+      title: t("found.title", { count: scan.issueCount }),
       detail:
         scan.fixableCount > 0
-          ? `${scan.fixableCount} can be fixed automatically once you connect ${wp ? "WordPress" : "your site"}. The rest come with step-by-step advice.`
-          : "These come with step-by-step advice. Connecting also lets us keep watching your site.",
+          ? t("found.fixable", { count: scan.fixableCount, target: wp ? "wordpress" : "site" })
+          : t("found.advice"),
       cta: connectCta,
     };
   } else if (scan.issueCount > 0) {
     step = {
       tone: "action",
       icon: ListChecks,
-      title: `${scan.issueCount} ${plural(scan.issueCount, "issue", "issues")} to review`,
-      detail: "Review them and approve the fixes you want applied.",
-      cta: { label: "Review issues", href: reportHref },
+      title: t("review.title", { count: scan.issueCount }),
+      detail: t("review.detail"),
+      cta: { label: t("cta.review"), href: reportHref },
     };
   } else if (!connected) {
     step = {
       tone: "ok",
       icon: CheckCircle,
-      title: "No issues found",
-      detail: "Connect your site to keep watching it and to apply fixes later.",
+      title: t("noIssues.title"),
+      detail: t("noIssues.detail"),
       cta: connectCta,
     };
   } else {
     step = {
       tone: "ok",
       icon: CheckCircle,
-      title: "Nothing needs your attention",
-      detail: "Your site is connected and the last scan found no issues.",
+      title: t("allGood.title"),
+      detail: t("allGood.detail"),
     };
   }
 
@@ -166,7 +165,7 @@ export function NextStepBanner({
       </span>
       <div className="min-w-0 flex-1">
         <div className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: accent }}>
-          Next step
+          {t("eyebrow")}
         </div>
         <div className="mt-0.5 text-base font-semibold" style={{ color: "var(--text-default)" }}>
           {step.title}
@@ -177,7 +176,7 @@ export function NextStepBanner({
         {top.length > 0 && (
           <div className="mt-3">
             <div className="text-xs font-semibold" style={{ color: "var(--text-subtle)" }}>
-              Top {top.length} {plural(top.length, "thing", "things")} to fix
+              {t("topThings", { count: top.length })}
             </div>
             <ol className="mt-1.5 space-y-1">
               {top.map((issue) => (
@@ -190,7 +189,7 @@ export function NextStepBanner({
                     <span
                       className="inline-block h-2 w-2 shrink-0 rounded-full"
                       style={{ background: SEVERITY_DOT[issue.severity] }}
-                      title={`${issue.severity} severity`}
+                      title={t(`severity.${issue.severity}`)}
                     />
                     <span className="min-w-0 truncate">{issueTitle(issue)}</span>
                     {issue.fixAvailable && (
@@ -198,7 +197,7 @@ export function NextStepBanner({
                         className="shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium"
                         style={{ borderColor: accent, color: accent }}
                       >
-                        auto-fix
+                        {t("autoFix")}
                       </span>
                     )}
                   </Link>

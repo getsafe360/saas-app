@@ -255,6 +255,15 @@ function transformWordPressData(apiData: any): WordPress {
   // recommendation backlog; it never overrides an observed result.
   const weightedScore = health.score.overall;
 
+  // The Security Checks panel shows the same checks as the checklist: true when
+  // the check found the problem, false when it passed, null when not observed.
+  const problemFound = (id: string): boolean | null => {
+    const status = health.findings.find((finding) => finding.id === id)?.status;
+    if (status === "fail" || status === "warn") return true;
+    if (status === "pass") return false;
+    return null;
+  };
+
   const snapshot = wpTelemetry.snapshot ?? {};
   const currentVersion = facts.core.version ?? "Unknown";
   const latestVersion = facts.core.latest ?? currentVersion;
@@ -280,13 +289,14 @@ function transformWordPressData(apiData: any): WordPress {
       daysOld: outdated ? daysSince(facts.core.latestReleaseDate ?? undefined) : 0,
     },
     security: {
-      defaultLoginExposed: facts.security.loginProtected === null ? null : !facts.security.loginProtected,
-      userEnumerationBlocked: facts.protections.userEnumerationBlocked,
-      xmlrpcEnabled: facts.protections.xmlrpcDisabled === true
-        ? false
-        : facts.security.xmlrpcReachable,
+      defaultLoginExposed: problemFound("wp-login-exposed"),
+      userEnumerationBlocked: (() => {
+        const found = problemFound("wp-user-enumeration");
+        return found === null ? null : !found;
+      })(),
+      xmlrpcEnabled: problemFound("wp-xmlrpc"),
       xmlrpcVulnerable: null,
-      wpDebugMode: facts.security.debugMode,
+      wpDebugMode: problemFound("wp-debug-mode"),
       directoryListingDisabled: null,
       securityPlugins: [],
     },

@@ -2,6 +2,7 @@
 "use client";
 
 import { Shield } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /** null = not observed yet; rendered as "Unknown", never as healthy or failing. */
 interface SecurityData {
@@ -43,28 +44,36 @@ interface SecurityOverviewProps {
   security: SecurityData;
 }
 
-const items = (security: SecurityData) => {
-  const login = stateOf(security.defaultLoginExposed, false);
-  const enumeration = stateOf(security.userEnumerationBlocked, true);
-  const xmlrpc = stateOf(security.xmlrpcEnabled, false);
-  const debug = stateOf(security.wpDebugMode, false);
-  return [
-    { label: "Login Page", state: login, value: login === "unknown" ? "Unknown" : login === "healthy" ? "Protected" : "Exposed" },
-    { label: "User Enumeration", state: enumeration, value: enumeration === "unknown" ? "Unknown" : enumeration === "healthy" ? "Blocked" : "Vulnerable" },
-    { label: "XML-RPC", state: xmlrpc, value: xmlrpc === "unknown" ? "Unknown" : xmlrpc === "healthy" ? "Disabled" : "Enabled" },
-    { label: "Debug Mode", state: debug, value: debug === "unknown" ? "Unknown" : debug === "healthy" ? "Off" : "On" },
-  ];
-};
+/** Label key, then value keys for healthy / at-risk (wordpress.security.*). */
+const ITEMS = [
+  { field: "defaultLoginExposed", healthyWhen: false, label: "loginPage", healthy: "protected", risk: "exposed" },
+  { field: "userEnumerationBlocked", healthyWhen: true, label: "userEnum", healthy: "blocked", risk: "vulnerable" },
+  { field: "xmlrpcEnabled", healthyWhen: false, label: "xmlrpc", healthy: "disabled", risk: "enabled" },
+  { field: "wpDebugMode", healthyWhen: false, label: "debugMode", healthy: "off", risk: "on" },
+] as const;
 
 export function SecurityOverview({ security }: SecurityOverviewProps) {
+  const t = useTranslations("SiteCockpit");
+  const items = ITEMS.map((item) => {
+    const state = stateOf(security[item.field], item.healthyWhen);
+    return {
+      label: t(`wordpress.security.${item.label}`),
+      state,
+      value:
+        state === "unknown"
+          ? t("common.unknown")
+          : t(`wordpress.security.${state === "healthy" ? item.healthy : item.risk}`),
+    };
+  });
+
   return (
     <section
       className="rounded-xl border p-4"
       style={{ borderColor: "var(--border-default)", background: "var(--header-bg)" }}
     >
-      <h5 className="text-sm font-semibold text-white mb-3">Security Checks</h5>
+      <h5 className="text-sm font-semibold text-white mb-3">{t("wordpress.security.checksTitle")}</h5>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {items(security).map((item) => (
+        {items.map((item) => (
           <div
             key={item.label}
             className="rounded-lg border p-3 flex items-center justify-between"
