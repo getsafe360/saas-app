@@ -1,0 +1,28 @@
+// lib/engine/fixers/catalog.ts
+//
+// Which fixers can run automatically, without importing their implementations.
+// The checklist runs in the browser, so it reads this list instead of the
+// registry (which pulls in the connector client). registry.test.ts keeps the
+// two in sync.
+
+import type { FixAutomation } from '../contracts';
+
+export const AUTOMATIC_FIXER_IDS: ReadonlySet<string> = new Set([
+  'wordpress-block-user-enumeration',
+  'wordpress-disable-xmlrpc',
+  'security-headers',
+]);
+
+/**
+ * How the user resolves a finding:
+ * - automatic: a registered fixer applies, verifies and can undo it
+ * - guided: we give the steps; the user does them and re-scans
+ * - manual: needs the host or a developer
+ */
+export type FixMode = 'automatic' | 'guided' | 'manual';
+
+export function fixModeFor(fixerId: string | undefined, automation: FixAutomation | undefined): FixMode {
+  if (fixerId && automation === 'auto' && AUTOMATIC_FIXER_IDS.has(fixerId)) return 'automatic';
+  if (automation === 'guided' || automation === 'auto') return 'guided';
+  return 'manual';
+}

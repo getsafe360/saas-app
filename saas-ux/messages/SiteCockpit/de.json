@@ -410,30 +410,64 @@
       "categoryScores": "Category Scores",
       "topRedFlags": "Top Red Flags",
       "findings": {
-        "title": "WP Health & Security Checklist",
-        "selectedSummary": "{selected} selected · {preselected} preselected",
-        "before": "Before",
-        "after": "After",
-        "savings": "Estimated Savings",
-        "safeMode": "Safe Mode",
-        "safeModeDescriptionOn": "Only low-risk actions are applied automatically. Sensitive actions are skipped for review.",
-        "safeModeDescriptionOff": "All selected actions are sent for remediation, including sensitive actions.",
-        "remediation": "Remediation",
-        "impactGain": "+{gain} score impact",
-        "optimizing": "Optimizing...",
-        "fixSelected": "Fix selected ({count})",
-        "noActionable": "No actionable findings from current WordPress telemetry.",
-        "categories": {
-          "security": "Security",
-          "performance": "Performance",
-          "stability": "Stability",
-          "seoUx": "SEO / UX",
-          "redFlags": "Red Flags"
+        "title": "WP-Checkliste für Zustand & Sicherheit",
+        "modeSummary": "{automatic} automatisch · {guided} angeleitet · {manual} manuell",
+        "before": "Vorher",
+        "after": "Nachher",
+        "savings": "Geschätzte Ersparnis",
+        "safeMode": "Sicherer Modus",
+        "safeModeDescriptionOn": "Nur risikoarme Korrekturen werden angewendet. Sensible Änderungen bleiben zur Prüfung zurück.",
+        "safeModeDescriptionOff": "Alle ausgewählten Korrekturen werden angewendet, auch sensible Änderungen.",
+        "impactGain": "+{gain} Punkte",
+        "noActionable": "Keine offenen Probleme in den aktuellen WordPress-Daten.",
+        "applyAutomatic": "{count, plural, one {# automatische Korrektur anwenden} other {# automatische Korrekturen anwenden}}",
+        "applying": "Korrekturen werden angewendet…",
+        "undo": "Rückgängig",
+        "undoAll": "Alle rückgängig",
+        "rescan": "Neu scannen, um den Score zu aktualisieren",
+        "resultSummary": "{applied} angewendet · {failed} fehlgeschlagen · {skipped} übersprungen",
+        "sections": {
+          "automatic": {
+            "title": "Automatische Korrekturen",
+            "description": "Werden über das GetSafe 360 Plugin angewendet, auf Ihrer Live-Website geprüft und lassen sich rückgängig machen."
+          },
+          "guided": {
+            "title": "Angeleitete Korrekturen",
+            "description": "Folgen Sie den Schritten und scannen Sie danach neu, um die Korrektur zu bestätigen."
+          },
+          "manual": {
+            "title": "Erfordert Ihren Hoster oder Entwickler",
+            "description": "Diese Änderungen kann das Plugin nicht sicher für Sie vornehmen."
+          }
         },
-        "depth": {
-          "quick": "Recommended depth: Quick (focuses on the highest-impact checks first).",
-          "balanced": "Recommended depth: Balanced (covers the Pareto 80/20 impact profile).",
-          "deep": "Recommended depth: Deep (includes scripts/assets and advanced forensic indicators)."
+        "result": {
+          "verified": "Behoben und auf Ihrer Website bestätigt",
+          "verification_failed": "Angewendet, aber noch nicht sichtbar → ein Cache liefert eventuell noch die alte Version. Später neu scannen.",
+          "connector_failed": "Das Plugin konnte die Änderung nicht anwenden → es wurde nichts verändert.",
+          "connector_update": "Aktualisieren Sie das GetSafe 360 Plugin, um diese Korrektur zu aktivieren.",
+          "safe_mode": "Vom sicheren Modus zurückgehalten.",
+          "not_automatic": "Keine automatische Korrektur → folgen Sie den angeleiteten Schritten.",
+          "error": "Etwas ist schiefgelaufen → bitte erneut versuchen.",
+          "undone": "Rückgängig gemacht"
+        },
+        "errors": {
+          "apply": "Korrekturen konnten nicht angewendet werden → Prüfen Sie die Verbindung zur Website und versuchen Sie es erneut.",
+          "notConnected": "Die Website ist nicht verbunden → Verbinden Sie das Plugin neu und versuchen Sie es erneut.",
+          "undo": "Rückgängig machen fehlgeschlagen → Erneut versuchen oder die Website neu verbinden.",
+          "undoNewerFirst": "Eine neuere Änderung an derselben Einstellung ist noch aktiv → Machen Sie zuerst diese rückgängig."
+        },
+        "severity": {
+          "critical": "Kritisch",
+          "high": "Hoch",
+          "medium": "Mittel",
+          "low": "Niedrig"
+        },
+        "categories": {
+          "security": "Sicherheit",
+          "performance": "Leistung",
+          "stability": "Stabilität",
+          "seoUx": "SEO / UX",
+          "redFlags": "Warnsignale"
         }
       }
     },
@@ -506,6 +540,10 @@
       "update": "Aktualisieren",
       "install": "Installieren",
       "configure": "Konfigurieren"
+    },
+    "card": {
+      "adviceOnly": "Nur Empfehlungen → diese Änderungen nehmen Sie selbst auf Ihrer Website vor.",
+      "connectToFix": "Verbinden, um zu beheben"
     }
   }
 }

@@ -1,11 +1,11 @@
 // components/site-cockpit/cards/wordpress/WordPressCard.tsx
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { CockpitCard } from "../CockpitCard";
 import { WordPressAIIcon } from "@/components/icons/WordPressAI";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useWordPressConnection } from "./hooks/useWordPressConnection";
 import { useWordPressPairing } from "./hooks/useWordPressPairing";
 import { NotConnected } from "./components/EmptyStates/NotConnected";
@@ -13,7 +13,12 @@ import { NoWordPress } from "./components/EmptyStates/NoWordPress";
 import { VersionStatus } from "./components/Analysis/VersionStatus";
 import { SecurityOverview } from "./components/Analysis/SecurityOverview";
 import { PluginsPanel } from "./components/Analysis/PluginsPanel";
-import { HealthFindingsPanel } from "./components/Analysis/HealthFindingsPanel";
+import {
+  HealthFindingsPanel,
+  type ApplyOutcome,
+  type UndoOutcome,
+} from "./components/Analysis/HealthFindingsPanel";
+import type { RemediationItem } from "@/lib/wordpress/remediation-result";
 import type { WordPressCardProps } from "./types";
 import type { WordPressHealthFinding } from "@/types/site-cockpit";
 import { ConnectionBanner } from "./components/ConnectionStatus/ConnectionBanner";
@@ -33,8 +38,8 @@ export function WordPressCard({
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations("SiteCockpit");
+  const locale = useLocale();
   const { wordpress, cms } = data;
-  const [isOptimizing, setIsOptimizing] = useState(false);
 
   // Custom hooks handle all logic
   const connection = useWordPressConnection(
@@ -160,37 +165,29 @@ export function WordPressCard({
         detail: "Direct connector data from the current WordPress site.",
       };
 
-  const handleOptimize = async (
+  const handleApply = async (
     selectedFindings: WordPressHealthFinding[],
-    options?: { safeMode: boolean },
-  ) => {
-    if (selectedFindings.length === 0) return;
-
+    options: { safeMode: boolean },
+  ): Promise<ApplyOutcome> => {
     if (!siteId || connection.connectionState.status !== "connected") {
       connection.setShowReconnectFlow(true);
-      return;
+      return { ok: false, error: "notConnected" };
     }
 
     try {
-      setIsOptimizing(true);
-
-      const healthResponse = await fetch(`/api/sites/${siteId}/health`, {
-        cache: "no-store",
-      });
+      const healthResponse = await fetch(`/api/sites/${siteId}/health`, { cache: "no-store" });
       const health = await healthResponse.json().catch(() => ({}));
       if (!healthResponse.ok || health.healthy === false) {
         connection.setShowReconnectFlow(true);
-        return;
+        return { ok: false, error: "notConnected" };
       }
 
       const response = await fetch(`/api/sites/${siteId}/wordpress/remediate`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          locale: "en",
-          safeMode: options?.safeMode ?? true,
+          locale,
+          safeMode: options.safeMode,
           findings: selectedFindings.map((finding) => ({
             id: finding.id,
             actionId: finding.remediationActionId,
@@ -202,29 +199,47 @@ export function WordPressCard({
           })),
         }),
       });
-
-      if (!response.ok) {
-        const body = await response.text().catch(() => "");
-        console.warn(
-          "[WordPressCard] remediation non-OK response",
-          response.status,
-          body,
-        );
-        return;
+      const body = await response.json().catch(() => null);
+      if (!response.ok || !body?.success) {
+        if (body?.error === "WORDPRESS_NOT_CONNECTED") {
+          connection.setShowReconnectFlow(true);
+          return { ok: false, error: "notConnected" };
+        }
+        console.warn("[WordPressCard] remediation failed", response.status, body?.error);
+        return { ok: false, error: "apply" };
       }
-
-      await response.json().catch(() => null);
-
-      if (analyzePath) {
-        router.push(
-          `${analyzePath}?source=wordpress-remediate&selected=${selectedFindings.length}`,
-        );
-      }
+      return { ok: true, items: Array.isArray(body.items) ? (body.items as RemediationItem[]) : [] };
     } catch (error) {
-      console.error("[WordPressCard] optimize failed", error);
-    } finally {
-      setIsOptimizing(false);
+      console.error("[WordPressCard] remediation failed", error);
+      return { ok: false, error: "apply" };
     }
+  };
+
+  const handleUndo = async (runIds: string[]): Promise<UndoOutcome> => {
+    if (!siteId) return { ok: false, error: "undo" };
+    try {
+      const response = await fetch(`/api/sites/${siteId}/wordpress/rollback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actionRunIds: runIds }),
+      });
+      const body = await response.json().catch(() => null);
+      if (body?.error === "UNDO_NEWER_CHANGES_FIRST") return { ok: false, error: "undoNewerFirst" };
+      const outcomes: Array<{ runId: string; status: string }> = Array.isArray(body?.outcomes) ? body.outcomes : [];
+      if (outcomes.length === 0) return { ok: false, error: "undo" };
+      return {
+        ok: true,
+        undoneRunIds: outcomes.filter((o) => o.status === "rolled_back").map((o) => o.runId),
+        failedRunIds: outcomes.filter((o) => o.status !== "rolled_back").map((o) => o.runId),
+      };
+    } catch (error) {
+      console.error("[WordPressCard] undo failed", error);
+      return { ok: false, error: "undo" };
+    }
+  };
+
+  const handleRescan = () => {
+    if (analyzePath) router.push(`${analyzePath}?source=wordpress-remediate`);
   };
 
   return (
@@ -388,8 +403,9 @@ export function WordPressCard({
         <PluginsPanel plugins={wordpress.plugins} />
         <HealthFindingsPanel
           findings={wordpress.healthFindings ?? []}
-          onOptimize={handleOptimize}
-          optimizing={isOptimizing}
+          onApply={handleApply}
+          onUndo={handleUndo}
+          onRescan={handleRescan}
           currentScore={wordpress.score ?? undefined}
         />
       </div>

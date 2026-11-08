@@ -425,29 +425,63 @@
       "topRedFlags": "Top Red Flags",
       "findings": {
         "title": "WP Health & Security Checklist",
-        "selectedSummary": "{selected} selected · {preselected} preselected",
+        "modeSummary": "{automatic} automatic · {guided} guided · {manual} manual",
         "before": "Before",
         "after": "After",
-        "savings": "Estimated Savings",
+        "savings": "Estimated savings",
         "safeMode": "Safe Mode",
-        "safeModeDescriptionOn": "Only low-risk actions are applied automatically. Sensitive actions are skipped for review.",
-        "safeModeDescriptionOff": "All selected actions are sent for remediation, including sensitive actions.",
-        "remediation": "Remediation",
-        "impactGain": "+{gain} score impact",
-        "optimizing": "Optimizing...",
-        "fixSelected": "Fix selected ({count})",
-        "noActionable": "No actionable findings from current WordPress telemetry.",
+        "safeModeDescriptionOn": "Only low-risk fixes are applied. Sensitive changes are held back for your review.",
+        "safeModeDescriptionOff": "All selected fixes are applied, including sensitive changes.",
+        "impactGain": "+{gain} score",
+        "noActionable": "No open issues in the current WordPress data.",
+        "applyAutomatic": "{count, plural, one {Apply # automatic fix} other {Apply # automatic fixes}}",
+        "applying": "Applying fixes…",
+        "undo": "Undo",
+        "undoAll": "Undo all",
+        "rescan": "Re-scan to update score",
+        "resultSummary": "{applied} applied · {failed} failed · {skipped} skipped",
+        "sections": {
+          "automatic": {
+            "title": "Automatic fixes",
+            "description": "Applied through the GetSafe 360 plugin, checked on your live site, and reversible with Undo."
+          },
+          "guided": {
+            "title": "Guided fixes",
+            "description": "Follow the steps, then re-scan to confirm the fix."
+          },
+          "manual": {
+            "title": "Needs your host or developer",
+            "description": "These changes are outside what the plugin can safely do for you."
+          }
+        },
+        "result": {
+          "verified": "Fixed and verified on your site",
+          "verification_failed": "Applied, but not visible yet → a cache may still serve the old version. Re-scan later.",
+          "connector_failed": "The plugin could not apply this change → nothing was modified.",
+          "connector_update": "Update the GetSafe 360 plugin to enable this fix.",
+          "safe_mode": "Held back by Safe Mode.",
+          "not_automatic": "No automatic fix → follow the guided steps.",
+          "error": "Something went wrong → try again.",
+          "undone": "Undone"
+        },
+        "errors": {
+          "apply": "Fixes could not be applied → Check the site connection and try again.",
+          "notConnected": "The site is not connected → Reconnect the plugin and try again.",
+          "undo": "Undo failed → Try again, or reconnect the site.",
+          "undoNewerFirst": "A newer change to the same setting is still applied → Undo that one first."
+        },
+        "severity": {
+          "critical": "Critical",
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low"
+        },
         "categories": {
           "security": "Security",
           "performance": "Performance",
           "stability": "Stability",
           "seoUx": "SEO / UX",
-          "redFlags": "Red Flags"
-        },
-        "depth": {
-          "quick": "Recommended depth: Quick (focuses on the highest-impact checks first).",
-          "balanced": "Recommended depth: Balanced (covers the Pareto 80/20 impact profile).",
-          "deep": "Recommended depth: Deep (includes scripts/assets and advanced forensic indicators)."
+          "redFlags": "Red flags"
         }
       }
     },
@@ -520,6 +554,10 @@
       "update": "Update",
       "install": "Install",
       "configure": "Configure"
+    },
+    "card": {
+      "adviceOnly": "Advice only → you make these changes on your site.",
+      "connectToFix": "Connect to fix"
     }
   }
 }
