@@ -428,13 +428,15 @@
       "title": "Page title length",
       "recommendation": "Keep the page title between 30 and 60 characters.",
       "ok": "The title is {length} characters, within the 30–60 range.",
-      "outside": "The title is {length} characters, outside the 30–60 range."
+      "outside": "The title is {length} characters, outside the 30–60 range.",
+      "missing": "The page has no title."
     },
     "content-desc-length": {
       "title": "Meta description length",
       "recommendation": "Keep the meta description between 120 and 160 characters.",
       "ok": "The meta description is {length} characters, within the 120–160 range.",
-      "outside": "The meta description is {length} characters, outside the 120–160 range."
+      "outside": "The meta description is {length} characters, outside the 120–160 range.",
+      "missing": "The page has no meta description."
     }
   }
 }

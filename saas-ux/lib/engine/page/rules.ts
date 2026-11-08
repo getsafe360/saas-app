@@ -329,7 +329,8 @@ export const PAGE_CONTENT_RULES: ReadonlyArray<Rule<PageFacts>> = [
     source: 'external-probe',
     evaluate: ({ meta }) => {
       if (!meta) return unknown('common.pageNotRead');
-      if (!meta.title) return { status: 'not-applicable', message: NO_TITLE };
+      // A missing title is worse than a badly sized one.
+      if (!meta.title) return { status: 'fail', message: 'missing' };
       return meta.titleLen >= 30 && meta.titleLen <= 60
         ? { status: 'pass', message: 'ok', values: { length: meta.titleLen } }
         : { status: 'warn', message: 'outside', values: { length: meta.titleLen } };
@@ -342,7 +343,7 @@ export const PAGE_CONTENT_RULES: ReadonlyArray<Rule<PageFacts>> = [
     source: 'external-probe',
     evaluate: ({ meta }) => {
       if (!meta) return unknown('common.pageNotRead');
-      if (!meta.description) return { status: 'not-applicable', message: NO_DESCRIPTION };
+      if (!meta.description) return { status: 'fail', message: 'missing' };
       return meta.descriptionLen >= 120 && meta.descriptionLen <= 160
         ? { status: 'pass', message: 'ok', values: { length: meta.descriptionLen } }
         : { status: 'warn', message: 'outside', values: { length: meta.descriptionLen } };

@@ -428,13 +428,15 @@
       "title": "Lunghezza del titolo della pagina",
       "recommendation": "Mantieni il titolo della pagina tra 30 e 60 caratteri.",
       "ok": "Il titolo è di {length} caratteri, nell’intervallo 30–60.",
-      "outside": "Il titolo è di {length} caratteri, fuori dall’intervallo 30–60."
+      "outside": "Il titolo è di {length} caratteri, fuori dall’intervallo 30–60.",
+      "missing": "La pagina non ha un titolo."
     },
     "content-desc-length": {
       "title": "Lunghezza della meta description",
       "recommendation": "Mantieni la meta description tra 120 e 160 caratteri.",
       "ok": "La meta description è di {length} caratteri, nell’intervallo 120–160.",
-      "outside": "La meta description è di {length} caratteri, fuori dall’intervallo 120–160."
+      "outside": "La meta description è di {length} caratteri, fuori dall’intervallo 120–160.",
+      "missing": "La pagina non ha una meta description."
     }
   }
 }

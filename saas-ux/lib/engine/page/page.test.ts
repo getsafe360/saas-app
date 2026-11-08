@@ -117,3 +117,24 @@ test('card insights come from the same checks as the scan', () => {
   assert.equal(cards.insights.security.topFindings[0].messages?.title, 'sec-csp.title');
   assert.equal(cards.overall, Math.round((cards.scores.seo + cards.scores.security + cards.scores.accessibility + cards.scores.performance) / 4));
 });
+
+test('exposure checks use what the public page showed, not connector telemetry', () => {
+  const connected = {
+    ...site,
+    // analyze-facts for a connected site: cms comes from the connector, publicCms from the page.
+    cms: { type: 'wordpress', wp: { version: '7.1.4', jsonApi: true, xmlrpc: null } },
+    publicCms: { type: 'wordpress', signals: [], wp: { version: null, xmlrpc: null, usersExposed: false } },
+  };
+  const byId = new Map(evaluatePageCards(connected).findings.map((f) => [f.id, f]));
+  assert.equal(byId.get('sec-wp-version-exposed')?.status, 'pass');
+  assert.equal(byId.get('sec-wp-user-enum')?.status, 'pass');
+});
+
+test('missing title and description lower the Content score below badly sized ones', () => {
+  const sized = { ...site, meta: { ...site.meta, title: 'Short title', titleLen: 11, description: 'Short', descriptionLen: 5 } };
+  const empty = { ...site, meta: { ...site.meta, title: '', titleLen: 0, description: '', descriptionLen: 0 } };
+  const sizedScore = evaluatePageCards(sized).scores.content;
+  const emptyScore = evaluatePageCards(empty).scores.content;
+  assert.ok(emptyScore < sizedScore, `${emptyScore} should be below ${sizedScore}`);
+  assert.equal(evaluatePageCards(empty).insights.content.criticalIssues + evaluatePageCards(empty).insights.content.warnings, 2);
+});

@@ -428,13 +428,15 @@
       "title": "Longueur du titre de la page",
       "recommendation": "Gardez le titre de la page entre 30 et 60 caractères.",
       "ok": "Le titre fait {length} caractères, dans la plage de 30 à 60.",
-      "outside": "Le titre fait {length} caractères, hors de la plage de 30 à 60."
+      "outside": "Le titre fait {length} caractères, hors de la plage de 30 à 60.",
+      "missing": "La page n’a pas de titre."
     },
     "content-desc-length": {
       "title": "Longueur de la méta-description",
       "recommendation": "Gardez la méta-description entre 120 et 160 caractères.",
       "ok": "La méta-description fait {length} caractères, dans la plage de 120 à 160.",
-      "outside": "La méta-description fait {length} caractères, hors de la plage de 120 à 160."
+      "outside": "La méta-description fait {length} caractères, hors de la plage de 120 à 160.",
+      "missing": "La page n’a pas de méta-description."
     }
   }
 }

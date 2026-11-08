@@ -428,13 +428,15 @@
       "title": "Tamanho do título da página",
       "recommendation": "Mantenha o título da página entre 30 e 60 caracteres.",
       "ok": "O título tem {length} caracteres, dentro da faixa de 30–60.",
-      "outside": "O título tem {length} caracteres, fora da faixa de 30–60."
+      "outside": "O título tem {length} caracteres, fora da faixa de 30–60.",
+      "missing": "A página não tem título."
     },
     "content-desc-length": {
       "title": "Tamanho da meta description",
       "recommendation": "Mantenha a meta description entre 120 e 160 caracteres.",
       "ok": "A meta description tem {length} caracteres, dentro da faixa de 120–160.",
-      "outside": "A meta description tem {length} caracteres, fora da faixa de 120–160."
+      "outside": "A meta description tem {length} caracteres, fora da faixa de 120–160.",
+      "missing": "A página não tem meta description."
     }
   }
 }

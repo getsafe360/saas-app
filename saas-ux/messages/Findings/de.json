@@ -428,13 +428,15 @@
       "title": "Länge des Seitentitels",
       "recommendation": "Halten Sie den Seitentitel zwischen 30 und 60 Zeichen.",
       "ok": "Der Titel hat {length} Zeichen und liegt im Bereich von 30–60.",
-      "outside": "Der Titel hat {length} Zeichen und liegt außerhalb des Bereichs von 30–60."
+      "outside": "Der Titel hat {length} Zeichen und liegt außerhalb des Bereichs von 30–60.",
+      "missing": "Die Seite hat keinen Titel."
     },
     "content-desc-length": {
       "title": "Länge der Meta-Beschreibung",
       "recommendation": "Halten Sie die Meta-Beschreibung zwischen 120 und 160 Zeichen.",
       "ok": "Die Meta-Beschreibung hat {length} Zeichen und liegt im Bereich von 120–160.",
-      "outside": "Die Meta-Beschreibung hat {length} Zeichen und liegt außerhalb des Bereichs von 120–160."
+      "outside": "Die Meta-Beschreibung hat {length} Zeichen und liegt außerhalb des Bereichs von 120–160.",
+      "missing": "Die Seite hat keine Meta-Beschreibung."
     }
   }
 }

@@ -624,6 +624,9 @@ export async function GET(req: NextRequest) {
       emailDns,
       ...(connectedWordPress ?? {}),
       cms: connectedWordPress?.cms ?? facts.cms,
+      // What the public page itself revealed (generator tag, xmlrpc, users route).
+      // Page checks must judge public exposure from this, not from connector telemetry.
+      publicCms: facts.cms,
     };
 
     await persistLiveSnapshot(connectedWordPress, enrichedFacts, true);

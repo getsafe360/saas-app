@@ -39,7 +39,9 @@ export function buildPageFacts(data: Loose | null | undefined): PageFacts {
   const dom = data?.dom;
   const a11y = data?.accessibility;
   const perf = data?.perfHints;
-  const cms = data?.cms;
+  // Connected sites replace `cms` with connector telemetry; exposure checks
+  // need what the public page showed, which analyze-facts keeps in `publicCms`.
+  const cms = data?.publicCms ?? data?.cms;
 
   let headers: Record<string, string> | null = null;
   if (data?.headers && typeof data.headers === 'object' && Object.keys(data.headers).length > 0) {
