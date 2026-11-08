@@ -32,6 +32,7 @@ const COMPONENTS: Array<[file: string, namespace: string]> = [
   ['components/site-cockpit/cards/wordpress/components/Analysis/VersionStatus.tsx', 'wordpress.version.'],
   ['components/site-cockpit/cards/wordpress/components/Analysis/PluginsPanel.tsx', 'wordpress.plugins.'],
   ['components/site-cockpit/cards/wordpress/components/ConnectionStatus/ConnectionBanner.tsx', 'wordpress.connection.'],
+  ['components/site-cockpit/cards/wordpress/components/Analysis/AppliedChangesPanel.tsx', 'wordpress.changes.'],
 ];
 
 test('every literal translation key used by the cockpit exists in all six languages', () => {
@@ -55,6 +56,8 @@ test('keys built from known lists exist, and every message parses', () => {
       (k) => `wordpress.security.${k}`,
     ),
     ...['security', 'performance', 'stability', 'seoUx', 'redFlags'].map((k) => `wordpress.findings.categories.${k}`),
+    ...['active', 'unverified', 'undone'].map((k) => `wordpress.changes.state.${k}`),
+    ...['undo', 'undoNewerFirst'].map((k) => `wordpress.changes.errors.${k}`),
   ];
   for (const locale of LOCALES) {
     for (const key of dynamic) assert.equal(typeof lookup(catalogs[locale], key), 'string', `${locale}: ${key}`);

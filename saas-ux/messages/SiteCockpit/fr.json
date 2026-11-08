@@ -503,7 +503,24 @@
       "agentTitle": "Agent d’optimisation WordPress",
       "agentEyebrow": "IA WordPress",
       "agentDescription": "Un espace dédié aux données WordPress, aux corrections guidées et à l’historique des vérifications.",
-      "openWorkspace": "Ouvrir l’espace de l’agent"
+      "openWorkspace": "Ouvrir l’espace de l’agent",
+      "changes": {
+        "title": "Modifications appliquées",
+        "description": "Modifications apportées à votre site par GetSafe 360. Annuler rétablit le réglage précédent.",
+        "state": {
+          "active": "Active",
+          "unverified": "Appliquée, pas encore visible",
+          "undone": "Annulée"
+        },
+        "appliedAt": "Appliquée le {date}",
+        "undoneAt": "le {date}",
+        "undo": "Annuler",
+        "newerFirst": "Annulez d’abord la modification plus récente de ce réglage.",
+        "errors": {
+          "undo": "L’annulation a échoué → Réessayez ou reconnectez le site.",
+          "undoNewerFirst": "Une modification plus récente du même réglage est encore active → Annulez-la d’abord."
+        }
+      }
     },
     "mobile": {
       "title": "Mobile",

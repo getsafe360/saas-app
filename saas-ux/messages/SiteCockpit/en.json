@@ -517,7 +517,24 @@
       "agentTitle": "WordPress Optimization Agent",
       "agentEyebrow": "WordPress AI",
       "agentDescription": "A focused workspace for WordPress telemetry, guided fixes, and verification history.",
-      "openWorkspace": "Open Agent Workspace"
+      "openWorkspace": "Open Agent Workspace",
+      "changes": {
+        "title": "Applied changes",
+        "description": "Changes GetSafe 360 made to your site. Undo restores the previous setting.",
+        "state": {
+          "active": "Active",
+          "unverified": "Applied, not visible yet",
+          "undone": "Undone"
+        },
+        "appliedAt": "Applied {date}",
+        "undoneAt": "on {date}",
+        "undo": "Undo",
+        "newerFirst": "Undo the newer change to this setting first.",
+        "errors": {
+          "undo": "Undo failed → Try again, or reconnect the site.",
+          "undoNewerFirst": "A newer change to the same setting is still applied → Undo that one first."
+        }
+      }
     },
     "mobile": {
       "title": "Mobile",

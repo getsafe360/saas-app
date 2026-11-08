@@ -503,7 +503,24 @@
       "agentTitle": "Agente de optimización de WordPress",
       "agentEyebrow": "IA para WordPress",
       "agentDescription": "Un espacio de trabajo centrado en los datos de WordPress, las correcciones guiadas y el historial de verificaciones.",
-      "openWorkspace": "Abrir espacio del agente"
+      "openWorkspace": "Abrir espacio del agente",
+      "changes": {
+        "title": "Cambios aplicados",
+        "description": "Cambios que GetSafe 360 ha hecho en tu sitio. Deshacer restaura el ajuste anterior.",
+        "state": {
+          "active": "Activo",
+          "unverified": "Aplicado, aún no visible",
+          "undone": "Deshecho"
+        },
+        "appliedAt": "Aplicado el {date}",
+        "undoneAt": "el {date}",
+        "undo": "Deshacer",
+        "newerFirst": "Deshaz primero el cambio más reciente de este ajuste.",
+        "errors": {
+          "undo": "No se pudo deshacer → Inténtalo de nuevo o vuelve a conectar el sitio.",
+          "undoNewerFirst": "Hay un cambio más reciente en el mismo ajuste → Deshaz ese primero."
+        }
+      }
     },
     "mobile": {
       "title": "Móvil",

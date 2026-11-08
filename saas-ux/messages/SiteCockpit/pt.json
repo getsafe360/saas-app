@@ -503,7 +503,24 @@
       "agentTitle": "Agente de otimização do WordPress",
       "agentEyebrow": "IA para WordPress",
       "agentDescription": "Um espaço de trabalho focado em dados do WordPress, correções guiadas e histórico de verificações.",
-      "openWorkspace": "Abrir espaço do agente"
+      "openWorkspace": "Abrir espaço do agente",
+      "changes": {
+        "title": "Alterações aplicadas",
+        "description": "Alterações que o GetSafe 360 fez no seu site. Desfazer restaura a configuração anterior.",
+        "state": {
+          "active": "Ativa",
+          "unverified": "Aplicada, ainda não visível",
+          "undone": "Desfeita"
+        },
+        "appliedAt": "Aplicada em {date}",
+        "undoneAt": "em {date}",
+        "undo": "Desfazer",
+        "newerFirst": "Desfaça primeiro a alteração mais recente desta configuração.",
+        "errors": {
+          "undo": "Falha ao desfazer → Tente novamente ou reconecte o site.",
+          "undoNewerFirst": "Uma alteração mais recente na mesma configuração ainda está ativa → Desfaça essa primeiro."
+        }
+      }
     },
     "mobile": {
       "title": "Mobile",
