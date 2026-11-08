@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
 import { users } from '@/lib/db/schema/auth/users';
@@ -14,7 +14,11 @@ import { toAppliedChanges } from '@/lib/wordpress/applied-changes';
 
 export const dynamic = 'force-dynamic';
 
-/** Enough history to decide undo order for the changes we show. */
+/**
+ * Only runs that changed the site carry an inverse, so filtering on it in SQL
+ * keeps skipped and no-op runs from crowding real changes out of the limit.
+ * The limit still leaves enough history to decide undo order.
+ */
 const HISTORY_LIMIT = 200;
 
 export async function GET(_request: Request, props: { params: Promise<{ id: string }> }) {
@@ -53,7 +57,14 @@ export async function GET(_request: Request, props: { params: Promise<{ id: stri
       completedAt: wordpressActionRuns.completedAt,
     })
     .from(wordpressActionRuns)
-    .where(eq(wordpressActionRuns.siteId, siteId))
+    .where(
+      and(
+        eq(wordpressActionRuns.siteId, siteId),
+        inArray(wordpressActionRuns.status, ['applied', 'failed', 'rolled_back']),
+        isNotNull(wordpressActionRuns.rollbackPayload),
+        sql`${wordpressActionRuns.rollbackPayload} <> 'null'::jsonb`,
+      ),
+    )
     .orderBy(desc(wordpressActionRuns.startedAt))
     .limit(HISTORY_LIMIT);
 
