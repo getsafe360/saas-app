@@ -112,6 +112,9 @@ importers:
       framer-motion:
         specifier: ^12.23.19
         version: 12.23.24(react-dom@19.1.10(react@19.1.10))(react@19.1.10)
+      intl-messageformat:
+        specifier: 10.7.18
+        version: 10.7.18
       jose:
         specifier: ^6.0.11
         version: 6.1.0

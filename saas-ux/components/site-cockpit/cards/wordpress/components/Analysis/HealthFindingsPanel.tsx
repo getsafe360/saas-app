@@ -15,6 +15,7 @@ import { useTranslations } from "next-intl";
 import type { WordPressHealthFinding } from "@/types/site-cockpit";
 import { fixModeFor, type FixMode } from "@/lib/engine/fixers/catalog";
 import type { RemediationItem } from "@/lib/wordpress/remediation-result";
+import { useFindingText } from "../../hooks/useFindingText";
 import {
   estimateSelectedSavingsMs,
   estimateSelectedScoreGain,
@@ -69,6 +70,7 @@ export function HealthFindingsPanel({
   currentScore = 0,
 }: HealthFindingsPanelProps) {
   const t = useTranslations("SiteCockpit.wordpress.findings");
+  const text = useFindingText();
 
   const actionable = useMemo(
     () => findings.filter((f) => f.status === "fail" || f.status === "warning"),
@@ -207,7 +209,7 @@ export function HealthFindingsPanel({
               type="button"
               role="switch"
               aria-checked={checked}
-              aria-label={finding.title}
+              aria-label={text.title(finding)}
               disabled={applying}
               onClick={() => toggle(finding.id)}
               className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${checked ? "bg-[var(--category-wordpress)]" : "bg-neutral-600"}`}
@@ -220,14 +222,14 @@ export function HealthFindingsPanel({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 text-sm text-white">
             {finding.category === "red-flags" ? <AlertTriangle className="h-3.5 w-3.5 text-red-400" /> : null}
-            {finding.title}
+            {text.title(finding)}
           </div>
           <div className="mt-1 text-xs" style={{ color: "var(--text-subtle)" }}>
             {t(`categories.${CATEGORY_LABEL[finding.category]}`)} · {t(`severity.${finding.severity}`)}
             {gain > 0 ? ` · ${t("impactGain", { gain })}` : ""}
           </div>
           <div className="mt-1 text-xs" style={{ color: "var(--text-subtle)" }}>
-            {finding.action}
+            {text.action(finding)}
           </div>
           {item && (
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">

@@ -8,6 +8,7 @@ import { WordPressAIIcon } from "@/components/icons/WordPressAI";
 import { useLocale, useTranslations } from "next-intl";
 import { useWordPressConnection } from "./hooks/useWordPressConnection";
 import { useWordPressPairing } from "./hooks/useWordPressPairing";
+import { useFindingText } from "./hooks/useFindingText";
 import { NotConnected } from "./components/EmptyStates/NotConnected";
 import { NoWordPress } from "./components/EmptyStates/NoWordPress";
 import { VersionStatus } from "./components/Analysis/VersionStatus";
@@ -39,6 +40,7 @@ export function WordPressCard({
   const pathname = usePathname();
   const t = useTranslations("SiteCockpit");
   const locale = useLocale();
+  const findingText = useFindingText();
   const { wordpress, cms } = data;
 
   // Custom hooks handle all logic
@@ -388,7 +390,7 @@ export function WordPressCard({
             <ul className="space-y-1 text-xs">
               {topRedFlags.map((flag) => (
                 <li key={flag.id} style={{ color: "var(--status-critical)" }}>
-                  • {flag.title}
+                  • {findingText.title(flag)}
                 </li>
               ))}
             </ul>

@@ -43,10 +43,8 @@ test('a throwing rule becomes unknown instead of breaking the report', () => {
     {
       id: 'boom',
       category: 'security',
-      title: 'Boom',
       severity: 'high',
       source: 'connector',
-      recommendation: '',
       evaluate: () => {
         throw new Error('bad input');
       },

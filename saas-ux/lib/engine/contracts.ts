@@ -80,6 +80,18 @@ export interface Finding {
   impact?: FindingImpact;
   /** Precheck in the UI: failing/warning, critical/high, and fixable. */
   selectedByDefault: boolean;
+  /**
+   * messages/Findings keys behind title/summary/recommendation, so the UI can
+   * show them in the user's language. The plain fields above are English.
+   */
+  messages?: FindingMessages;
+}
+
+export interface FindingMessages {
+  title: string;
+  summary: string;
+  values?: Record<string, string | number>;
+  recommendation: string;
 }
 
 export interface CategoryScore {

@@ -14,10 +14,16 @@ import type {
   FixRef,
   Severity,
 } from './contracts';
+import { type MessageValues, messageKey, renderMessage } from './messages';
 
 export interface RuleOutcome {
   status: CheckStatus;
-  summary: string;
+  /**
+   * Catalog key of the sentence describing what was observed: an entry of this
+   * rule in messages/Findings ("outdated") or a shared one ("common.notReported").
+   */
+  message: string;
+  values?: MessageValues;
   /** Overrides the rule's default severity for this outcome. */
   severity?: Severity;
   confidence?: Confidence;
@@ -27,12 +33,11 @@ export interface RuleOutcome {
   impact?: FindingImpact;
 }
 
+/** Title and recommendation come from messages/Findings under the rule id. */
 export interface Rule<Facts> {
   id: string;
   category: EngineCategory;
-  title: string;
   severity: Severity;
-  recommendation: string;
   source: EvidenceSource;
   fix?: FixRef;
   evaluate(facts: Facts): RuleOutcome;
@@ -63,8 +68,8 @@ export function isSelectedByDefault(finding: Pick<Finding, 'status' | 'severity'
 }
 
 /** Shorthand for a check whose input was not observed. */
-export function unknown(summary: string): RuleOutcome {
-  return { status: 'unknown', summary, confidence: 'low' };
+export function unknown(message: string, values?: MessageValues): RuleOutcome {
+  return { status: 'unknown', message, values, confidence: 'low' };
 }
 
 export function evaluateRules<Facts>(
@@ -78,18 +83,23 @@ export function evaluateRules<Facts>(
       outcome = rule.evaluate(facts);
     } catch {
       // A broken rule must never take down the report or invent a result.
-      outcome = unknown('This check could not be evaluated.');
+      outcome = unknown('common.notEvaluated');
     }
+
+    const summaryKey = messageKey(rule.id, outcome.message);
+    const titleKey = `${rule.id}.title`;
+    const recommendationKey = `${rule.id}.recommendation`;
 
     const finding: Finding = {
       id: rule.id,
       category: rule.category,
-      title: rule.title,
+      title: renderMessage(titleKey),
       status: outcome.status,
       severity: outcome.severity ?? rule.severity,
       confidence: outcome.confidence ?? (outcome.status === 'unknown' ? 'low' : 'high'),
-      summary: outcome.summary,
-      recommendation: rule.recommendation,
+      summary: renderMessage(summaryKey, outcome.values),
+      recommendation: renderMessage(recommendationKey),
+      messages: { title: titleKey, summary: summaryKey, values: outcome.values, recommendation: recommendationKey },
       evidence:
         outcome.status === 'unknown'
           ? undefined

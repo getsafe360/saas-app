@@ -130,6 +130,13 @@ export interface WordPressHealthFinding {
   estimatedRiskReduction?: number;
   depthTier?: "quick" | "balanced" | "deep";
   safetyLevel?: "safe" | "review" | "sensitive";
+  /** messages/Findings keys for title/description/action; the plain fields are English. */
+  messages?: {
+    title: string;
+    summary: string;
+    values?: Record<string, string | number>;
+    recommendation: string;
+  };
 }
 
 /** null = nothing in this category could be observed yet. */

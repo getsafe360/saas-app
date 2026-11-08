@@ -1,7 +1,8 @@
 // lib/engine/security/headers.ts
 //
 // HTTP security header rule pack. Detection reuses the deterministic list in
-// lib/scan/rules.ts so the URL scan and the engine agree on ids and wording.
+// lib/scan/rules.ts so the URL scan and the engine agree on ids; the engine's
+// wording lives in messages/Findings like every other rule.
 // The fix values here are the exact headers the connector will send.
 
 import { SECURITY_HEADERS } from '@/lib/scan/rules';
@@ -44,31 +45,29 @@ const CSP_FIX: FixRef = { fixerId: 'security-csp', automation: 'guided', risk: '
 export const SECURITY_HEADER_RULES: ReadonlyArray<Rule<SiteHeaderFacts>> = SECURITY_HEADERS.map((spec) => ({
   id: spec.id,
   category: 'security',
-  title: spec.title,
   severity: spec.severity,
   source: 'external-probe',
-  recommendation: spec.suggestion,
   fix: spec.id === 'sec-csp' ? CSP_FIX : headerFix(spec.id),
   evaluate: ({ https, headers }: SiteHeaderFacts) => {
-    if (headers === null) return unknown('Response headers were not captured.');
+    if (headers === null) return unknown('common.headersNotCaptured');
 
     const value = headers[spec.header];
-    if (value) return { status: 'pass', summary: `${spec.header} is set.`, observed: value };
+    if (value) return { status: 'pass', message: 'common.headerSet', values: { header: spec.header }, observed: value };
 
     if (spec.header === 'x-frame-options' && /frame-ancestors/i.test(headers['content-security-policy'] ?? '')) {
       return {
         status: 'pass',
-        summary: 'Framing is restricted by CSP frame-ancestors.',
+        message: 'frameAncestors',
         observed: headers['content-security-policy'],
       };
     }
 
     if (spec.header === 'strict-transport-security') {
-      if (https === null) return unknown('HTTPS status was not observed.');
-      if (!https) return { status: 'not-applicable', summary: 'HSTS requires HTTPS, which the site does not serve yet.' };
+      if (https === null) return unknown('httpsUnknown');
+      if (!https) return { status: 'not-applicable', message: 'notApplicable' };
     }
 
-    return { status: 'fail', summary: spec.description };
+    return { status: 'fail', message: 'missing' };
   },
 }));
 
