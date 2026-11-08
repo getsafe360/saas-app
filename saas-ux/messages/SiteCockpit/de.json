@@ -343,7 +343,17 @@
         "liveData": "Live-Daten von Ihrer Seite",
         "reconnect": "Neu verbinden",
         "connectionLost": "Verbindung verloren",
-        "pluginDeactivated": "Plugin möglicherweise deaktiviert"
+        "pluginDeactivated": "Plugin möglicherweise deaktiviert",
+        "reconnectingMessage": "Verbindung zu Ihrer Website wird wiederhergestellt…",
+        "errorRetry": "Verbindungsfehler → Zum Wiederholen klicken",
+        "waiting": "Warten auf Antwort der Website…",
+        "reconnectingStatus": "Verbindung wird hergestellt",
+        "errorStatus": "Verbindungsfehler",
+        "pending": "Ausstehend",
+        "lastUpdated": "Zuletzt aktualisiert:",
+        "disconnect": "Trennen",
+        "attempt": "Versuch {attempt} von {total}",
+        "autoRetry": "{minutes, plural, one {Automatischer neuer Versuch in # Minute} other {Automatischer neuer Versuch in # Minuten}}"
       },
       "version": {
         "title": "WordPress-Version",
@@ -352,7 +362,10 @@
         "outdated": "Veraltet",
         "updateAvailable": "Update verfügbar",
         "daysOld": "{count} Tage alt",
-        "updateNow": "Jetzt aktualisieren"
+        "updateNow": "Jetzt aktualisieren",
+        "upToDate": "Aktuell",
+        "latestValue": "Neueste: {version}",
+        "behind": "{days} Tage hinter der neuesten Version · {count, plural, one {# Empfehlung} other {# Empfehlungen}}"
       },
       "security": {
         "title": "Sicherheit",
@@ -367,7 +380,8 @@
         "disabled": "Deaktiviert",
         "debugMode": "Debug-Modus",
         "on": "An",
-        "off": "Aus"
+        "off": "Aus",
+        "checksTitle": "Sicherheitsprüfungen"
       },
       "plugins": {
         "title": "Plugins",
@@ -378,7 +392,9 @@
         "updateAvailable": "Update verfügbar",
         "fixNow": "Jetzt beheben",
         "viewAll": "Alle anzeigen",
-        "needsUpdate": "{count} Plugins benötigen Updates"
+        "needsUpdate": "{count} Plugins benötigen Updates",
+        "healthy": "In Ordnung",
+        "activeOf": "{active}/{total} aktiv"
       },
       "themes": {
         "title": "Theme",
@@ -405,10 +421,10 @@
         "medium": "Mittel",
         "low": "Niedrig"
       },
-      "lastAudit": "Last Audit",
-      "trend": "Trend",
-      "categoryScores": "Category Scores",
-      "topRedFlags": "Top Red Flags",
+      "lastAudit": "Letzte Prüfung",
+      "trend": "Verlauf",
+      "categoryScores": "Kategorie-Bewertungen",
+      "topRedFlags": "Wichtigste Warnsignale",
       "findings": {
         "title": "WP-Checkliste für Zustand & Sicherheit",
         "modeSummary": "{automatic} automatisch · {guided} angeleitet · {manual} manuell",
@@ -473,7 +489,21 @@
           "title": "Alle automatischen Korrekturen sind angewendet",
           "description": "Das Plugin kann nichts mehr selbst beheben. Die folgenden Punkte erfordern einen angeleiteten Schritt oder Ihren Hoster."
         }
-      }
+      },
+      "telemetry": {
+        "savedLabel": "Gespeicherter Stand",
+        "savedDetail": "Der Live-Abruf ist fehlgeschlagen; angezeigt wird der zuletzt gespeicherte Stand.",
+        "liveLabel": "Live-Daten",
+        "liveDetail": "Daten direkt vom Connector der aktuellen WordPress-Website.",
+        "core": "Core",
+        "latest": "Aktuell",
+        "plugins": "Plugins",
+        "notMeasured": "Noch nicht gemessen"
+      },
+      "agentTitle": "WordPress-Optimierungsagent",
+      "agentEyebrow": "WordPress KI",
+      "agentDescription": "Ein fokussierter Arbeitsbereich für WordPress-Daten, angeleitete Korrekturen und den Prüfverlauf.",
+      "openWorkspace": "Agent-Arbeitsbereich öffnen"
     },
     "mobile": {
       "title": "Mobil",
@@ -548,6 +578,67 @@
     "card": {
       "adviceOnly": "Nur Empfehlungen → diese Änderungen nehmen Sie selbst auf Ihrer Website vor.",
       "connectToFix": "Verbinden, um zu beheben"
+    },
+    "focus": {
+      "heading": "Kategorien",
+      "showAll": "Alle anzeigen",
+      "showOne": "Einzeln anzeigen",
+      "allClear": "Alles in Ordnung",
+      "critical": "{count} kritisch",
+      "warnings": "{count, plural, one {# Warnung} other {# Warnungen}}",
+      "scoresHeading": "Kategorie-Bewertungen",
+      "labels": {
+        "performance": "Leistung",
+        "security": "Sicherheit",
+        "seo": "SEO",
+        "accessibility": "Barrierefreiheit",
+        "content": "Inhalt",
+        "wordpress": "WordPress"
+      }
+    },
+    "nextStep": {
+      "eyebrow": "Nächster Schritt",
+      "scanning": {
+        "title": "Ihre Website wird gescannt…",
+        "detail": "Wir prüfen SEO, Leistung, Barrierefreiheit und Sicherheit. Das dauert etwa 30 Sekunden."
+      },
+      "failed": {
+        "title": "Der Scan wurde nicht abgeschlossen"
+      },
+      "firstScan": {
+        "title": "Ersten Scan starten",
+        "detail": "Eine vollständige Prüfung von SEO, Leistung, Barrierefreiheit und Sicherheit mit einer Liste, was zu beheben ist. Funktioniert ohne Verbindung zu Ihrer Website."
+      },
+      "found": {
+        "title": "{count, plural, one {# Problem gefunden} other {# Probleme gefunden}}",
+        "fixable": "{count, plural, one {# davon lässt} other {# davon lassen}} sich automatisch beheben, sobald Sie {target, select, wordpress {WordPress} other {Ihre Website}} verbinden. Für den Rest gibt es Schritt-für-Schritt-Anleitungen.",
+        "advice": "Dazu gibt es Schritt-für-Schritt-Anleitungen. Mit einer Verbindung behalten wir Ihre Website außerdem im Blick."
+      },
+      "review": {
+        "title": "{count, plural, one {# Problem zu prüfen} other {# Probleme zu prüfen}}",
+        "detail": "Prüfen Sie sie und geben Sie die gewünschten Korrekturen frei."
+      },
+      "noIssues": {
+        "title": "Keine Probleme gefunden",
+        "detail": "Verbinden Sie Ihre Website, damit wir sie im Blick behalten und später Korrekturen anwenden können."
+      },
+      "allGood": {
+        "title": "Nichts erfordert Ihre Aufmerksamkeit",
+        "detail": "Ihre Website ist verbunden und der letzte Scan hat keine Probleme gefunden."
+      },
+      "cta": {
+        "connect": "Jetzt verbinden",
+        "tryAgain": "Erneut versuchen",
+        "runScan": "Scan starten",
+        "review": "Probleme prüfen"
+      },
+      "topThings": "{count, plural, one {Das Wichtigste zum Beheben} other {Die # wichtigsten Punkte zum Beheben}}",
+      "autoFix": "automatisch",
+      "severity": {
+        "high": "Hoher Schweregrad",
+        "medium": "Mittlerer Schweregrad",
+        "low": "Niedriger Schweregrad"
+      }
     }
   }
 }

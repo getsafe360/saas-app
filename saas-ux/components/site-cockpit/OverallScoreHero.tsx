@@ -16,6 +16,7 @@ import {
 import { getCMSInfo } from "@/components/analyzer/cms/cms-signatures";
 import { WordPressAIIcon } from "@/components/icons/WordPressAI";
 import type { Summary } from "@/types/site-cockpit";
+import type { FocusCategory } from "@/lib/cockpit/focus";
 
 interface OverallScoreHeroProps {
   summary: Summary;
@@ -23,6 +24,8 @@ interface OverallScoreHeroProps {
   finalUrl: string;
   metaTitle?: string;
   wordpressScore?: number;
+  /** Opens a category in the cockpit; without it the arcs scroll to the card. */
+  onSelectCategory?: (category: FocusCategory) => void;
   /** False while only saved scores are known (no passed/warning/critical counts yet). */
   showCounts?: boolean;
   cms?: {
@@ -44,19 +47,36 @@ interface CategoryArcProps {
   icon: ComponentType<{ className?: string; size?: number }>;
   /** Id of the card this arc jumps to when clicked. */
   targetId?: string;
+  /** Takes precedence over targetId. */
+  onSelect?: () => void;
 }
 
-function CategoryArc({ label, score, color, icon: Icon, targetId }: CategoryArcProps) {
-  const jump = targetId
-    ? () => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" })
-    : undefined;
+function CategoryArc({ label, score, color, icon: Icon, targetId, onSelect }: CategoryArcProps) {
+  const jump =
+    onSelect ??
+    (targetId
+      ? () => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" })
+      : undefined);
   const dash = (score / 100) * ARC_CIRC;
   return (
     <div className="flex flex-col items-center gap-1.5">
       <div
         className="relative h-14 w-14 cursor-default"
         onClick={jump}
-        title={jump ? `Jump to ${label}` : undefined}
+        title={jump ? label : undefined}
+        role={jump ? "button" : undefined}
+        tabIndex={jump ? 0 : undefined}
+        aria-label={jump ? `${label}: ${score}` : undefined}
+        onKeyDown={
+          jump
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  jump();
+                }
+              }
+            : undefined
+        }
         style={{ cursor: jump ? "pointer" : "default" }}
       >
         <svg className="h-14 w-14 -rotate-90" viewBox="0 0 56 56">
@@ -107,6 +127,7 @@ export function OverallScoreHero({
   wordpressScore,
   cms,
   showCounts = true,
+  onSelectCategory,
 }: OverallScoreHeroProps) {
   const t = useTranslations("SiteCockpit");
   const [imageError, setImageError] = useState(false);
@@ -136,52 +157,58 @@ export function OverallScoreHero({
 
   const categoryArcs: CategoryArcProps[] = [
     {
-      label: "Performance",
+      label: t("focus.labels.performance"),
       score: scores.performance,
       color: "var(--category-performance)",
       icon: Zap,
       targetId: "card-performance",
+            onSelect: onSelectCategory ? () => onSelectCategory("performance") : undefined,
     },
     {
-      label: "Security",
+      label: t("focus.labels.security"),
       score: scores.security,
       color: "var(--category-security)",
       icon: Shield,
       targetId: "card-security",
+            onSelect: onSelectCategory ? () => onSelectCategory("security") : undefined,
     },
     {
-      label: "SEO",
+      label: t("focus.labels.seo"),
       score: scores.seo,
       color: "var(--category-seo)",
       icon: Search,
       targetId: "card-seo",
+            onSelect: onSelectCategory ? () => onSelectCategory("seo") : undefined,
     },
     {
-      label: "Accessibility",
+      label: t("focus.labels.accessibility"),
       score: scores.accessibility,
       color: "var(--category-accessibility)",
       icon: Accessibility,
       targetId: "card-accessibility",
+            onSelect: onSelectCategory ? () => onSelectCategory("accessibility") : undefined,
     },
     ...(typeof scores.content === "number"
       ? [
           {
-            label: "Content",
+            label: t("focus.labels.content"),
             score: scores.content,
             color: "var(--category-content)",
             icon: FileText,
             targetId: "card-content",
+            onSelect: onSelectCategory ? () => onSelectCategory("content") : undefined,
           },
         ]
       : []),
     ...(isWordPress && wordpressScore !== undefined
       ? [
           {
-            label: "WordPress",
+            label: t("focus.labels.wordpress"),
             score: wordpressScore,
             color: "var(--category-wordpress)",
             icon: WordPressAIIcon as ComponentType<{ className?: string; size?: number }>,
             targetId: "card-wordpress",
+            onSelect: onSelectCategory ? () => onSelectCategory("wordpress") : undefined,
           },
         ]
       : []),
@@ -358,7 +385,7 @@ export function OverallScoreHero({
             className="text-[10px] font-semibold uppercase tracking-[0.15em] mb-4"
             style={{ color: "var(--text-subtle)" }}
           >
-            Category Scores
+            {t("focus.scoresHeading")}
           </div>
           <div className="flex items-start justify-around gap-4 flex-wrap">
             {categoryArcs.map((arc) => (

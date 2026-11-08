@@ -357,7 +357,17 @@
           "plugin": "Plugin (installed & active)",
           "pairing": "Pairing Code accepted",
           "site": "Site conx"
-        }
+        },
+        "reconnectingMessage": "Reconnecting to your site…",
+        "errorRetry": "Connection error → Click to retry",
+        "waiting": "Waiting for the site to respond…",
+        "reconnectingStatus": "Reconnecting",
+        "errorStatus": "Connection error",
+        "pending": "Pending",
+        "lastUpdated": "Last updated:",
+        "disconnect": "Disconnect",
+        "attempt": "Attempt {attempt} of {total}",
+        "autoRetry": "{minutes, plural, one {Retrying automatically in # minute} other {Retrying automatically in # minutes}}"
       },
       "version": {
         "title": "WordPress Version",
@@ -366,7 +376,10 @@
         "outdated": "Outdated",
         "updateAvailable": "Update Available",
         "daysOld": "{count} days old",
-        "updateNow": "Update Now"
+        "updateNow": "Update Now",
+        "upToDate": "Up to date",
+        "latestValue": "Latest: {version}",
+        "behind": "{days} days behind the latest release · {count, plural, one {# recommendation} other {# recommendations}}"
       },
       "security": {
         "title": "Security",
@@ -381,7 +394,8 @@
         "disabled": "Disabled",
         "debugMode": "Debug Mode",
         "on": "On",
-        "off": "Off"
+        "off": "Off",
+        "checksTitle": "Security checks"
       },
       "plugins": {
         "title": "Plugins",
@@ -392,7 +406,9 @@
         "updateAvailable": "Update Available",
         "fixNow": "Fix Now",
         "viewAll": "View All",
-        "needsUpdate": "{count} plugins need updates"
+        "needsUpdate": "{count} plugins need updates",
+        "healthy": "Healthy",
+        "activeOf": "{active}/{total} active"
       },
       "themes": {
         "title": "Theme",
@@ -487,7 +503,21 @@
           "title": "All automatic fixes are applied",
           "description": "Nothing is left that the plugin can fix by itself. The items below need a guided step or your host."
         }
-      }
+      },
+      "telemetry": {
+        "savedLabel": "Saved snapshot",
+        "savedDetail": "Live pull failed, showing the latest stored telemetry.",
+        "liveLabel": "Live telemetry",
+        "liveDetail": "Direct connector data from the current WordPress site.",
+        "core": "Core",
+        "latest": "Latest",
+        "plugins": "Plugins",
+        "notMeasured": "Not measured yet"
+      },
+      "agentTitle": "WordPress Optimization Agent",
+      "agentEyebrow": "WordPress AI",
+      "agentDescription": "A focused workspace for WordPress telemetry, guided fixes, and verification history.",
+      "openWorkspace": "Open Agent Workspace"
     },
     "mobile": {
       "title": "Mobile",
@@ -562,6 +592,67 @@
     "card": {
       "adviceOnly": "Advice only → you make these changes on your site.",
       "connectToFix": "Connect to fix"
+    },
+    "focus": {
+      "heading": "Categories",
+      "showAll": "Show all",
+      "showOne": "One at a time",
+      "allClear": "All clear",
+      "critical": "{count} critical",
+      "warnings": "{count, plural, one {# warning} other {# warnings}}",
+      "scoresHeading": "Category scores",
+      "labels": {
+        "performance": "Performance",
+        "security": "Security",
+        "seo": "SEO",
+        "accessibility": "Accessibility",
+        "content": "Content",
+        "wordpress": "WordPress"
+      }
+    },
+    "nextStep": {
+      "eyebrow": "Next step",
+      "scanning": {
+        "title": "Scanning your site…",
+        "detail": "Checking SEO, performance, accessibility and security. This takes about 30 seconds."
+      },
+      "failed": {
+        "title": "The scan didn't finish"
+      },
+      "firstScan": {
+        "title": "Run your first scan",
+        "detail": "A full check of SEO, performance, accessibility and security, with a list of what to fix. It works without connecting your site."
+      },
+      "found": {
+        "title": "{count, plural, one {# issue found} other {# issues found}}",
+        "fixable": "{count, plural, one {# can} other {# can}} be fixed automatically once you connect {target, select, wordpress {WordPress} other {your site}}. The rest come with step-by-step advice.",
+        "advice": "These come with step-by-step advice. Connecting also lets us keep watching your site."
+      },
+      "review": {
+        "title": "{count, plural, one {# issue to review} other {# issues to review}}",
+        "detail": "Review them and approve the fixes you want applied."
+      },
+      "noIssues": {
+        "title": "No issues found",
+        "detail": "Connect your site to keep watching it and to apply fixes later."
+      },
+      "allGood": {
+        "title": "Nothing needs your attention",
+        "detail": "Your site is connected and the last scan found no issues."
+      },
+      "cta": {
+        "connect": "Connect now",
+        "tryAgain": "Try again",
+        "runScan": "Run scan",
+        "review": "Review issues"
+      },
+      "topThings": "{count, plural, one {Top thing to fix} other {Top # things to fix}}",
+      "autoFix": "auto-fix",
+      "severity": {
+        "high": "High severity",
+        "medium": "Medium severity",
+        "low": "Low severity"
+      }
     }
   }
 }

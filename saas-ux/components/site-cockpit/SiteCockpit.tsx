@@ -37,6 +37,15 @@ import { ConnectionCard } from "./cards/ConnectionCard";
 import { ReportCard } from "./cards/ReportCard";
 import { OverallScoreHero } from "./OverallScoreHero";
 import { NextStepBanner } from "./NextStepBanner";
+import { CategoryFocusTabs, type FocusTab } from "./CategoryFocusTabs";
+import {
+  FOCUS_CATEGORIES,
+  focusStorageKey,
+  pickDefaultFocus,
+  resolveFocus,
+  type FocusCategory,
+  type FocusSelection,
+} from "@/lib/cockpit/focus";
 import type { StoredScan } from "@/lib/cockpit/stored";
 import type { SiteScanState } from "@/lib/cockpit/useSiteScan";
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
@@ -334,6 +343,85 @@ export function SiteCockpit({
     return true;
   });
 
+  // ── One category at a time ────────────────────────────────────────────────
+  const focusTabs: FocusTab[] = visibleCards
+    .filter((card): card is CardConfig & { id: FocusCategory } =>
+      (FOCUS_CATEGORIES as ReadonlyArray<string>).includes(card.id),
+    )
+    .map((card) => {
+      if (card.id === "wordpress") {
+        const problems = (data.wordpress?.healthFindings ?? []).filter(
+          (f) => f.status === "fail" || f.status === "warning",
+        );
+        const critical = problems.filter(
+          (f) => f.status === "fail" && (f.severity === "critical" || f.severity === "high"),
+        ).length;
+        return {
+          id: card.id,
+          score: data.summary.categoryScores.wordpress ?? data.wordpress?.score ?? null,
+          critical,
+          warnings: problems.length - critical,
+        };
+      }
+      const insights = data.summary.categoryInsights?.[card.id];
+      return {
+        id: card.id,
+        score: data.summary.categoryScores[card.id] ?? null,
+        critical: insights?.criticalIssues ?? 0,
+        warnings: insights?.warnings ?? 0,
+      };
+    });
+  const defaultFocus = pickDefaultFocus(focusTabs);
+  const focusIds = focusTabs.map((tab) => tab.id);
+  // null until the viewer picks; the default is computed the same way on server and client.
+  const [focusChoice, setFocusChoice] = useState<FocusSelection | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(focusStorageKey(siteId));
+      if (stored) setFocusChoice(stored as FocusSelection);
+    } catch {
+      // Storage unavailable (private mode, blocked): keep the default.
+    }
+  }, [siteId]);
+
+  const focus: FocusSelection = wordpressOnly
+    ? "all"
+    : resolveFocus(focusChoice, focusIds, defaultFocus);
+
+  const selectFocus = useCallback(
+    (selection: FocusSelection) => {
+      setFocusChoice(selection);
+      try {
+        window.localStorage.setItem(focusStorageKey(siteId), selection);
+      } catch {
+        // Not remembered; the choice still applies for this visit.
+      }
+    },
+    [siteId],
+  );
+
+  // ?category= (sidebar links) opens that category as well as starting its optimization.
+  useEffect(() => {
+    const category = searchParams.get("category");
+    if (category && (FOCUS_CATEGORIES as ReadonlyArray<string>).includes(category)) {
+      setFocusChoice(category as FocusCategory);
+    }
+  }, [searchParams]);
+
+  const selectFromHero = useCallback(
+    (category: FocusCategory) => {
+      selectFocus(category);
+      document.getElementById("category-focus")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    [selectFocus],
+  );
+
+  const renderedCards =
+    focus === "all"
+      ? visibleCards
+      : visibleCards.filter((card) => card.id === focus || card.id === "optimization");
+
   return (
     <div
       className="min-h-screen"
@@ -346,6 +434,7 @@ export function SiteCockpit({
         metaTitle={data.meta?.title}
         wordpressScore={isConnected ? (data.wordpress?.score ?? undefined) : undefined}
         cms={data.cms}
+        onSelectCategory={wordpressOnly ? undefined : selectFromHero}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -403,13 +492,24 @@ export function SiteCockpit({
         )}
       </div>
 
+      {!wordpressOnly && focusTabs.length > 1 && (
+        <div id="category-focus" className="max-w-7xl mx-auto scroll-mt-4 px-4 sm:px-6 lg:px-8">
+          <CategoryFocusTabs
+            tabs={focusTabs}
+            selected={focus}
+            defaultFocus={defaultFocus}
+            onSelect={selectFocus}
+          />
+        </div>
+      )}
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={visibleCards.map((c) => c.id)}
+          items={renderedCards.map((c) => c.id)}
           strategy={rectSortingStrategy}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
@@ -444,22 +544,28 @@ export function SiteCockpit({
                   className="text-xs uppercase tracking-[0.18em]"
                   style={{ color: "var(--text-subtle)" }}
                 >
-                  WordPress AI
+                  {t("wordpress.agentEyebrow")}
                 </div>
                 <h2
                   className="mt-2 text-2xl font-semibold"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  WordPress Optimization Agent
+                  {t("wordpress.agentTitle")}
                 </h2>
                 <p className="mt-2 text-sm" style={{ color: "var(--text-subtle)" }}>
-                  A focused workspace for WordPress telemetry, guided fixes, and verification history.
+                  {t("wordpress.agentDescription")}
                 </p>
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-              {visibleCards.map((card) => {
+            <div
+              className={
+                focus === "all"
+                  ? "grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch"
+                  : "grid grid-cols-1 gap-6"
+              }
+            >
+              {renderedCards.map((card) => {
                 if (card.id === "performance") {
                   return (
                     <PerformanceCard

@@ -343,7 +343,17 @@
         "liveData": "Dados ao vivo do seu site",
         "reconnect": "Reconectar",
         "connectionLost": "Conexão Perdida",
-        "pluginDeactivated": "O plugin pode estar desativado"
+        "pluginDeactivated": "O plugin pode estar desativado",
+        "reconnectingMessage": "Reconectando ao seu site…",
+        "errorRetry": "Erro de conexão → Clique para tentar de novo",
+        "waiting": "Aguardando resposta do site…",
+        "reconnectingStatus": "Reconectando",
+        "errorStatus": "Erro de conexão",
+        "pending": "Pendente",
+        "lastUpdated": "Última atualização:",
+        "disconnect": "Desconectar",
+        "attempt": "Tentativa {attempt} de {total}",
+        "autoRetry": "{minutes, plural, one {Nova tentativa automática em # minuto} other {Nova tentativa automática em # minutos}}"
       },
       "version": {
         "title": "Versão do WordPress",
@@ -352,7 +362,10 @@
         "outdated": "Desatualizada",
         "updateAvailable": "Atualização Disponível",
         "daysOld": "{count} dias",
-        "updateNow": "Atualizar Agora"
+        "updateNow": "Atualizar Agora",
+        "upToDate": "Atualizado",
+        "latestValue": "Mais recente: {version}",
+        "behind": "{days} dias atrás da versão mais recente · {count, plural, one {# recomendação} other {# recomendações}}"
       },
       "security": {
         "title": "Segurança",
@@ -367,7 +380,8 @@
         "disabled": "Desabilitado",
         "debugMode": "Modo Debug",
         "on": "Ligado",
-        "off": "Desligado"
+        "off": "Desligado",
+        "checksTitle": "Verificações de segurança"
       },
       "plugins": {
         "title": "Plugins",
@@ -378,7 +392,9 @@
         "updateAvailable": "Atualização Disponível",
         "fixNow": "Corrigir Agora",
         "viewAll": "Ver Todos",
-        "needsUpdate": "{count} plugins precisam de atualizações"
+        "needsUpdate": "{count} plugins precisam de atualizações",
+        "healthy": "Saudáveis",
+        "activeOf": "{active}/{total} ativos"
       },
       "themes": {
         "title": "Tema",
@@ -405,10 +421,10 @@
         "medium": "Médio",
         "low": "Baixo"
       },
-      "lastAudit": "Last Audit",
-      "trend": "Trend",
-      "categoryScores": "Category Scores",
-      "topRedFlags": "Top Red Flags",
+      "lastAudit": "Última auditoria",
+      "trend": "Tendência",
+      "categoryScores": "Pontuação por categoria",
+      "topRedFlags": "Principais sinais de alerta",
       "findings": {
         "title": "Checklist de saúde e segurança WP",
         "modeSummary": "{automatic} automáticas · {guided} guiadas · {manual} manuais",
@@ -473,7 +489,21 @@
           "title": "Todas as correções automáticas foram aplicadas",
           "description": "O plugin não pode corrigir mais nada sozinho. Os itens abaixo precisam de um passo guiado ou da sua hospedagem."
         }
-      }
+      },
+      "telemetry": {
+        "savedLabel": "Instantâneo salvo",
+        "savedDetail": "A consulta ao vivo falhou; mostrando os últimos dados salvos.",
+        "liveLabel": "Dados ao vivo",
+        "liveDetail": "Dados diretos do conector do site WordPress atual.",
+        "core": "Núcleo",
+        "latest": "Mais recente",
+        "plugins": "Plugins",
+        "notMeasured": "Ainda não medido"
+      },
+      "agentTitle": "Agente de otimização do WordPress",
+      "agentEyebrow": "IA para WordPress",
+      "agentDescription": "Um espaço de trabalho focado em dados do WordPress, correções guiadas e histórico de verificações.",
+      "openWorkspace": "Abrir espaço do agente"
     },
     "mobile": {
       "title": "Mobile",
@@ -548,6 +578,67 @@
     "card": {
       "adviceOnly": "Apenas recomendações → você faz essas alterações no seu site.",
       "connectToFix": "Conectar para corrigir"
+    },
+    "focus": {
+      "heading": "Categorias",
+      "showAll": "Mostrar tudo",
+      "showOne": "Uma por vez",
+      "allClear": "Tudo certo",
+      "critical": "{count} críticos",
+      "warnings": "{count, plural, one {# aviso} other {# avisos}}",
+      "scoresHeading": "Pontuação por categoria",
+      "labels": {
+        "performance": "Desempenho",
+        "security": "Segurança",
+        "seo": "SEO",
+        "accessibility": "Acessibilidade",
+        "content": "Conteúdo",
+        "wordpress": "WordPress"
+      }
+    },
+    "nextStep": {
+      "eyebrow": "Próximo passo",
+      "scanning": {
+        "title": "Analisando seu site…",
+        "detail": "Verificando SEO, desempenho, acessibilidade e segurança. Leva cerca de 30 segundos."
+      },
+      "failed": {
+        "title": "A análise não terminou"
+      },
+      "firstScan": {
+        "title": "Faça sua primeira análise",
+        "detail": "Uma verificação completa de SEO, desempenho, acessibilidade e segurança, com uma lista do que corrigir. Funciona sem conectar seu site."
+      },
+      "found": {
+        "title": "{count, plural, one {# problema encontrado} other {# problemas encontrados}}",
+        "fixable": "{count, plural, one {# pode} other {# podem}} ser corrigidos automaticamente depois que você conectar {target, select, wordpress {o WordPress} other {seu site}}. Os demais vêm com instruções passo a passo.",
+        "advice": "Eles vêm com instruções passo a passo. Conectar também nos permite continuar monitorando seu site."
+      },
+      "review": {
+        "title": "{count, plural, one {# problema para revisar} other {# problemas para revisar}}",
+        "detail": "Revise-os e aprove as correções que deseja aplicar."
+      },
+      "noIssues": {
+        "title": "Nenhum problema encontrado",
+        "detail": "Conecte seu site para que possamos monitorá-lo e aplicar correções depois."
+      },
+      "allGood": {
+        "title": "Nada precisa da sua atenção",
+        "detail": "Seu site está conectado e a última análise não encontrou problemas."
+      },
+      "cta": {
+        "connect": "Conectar agora",
+        "tryAgain": "Tentar de novo",
+        "runScan": "Analisar",
+        "review": "Revisar problemas"
+      },
+      "topThings": "{count, plural, one {O principal a corrigir} other {As # principais coisas a corrigir}}",
+      "autoFix": "automático",
+      "severity": {
+        "high": "Gravidade alta",
+        "medium": "Gravidade média",
+        "low": "Gravidade baixa"
+      }
     }
   }
 }

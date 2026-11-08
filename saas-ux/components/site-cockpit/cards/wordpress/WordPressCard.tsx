@@ -22,6 +22,15 @@ import {
 import type { RemediationItem } from "@/lib/wordpress/remediation-result";
 import type { WordPressCardProps } from "./types";
 import type { WordPressHealthFinding } from "@/types/site-cockpit";
+
+/** Health category → label key in wordpress.findings.categories. */
+const CATEGORY_SCORE_LABEL: Record<string, string> = {
+  security: "security",
+  performance: "performance",
+  stability: "stability",
+  "seo-ux": "seoUx",
+  "red-flags": "redFlags",
+};
 import { ConnectionBanner } from "./components/ConnectionStatus/ConnectionBanner";
 import { ReconnectionModal } from "./components/ConnectionStatus/ReconnectionModal";
 export function WordPressCard({
@@ -159,12 +168,12 @@ export function WordPressCard({
 
   const telemetryStatus = wordpress.connection?.status === "degraded"
     ? {
-        label: "Saved snapshot",
-        detail: "Live pull failed, showing the latest stored telemetry.",
+        label: t("wordpress.telemetry.savedLabel"),
+        detail: t("wordpress.telemetry.savedDetail"),
       }
     : {
-        label: "Live telemetry",
-        detail: "Direct connector data from the current WordPress site.",
+        label: t("wordpress.telemetry.liveLabel"),
+        detail: t("wordpress.telemetry.liveDetail"),
       };
 
   const handleApply = async (
@@ -251,7 +260,7 @@ export function WordPressCard({
         <div className="flex items-center gap-3">
           <WordPressAIIcon size={24} className="h-6 w-6" />
           <span className="text-[var(--category-wordpress)]">
-            {agentMode ? "WordPress Optimization Agent" : t("wordpress.title")}
+            {agentMode ? t("wordpress.agentTitle") : t("wordpress.title")}
           </span>
         </div>
       }
@@ -294,7 +303,7 @@ export function WordPressCard({
             className="text-sm font-semibold"
             style={{ color: "var(--text-subtle)" }}
           >
-            {agentMode ? "WordPress Optimization Agent" : t("wordpress.title")}
+            {agentMode ? t("wordpress.agentTitle") : t("wordpress.title")}
           </h4>
           {!agentMode && agentWorkspacePath && (
             <button
@@ -303,7 +312,7 @@ export function WordPressCard({
               className="rounded-md border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/5"
               style={{ borderColor: "var(--border-default)", color: "var(--text-primary)" }}
             >
-              Open Agent Workspace
+              {t("wordpress.openWorkspace")}
             </button>
           )}
         </div>
@@ -323,15 +332,15 @@ export function WordPressCard({
             </div>
             <div className="grid min-w-[220px] grid-cols-2 gap-2 text-xs sm:min-w-[280px] sm:grid-cols-3">
               <div className="rounded-md px-2 py-2" style={{ background: "var(--background-default)" }}>
-                <div style={{ color: "var(--text-subtle)" }}>Core</div>
+                <div style={{ color: "var(--text-subtle)" }}>{t("wordpress.telemetry.core")}</div>
                 <div className="mt-1 text-sm font-semibold text-white">{wordpress.version.current}</div>
               </div>
               <div className="rounded-md px-2 py-2" style={{ background: "var(--background-default)" }}>
-                <div style={{ color: "var(--text-subtle)" }}>Latest</div>
+                <div style={{ color: "var(--text-subtle)" }}>{t("wordpress.telemetry.latest")}</div>
                 <div className="mt-1 text-sm font-semibold text-white">{wordpress.version.latest}</div>
               </div>
               <div className="rounded-md px-2 py-2" style={{ background: "var(--background-default)" }}>
-                <div style={{ color: "var(--text-subtle)" }}>Plugins</div>
+                <div style={{ color: "var(--text-subtle)" }}>{t("wordpress.telemetry.plugins")}</div>
                 <div className="mt-1 text-sm font-semibold text-white">{wordpress.plugins.active}</div>
               </div>
             </div>
@@ -358,7 +367,7 @@ export function WordPressCard({
                     style={{ background: "var(--header-bg)" }}
                   >
                     <div style={{ color: "var(--text-subtle)" }}>
-                      {category}
+                      {t(`wordpress.findings.categories.${CATEGORY_SCORE_LABEL[category] ?? "security"}`)}
                     </div>
                     <div
                       className={
@@ -370,7 +379,7 @@ export function WordPressCard({
                               ? "text-yellow-300"
                               : "text-red-300"
                       }
-                      title={value === null ? "Not measured yet" : undefined}
+                      title={value === null ? t("wordpress.telemetry.notMeasured") : undefined}
                     >
                       {value === null ? "—" : `${value}/100`}
                     </div>

@@ -2,6 +2,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { WordPressRecommendation } from "@/types/site-cockpit";
 
 interface VersionStatusProps {
@@ -18,6 +19,7 @@ export function VersionStatus({
   version,
   recommendations,
 }: VersionStatusProps) {
+  const t = useTranslations("SiteCockpit.wordpress.version");
   return (
     <section
       className="rounded-xl border p-4"
@@ -29,11 +31,11 @@ export function VersionStatus({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-xs" style={{ color: "var(--text-subtle)" }}>
-            WordPress Version
+            {t("title")}
           </div>
           <div className="text-xl font-bold text-white mt-1">{version.current}</div>
           <div className="text-xs mt-1" style={{ color: "var(--text-subtle)" }}>
-            Latest: {version.latest}
+            {t("latestValue", { version: version.latest })}
           </div>
         </div>
 
@@ -49,7 +51,7 @@ export function VersionStatus({
               : "oklch(from var(--color-success) l c h / 0.15)",
           }}
         >
-          {version.outdated ? "Update Available" : "Up to Date"}
+          {version.outdated ? t("updateAvailable") : t("upToDate")}
         </span>
       </div>
 
@@ -64,7 +66,7 @@ export function VersionStatus({
         >
           <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
           <div>
-            {version.daysOld} days behind latest release · {recommendations.length} recommendation(s)
+            {t("behind", { days: version.daysOld, count: recommendations.length })}
           </div>
         </div>
       )}
