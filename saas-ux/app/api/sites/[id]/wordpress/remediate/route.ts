@@ -11,6 +11,7 @@ import { publishEvent } from '@/lib/cockpit/event-bus';
 import { createWordPressClient } from '@/lib/wordpress/client';
 import { createWordPressActionPlan, type RemediationFindingInput } from '@/lib/wordpress/plan';
 import { executeWordPressActionPlan } from '@/lib/wordpress/actions';
+import { toRemediationItems } from '@/lib/wordpress/remediation-result';
 import type {
   WordPressCapabilitySummary,
   WordPressDetailedVerificationResult,
@@ -218,6 +219,7 @@ export async function POST(
   let auditError: string | undefined;
   let aiTrackingError: string | undefined;
   let wordpressPersistenceError: string | undefined;
+  let runIdByActionId = new Map<string, string>();
 
   try {
     const [analysisJob] = await db
@@ -348,7 +350,7 @@ export async function POST(
       .values(runValues)
       .returning({ id: wordpressActionRuns.id, actionId: wordpressActionRuns.actionId });
 
-    const runIdByActionId = new Map(insertedRuns.map((row) => [row.actionId, row.id]));
+    runIdByActionId = new Map(insertedRuns.map((row) => [row.actionId, row.id]));
     const verificationValues = executionResults
       .filter((result) => result.verification)
       .map((result) => ({
@@ -406,5 +408,6 @@ export async function POST(
       failed: executionResults.filter((result) => result.status === 'failed').length,
     },
     executed: executionResults,
+    items: toRemediationItems(executionResults, plan, runIdByActionId),
   });
 }

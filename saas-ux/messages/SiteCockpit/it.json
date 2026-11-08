@@ -410,30 +410,64 @@
       "categoryScores": "Category Scores",
       "topRedFlags": "Top Red Flags",
       "findings": {
-        "title": "WP Health & Security Checklist",
-        "selectedSummary": "{selected} selected · {preselected} preselected",
-        "before": "Before",
-        "after": "After",
-        "savings": "Estimated Savings",
-        "safeMode": "Safe Mode",
-        "safeModeDescriptionOn": "Only low-risk actions are applied automatically. Sensitive actions are skipped for review.",
-        "safeModeDescriptionOff": "All selected actions are sent for remediation, including sensitive actions.",
-        "remediation": "Remediation",
-        "impactGain": "+{gain} score impact",
-        "optimizing": "Optimizing...",
-        "fixSelected": "Fix selected ({count})",
-        "noActionable": "No actionable findings from current WordPress telemetry.",
-        "categories": {
-          "security": "Security",
-          "performance": "Performance",
-          "stability": "Stability",
-          "seoUx": "SEO / UX",
-          "redFlags": "Red Flags"
+        "title": "Checklist salute e sicurezza WP",
+        "modeSummary": "{automatic} automatiche · {guided} guidate · {manual} manuali",
+        "before": "Prima",
+        "after": "Dopo",
+        "savings": "Risparmio stimato",
+        "safeMode": "Modalità sicura",
+        "safeModeDescriptionOn": "Vengono applicate solo correzioni a basso rischio. Le modifiche sensibili restano in attesa della tua revisione.",
+        "safeModeDescriptionOff": "Vengono applicate tutte le correzioni selezionate, comprese le modifiche sensibili.",
+        "impactGain": "+{gain} punti",
+        "noActionable": "Nessun problema aperto nei dati WordPress attuali.",
+        "applyAutomatic": "{count, plural, one {Applica # correzione automatica} other {Applica # correzioni automatiche}}",
+        "applying": "Applicazione delle correzioni…",
+        "undo": "Annulla",
+        "undoAll": "Annulla tutto",
+        "rescan": "Nuova scansione per aggiornare il punteggio",
+        "resultSummary": "{applied} applicate · {failed} non riuscite · {skipped} saltate",
+        "sections": {
+          "automatic": {
+            "title": "Correzioni automatiche",
+            "description": "Applicate tramite il plugin GetSafe 360, verificate sul tuo sito live e annullabili."
+          },
+          "guided": {
+            "title": "Correzioni guidate",
+            "description": "Segui i passaggi, poi esegui una nuova scansione per confermare la correzione."
+          },
+          "manual": {
+            "title": "Richiede il tuo hosting o uno sviluppatore",
+            "description": "Il plugin non può eseguire queste modifiche in modo sicuro al posto tuo."
+          }
         },
-        "depth": {
-          "quick": "Recommended depth: Quick (focuses on the highest-impact checks first).",
-          "balanced": "Recommended depth: Balanced (covers the Pareto 80/20 impact profile).",
-          "deep": "Recommended depth: Deep (includes scripts/assets and advanced forensic indicators)."
+        "result": {
+          "verified": "Corretto e verificato sul tuo sito",
+          "verification_failed": "Applicato, ma non ancora visibile → una cache potrebbe servire ancora la versione precedente. Ripeti la scansione più tardi.",
+          "connector_failed": "Il plugin non è riuscito ad applicare la modifica → non è stato modificato nulla.",
+          "connector_update": "Aggiorna il plugin GetSafe 360 per attivare questa correzione.",
+          "safe_mode": "Trattenuto dalla modalità sicura.",
+          "not_automatic": "Nessuna correzione automatica → segui i passaggi guidati.",
+          "error": "Qualcosa è andato storto → riprova.",
+          "undone": "Annullato"
+        },
+        "errors": {
+          "apply": "Impossibile applicare le correzioni → Controlla la connessione del sito e riprova.",
+          "notConnected": "Il sito non è connesso → Ricollega il plugin e riprova.",
+          "undo": "Annullamento non riuscito → Riprova o ricollega il sito.",
+          "undoNewerFirst": "Una modifica più recente alla stessa impostazione è ancora attiva → Annulla prima quella."
+        },
+        "severity": {
+          "critical": "Critico",
+          "high": "Alto",
+          "medium": "Medio",
+          "low": "Basso"
+        },
+        "categories": {
+          "security": "Sicurezza",
+          "performance": "Prestazioni",
+          "stability": "Stabilità",
+          "seoUx": "SEO / UX",
+          "redFlags": "Segnali d’allarme"
         }
       }
     },
@@ -506,6 +540,10 @@
       "update": "Aggiorna",
       "install": "Installa",
       "configure": "Configura"
+    },
+    "card": {
+      "adviceOnly": "Solo consigli → queste modifiche le fai tu sul tuo sito.",
+      "connectToFix": "Connetti per correggere"
     }
   }
 }

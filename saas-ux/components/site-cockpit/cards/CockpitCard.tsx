@@ -298,7 +298,7 @@ export function CockpitCard({
                   onClick={onUnlock}
                 >
                   <Lock className="h-3.5 w-3.5" />
-                  Connect to fix
+                  {t("card.connectToFix")}
                 </button>
               </div>
             )}
@@ -307,7 +307,7 @@ export function CockpitCard({
                 className="px-6 pb-6 pt-2 text-xs"
                 style={{ color: "var(--text-subtle)" }}
               >
-                Advice only — these changes are made on your site.
+                {t("card.adviceOnly")}
               </div>
             )}
 
