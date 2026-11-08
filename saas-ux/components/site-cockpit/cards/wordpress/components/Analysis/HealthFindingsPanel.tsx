@@ -100,18 +100,27 @@ export function HealthFindingsPanel({
     setError(null);
   }, [prechecked]);
 
-  const selected = automatic.filter((finding) => selectedIds.has(finding.id));
-  const toApply = safeMode ? selected.filter((f) => f.safetyLevel !== "sensitive") : selected;
-
-  const projectedGain = estimateSelectedScoreGain(toApply);
-  const projectedScore = Math.min(100, currentScore + projectedGain);
-  const projectedSavingsMs = estimateSelectedSavingsMs(toApply);
-
   const itemByFindingId = useMemo(() => {
     const map = new Map<string, RemediationItem>();
     for (const item of items ?? []) for (const id of item.findingIds) map.set(id, item);
     return map;
   }, [items]);
+
+  // A finding is settled while its change is on the site (applied, or applied but not
+  // yet visible). Everything else (never run, failed, skipped, undone) can be applied again.
+  const isSettled = (finding: WordPressHealthFinding) => {
+    const item = itemByFindingId.get(finding.id);
+    if (!item || (item.runId && undoneRunIds.has(item.runId))) return false;
+    return item.status === "applied" || item.reason === "verification_failed";
+  };
+
+  const pending = automatic.filter((finding) => !isSettled(finding));
+  const selected = pending.filter((finding) => selectedIds.has(finding.id));
+  const toApply = safeMode ? selected.filter((f) => f.safetyLevel !== "sensitive") : selected;
+
+  const projectedGain = estimateSelectedScoreGain(toApply);
+  const projectedScore = Math.min(100, currentScore + projectedGain);
+  const projectedSavingsMs = estimateSelectedSavingsMs(toApply);
 
   const undoableRunIds = (items ?? [])
     .filter((item) => item.undoable && item.runId && !undoneRunIds.has(item.runId))
@@ -124,8 +133,12 @@ export function HealthFindingsPanel({
     try {
       const outcome = await onApply(toApply, { safeMode });
       if (outcome.ok) {
-        setItems(outcome.items);
-        setUndoneRunIds(new Set());
+        // Newer outcomes replace older ones for the same findings; the rest (and their Undo) stay.
+        const rerun = new Set(outcome.items.flatMap((item) => item.findingIds));
+        setItems((prev) => [
+          ...(prev ?? []).filter((item) => !item.findingIds.some((id) => rerun.has(id))),
+          ...outcome.items,
+        ]);
       } else {
         setError(outcome.error);
       }
@@ -174,6 +187,7 @@ export function HealthFindingsPanel({
   const renderFinding = (finding: WordPressHealthFinding, mode: FixMode) => {
     const item = itemByFindingId.get(finding.id);
     const undone = Boolean(item?.runId && undoneRunIds.has(item.runId));
+    const settled = isSettled(finding);
     const checked = selectedIds.has(finding.id);
     const gain = finding.estimatedScoreGain ?? 0;
 
@@ -184,7 +198,7 @@ export function HealthFindingsPanel({
         style={{ borderColor: "var(--border-default)" }}
       >
         {mode === "automatic" &&
-          (item ? (
+          (item && settled ? (
             <div className="mt-0.5">
               <ResultIcon item={item} undone={undone} />
             </div>
@@ -349,7 +363,7 @@ export function HealthFindingsPanel({
                     {t("rescan")}
                   </button>
                 )}
-                {!items && onApply && (
+                {pending.length > 0 && onApply && (
                   <button
                     type="button"
                     className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
