@@ -53,3 +53,18 @@ export function parseCoreFiles(raw: unknown): WordPressCoreFilesResponse | null 
     complete: value.complete === true,
   };
 }
+
+export function parseCoreFileDiff(raw: unknown): WordPressCoreFileDiff | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const value = raw as Partial<WordPressCoreFileDiff>;
+  if (!isCorePath(value.path)) return null;
+  if (value.kind !== 'modified' && value.kind !== 'unexpected' && value.kind !== 'unchanged') return null;
+  return {
+    success: value.success === true,
+    path: value.path,
+    kind: value.kind,
+    diff: typeof value.diff === 'string' ? value.diff : null,
+    truncated: value.truncated === true,
+    size: typeof value.size === 'number' ? value.size : undefined,
+  };
+}

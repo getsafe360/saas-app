@@ -551,6 +551,61 @@
           "undo": "L’annulation a échoué → Réessayez ou reconnectez le site.",
           "undoNewerFirst": "Une modification plus récente du même réglage est encore active → Annulez-la d’abord."
         }
+      },
+      "coreReview": {
+        "title": "Fichiers du cœur de WordPress modifiés",
+        "description": "Claude explique chaque modification simplement — piratage, modification volontaire ou sans danger — pour que vous sachiez ce que la restauration ou la quarantaine remplacerait.",
+        "privacy": "Seules les lignes modifiées des fichiers du cœur sont envoyées pour cet examen (jamais wp-config.php, les plugins, les thèmes ni les fichiers envoyés). Elles ne sont pas conservées.",
+        "start": "Examiner avec l’IA",
+        "running": "Examen en cours…",
+        "rerun": "Examiner à nouveau",
+        "verdict": {
+          "malicious": "Malveillant",
+          "suspicious": "Suspect",
+          "unclear": "Incertain",
+          "customization": "Modification volontaire",
+          "harmless": "Sans danger"
+        },
+        "kind": {
+          "modified": "Fichier du cœur modifié",
+          "unexpected": "Ne fait pas partie de WordPress"
+        },
+        "recommendation": {
+          "restore": "Recommandation : restaurer le fichier officiel.",
+          "quarantine": "Recommandation : mettre ce fichier en quarantaine.",
+          "keep": "Recommandation : le conserver si vous savez qui a fait cette modification.",
+          "review": "Recommandation : demander à un développeur de l’examiner."
+        },
+        "signals": "Signaux d’alerte dans le code : {list}",
+        "notReviewed": "L’IA n’a pas expliqué ce fichier ; jugez-le d’après les modifications ci-dessous.",
+        "showChanges": "Afficher les modifications",
+        "truncated": "Seule la première partie des modifications est affichée.",
+        "noDiff": "Le fichier est trop volumineux pour afficher ses modifications.",
+        "omitted": "{count, plural, one {# autre fichier n’a pas été examiné} other {# autres fichiers n’ont pas été examinés}} cette fois.",
+        "incomplete": "L’analyse a manqué de temps ; la liste peut être incomplète.",
+        "empty": "Aucun fichier du cœur modifié n’a été trouvé.",
+        "aiUnavailable": "L’examen par IA n’est pas disponible pour le moment ; les verdicts ci-dessous proviennent uniquement d’une analyse automatique du code.",
+        "nextStep": "Utilisez la liste de contrôle ci-dessus pour restaurer ou mettre en quarantaine ces fichiers ; les deux peuvent être annulés.",
+        "errors": {
+          "GENERIC": "L’examen a échoué → Réessayez dans un instant.",
+          "RATE_LIMITED": "Trop d’examens au cours de la dernière heure → Réessayez plus tard.",
+          "WORDPRESS_NOT_CONNECTED": "Le site n’est pas connecté → Reconnectez le plugin GetSafe 360.",
+          "CORE_FILES_UNAVAILABLE": "Le plugin n’a pas pu lister les fichiers du cœur → Mettez-le à jour en 1.9 ou plus et réessayez."
+        },
+        "signal": {
+          "requestExec": "exécute du code envoyé par les visiteurs",
+          "decodedExec": "exécute une charge cachée et encodée",
+          "pregEval": "exécution de code via preg_replace",
+          "dynamicExec": "exécute du code construit à la volée",
+          "shell": "exécute des commandes serveur",
+          "obfuscation": "décode un contenu caché",
+          "longEncoded": "long texte encodé",
+          "hexEscaped": "texte déguisé",
+          "writesRequest": "écrit des données de visiteurs dans des fichiers",
+          "remoteFetch": "charge du contenu depuis un autre serveur",
+          "readsRequest": "lit des données envoyées par les visiteurs"
+        },
+        "unavailable": "Les modifications n’ont pas pu être chargées (la copie officielle n’a peut-être pas été téléchargée). Réessayez plus tard."
       }
     },
     "mobile": {

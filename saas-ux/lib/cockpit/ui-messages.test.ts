@@ -6,6 +6,7 @@ import test from 'node:test';
 import { IntlMessageFormat } from 'intl-messageformat';
 import { FOCUS_CATEGORIES } from './focus';
 import { PAIRING_MESSAGE_KEYS } from '../wordpress/pairing-messages';
+import { RECOMMENDATIONS, SIGNALS, VERDICTS } from '../wordpress/core-review';
 
 const root = path.resolve(__dirname, '../..');
 const LOCALES = ['en', 'de', 'es', 'fr', 'it', 'pt'];
@@ -36,6 +37,7 @@ const COMPONENTS: Array<[file: string, namespace: string]> = [
   ['components/site-cockpit/cards/wordpress/components/Analysis/AppliedChangesPanel.tsx', 'wordpress.changes.'],
   ['components/site-cockpit/cards/ConnectionCard.tsx', 'connection.'],
   ['components/site-cockpit/cards/wordpress/components/ConnectionStatus/ReconnectionModal.tsx', 'wordpress.connection.modal.'],
+  ['components/site-cockpit/cards/wordpress/components/Analysis/CoreFilesReview.tsx', 'wordpress.coreReview.'],
 ];
 
 test('every literal translation key used by the cockpit exists in all six languages', () => {
@@ -62,6 +64,11 @@ test('keys built from known lists exist, and every message parses', () => {
     ...['active', 'unverified', 'undone'].map((k) => `wordpress.changes.state.${k}`),
     ...['undo', 'undoNewerFirst'].map((k) => `wordpress.changes.errors.${k}`),
     ...PAIRING_MESSAGE_KEYS.map((k) => `connection.pairing.messages.${k}`),
+    ...VERDICTS.map((k) => `wordpress.coreReview.verdict.${k}`),
+    ...SIGNALS.map((k) => `wordpress.coreReview.signal.${k}`),
+    ...RECOMMENDATIONS.map((k) => `wordpress.coreReview.recommendation.${k}`),
+    ...['modified', 'unexpected'].map((k) => `wordpress.coreReview.kind.${k}`),
+    ...['GENERIC', 'RATE_LIMITED', 'WORDPRESS_NOT_CONNECTED', 'CORE_FILES_UNAVAILABLE'].map((k) => `wordpress.coreReview.errors.${k}`),
     ...['custom', 'unknown'].map((k) => `connection.platforms.${k}`),
     ...['external', 'perfSeo', 'a11y', 'headers', 'structured'].map((k) => `connection.info.without.${k}`),
     ...['workflows', 'fixes', 'diagnostics', 'monitoring', 'audit'].map((k) => `connection.info.with.${k}`),

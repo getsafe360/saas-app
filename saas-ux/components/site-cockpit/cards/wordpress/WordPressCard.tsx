@@ -21,6 +21,10 @@ import {
 } from "./components/Analysis/HealthFindingsPanel";
 import type { RemediationItem } from "@/lib/wordpress/remediation-result";
 import { AppliedChangesPanel } from "./components/Analysis/AppliedChangesPanel";
+import { CoreFilesReview } from "./components/Analysis/CoreFilesReview";
+
+/** Findings whose fixes replace or remove core files; the AI review explains them first. */
+const CORE_FILE_FINDINGS = new Set(["red-flag-core-modifications", "red-flag-unexpected-core-files"]);
 import type { WordPressCardProps } from "./types";
 import type { WordPressHealthFinding } from "@/types/site-cockpit";
 
@@ -429,6 +433,11 @@ export function WordPressCard({
           externallyUndone={undoneElsewhere}
           currentScore={wordpress.score ?? undefined}
         />
+
+        {siteId &&
+          (wordpress.healthFindings ?? []).some(
+            (finding) => CORE_FILE_FINDINGS.has(finding.id) && finding.status === "fail",
+          ) && <CoreFilesReview siteId={siteId} />}
 
         {siteId && (
           <AppliedChangesPanel

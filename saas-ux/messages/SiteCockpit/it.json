@@ -551,6 +551,61 @@
           "undo": "Annullamento non riuscito → Riprova o ricollega il sito.",
           "undoNewerFirst": "Una modifica più recente alla stessa impostazione è ancora attiva → Annulla prima quella."
         }
+      },
+      "coreReview": {
+        "title": "File del core di WordPress modificati",
+        "description": "Claude spiega ogni modifica in parole semplici — un attacco, una modifica voluta o niente di grave — così sai cosa sostituirebbero il ripristino o la quarantena.",
+        "privacy": "Per questa verifica vengono inviate solo le righe modificate dei file del core (mai wp-config.php, plugin, temi o caricamenti). Non vengono conservate.",
+        "start": "Verifica con l’IA",
+        "running": "Verifica in corso…",
+        "rerun": "Verifica di nuovo",
+        "verdict": {
+          "malicious": "Malevolo",
+          "suspicious": "Sospetto",
+          "unclear": "Non chiaro",
+          "customization": "Modifica voluta",
+          "harmless": "Innocuo"
+        },
+        "kind": {
+          "modified": "File del core modificato",
+          "unexpected": "Non fa parte di WordPress"
+        },
+        "recommendation": {
+          "restore": "Consiglio: ripristinare il file ufficiale.",
+          "quarantine": "Consiglio: mettere il file in quarantena.",
+          "keep": "Consiglio: mantenerlo, se sai chi ha fatto la modifica.",
+          "review": "Consiglio: farlo esaminare da uno sviluppatore."
+        },
+        "signals": "Segnali d’allarme nel codice: {list}",
+        "notReviewed": "L’IA non ha spiegato questo file; valutalo dalle modifiche qui sotto.",
+        "showChanges": "Mostra modifiche",
+        "truncated": "Viene mostrata solo la prima parte delle modifiche.",
+        "noDiff": "Il file è troppo grande per mostrarne le modifiche.",
+        "omitted": "{count, plural, one {# altro file non è stato verificato} other {# altri file non sono stati verificati}} questa volta.",
+        "incomplete": "La scansione ha esaurito il tempo; l’elenco potrebbe essere incompleto.",
+        "empty": "Nessun file del core modificato trovato.",
+        "aiUnavailable": "La verifica con l’IA al momento non è disponibile; le valutazioni qui sotto provengono solo da un controllo automatico del codice.",
+        "nextStep": "Usa la checklist qui sopra per ripristinare o mettere in quarantena questi file; entrambe le azioni si possono annullare.",
+        "errors": {
+          "GENERIC": "La verifica non è riuscita → Riprova tra poco.",
+          "RATE_LIMITED": "Troppe verifiche nell’ultima ora → Riprova più tardi.",
+          "WORDPRESS_NOT_CONNECTED": "Il sito non è collegato → Ricollega il plugin GetSafe 360.",
+          "CORE_FILES_UNAVAILABLE": "Il plugin non è riuscito a elencare i file del core → Aggiornalo alla 1.9 o successiva e riprova."
+        },
+        "signal": {
+          "requestExec": "esegue codice inviato dai visitatori",
+          "decodedExec": "esegue un contenuto nascosto e codificato",
+          "pregEval": "esecuzione di codice tramite preg_replace",
+          "dynamicExec": "esegue codice costruito al volo",
+          "shell": "esegue comandi del server",
+          "obfuscation": "decodifica contenuti nascosti",
+          "longEncoded": "lungo testo codificato",
+          "hexEscaped": "testo camuffato",
+          "writesRequest": "scrive dati dei visitatori nei file",
+          "remoteFetch": "carica contenuti da un altro server",
+          "readsRequest": "legge dati inviati dai visitatori"
+        },
+        "unavailable": "Non è stato possibile caricare le modifiche (forse la copia ufficiale non è stata scaricata). Riprova più tardi."
       }
     },
     "mobile": {
