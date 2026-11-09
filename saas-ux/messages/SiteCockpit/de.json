@@ -551,6 +551,60 @@
           "undo": "Rückgängig machen fehlgeschlagen → Erneut versuchen oder die Website neu verbinden.",
           "undoNewerFirst": "Eine neuere Änderung an derselben Einstellung ist noch aktiv → Machen Sie zuerst diese rückgängig."
         }
+      },
+      "coreReview": {
+        "title": "Geänderte WordPress-Core-Dateien",
+        "description": "Claude erklärt jede Änderung verständlich – Hack, bewusste Anpassung oder harmlos –, damit Sie wissen, was Wiederherstellen oder Quarantäne ersetzen würde.",
+        "privacy": "Für diese Prüfung werden nur die geänderten Zeilen von WordPress-Core-Dateien gesendet (nie wp-config.php, Plugins, Themes oder Uploads). Sie werden nicht gespeichert.",
+        "start": "Mit KI prüfen",
+        "running": "Wird geprüft…",
+        "rerun": "Erneut prüfen",
+        "verdict": {
+          "malicious": "Schädlich",
+          "suspicious": "Verdächtig",
+          "unclear": "Unklar",
+          "customization": "Bewusste Anpassung",
+          "harmless": "Harmlos"
+        },
+        "kind": {
+          "modified": "Geänderte Core-Datei",
+          "unexpected": "Gehört nicht zu WordPress"
+        },
+        "recommendation": {
+          "restore": "Empfehlung: Originaldatei wiederherstellen.",
+          "quarantine": "Empfehlung: Datei in Quarantäne verschieben.",
+          "keep": "Empfehlung: Behalten, wenn Sie wissen, wer die Änderung vorgenommen hat.",
+          "review": "Empfehlung: Von einem Entwickler prüfen lassen."
+        },
+        "signals": "Warnzeichen im Code: {list}",
+        "notReviewed": "Die KI hat diese Datei nicht erklärt; beurteilen Sie sie anhand der Änderungen unten.",
+        "showChanges": "Änderungen anzeigen",
+        "truncated": "Es wird nur der erste Teil der Änderungen angezeigt.",
+        "noDiff": "Die Datei ist zu groß, um die Änderungen anzuzeigen.",
+        "omitted": "{count, plural, one {# weitere Datei wurde} other {# weitere Dateien wurden}} diesmal nicht geprüft.",
+        "incomplete": "Der Scan hat das Zeitlimit erreicht; die Liste ist möglicherweise unvollständig.",
+        "empty": "Es wurden keine geänderten Core-Dateien gefunden.",
+        "aiUnavailable": "Die KI-Prüfung ist gerade nicht verfügbar; die Einstufungen unten stammen nur aus einem automatischen Code-Scan.",
+        "nextStep": "Nutzen Sie die Checkliste oben, um diese Dateien wiederherzustellen oder in Quarantäne zu verschieben; beides lässt sich rückgängig machen.",
+        "errors": {
+          "GENERIC": "Die Prüfung ist fehlgeschlagen → Gleich erneut versuchen.",
+          "RATE_LIMITED": "Zu viele Prüfungen in der letzten Stunde → Später erneut versuchen.",
+          "WORDPRESS_NOT_CONNECTED": "Die Website ist nicht verbunden → Das GetSafe-360-Plugin neu verbinden.",
+          "CORE_FILES_UNAVAILABLE": "Das Plugin konnte die Core-Dateien nicht auflisten → Auf 1.9 oder neuer aktualisieren und erneut versuchen."
+        },
+        "signal": {
+          "requestExec": "führt von Besuchern gesendeten Code aus",
+          "decodedExec": "führt versteckten, kodierten Code aus",
+          "pregEval": "Codeausführung über preg_replace",
+          "dynamicExec": "führt zur Laufzeit erzeugten Code aus",
+          "shell": "führt Serverbefehle aus",
+          "obfuscation": "entschlüsselt versteckte Inhalte",
+          "longEncoded": "langer kodierter Text",
+          "hexEscaped": "verschleierter Text",
+          "writesRequest": "schreibt Besucherdaten in Dateien",
+          "remoteFetch": "lädt Inhalte von einem anderen Server",
+          "readsRequest": "liest Besuchereingaben"
+        }
       }
     },
     "mobile": {

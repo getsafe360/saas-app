@@ -551,6 +551,60 @@
           "undo": "No se pudo deshacer → Inténtalo de nuevo o vuelve a conectar el sitio.",
           "undoNewerFirst": "Hay un cambio más reciente en el mismo ajuste → Deshaz ese primero."
         }
+      },
+      "coreReview": {
+        "title": "Archivos del núcleo de WordPress modificados",
+        "description": "Claude explica cada cambio con palabras sencillas —un hackeo, una edición deliberada o algo inofensivo— para que sepas qué sustituiría restaurar o poner en cuarentena.",
+        "privacy": "Para esta revisión solo se envían las líneas modificadas de los archivos del núcleo (nunca wp-config.php, plugins, temas ni archivos subidos). No se guardan.",
+        "start": "Revisar con IA",
+        "running": "Revisando…",
+        "rerun": "Revisar de nuevo",
+        "verdict": {
+          "malicious": "Malicioso",
+          "suspicious": "Sospechoso",
+          "unclear": "Poco claro",
+          "customization": "Edición deliberada",
+          "harmless": "Inofensivo"
+        },
+        "kind": {
+          "modified": "Archivo del núcleo modificado",
+          "unexpected": "No forma parte de WordPress"
+        },
+        "recommendation": {
+          "restore": "Recomendación: restaurar el archivo oficial.",
+          "quarantine": "Recomendación: poner este archivo en cuarentena.",
+          "keep": "Recomendación: conservarlo si sabes quién hizo el cambio.",
+          "review": "Recomendación: pedir a un desarrollador que lo revise."
+        },
+        "signals": "Señales de alerta en el código: {list}",
+        "notReviewed": "La IA no explicó este archivo; júzgalo por los cambios de abajo.",
+        "showChanges": "Mostrar cambios",
+        "truncated": "Solo se muestra la primera parte de los cambios.",
+        "noDiff": "El archivo es demasiado grande para mostrar sus cambios.",
+        "omitted": "{count, plural, one {# archivo más no se revisó} other {# archivos más no se revisaron}} esta vez.",
+        "incomplete": "El análisis se quedó sin tiempo, así que la lista puede estar incompleta.",
+        "empty": "No se encontraron archivos del núcleo modificados.",
+        "aiUnavailable": "La revisión con IA no está disponible ahora; las valoraciones de abajo proceden solo de un análisis automático del código.",
+        "nextStep": "Usa la lista de comprobación de arriba para restaurar o poner en cuarentena estos archivos; ambas acciones se pueden deshacer.",
+        "errors": {
+          "GENERIC": "La revisión falló → Inténtalo de nuevo en un momento.",
+          "RATE_LIMITED": "Demasiadas revisiones en la última hora → Inténtalo más tarde.",
+          "WORDPRESS_NOT_CONNECTED": "El sitio no está conectado → Vuelve a conectar el plugin de GetSafe 360.",
+          "CORE_FILES_UNAVAILABLE": "El plugin no pudo listar los archivos del núcleo → Actualízalo a la 1.9 o posterior e inténtalo de nuevo."
+        },
+        "signal": {
+          "requestExec": "ejecuta código enviado por visitantes",
+          "decodedExec": "ejecuta una carga oculta y codificada",
+          "pregEval": "ejecución de código mediante preg_replace",
+          "dynamicExec": "ejecuta código generado al vuelo",
+          "shell": "ejecuta comandos del servidor",
+          "obfuscation": "descodifica contenido oculto",
+          "longEncoded": "texto codificado largo",
+          "hexEscaped": "texto camuflado",
+          "writesRequest": "escribe datos de visitantes en archivos",
+          "remoteFetch": "carga contenido de otro servidor",
+          "readsRequest": "lee datos enviados por visitantes"
+        }
       }
     },
     "mobile": {

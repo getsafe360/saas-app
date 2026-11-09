@@ -551,6 +551,60 @@
           "undo": "Undo failed → Try again, or reconnect the site.",
           "undoNewerFirst": "A newer change to the same setting is still applied → Undo that one first."
         }
+      },
+      "coreReview": {
+        "title": "Changed WordPress core files",
+        "description": "Claude explains each change in plain words — a hack, a deliberate edit, or harmless — so you know what restoring or quarantining would replace.",
+        "privacy": "Only the changed lines of WordPress core files are sent for this review (never wp-config.php, plugins, themes or uploads). They are not stored.",
+        "start": "Review with AI",
+        "running": "Reviewing…",
+        "rerun": "Review again",
+        "verdict": {
+          "malicious": "Malicious",
+          "suspicious": "Suspicious",
+          "unclear": "Unclear",
+          "customization": "Deliberate edit",
+          "harmless": "Harmless"
+        },
+        "kind": {
+          "modified": "Modified core file",
+          "unexpected": "Not part of WordPress"
+        },
+        "recommendation": {
+          "restore": "Recommended: restore the official file.",
+          "quarantine": "Recommended: quarantine this file.",
+          "keep": "Recommended: keep it, if you know who made this change.",
+          "review": "Recommended: ask a developer to look at it."
+        },
+        "signals": "Red flags in the code: {list}",
+        "notReviewed": "The AI did not explain this file; judge it by the changes below.",
+        "showChanges": "Show changes",
+        "truncated": "Only the first part of the changes is shown.",
+        "noDiff": "The file is too large to show its changes.",
+        "omitted": "{count, plural, one {# more file was} other {# more files were}} not reviewed this time.",
+        "incomplete": "The scan ran out of time, so the list may be incomplete.",
+        "empty": "No changed core files were found.",
+        "aiUnavailable": "The AI review is not available right now; verdicts below come from an automatic code scan only.",
+        "nextStep": "Use the checklist above to restore or quarantine these files; both can be undone.",
+        "errors": {
+          "GENERIC": "The review failed → Try again in a moment.",
+          "RATE_LIMITED": "Too many reviews in the last hour → Try again later.",
+          "WORDPRESS_NOT_CONNECTED": "The site is not connected → Reconnect the GetSafe 360 plugin.",
+          "CORE_FILES_UNAVAILABLE": "The plugin could not list the core files → Update it to 1.9 or newer and try again."
+        },
+        "signal": {
+          "requestExec": "runs code sent by visitors",
+          "decodedExec": "runs a hidden, encoded payload",
+          "pregEval": "code execution via preg_replace",
+          "dynamicExec": "runs code built at runtime",
+          "shell": "runs server commands",
+          "obfuscation": "decodes hidden content",
+          "longEncoded": "long encoded text",
+          "hexEscaped": "disguised text",
+          "writesRequest": "writes visitor data into files",
+          "remoteFetch": "loads content from another server",
+          "readsRequest": "reads visitor input"
+        }
       }
     },
     "mobile": {
