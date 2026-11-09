@@ -12,6 +12,7 @@ import {
   disableXmlRpcFixer,
 } from './wordpress/connector-settings';
 import { securityHeadersFixer } from './wordpress/security-headers';
+import { pluginUpdatesFixer } from './wordpress/plugin-updates';
 import {
   cleanTransientsFixer,
   configPermissionsFixer,
@@ -32,6 +33,8 @@ const FIXERS: ReadonlyArray<ConnectorFixer> = [
   pluginAutoUpdatesFixer,
   cleanTransientsFixer,
   revisionsFixer,
+  // Connector 1.8
+  pluginUpdatesFixer,
 ];
 
 const BY_ID = new Map(FIXERS.map((fixer) => [fixer.id, fixer]));

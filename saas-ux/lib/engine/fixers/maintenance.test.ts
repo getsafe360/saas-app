@@ -12,6 +12,7 @@ import { getFixer } from './registry';
 import { createWordPressActionPlan } from '@/lib/wordpress/plan';
 import { parseRollbackRequest } from '@/lib/wordpress/rollback';
 import type { WordPressCapabilitySummary } from '@/lib/wordpress/types';
+import { connectorTimeoutFor } from '@/lib/wordpress/timeouts';
 
 // Real response from connector 1.7.0 on WordPress 7.1.4: security releases
 // on, no plugin auto-updates (0 of 2), file editor open, no revisions.
@@ -224,6 +225,88 @@ test('verification reads the site audit after the change', async () => {
     const malformed = await fixer.verify({ siteUrl: 'https://example.test', tokenHash: 'x', action });
     assert.equal(malformed.success, false);
     assert.match(malformed.checks[0].detail ?? '', /did not return a site audit/);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test('outdated plugins: automatic with a restore point, manual when the host blocks updates', () => {
+  const audit: any = clone(audit17);
+  audit.plugins.updatesAvailable = 3;
+  const finding = findings(audit).get('wp-outdated-plugins');
+  assert.equal(finding?.status, 'fail');
+  assert.equal(fixModeFor(finding?.fix?.fixerId, finding?.fix?.automation), 'automatic');
+  assert.equal(finding?.selectedByDefault, false, 'updates are never ticked in advance');
+
+  const blocked: any = clone(audit17);
+  blocked.plugins.updatesAvailable = 3;
+  blocked.plugins.updatesPossible = false;
+  const manual = findings(blocked).get('wp-outdated-plugins');
+  assert.equal(manual?.fix, undefined);
+  assert.equal(fixModeFor(undefined, undefined), 'manual');
+});
+
+test('plugin updates: fixed request, long timeout, restore-point undo', () => {
+  const plan = createWordPressActionPlan({
+    siteId: 's1',
+    capabilities: capabilities({ pluginUpdates: true }),
+    findings: [{ id: 'wp-outdated-plugins', actionId: 'wordpress-update-plugins' }],
+  });
+  const [action] = plan.actions;
+  assert.equal(action.autoApplyEligible, true);
+  assert.equal(action.risk, 'medium');
+  assert.match(action.description, /database tables are not undone/);
+  assert.deepEqual(getFixer(action.id)!.toConnectorRequest(action), {
+    id: 'wordpress-update-plugins',
+    type: 'update_plugins',
+    payload: { plugins: 'outdated' },
+  });
+  assert.equal(connectorTimeoutFor('update_plugins'), 90_000);
+  assert.equal(connectorTimeoutFor('restore_plugins'), 60_000);
+  assert.equal(connectorTimeoutFor('set_default_role'), 10_000);
+
+  const id = 'a'.repeat(32);
+  assert.deepEqual(parseRollbackRequest({ id: 'r', type: 'restore_plugins', payload: { restorePoints: [id] } })?.payload, {
+    restorePoints: [id],
+  });
+  assert.equal(parseRollbackRequest({ id: 'r', type: 'restore_plugins', payload: { restorePoints: ['../x'] } }), null);
+  assert.equal(parseRollbackRequest({ id: 'r', type: 'restore_plugins', payload: { restorePoints: [] } }), null);
+  assert.equal(parseRollbackRequest({ id: 'r', type: 'update_plugins', payload: { plugins: 'outdated' } }), null);
+});
+
+test('plugin update verification: the site must load and no installable update may remain', async () => {
+  const fixer = getFixer('wordpress-update-plugins')!;
+  const action = createWordPressActionPlan({
+    siteId: 's1',
+    capabilities: capabilities({ pluginUpdates: true }),
+    findings: [{ id: 'wp-outdated-plugins', actionId: fixer.id }],
+  }).actions[0];
+  const original = globalThis.fetch;
+  const auditWith = (updatesAvailable: number, updatesWithoutPackage: number) => {
+    const audit: any = clone(audit17);
+    audit.plugins.updatesAvailable = updatesAvailable;
+    audit.plugins.updatesWithoutPackage = updatesWithoutPackage;
+    return audit;
+  };
+  const site = (status: number, body: string) => (async () => new Response(body, { status })) as unknown as typeof fetch;
+
+  try {
+    globalThis.fetch = (async () => new Response(JSON.stringify(auditWith(1, 1)), { status: 200 })) as unknown as typeof fetch;
+    const done = await fixer.verify({ siteUrl: 'https://example.test', tokenHash: 'x', action, fetchImpl: site(200, '<html>ok</html>') });
+    assert.equal(done.success, true, 'a licence-only update does not count against the run');
+
+    const broken = await fixer.verify({
+      siteUrl: 'https://example.test',
+      tokenHash: 'x',
+      action,
+      fetchImpl: site(200, '<p>There has been a critical error on this website.</p>'),
+    });
+    assert.equal(broken.success, false);
+    assert.equal(broken.checks.find((c) => c.name === 'site-loads')?.ok, false);
+
+    globalThis.fetch = (async () => new Response(JSON.stringify(auditWith(2, 0)), { status: 200 })) as unknown as typeof fetch;
+    const remaining = await fixer.verify({ siteUrl: 'https://example.test', tokenHash: 'x', action, fetchImpl: site(200, 'ok') });
+    assert.equal(remaining.success, false, 'updates left for the next run keep it unverified');
   } finally {
     globalThis.fetch = original;
   }

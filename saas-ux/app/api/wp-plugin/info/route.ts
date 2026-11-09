@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 // Bump PLUGIN_VERSION and set WP_PLUGIN_DOWNLOAD_URL env var with each release.
 // WP_PLUGIN_DOWNLOAD_URL should point to the publicly accessible plugin ZIP
 // (e.g. a Vercel Blob URL: https://xxxx.blob.vercel-storage.com/getsafe360-connector-v0.3.0.zip)
-const PLUGIN_VERSION = '1.7.0';
+const PLUGIN_VERSION = '1.8.0';
 
 export async function GET() {
     const downloadUrl = process.env.WP_PLUGIN_DOWNLOAD_URL ?? '';
@@ -31,6 +31,7 @@ export async function GET() {
             description:
                 'Secure connector between your WordPress site and <strong>GetSafe 360 AI</strong> for automated security scanning, performance monitoring, and AI-powered repairs. <a href="https://www.getsafe360.ai/docs/wordpress-connector">View documentation</a>',
             changelog:
+                '<h4>1.8.0</h4><ul><li>Update outdated plugins from GetSafe 360 with a restore point: one plugin at a time, the previous version saved first, and put back immediately if the site stops loading</li><li>Undo restores the plugin files from the restore point; restore points are kept for 14 days</li><li>Never updates itself through this route, skips premium plugins without a download link, and leaves multisite networks to the network admin</li></ul>' +
                 '<h4>1.7.0</h4><ul><li>New one-click fixes from GetSafe 360: lock the theme and plugin file editor, give new accounts the Subscriber role, make wp-config.php private (only when PHP keeps access), switch on automatic WordPress security releases and plugin auto-updates, remove expired transients and old post revisions (the newest 5 per post are kept)</li><li>Every reversible change returns an exact undo; the connector never makes an administrator the default role or wp-config.php world-writable</li><li>Site audit now reports automatic-update status and how many revisions can be removed</li></ul>' +
                 '<h4>1.6.0</h4><ul><li>New read-only site audit for GetSafe 360 health checks: security settings, updates, performance, database and cron health, and red flags such as PHP files in uploads or modified core files</li><li>Sends flags and counts only, never usernames, email addresses or file contents</li></ul>' +
                 '<h4>1.5.0</h4><ul><li>Add allowlisted security headers action (HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy) with exact rollback</li><li>User-enumeration guard no longer hides user endpoints from logged-in users, so the block editor keeps working</li></ul>' +

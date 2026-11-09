@@ -27,3 +27,11 @@ cp "$PLUGIN" wordpress/wp-content/plugins/getsafe360-connector/
 $WP plugin activate getsafe360-connector --quiet
 $WP eval-file "$HERE/audit-test.php"
 $WP eval-file "$HERE/actions-test.php"
+
+# Plugin updates need the site to load itself for the health check: serve it locally.
+PORT="${LOOPBACK_PORT:-8089}"
+PHP_CLI_SERVER_WORKERS=4 php -S "127.0.0.1:$PORT" -t "$WORK/wordpress" >/dev/null 2>&1 &
+SERVER_PID=$!
+trap 'kill $SERVER_PID 2>/dev/null' EXIT
+for _ in $(seq 1 20); do curl -s --noproxy '*' -o /dev/null "http://127.0.0.1:$PORT/" && break; sleep 0.5; done
+GS360_LOOPBACK="http://127.0.0.1:$PORT" $WP eval-file "$HERE/plugin-updates-test.php"

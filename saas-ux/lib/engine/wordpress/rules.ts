@@ -198,11 +198,14 @@ export const WORDPRESS_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     category: 'stability',
     severity: 'medium',
     source: 'connector',
-    fix: { fixerId: 'wordpress-update-plugins', automation: 'guided', risk: 'medium', reversible: false },
+    // Updates can break a site: never ticked in advance (medium), undone from a restore point.
+    fix: { fixerId: 'wordpress-update-plugins', automation: 'auto', risk: 'medium', reversible: true },
     evaluate: ({ plugins }) => {
       if (plugins.outdated === null) return unknown(NOT_REPORTED);
       if (plugins.outdated === 0) return { status: 'pass', message: 'upToDate' };
       return {
+        // Without direct file access (FTP credentials, DISALLOW_FILE_MODS, multisite) the dashboard is the way.
+        ...(plugins.updatesPossible === false ? { fix: null } : {}),
         status: 'fail',
         severity: plugins.outdated > 4 ? 'high' : 'medium',
         message: 'outdated', values: { count: plugins.outdated },

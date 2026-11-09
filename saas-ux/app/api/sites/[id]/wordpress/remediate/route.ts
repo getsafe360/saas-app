@@ -71,6 +71,9 @@ function inferBuilderFromPull(pull: { plugins?: string[]; theme?: string }): Wor
   return 'unknown';
 }
 
+// Plugin updates run one after another on the site and can take a while.
+export const maxDuration = 300;
+
 export async function POST(
   request: NextRequest,
   props: { params: Promise<{ id: string }> },
