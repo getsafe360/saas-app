@@ -29,6 +29,7 @@ const CAPABILITY_LABELS: Record<string, string> = {
   autoUpdatesPlugins: 'switch on plugin auto-updates (connector 1.7 or newer)',
   databaseCleanup: 'clean up the database (connector 1.7 or newer)',
   pluginUpdates: 'update plugins with a restore point (connector 1.8 or newer)',
+  coreIntegrity: 'restore and quarantine core files (connector 1.9 or newer)',
 };
 
 function makeActionId(finding: RemediationFindingInput): string {

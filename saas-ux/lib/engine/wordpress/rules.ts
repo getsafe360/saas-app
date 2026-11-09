@@ -277,7 +277,8 @@ export const WORDPRESS_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     category: 'red-flags',
     severity: 'critical',
     source: 'connector',
-    fix: { fixerId: 'wordpress-run-integrity-scan', automation: 'guided', risk: 'high', reversible: false },
+    // Official copies, each checked against the official checksum; undo puts the previous files back.
+    fix: { fixerId: 'wordpress-restore-core-files', automation: 'auto', risk: 'medium', reversible: true },
     evaluate: ({ redFlags }) => {
       if (redFlags.coreModifiedFiles === null) return unknown('unknown');
       return redFlags.coreModifiedFiles > 0
@@ -288,6 +289,24 @@ export const WORDPRESS_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
             impact: { scoreGain: 15, riskReduction: 40 },
           }
         : { status: 'pass', message: 'clean' };
+    },
+  },
+  {
+    id: 'red-flag-unexpected-core-files',
+    category: 'red-flags',
+    severity: 'critical',
+    source: 'connector',
+    fix: { fixerId: 'wordpress-quarantine-core-files', automation: 'auto', risk: 'medium', reversible: true },
+    evaluate: ({ redFlags }) => {
+      if (redFlags.unexpectedCoreFiles === null) return unknown('common.needsPluginVersion', { version: '1.9' });
+      return redFlags.unexpectedCoreFiles > 0
+        ? {
+            status: 'fail',
+            message: 'found', values: { count: redFlags.unexpectedCoreFiles },
+            observed: String(redFlags.unexpectedCoreFiles),
+            impact: { scoreGain: 15, riskReduction: 45 },
+          }
+        : { status: 'pass', message: 'none' };
     },
   },
   ...WORDPRESS_AUDIT_RULES,

@@ -92,6 +92,8 @@ export interface WordPressAuditResponse {
   redFlags: {
     uploadsPhpFiles: number | null;
     coreModifiedFiles: number | null;
+    /** Connector ≥ 1.9: PHP files in wp-admin/ or wp-includes/ that are not part of WordPress. */
+    unexpectedCoreFiles?: number | null;
     scannedAt: string;
   };
   environment: {

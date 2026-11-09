@@ -38,6 +38,7 @@ const DEPTH_TIER: Record<string, NonNullable<WordPressHealthFinding['depthTier']
   'seo-sitemap': 'balanced',
   'red-flag-hidden-plugins': 'deep',
   'red-flag-core-modifications': 'deep',
+  'red-flag-unexpected-core-files': 'deep',
   'sec-csp': 'balanced',
 };
 

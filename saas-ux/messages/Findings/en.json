@@ -10,7 +10,8 @@
       "noTitle": "The page has no title to measure.",
       "noDescription": "The page has no meta description to measure.",
       "pageNotRead": "The page content could not be read.",
-      "needsPlugin17": "Needs the GetSafe 360 plugin 1.7 or newer."
+      "needsPlugin17": "Needs the GetSafe 360 plugin 1.7 or newer.",
+      "needsPluginVersion": "Needs the GetSafe 360 plugin {version} or newer."
     },
     "wp-core-version": {
       "title": "WordPress core version",
@@ -94,6 +95,12 @@
       "unknown": "Core file checksums could not be verified.",
       "modified": "{count, plural, one {# WordPress core file differs} other {# WordPress core files differ}} from the official release.",
       "clean": "All core files match the official WordPress checksums."
+    },
+    "red-flag-unexpected-core-files": {
+      "title": "Unexpected files in core folders",
+      "recommendation": "Remove PHP files in wp-admin and wp-includes that are not part of WordPress — a common hiding place for backdoors — then change all passwords.",
+      "found": "{count, plural, one {# PHP file in wp-admin or wp-includes is} other {# PHP files in wp-admin or wp-includes are}} not part of WordPress.",
+      "none": "wp-admin and wp-includes contain only WordPress files."
     },
     "wp-admin-username": {
       "title": "Predictable admin username",

@@ -353,6 +353,16 @@ export class WordPressClient {
     return this.request<unknown>('audit');
   }
 
+  /** Paths of modified and unexpected core files. Plugin ≥ 1.9 (`coreIntegrity`). */
+  async coreFiles(): Promise<unknown> {
+    return this.request<unknown>('core-files');
+  }
+
+  /** Changed lines of one core file against the official copy (capped). Plugin ≥ 1.9. */
+  async coreFileDiff(path: string): Promise<unknown> {
+    return this.request<unknown>(`core-files/diff?path=${encodeURIComponent(path)}`);
+  }
+
   /**
    * Apply allowlisted connector actions such as safe security toggles.
    * Requires plugin v1.4.0+.
