@@ -124,6 +124,29 @@ try {
   check(!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200, 'the site loads again');
   check($res['rollback'] === null, 'nothing left to undo after an automatic restore');
 
+  // ---------- a damaged restore point never costs the installed version ----------
+  offer($slug, $file, '1.1', $good);
+  $res = run_action($key, 'update_plugins', ['plugins' => 'outdated']);
+  check($res['status'] === 'applied' && installed_version($file) === '1.1', 'updated to 1.1 again');
+  $id = $res['rollback']['payload']['restorePoints'][0];
+  file_put_contents(WP_CONTENT_DIR . "/getsafe360-backups/$id.zip", 'not a zip');
+  $undo = run_action($key, 'restore_plugins', $res['rollback']['payload'], 'r');
+  check($undo['status'] === 'failed', 'undo from a damaged restore point fails: ' . $undo['message']);
+  check(installed_version($file) === '1.1' && file_exists(WP_PLUGIN_DIR . "/$slug/readme.txt"), 'the installed 1.1 is left complete');
+  check(glob(WP_CONTENT_DIR . '/getsafe360-backups/restore-*') === [], 'no staging folders are left behind');
+
+  // A partial undo (one restore works, one is missing) reports failure so the run stays undoable.
+  run_action($key, 'restore_plugins', ['restorePoints' => []], 'r');
+  delete_plugins([$file]);
+  wp_mkdir_p(WP_PLUGIN_DIR . "/$slug");
+  file_put_contents(WP_PLUGIN_DIR . "/$file", demo_source('1.0'));
+  offer($slug, $file, '1.1', $good);
+  $fresh = run_action($key, 'update_plugins', ['plugins' => 'outdated']);
+  $valid = $fresh['rollback']['payload']['restorePoints'][0];
+  $mixed = run_action($key, 'restore_plugins', ['restorePoints' => [$valid, str_repeat('b', 32)]], 'r');
+  check($mixed['status'] === 'failed' && count($mixed['state']['restored']) === 1, 'an undo that misses any plugin reports failure, after restoring the rest');
+  check(installed_version($file) === '1.0', 'the valid restore point was still applied');
+
   // ---------- guards ----------
   $self = run_action($key, 'update_plugins', ['plugins' => ['getsafe360-connector/getsafe360-connector.php']]);
   check($self['status'] === 'skipped', 'never updates the connector itself');

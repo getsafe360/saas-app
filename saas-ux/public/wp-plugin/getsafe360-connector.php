@@ -1179,14 +1179,28 @@ class GetSafe360_Connector {
       return new \WP_Error('filesystem', 'WordPress cannot write plugin files directly on this server.');
     }
 
+    // Unpack into a staging folder first: a damaged archive must never cost the installed version.
     $target = $this->plugin_path($point['plugin']);
-    if (file_exists($target)) {
-      $wp_filesystem->delete($target, true);
+    $name = dirname($point['plugin']) === '.' ? $point['plugin'] : dirname($point['plugin']);
+    $staging = $this->backup_dir() . '/restore-' . bin2hex(random_bytes(8));
+    $unzipped = unzip_file($zip, $staging);
+    if (is_wp_error($unzipped) || !file_exists("$staging/$name") || !file_exists("$staging/{$point['plugin']}")) {
+      $wp_filesystem->delete($staging, true);
+      return new \WP_Error('restore_corrupt', 'The restore point could not be unpacked; the installed version was left in place.');
     }
-    $result = unzip_file($zip, WP_PLUGIN_DIR);
-    if (is_wp_error($result)) {
-      return $result;
+    $previous = file_exists($target) ? "$staging/previous" : null;
+    if ($previous && !$wp_filesystem->move($target, $previous)) {
+      $wp_filesystem->delete($staging, true);
+      return new \WP_Error('restore_move', 'The installed version could not be moved aside; nothing was changed.');
     }
+    if (!$wp_filesystem->move("$staging/$name", $target)) {
+      if ($previous) {
+        $wp_filesystem->move($previous, $target);
+      }
+      $wp_filesystem->delete($staging, true);
+      return new \WP_Error('restore_move', 'The restore point could not be put in place; the installed version was kept.');
+    }
+    $wp_filesystem->delete($staging, true);
     if (!empty($point['wasActive'])) {
       $this->set_plugins_active([$point['plugin']]);
     }
@@ -1367,7 +1381,8 @@ class GetSafe360_Connector {
         $errors[] = ['plugin' => $plugin, 'reason' => $result->get_error_message()];
       }
     }
-    $status = empty($errors) ? 'applied' : (empty($restored) ? 'failed' : 'applied');
+    // Any failure keeps the run undoable: restoring the others again is harmless.
+    $status = empty($errors) ? 'applied' : 'failed';
     $message = sprintf('%d plugin(s) restored to their previous version.', count($restored));
     if (!empty($errors)) {
       $message .= sprintf(' %d could not be restored: %s', count($errors), implode('; ', array_map(function ($e) { return $e['plugin'] . ' (' . $e['reason'] . ')'; }, $errors)));
