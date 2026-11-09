@@ -16,6 +16,8 @@ import { publishEvent } from '@/lib/cockpit/event-bus';
 import { createWordPressClient } from '@/lib/wordpress/client';
 import { planRollback } from '@/lib/wordpress/rollback';
 import { connectorTimeoutFor } from '@/lib/wordpress/timeouts';
+import { clearTestState } from '@/lib/security/csp/reports';
+import { CSP_TEST_ACTION_ID } from '@/lib/security/csp/start';
 
 type RollbackOutcome = { runId: string; status: 'rolled_back' | 'failed'; message: string };
 
@@ -157,6 +159,11 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
   }
 
   const rolledBack = outcomes.filter((outcome) => outcome.status === 'rolled_back');
+  // Undoing the CSP test ends it: drop its saved policy and reports.
+  const rolledBackIds = new Set(rolledBack.map((outcome) => outcome.runId));
+  if (runs.some((run) => rolledBackIds.has(run.id) && run.actionId === CSP_TEST_ACTION_ID)) {
+    await clearTestState(siteId).catch(() => undefined);
+  }
   let auditChangeSetId: string | undefined;
   let auditError: string | undefined;
 

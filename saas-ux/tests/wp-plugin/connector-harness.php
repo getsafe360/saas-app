@@ -28,9 +28,8 @@ $res = $apply->invoke($c, 'security-headers', ['headers' => [
 ]]);
 check($res['status'] === 'applied', 'applies allowlisted headers');
 check($GLOBALS['opts']['getsafe360_security_headers']['X-Frame-Options'] === 'SAMEORIGIN', 'normalises X-Frame-Options');
-check($res['rollback']['payload']['replace'] === true, 'rollback replaces wholesale');
-check($res['rollback']['payload']['headers'] instanceof stdClass, 'rollback to empty encodes as {}');
-check(json_encode($res['rollback']['payload']) === '{"replace":true,"headers":{}}', 'rollback JSON shape');
+check(!isset($res['rollback']['payload']['replace']), 'rollback only touches the headers this run set');
+check(json_encode($res['rollback']['payload']) === '{"headers":{"Strict-Transport-Security":null,"X-Content-Type-Options":null,"X-Frame-Options":null,"Referrer-Policy":null}}', 'rollback JSON shape');
 
 // 2. reject unknown header or bad value: all-or-nothing
 $before = $GLOBALS['opts']['getsafe360_security_headers'];
@@ -46,6 +45,15 @@ check(!isset($GLOBALS['opts']['getsafe360_security_headers']['Referrer-Policy'])
 $apply->invoke($c, 'h4-rollback', $second['rollback']['payload']);
 check($GLOBALS['opts']['getsafe360_security_headers'] === $before, 'rollback restores previous set');
 
+// 3b. Independent runs undo independently: a CSP test, then undo of the header run keeps the CSP.
+$GLOBALS['opts']['getsafe360_security_headers'] = [];
+$headers_run = $apply->invoke($c, 'security-headers', ['headers' => ['X-Frame-Options' => 'DENY']]);
+$csp_run = $apply->invoke($c, 'csp', ['headers' => ['Content-Security-Policy-Report-Only' => "default-src 'self'"]]);
+$apply->invoke($c, 'security-headers-rollback', json_decode(json_encode($headers_run['rollback']['payload']), true));
+check($GLOBALS['opts']['getsafe360_security_headers'] === ['Content-Security-Policy-Report-Only' => "default-src 'self'"], 'undoing the older header run keeps the newer CSP test');
+$apply->invoke($c, 'csp-rollback', json_decode(json_encode($csp_run['rollback']['payload']), true));
+check($GLOBALS['opts']['getsafe360_security_headers'] === [], 'undoing the CSP test removes only the CSP');
+
 // 4. REST filter keeps users endpoints for logged-in users
 $GLOBALS['opts']['getsafe360_action_state'] = ['blockUserEnumeration' => true];
 $eps = ['/wp/v2/users' => 1, '/wp/v2/users/me' => 1, '/wp/v2/posts' => 1];
@@ -54,5 +62,23 @@ check(isset($c->filter_rest_endpoints($eps)['/wp/v2/users/me']), 'logged-in user
 $GLOBALS['logged_in'] = false;
 $anon = $c->filter_rest_endpoints($eps);
 check(!isset($anon['/wp/v2/users']) && !isset($anon['/wp/v2/users/me']) && isset($anon['/wp/v2/posts']), 'anonymous users lose user endpoints only');
+
+// 5. CSP: valid policies pass, injections and foreign report hosts never do
+$GLOBALS['opts']['getsafe360_security_headers'] = [];
+$csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; object-src 'none'; upgrade-insecure-requests; report-uri https://www.getsafe360.ai/api/csp-report/s/k";
+$res = $apply->invoke($c, 'csp', ['headers' => ['Content-Security-Policy-Report-Only' => $csp]]);
+check($res['status'] === 'applied' && $GLOBALS['opts']['getsafe360_security_headers']['Content-Security-Policy-Report-Only'] === $csp, 'accepts a valid report-only CSP');
+foreach ([
+  'foreign report host' => "default-src 'self'; report-uri https://evil.example/c",
+  'header injection' => "default-src 'self'\r\nSet-Cookie: a=b",
+  'unknown directive' => "default-src 'self'; sandbox allow-scripts",
+  'duplicate directive' => "default-src 'self'; default-src *",
+  'no default-src' => "script-src 'self'",
+  'javascript: source' => "default-src 'self' javascript:",
+] as $label => $bad) {
+  $r = $apply->invoke($c, 'csp-bad', ['headers' => ['Content-Security-Policy' => $bad]]);
+  check($r['status'] === 'failed', "rejects CSP with $label");
+}
+check(!isset($GLOBALS['opts']['getsafe360_security_headers']['Content-Security-Policy']), 'rejected CSPs change nothing');
 
 exit($fails ? 1 : 0);

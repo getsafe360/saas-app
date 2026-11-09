@@ -262,7 +262,8 @@
     "sec-csp": {
       "title": "Keine Content-Security-Policy",
       "recommendation": "Beginnen Sie mit einer Report-Only-Richtlinie und verschärfen Sie sie, sobald die Verstöße verstanden sind.",
-      "missing": "Ohne CSP wird jedes eingeschleuste Skript auf der Seite mit vollen Rechten ausgeführt."
+      "missing": "Ohne CSP wird jedes eingeschleuste Skript auf der Seite mit vollen Rechten ausgeführt.",
+      "reportOnly": "Eine Richtlinie wird im Nur-Bericht-Modus getestet; sie blockiert noch nichts."
     },
     "sec-nosniff": {
       "title": "X-Content-Type-Options fehlt",

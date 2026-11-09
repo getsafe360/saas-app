@@ -606,6 +606,36 @@
           "readsRequest": "reads visitor input"
         },
         "unavailable": "The changes could not be loaded (the official copy may not have downloaded). Review again later."
+      },
+      "csp": {
+        "title": "Content-Security-Policy",
+        "description": "A CSP tells browsers which servers may run scripts and load content on your site, so an injected script from elsewhere is blocked. GetSafe 360 builds a policy from what your pages load and tests it first without blocking anything.",
+        "build": "Build a policy",
+        "building": "Scanning your pages…",
+        "scanned": "{count, plural, one {Built from # page.} other {Built from # pages.}} Proposed policy:",
+        "inlineNote": "Your theme or plugins use inline scripts, so the policy allows them. It still limits which servers may run code, blocks plugins and base-tag tricks, and stops other sites from framing yours.",
+        "reportOnlyNote": "Testing runs in report-only mode: visitors' browsers report what the policy would block, but nothing is blocked. You can stop it any time under Applied changes.",
+        "start": "Start testing (report-only)",
+        "testingSince": "Testing since {date} ({days, plural, =0 {today} one {# day} other {# days}}).",
+        "reports": "{count, plural, =0 {No reports yet} one {# report} other {# reports}}",
+        "refresh": "Refresh",
+        "noReports": "No browser has reported a problem yet. Let the test run for a few days of normal traffic.",
+        "columns": {
+          "directive": "Rule",
+          "source": "Blocked source",
+          "count": "Reports",
+          "page": "Example page"
+        },
+        "testingHint": "Each line is something the policy would have blocked. After a few days, Claude will help you decide what to allow before you switch the policy on. To stop the test, undo it under Applied changes.",
+        "errors": {
+          "GENERIC": "Something went wrong → Try again in a moment.",
+          "RATE_LIMITED": "Too many scans in the last hour → Try again later.",
+          "SITE_UNREACHABLE": "Your pages could not be loaded → Check that the site is online and try again.",
+          "CONNECTOR_UPDATE": "Testing a CSP needs the GetSafe 360 plugin 1.10 or newer → Update the plugin.",
+          "CONNECTOR_UNREACHABLE": "The GetSafe 360 plugin did not respond → Check the connection and try again.",
+          "CONNECTOR_FAILED": "The plugin did not apply the policy → Try again, or update the plugin.",
+          "WORDPRESS_NOT_CONNECTED": "The site is not connected → Reconnect the GetSafe 360 plugin."
+        }
       }
     },
     "mobile": {

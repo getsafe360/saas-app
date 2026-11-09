@@ -262,7 +262,8 @@
     "sec-csp": {
       "title": "Sem Content-Security-Policy",
       "recommendation": "Comece com uma política em modo report-only e reforce-a quando as violações estiverem claras.",
-      "missing": "Sem CSP, qualquer script injetado na página é executado com todos os privilégios."
+      "missing": "Sem CSP, qualquer script injetado na página é executado com todos os privilégios.",
+      "reportOnly": "Uma política está sendo testada no modo somente relatório; ela ainda não bloqueia nada."
     },
     "sec-nosniff": {
       "title": "X-Content-Type-Options ausente",

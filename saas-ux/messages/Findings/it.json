@@ -262,7 +262,8 @@
     "sec-csp": {
       "title": "Nessuna Content-Security-Policy",
       "recommendation": "Inizia con una policy in modalità report-only, poi rendila più restrittiva quando le violazioni sono chiare.",
-      "missing": "Senza CSP, qualsiasi script iniettato nella pagina viene eseguito con tutti i privilegi."
+      "missing": "Senza CSP, qualsiasi script iniettato nella pagina viene eseguito con tutti i privilegi.",
+      "reportOnly": "Una policy è in prova in modalità solo report; non blocca ancora nulla."
     },
     "sec-nosniff": {
       "title": "X-Content-Type-Options mancante",
