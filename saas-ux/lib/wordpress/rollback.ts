@@ -4,7 +4,7 @@
 // request the connector returned (`rollbackPayload`); undo replays those,
 // newest first, so stacked changes unwind back to the original state.
 
-import type { WordPressConnectorActionRequest } from '@/lib/wordpress/types';
+import { CONNECTOR_SETTING_KEYS, type WordPressConnectorActionRequest } from '@/lib/wordpress/types';
 
 export interface RollbackCandidate {
   id: string;
@@ -19,9 +19,10 @@ export interface PlannedRollback {
   request: WordPressConnectorActionRequest;
 }
 
-const SETTING_KEYS = new Set(['disableXmlRpc', 'blockUserEnumeration']);
+const SETTING_KEYS: ReadonlySet<string> = new Set(CONNECTOR_SETTING_KEYS);
+const PLUGIN_FILE = /^[A-Za-z0-9._/-]+\.php$/;
 
-/** Accept only the two inverse shapes the connector produces. */
+/** Accept only the inverse shapes the connector produces. */
 export function parseRollbackRequest(raw: unknown): WordPressConnectorActionRequest | null {
   if (!raw || typeof raw !== 'object') return null;
   const value = raw as { id?: unknown; type?: unknown; payload?: unknown };
@@ -33,7 +34,10 @@ export function parseRollbackRequest(raw: unknown): WordPressConnectorActionRequ
     return {
       id: value.id,
       type: 'update_connector_setting',
-      payload: { key: payload.key as 'disableXmlRpc' | 'blockUserEnumeration', enabled: Boolean(payload.enabled) },
+      payload: {
+        key: payload.key as (typeof CONNECTOR_SETTING_KEYS)[number],
+        enabled: Boolean(payload.enabled),
+      },
     };
   }
 
@@ -46,6 +50,25 @@ export function parseRollbackRequest(raw: unknown): WordPressConnectorActionRequ
       clean[name] = header;
     }
     return { id: value.id, type: 'set_security_headers', payload: { headers: clean, replace: payload.replace === true } };
+  }
+
+  if (value.type === 'set_config_permissions') {
+    // Restores a previous mode only; never world-writable.
+    if (typeof payload.mode !== 'string' || !/^0?[0-7]{3}$/.test(payload.mode)) return null;
+    if (parseInt(payload.mode, 8) & 0o002) return null;
+    return { id: value.id, type: 'set_config_permissions', payload: { mode: payload.mode } };
+  }
+
+  if (value.type === 'set_default_role') {
+    if (typeof payload.role !== 'string' || !/^[a-z0-9_-]+$/.test(payload.role)) return null;
+    return { id: value.id, type: 'set_default_role', payload: { role: payload.role } };
+  }
+
+  if (value.type === 'set_plugin_auto_updates') {
+    const plugins = payload.plugins;
+    if (payload.replace !== true || !Array.isArray(plugins)) return null;
+    if (!plugins.every((file) => typeof file === 'string' && PLUGIN_FILE.test(file) && !file.includes('..'))) return null;
+    return { id: value.id, type: 'set_plugin_auto_updates', payload: { plugins: plugins as string[], replace: true } };
   }
 
   return null;

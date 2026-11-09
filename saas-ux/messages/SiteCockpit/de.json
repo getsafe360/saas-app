@@ -546,6 +546,7 @@
         "undoneAt": "am {date}",
         "undo": "Rückgängig",
         "newerFirst": "Machen Sie zuerst die neuere Änderung an dieser Einstellung rückgängig.",
+        "permanent": "Dauerhaft: Diese Änderung lässt sich nicht rückgängig machen.",
         "errors": {
           "undo": "Rückgängig machen fehlgeschlagen → Erneut versuchen oder die Website neu verbinden.",
           "undoNewerFirst": "Eine neuere Änderung an derselben Einstellung ist noch aktiv → Machen Sie zuerst diese rückgängig."

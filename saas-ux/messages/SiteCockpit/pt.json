@@ -546,6 +546,7 @@
         "undoneAt": "em {date}",
         "undo": "Desfazer",
         "newerFirst": "Desfaça primeiro a alteração mais recente desta configuração.",
+        "permanent": "Permanente: esta alteração não pode ser desfeita.",
         "errors": {
           "undo": "Falha ao desfazer → Tente novamente ou reconecte o site.",
           "undoNewerFirst": "Uma alteração mais recente na mesma configuração ainda está ativa → Desfaça essa primeiro."

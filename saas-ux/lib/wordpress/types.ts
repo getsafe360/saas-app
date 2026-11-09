@@ -60,6 +60,10 @@ export interface WordPressCapabilitySummary {
 export interface WordPressConnectorProtectionState {
   disableXmlRpc: boolean;
   blockUserEnumeration: boolean;
+  /** Connector ≥ 1.7. */
+  disableFileEditor?: boolean;
+  /** Connector ≥ 1.7. */
+  enableCoreSecurityUpdates?: boolean;
 }
 
 export interface WordPressSiteSnapshot {
@@ -103,6 +107,10 @@ export type WordPressActionType =
   | 'apply_schema'
   | 'update_connector_setting'
   | 'set_security_headers'
+  | 'set_config_permissions'
+  | 'set_default_role'
+  | 'set_plugin_auto_updates'
+  | 'cleanup_database'
   | 'flush_cache'
   | 'verify_render';
 
@@ -128,8 +136,15 @@ export interface WordPressDetailedVerificationResult extends WordPressVerificati
   checks: WordPressVerificationCheck[];
 }
 
+export const CONNECTOR_SETTING_KEYS = [
+  'disableXmlRpc',
+  'blockUserEnumeration',
+  'disableFileEditor',
+  'enableCoreSecurityUpdates',
+] as const;
+
 export interface WordPressConnectorSettingPayload {
-  key: 'disableXmlRpc' | 'blockUserEnumeration';
+  key: (typeof CONNECTOR_SETTING_KEYS)[number];
   enabled: boolean;
 }
 
@@ -164,16 +179,39 @@ export interface WordPressSecurityHeadersPayload {
   replace?: boolean;
 }
 
+/** `tighten` drops the "others" bits; an octal string (rollback) restores a previous mode. */
+export interface WordPressConfigPermissionsPayload {
+  mode: 'tighten' | string;
+}
+
+/** Only roles without administrative or editor capabilities are accepted by the connector. */
+export interface WordPressDefaultRolePayload {
+  role: string;
+}
+
+/** `enable: 'all'` turns on every plugin; `plugins` + `replace` restores an exact list (rollback). */
+export type WordPressPluginAutoUpdatesPayload =
+  | { enable: 'all' }
+  | { plugins: string[]; replace: true };
+
+export interface WordPressCleanupPayload {
+  task: 'expired_transients' | 'revisions';
+}
+
 export type WordPressConnectorActionRequest =
   | { id: string; type: 'update_connector_setting'; payload: WordPressConnectorSettingPayload }
-  | { id: string; type: 'set_security_headers'; payload: WordPressSecurityHeadersPayload };
+  | { id: string; type: 'set_security_headers'; payload: WordPressSecurityHeadersPayload }
+  | { id: string; type: 'set_config_permissions'; payload: WordPressConfigPermissionsPayload }
+  | { id: string; type: 'set_default_role'; payload: WordPressDefaultRolePayload }
+  | { id: string; type: 'set_plugin_auto_updates'; payload: WordPressPluginAutoUpdatesPayload }
+  | { id: string; type: 'cleanup_database'; payload: WordPressCleanupPayload };
 
 export interface WordPressConnectorActionResult {
   id: string;
   type: WordPressConnectorActionRequest['type'];
   status: 'applied' | 'skipped' | 'failed';
   message: string;
-  state?: WordPressConnectorProtectionState | { securityHeaders?: Record<string, string> };
+  state?: WordPressConnectorProtectionState | Record<string, unknown> | null;
   rollback?: WordPressConnectorActionRequest | null;
 }
 

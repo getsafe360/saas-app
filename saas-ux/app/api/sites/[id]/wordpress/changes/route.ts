@@ -5,7 +5,8 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
+import { PERMANENT_FIXER_IDS } from '@/lib/engine/fixers/catalog';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
 import { users } from '@/lib/db/schema/auth/users';
@@ -52,6 +53,7 @@ export async function GET(_request: Request, props: { params: Promise<{ id: stri
       status: wordpressActionRuns.status,
       rollbackPayload: wordpressActionRuns.rollbackPayload,
       inputPayload: wordpressActionRuns.inputPayload,
+      resultPayload: wordpressActionRuns.resultPayload,
       verificationOk: wordpressActionRuns.verificationOk,
       startedAt: wordpressActionRuns.startedAt,
       completedAt: wordpressActionRuns.completedAt,
@@ -61,8 +63,15 @@ export async function GET(_request: Request, props: { params: Promise<{ id: stri
       and(
         eq(wordpressActionRuns.siteId, siteId),
         inArray(wordpressActionRuns.status, ['applied', 'failed', 'rolled_back']),
-        isNotNull(wordpressActionRuns.rollbackPayload),
-        sql`${wordpressActionRuns.rollbackPayload} <> 'null'::jsonb`,
+        or(
+          and(
+            isNotNull(wordpressActionRuns.rollbackPayload),
+            sql`${wordpressActionRuns.rollbackPayload} <> 'null'::jsonb`,
+          ),
+          // One-way changes (database cleanup, default role) have no inverse but did change the site,
+          // including when the live check afterwards failed (toAppliedChanges confirms the connector applied it).
+          inArray(wordpressActionRuns.actionId, [...PERMANENT_FIXER_IDS]),
+        ),
       ),
     )
     .orderBy(desc(wordpressActionRuns.startedAt))

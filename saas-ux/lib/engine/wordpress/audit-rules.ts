@@ -7,6 +7,11 @@ import { type Rule, type RuleOutcome, unknown } from '../rules';
 import type { WordPressFacts } from './facts';
 
 const NEEDS_AUDIT = 'common.needsAudit';
+const NEEDS_PLUGIN_17 = 'common.needsPlugin17';
+
+/** Above these counts the stability checks warn; fixers verify against the same limits. */
+export const EXPIRED_TRANSIENTS_LIMIT = 1000;
+export const REVISIONS_LIMIT = 5000;
 
 const KB = 1024;
 const MB = 1024 * KB;
@@ -99,7 +104,8 @@ export const WORDPRESS_AUDIT_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     category: 'security',
     severity: 'critical',
     source: 'connector',
-    fix: { fixerId: 'wordpress-fix-default-role', automation: 'guided', risk: 'low', reversible: false },
+    // Final on purpose: the connector never restores an administrator default role.
+    fix: { fixerId: 'wordpress-fix-default-role', automation: 'auto', risk: 'low', reversible: false },
     evaluate: ({ security }) =>
       healthyWhenTrue(security.openAdminRegistration === null ? null : !security.openAdminRegistration, {
         scoreGain: 20,
@@ -111,7 +117,7 @@ export const WORDPRESS_AUDIT_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     category: 'security',
     severity: 'medium',
     source: 'connector',
-    fix: { fixerId: 'wordpress-disable-file-edit', automation: 'guided', risk: 'low', reversible: true },
+    fix: { fixerId: 'wordpress-disable-file-edit', automation: 'auto', risk: 'low', reversible: true },
     evaluate: ({ security }) =>
       healthyWhenTrue(security.fileEditDisabled, { scoreGain: 4, riskReduction: 12 }),
   },
@@ -154,7 +160,7 @@ export const WORDPRESS_AUDIT_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     category: 'security',
     severity: 'medium',
     source: 'connector',
-    fix: { fixerId: 'wordpress-tighten-config-permissions', automation: 'guided', risk: 'low', reversible: true },
+    fix: { fixerId: 'wordpress-tighten-config-permissions', automation: 'auto', risk: 'low', reversible: true },
     evaluate: ({ security }) => {
       if (security.wpConfigWorldReadable === null) return unknown('unknown');
       return security.wpConfigWorldReadable
@@ -198,6 +204,24 @@ export const WORDPRESS_AUDIT_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
         default:
           return unknown('uninterpretable', { version: observed });
       }
+    },
+  },
+
+  {
+    id: 'wp-core-auto-updates',
+    category: 'security',
+    severity: 'high',
+    source: 'connector',
+    fix: { fixerId: 'wordpress-enable-core-auto-updates', automation: 'auto', risk: 'low', reversible: true },
+    evaluate: ({ autoUpdates }) => {
+      if (autoUpdates.updaterDisabled === true) {
+        // The site (or its host) switched the updater off; only a wp-config.php change helps.
+        return { status: 'warn', severity: 'medium', message: 'disabledByConfig', fix: null, impact: { riskReduction: 10 } };
+      }
+      if (autoUpdates.coreMinor === null) return unknown(NEEDS_PLUGIN_17);
+      return autoUpdates.coreMinor
+        ? { status: 'pass', message: 'on' }
+        : { status: 'fail', message: 'off', impact: { scoreGain: 5, riskReduction: 20 } };
     },
   },
 
@@ -267,6 +291,29 @@ export const WORDPRESS_AUDIT_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     },
   },
   {
+    id: 'wp-plugin-auto-updates',
+    category: 'stability',
+    severity: 'medium',
+    source: 'connector',
+    // Updates can occasionally break a site, so this is never preselected (risk medium).
+    fix: { fixerId: 'wordpress-enable-plugin-auto-updates', automation: 'auto', risk: 'medium', reversible: true },
+    evaluate: ({ autoUpdates }) => {
+      const { pluginsEnabled: enabled, pluginsTotal: total } = autoUpdates;
+      if (autoUpdates.pluginsAllowed === false) {
+        return { status: 'warn', severity: 'low', message: 'disabledByConfig', fix: null };
+      }
+      if (enabled === null || total === null) return unknown(NEEDS_PLUGIN_17);
+      if (total === 0 || enabled >= total) return { status: 'pass', message: 'all', values: { total } };
+      return {
+        status: 'warn',
+        message: enabled === 0 ? 'none' : 'some',
+        values: { enabled, total },
+        observed: `${enabled}/${total}`,
+        impact: { scoreGain: 2, riskReduction: 8 },
+      };
+    },
+  },
+  {
     id: 'wp-autoload-size',
     category: 'stability',
     severity: 'high',
@@ -301,10 +348,10 @@ export const WORDPRESS_AUDIT_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     category: 'stability',
     severity: 'low',
     source: 'connector',
-    fix: { fixerId: 'wordpress-clean-transients', automation: 'guided', risk: 'low', reversible: false },
+    fix: { fixerId: 'wordpress-clean-transients', automation: 'auto', risk: 'low', reversible: false },
     evaluate: ({ database }) => {
       if (database.expiredTransients === null) return unknown(NEEDS_AUDIT);
-      return database.expiredTransients > 1000
+      return database.expiredTransients > EXPIRED_TRANSIENTS_LIMIT
         ? {
             status: 'warn',
             message: 'many', values: { count: database.expiredTransients },
@@ -319,10 +366,11 @@ export const WORDPRESS_AUDIT_RULES: ReadonlyArray<Rule<WordPressFacts>> = [
     category: 'stability',
     severity: 'low',
     source: 'connector',
-    fix: { fixerId: 'wordpress-limit-revisions', automation: 'guided', risk: 'medium', reversible: false },
+    fix: { fixerId: 'wordpress-limit-revisions', automation: 'auto', risk: 'medium', reversible: false },
     evaluate: ({ database }) => {
       if (database.revisions === null) return unknown(NEEDS_AUDIT);
-      return database.revisions > 5000
+      // Once only the newest revisions per post remain, there is nothing left to clean.
+      return database.revisions > REVISIONS_LIMIT && database.revisionsRemovable !== 0
         ? {
             status: 'warn',
             message: 'many', values: { count: database.revisions },

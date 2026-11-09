@@ -546,6 +546,7 @@
         "undoneAt": "le {date}",
         "undo": "Annuler",
         "newerFirst": "Annulez d’abord la modification plus récente de ce réglage.",
+        "permanent": "Définitif : cette modification ne peut pas être annulée.",
         "errors": {
           "undo": "L’annulation a échoué → Réessayez ou reconnectez le site.",
           "undoNewerFirst": "Une modification plus récente du même réglage est encore active → Annulez-la d’abord."

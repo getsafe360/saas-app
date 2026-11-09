@@ -9,7 +9,8 @@
       "notWordPress": "Ne concerne que les sites WordPress.",
       "noTitle": "La page n’a pas de titre à mesurer.",
       "noDescription": "La page n’a pas de méta-description à mesurer.",
-      "pageNotRead": "Le contenu de la page n’a pas pu être lu."
+      "pageNotRead": "Le contenu de la page n’a pas pu être lu.",
+      "needsPlugin17": "Nécessite le plugin GetSafe 360 1.7 ou plus récent."
     },
     "wp-core-version": {
       "title": "Version du cœur WordPress",
@@ -152,6 +153,13 @@
       "supported": "PHP {branch} est pris en charge.",
       "uninterpretable": "La version de PHP \"{version}\" n’a pas pu être interprétée."
     },
+    "wp-core-auto-updates": {
+      "title": "Mises à jour de sécurité automatiques",
+      "recommendation": "Laissez GetSafe 360 activer les mises à jour de sécurité automatiques de WordPress, ou retirez define('WP_AUTO_UPDATE_CORE', false); de wp-config.php.",
+      "on": "WordPress installe automatiquement les versions de sécurité.",
+      "off": "Les versions de sécurité de WordPress ne s’installent pas automatiquement : les failles connues restent ouvertes jusqu’à une mise à jour manuelle.",
+      "disabledByConfig": "Les mises à jour automatiques sont désactivées dans wp-config.php (AUTOMATIC_UPDATER_DISABLED ou DISALLOW_FILE_MODS) ou par votre hébergeur. Si votre hébergeur ne met pas WordPress à jour pour vous, retirez ce réglage."
+    },
     "wp-debug-log": {
       "title": "Journal de débogage",
       "recommendation": "Désactivez WP_DEBUG_LOG en production, ou écrivez le journal en dehors de la racine web.",
@@ -176,6 +184,14 @@
       "unknown": "Les données de mise à jour du thème ne sont pas encore disponibles.",
       "available": "Une mise à jour est disponible pour le thème actif.",
       "upToDate": "Le thème actif est à jour."
+    },
+    "wp-plugin-auto-updates": {
+      "title": "Mises à jour automatiques des plugins",
+      "recommendation": "Activez les mises à jour automatiques de vos plugins, ici ou dans Extensions → Activer les mises à jour automatiques.",
+      "all": "{total, plural, one {Le plugin se met} other {Les # plugins se mettent}} à jour automatiquement.",
+      "some": "{enabled, number} plugins sur {total, number} se mettent à jour automatiquement.",
+      "none": "Aucun des {total, number} plugins ne se met à jour automatiquement.",
+      "disabledByConfig": "Les mises à jour automatiques des plugins sont désactivées sur ce site par wp-config.php, votre hébergeur ou un autre plugin."
     },
     "wp-autoload-size": {
       "title": "Options chargées automatiquement",

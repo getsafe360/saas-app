@@ -1,8 +1,8 @@
 // lib/engine/fixers/wordpress/connector-settings.ts
 //
-// Fixers for the connector's built-in protection toggles (XML-RPC, user
-// enumeration). Behaviour is unchanged from the previous switch-based
-// planner; only the structure moved into the registry.
+// Fixers for the connector's built-in switches: XML-RPC, user enumeration,
+// the file editor lock and automatic security updates (1.7). Each one flips a
+// connector setting whose rollback flips it back.
 
 import { createWordPressClient } from '@/lib/wordpress/client';
 import type { WordPressConnectorSettingPayload } from '@/lib/wordpress/types';
@@ -13,10 +13,18 @@ import {
   type VerificationCheck,
   verificationResult,
 } from '../types';
+import { auditChecks } from './audit-check';
 
 type SettingKey = WordPressConnectorSettingPayload['key'];
 
 const USER_AGENT = 'GetSafe360-WordPressVerifier/1.0';
+
+const SETTINGS: Record<SettingKey, { label: string; check: string }> = {
+  disableXmlRpc: { label: 'XML-RPC protection', check: 'connector-state:disable-xmlrpc' },
+  blockUserEnumeration: { label: 'user enumeration protection', check: 'connector-state:block-user-enumeration' },
+  disableFileEditor: { label: 'file editor lock', check: 'connector-state:disable-file-editor' },
+  enableCoreSecurityUpdates: { label: 'automatic security updates', check: 'connector-state:core-security-updates' },
+};
 
 async function connectorStateCheck(context: FixerVerifyContext, key: SettingKey): Promise<VerificationCheck> {
   const client = createWordPressClient({ siteUrl: context.siteUrl, tokenHash: context.tokenHash, timeout: 10000 });
@@ -24,9 +32,9 @@ async function connectorStateCheck(context: FixerVerifyContext, key: SettingKey)
   const pull = await client.pull();
   const actual = Boolean(pull.protections?.[key]);
   const ok = actual === Boolean(setting.enabled);
-  const label = key === 'disableXmlRpc' ? 'XML-RPC protection' : 'user enumeration protection';
+  const { label, check } = SETTINGS[key];
   return {
-    name: key === 'disableXmlRpc' ? 'connector-state:disable-xmlrpc' : 'connector-state:block-user-enumeration',
+    name: check,
     ok,
     detail: ok ? `Connector reports ${label} enabled.` : `Connector did not confirm ${label}.`,
   };
@@ -150,3 +158,59 @@ export const disableXmlRpcFixer = settingFixer('wordpress-disable-xmlrpc', 'disa
     assertions: ['Connector protection state reports disableXmlRpc = true'],
   },
 });
+
+export const disableFileEditorFixer = settingFixer(
+  'wordpress-disable-file-edit',
+  'disableFileEditor',
+  {
+    title: 'Lock the theme and plugin file editor',
+    description:
+      'Removes the built-in code editor for every account, like DISALLOW_FILE_EDIT, without touching wp-config.php. A stolen administrator login can then no longer change PHP code from the dashboard.',
+    risk: 'low',
+    autoApplyEligible: true,
+    requiresApproval: false,
+    capability: 'securityDisableFileEditor',
+    verification: {
+      kind: 'api',
+      expectation: 'WordPress reports the file editor as disabled.',
+      assertions: ['Connector state reports disableFileEditor = true', 'Site audit reports fileEditDisabled = true'],
+    },
+  },
+  (context) =>
+    auditChecks(context, [
+      {
+        name: 'audit:file-edit-disabled',
+        test: (audit) => audit.security.fileEditDisabled,
+        ok: 'WordPress reports the file editor as disabled.',
+        failed: 'WordPress still allows editing theme and plugin files.',
+      },
+    ]),
+);
+
+export const coreAutoUpdatesFixer = settingFixer(
+  'wordpress-enable-core-auto-updates',
+  'enableCoreSecurityUpdates',
+  {
+    title: 'Install WordPress security releases automatically',
+    description:
+      'Lets WordPress install minor security releases (for example 6.8.2 → 6.8.3) on its own. Major versions, plugins and themes are not affected.',
+    risk: 'low',
+    autoApplyEligible: true,
+    requiresApproval: false,
+    capability: 'autoUpdatesCore',
+    verification: {
+      kind: 'api',
+      expectation: 'WordPress reports automatic security releases as on.',
+      assertions: ['Connector state reports enableCoreSecurityUpdates = true', 'Site audit reports autoUpdates.coreMinor = true'],
+    },
+  },
+  (context) =>
+    auditChecks(context, [
+      {
+        name: 'audit:core-security-updates',
+        test: (audit) => audit.autoUpdates?.coreMinor ?? null,
+        ok: 'WordPress will install security releases automatically.',
+        failed: 'WordPress still reports automatic security releases as off.',
+      },
+    ]),
+);
