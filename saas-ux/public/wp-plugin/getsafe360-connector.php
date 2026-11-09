@@ -899,42 +899,62 @@ class GetSafe360_Connector {
     return $count === null ? null : (int) $count;
   }
 
-  /** Deletes revisions beyond the newest $keep per post, in batches, until $deadline. */
+  /**
+   * Deletes revisions beyond the newest $keep per post until $deadline. Works
+   * post by post in bounded batches (never loads every revision at once), so
+   * revision-heavy sites make progress on every run.
+   */
   private function trim_revisions($keep, $deadline) {
     global $wpdb;
-    $rows = $wpdb->get_results($wpdb->prepare(
-      "SELECT ID, post_parent FROM {$wpdb->posts}
-       WHERE post_type = 'revision' AND post_name NOT LIKE %s
-       ORDER BY post_parent ASC, post_date DESC, ID DESC",
-      '%' . $wpdb->esc_like('-autosave') . '%'
-    ), ARRAY_N);
-
-    $seen = [];
-    $excess = [];
-    foreach ((array) $rows as $row) {
-      $parent = (int) $row[1];
-      $seen[$parent] = isset($seen[$parent]) ? $seen[$parent] + 1 : 1;
-      if ($seen[$parent] > $keep) {
-        $excess[] = (int) $row[0];
-      }
-    }
-
+    $not_autosave = '%' . $wpdb->esc_like('-autosave') . '%';
     $deleted = 0;
-    foreach (array_chunk($excess, 200) as $chunk) {
-      if (microtime(true) > $deadline) {
+
+    while (microtime(true) < $deadline) {
+      $parents = $wpdb->get_col($wpdb->prepare(
+        "SELECT post_parent FROM {$wpdb->posts}
+         WHERE post_type = 'revision' AND post_name NOT LIKE %s
+         GROUP BY post_parent HAVING COUNT(*) > %d LIMIT 100",
+        $not_autosave,
+        $keep
+      ));
+      if (empty($parents)) {
         break;
       }
-      $ids = implode(',', array_map('intval', $chunk));
-      $wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE post_id IN ($ids)");
-      $wpdb->query("DELETE FROM {$wpdb->term_relationships} WHERE object_id IN ($ids)");
-      $removed = $wpdb->query("DELETE FROM {$wpdb->posts} WHERE ID IN ($ids) AND post_type = 'revision'");
-      foreach ($chunk as $id) {
-        clean_post_cache($id);
+
+      $deleted_in_page = 0;
+      foreach ($parents as $parent) {
+        if (microtime(true) > $deadline) {
+          break 2;
+        }
+        // Everything after the newest $keep of this post, at most 500 per step.
+        $ids = $wpdb->get_col($wpdb->prepare(
+          "SELECT ID FROM {$wpdb->posts}
+           WHERE post_type = 'revision' AND post_parent = %d AND post_name NOT LIKE %s
+           ORDER BY post_date DESC, ID DESC LIMIT %d, 500",
+          (int) $parent,
+          $not_autosave,
+          $keep
+        ));
+        foreach (array_chunk(array_map('intval', $ids), 200) as $chunk) {
+          $list = implode(',', $chunk);
+          $wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE post_id IN ($list)");
+          $wpdb->query("DELETE FROM {$wpdb->term_relationships} WHERE object_id IN ($list)");
+          $removed = $wpdb->query("DELETE FROM {$wpdb->posts} WHERE ID IN ($list) AND post_type = 'revision'");
+          foreach ($chunk as $id) {
+            clean_post_cache($id);
+          }
+          $deleted_in_page += is_int($removed) ? $removed : 0;
+        }
       }
-      $deleted += is_int($removed) ? $removed : 0;
+
+      $deleted += $deleted_in_page;
+      if ($deleted_in_page === 0) {
+        break; // Nothing could be deleted; do not spin until the deadline.
+      }
     }
 
-    return ['deleted' => $deleted, 'remaining' => max(0, count($excess) - $deleted)];
+    $remaining = $this->count_excess_revisions();
+    return ['deleted' => $deleted, 'remaining' => $remaining === null ? 0 : $remaining];
   }
 
   /**

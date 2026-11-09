@@ -127,6 +127,23 @@ $newest = array_values(wp_get_post_revisions($post_id))[0];
 check($newest->post_content === 'v8', 'the newest revision survives');
 wp_delete_post($post_id, true);
 
+// Many revisions: more than one 500-row step, and a spent budget deletes nothing.
+$big = wp_insert_post(['post_title' => 'Busy page', 'post_content' => 'v0', 'post_status' => 'publish', 'post_type' => 'page']);
+for ($i = 1; $i <= 620; $i++) {
+  $GLOBALS['wpdb']->update($GLOBALS['wpdb']->posts, ['post_content' => "v$i"], ['ID' => $big]);
+  clean_post_cache($big);
+  _wp_put_post_revision(get_post($big));
+}
+$connector = $GLOBALS['getsafe360_connector_instance'] ?? new GetSafe360_Connector();
+$trim = new ReflectionMethod($connector, 'trim_revisions');
+$trim->setAccessible(true);
+$spent = $trim->invoke($connector, 5, microtime(true) - 1);
+check($spent['deleted'] === 0 && $spent['remaining'] >= 615, 'a spent budget deletes nothing and reports what remains');
+$res = run_action($key, 'cleanup_database', ['task' => 'revisions']);
+check($res['status'] === 'applied' && count(wp_get_post_revisions($big)) === 5, 'clears hundreds of revisions in bounded steps, keeping 5');
+check(strpos($res['message'], 'more remain') === false, 'reports nothing left over');
+wp_delete_post($big, true);
+
 for ($i = 0; $i < 3; $i++) {
   update_option("_transient_timeout_gs360_test_$i", time() - 3600, false);
   update_option("_transient_gs360_test_$i", 'stale', false);
