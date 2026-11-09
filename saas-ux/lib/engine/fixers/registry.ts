@@ -13,6 +13,7 @@ import {
 } from './wordpress/connector-settings';
 import { securityHeadersFixer } from './wordpress/security-headers';
 import { pluginUpdatesFixer } from './wordpress/plugin-updates';
+import { quarantineCoreFilesFixer, restoreCoreFilesFixer } from './wordpress/core-integrity';
 import {
   cleanTransientsFixer,
   configPermissionsFixer,
@@ -35,6 +36,9 @@ const FIXERS: ReadonlyArray<ConnectorFixer> = [
   revisionsFixer,
   // Connector 1.8
   pluginUpdatesFixer,
+  // Connector 1.9
+  restoreCoreFilesFixer,
+  quarantineCoreFilesFixer,
 ];
 
 const BY_ID = new Map(FIXERS.map((fixer) => [fixer.id, fixer]));

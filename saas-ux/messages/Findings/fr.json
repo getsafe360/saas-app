@@ -10,7 +10,8 @@
       "noTitle": "La page n’a pas de titre à mesurer.",
       "noDescription": "La page n’a pas de méta-description à mesurer.",
       "pageNotRead": "Le contenu de la page n’a pas pu être lu.",
-      "needsPlugin17": "Nécessite le plugin GetSafe 360 1.7 ou plus récent."
+      "needsPlugin17": "Nécessite le plugin GetSafe 360 1.7 ou plus récent.",
+      "needsPluginVersion": "Nécessite le plugin GetSafe 360 {version} ou plus récent."
     },
     "wp-core-version": {
       "title": "Version du cœur WordPress",
@@ -94,6 +95,12 @@
       "unknown": "Les sommes de contrôle des fichiers du cœur n’ont pas pu être vérifiées.",
       "modified": "{count, plural, one {# fichier du cœur WordPress diffère} other {# fichiers du cœur WordPress diffèrent}} de la version officielle.",
       "clean": "Tous les fichiers du cœur correspondent aux sommes de contrôle officielles de WordPress."
+    },
+    "red-flag-unexpected-core-files": {
+      "title": "Fichiers inattendus dans les dossiers du cœur",
+      "recommendation": "Supprimez les fichiers PHP de wp-admin et wp-includes qui ne font pas partie de WordPress — une cachette courante pour les portes dérobées — puis changez tous les mots de passe.",
+      "found": "{count, plural, one {# fichier PHP dans wp-admin ou wp-includes ne fait} other {# fichiers PHP dans wp-admin ou wp-includes ne font}} pas partie de WordPress.",
+      "none": "wp-admin et wp-includes ne contiennent que des fichiers WordPress."
     },
     "wp-admin-username": {
       "title": "Nom d’administrateur prévisible",

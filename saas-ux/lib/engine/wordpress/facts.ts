@@ -85,6 +85,8 @@ export interface WordPressFacts {
   redFlags: {
     uploadsPhpFiles: number | null;
     coreModifiedFiles: number | null;
+    /** Null before connector 1.9 or when the scan ran out of time. */
+    unexpectedCoreFiles: number | null;
   };
   seo: {
     sitemapReachable: boolean | null;
@@ -196,6 +198,7 @@ export function buildWordPressFacts(apiData: Loose): WordPressFacts {
     redFlags: {
       uploadsPhpFiles: asNumber(audit?.redFlags.uploadsPhpFiles),
       coreModifiedFiles: asNumber(audit?.redFlags.coreModifiedFiles),
+      unexpectedCoreFiles: asNumber(audit?.redFlags.unexpectedCoreFiles),
     },
     seo: {
       sitemapReachable: asBool(telemetry.seo?.sitemapReachable),

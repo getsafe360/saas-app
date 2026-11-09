@@ -35,3 +35,4 @@ SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null' EXIT
 for _ in $(seq 1 20); do curl -s --noproxy '*' -o /dev/null "http://127.0.0.1:$PORT/" && break; sleep 0.5; done
 GS360_LOOPBACK="http://127.0.0.1:$PORT" $WP eval-file "$HERE/plugin-updates-test.php"
+GS360_LOOPBACK="http://127.0.0.1:$PORT" $WP eval-file "$HERE/core-integrity-test.php"

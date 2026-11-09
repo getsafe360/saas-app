@@ -113,6 +113,9 @@ export type WordPressActionType =
   | 'cleanup_database'
   | 'update_plugins'
   | 'restore_plugins'
+  | 'restore_core_files'
+  | 'quarantine_core_files'
+  | 'restore_core_backup'
   | 'flush_cache'
   | 'verify_render';
 
@@ -210,6 +213,15 @@ export interface WordPressRestorePluginsPayload {
   restorePoints: string[];
 }
 
+/** `'modified'` restores every modified core file; `'unexpected'` quarantines every unexpected one. */
+export interface WordPressCoreFilesPayload {
+  paths: 'modified' | 'unexpected' | string[];
+}
+
+export interface WordPressCoreBackupPayload {
+  restorePoint: string;
+}
+
 export type WordPressConnectorActionRequest =
   | { id: string; type: 'update_connector_setting'; payload: WordPressConnectorSettingPayload }
   | { id: string; type: 'set_security_headers'; payload: WordPressSecurityHeadersPayload }
@@ -218,7 +230,10 @@ export type WordPressConnectorActionRequest =
   | { id: string; type: 'set_plugin_auto_updates'; payload: WordPressPluginAutoUpdatesPayload }
   | { id: string; type: 'cleanup_database'; payload: WordPressCleanupPayload }
   | { id: string; type: 'update_plugins'; payload: WordPressUpdatePluginsPayload }
-  | { id: string; type: 'restore_plugins'; payload: WordPressRestorePluginsPayload };
+  | { id: string; type: 'restore_plugins'; payload: WordPressRestorePluginsPayload }
+  | { id: string; type: 'restore_core_files'; payload: WordPressCoreFilesPayload }
+  | { id: string; type: 'quarantine_core_files'; payload: WordPressCoreFilesPayload }
+  | { id: string; type: 'restore_core_backup'; payload: WordPressCoreBackupPayload };
 
 export interface WordPressConnectorActionResult {
   id: string;

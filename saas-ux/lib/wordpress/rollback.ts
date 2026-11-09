@@ -64,6 +64,11 @@ export function parseRollbackRequest(raw: unknown): WordPressConnectorActionRequ
     return { id: value.id, type: 'set_default_role', payload: { role: payload.role } };
   }
 
+  if (value.type === 'restore_core_backup') {
+    if (typeof payload.restorePoint !== 'string' || !/^[a-f0-9]{32}$/.test(payload.restorePoint)) return null;
+    return { id: value.id, type: 'restore_core_backup', payload: { restorePoint: payload.restorePoint } };
+  }
+
   if (value.type === 'restore_plugins') {
     const ids = payload.restorePoints;
     if (!Array.isArray(ids) || ids.length === 0) return null;

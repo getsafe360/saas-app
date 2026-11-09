@@ -21,6 +21,9 @@ export const AUTOMATIC_FIXER_IDS: ReadonlySet<string> = new Set([
   'wordpress-limit-revisions',
   // Connector 1.8
   'wordpress-update-plugins',
+  // Connector 1.9
+  'wordpress-restore-core-files',
+  'wordpress-quarantine-core-files',
 ]);
 
 /**

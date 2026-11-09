@@ -10,7 +10,8 @@
       "noTitle": "La pagina non ha un titolo da misurare.",
       "noDescription": "La pagina non ha una meta description da misurare.",
       "pageNotRead": "Non è stato possibile leggere il contenuto della pagina.",
-      "needsPlugin17": "Richiede il plugin GetSafe 360 1.7 o successivo."
+      "needsPlugin17": "Richiede il plugin GetSafe 360 1.7 o successivo.",
+      "needsPluginVersion": "Richiede il plugin GetSafe 360 {version} o successivo."
     },
     "wp-core-version": {
       "title": "Versione del core di WordPress",
@@ -94,6 +95,12 @@
       "unknown": "Non è stato possibile verificare i checksum dei file del core.",
       "modified": "{count, plural, one {# file del core di WordPress differisce} other {# file del core di WordPress differiscono}} dalla versione ufficiale.",
       "clean": "Tutti i file del core corrispondono ai checksum ufficiali di WordPress."
+    },
+    "red-flag-unexpected-core-files": {
+      "title": "File inattesi nelle cartelle del core",
+      "recommendation": "Rimuovi i file PHP in wp-admin e wp-includes che non fanno parte di WordPress — un nascondiglio comune per le backdoor — e poi cambia tutte le password.",
+      "found": "{count, plural, one {# file PHP in wp-admin o wp-includes non fa} other {# file PHP in wp-admin o wp-includes non fanno}} parte di WordPress.",
+      "none": "wp-admin e wp-includes contengono solo file di WordPress."
     },
     "wp-admin-username": {
       "title": "Nome utente amministratore prevedibile",

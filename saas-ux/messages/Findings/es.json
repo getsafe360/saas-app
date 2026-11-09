@@ -10,7 +10,8 @@
       "noTitle": "La página no tiene título que medir.",
       "noDescription": "La página no tiene meta descripción que medir.",
       "pageNotRead": "No se pudo leer el contenido de la página.",
-      "needsPlugin17": "Requiere el plugin GetSafe 360 1.7 o posterior."
+      "needsPlugin17": "Requiere el plugin GetSafe 360 1.7 o posterior.",
+      "needsPluginVersion": "Requiere el plugin GetSafe 360 {version} o posterior."
     },
     "wp-core-version": {
       "title": "Versión del núcleo de WordPress",
@@ -94,6 +95,12 @@
       "unknown": "No se pudieron verificar las sumas de comprobación del núcleo.",
       "modified": "{count, plural, one {# archivo del núcleo de WordPress difiere} other {# archivos del núcleo de WordPress difieren}} de la versión oficial.",
       "clean": "Todos los archivos del núcleo coinciden con las sumas de comprobación oficiales de WordPress."
+    },
+    "red-flag-unexpected-core-files": {
+      "title": "Archivos inesperados en carpetas del núcleo",
+      "recommendation": "Elimina los archivos PHP de wp-admin y wp-includes que no forman parte de WordPress —un escondite habitual de puertas traseras— y después cambia todas las contraseñas.",
+      "found": "{count, plural, one {# archivo PHP en wp-admin o wp-includes no forma} other {# archivos PHP en wp-admin o wp-includes no forman}} parte de WordPress.",
+      "none": "wp-admin y wp-includes solo contienen archivos de WordPress."
     },
     "wp-admin-username": {
       "title": "Nombre de administrador predecible",

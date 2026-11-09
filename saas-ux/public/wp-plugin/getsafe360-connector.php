@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GetSafe 360 AI Connector
  * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 1.8.0
+ * Version: 1.9.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
@@ -20,7 +20,7 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '1.8.0';
+  const VERSION = '1.9.0';
   const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';
   const OPTION = 'getsafe360_connector';
   const ACTION_STATE_OPTION = 'getsafe360_action_state';
@@ -1171,6 +1171,9 @@ class GetSafe360_Connector {
       return new \WP_Error('restore_missing', 'The restore point no longer exists.');
     }
     $point = $points[$id];
+    if (isset($point['kind']) && $point['kind'] === 'core') {
+      return new \WP_Error('restore_missing', 'That restore point holds core files, not a plugin.');
+    }
     $zip = $this->backup_dir() . "/$id.zip";
     if (!file_exists($zip)) {
       return new \WP_Error('restore_missing', 'The restore point file is missing.');
@@ -1388,6 +1391,451 @@ class GetSafe360_Connector {
       $message .= sprintf(' %d could not be restored: %s', count($errors), implode('; ', array_map(function ($e) { return $e['plugin'] . ' (' . $e['reason'] . ')'; }, $errors)));
     }
     return $this->action_result($action_id, $type, $status, $message, ['restored' => $restored, 'errors' => $errors]);
+  }
+
+  // ---------- 1.9 core file integrity ----------
+
+  /** Diffs sent to the SaaS are capped; they are reviewed, never stored long-term. */
+  const CORE_DIFF_MAX_BYTES = 20000;
+  const CORE_FILE_MAX_BYTES = 1048576;
+  const CORE_SCAN_BUDGET_SECONDS = 8.0;
+  const CORE_FILES_PER_ACTION = 50;
+
+  /**
+   * Official checksums for this WordPress version, cached for a day. With a
+   * $deadline the download counts against that time budget.
+   */
+  private function fetch_core_checksums($deadline = null) {
+    $version = get_bloginfo('version');
+    $cache_key = 'getsafe360_core_sums_' . md5($version . '|' . get_locale());
+    $cached = get_site_transient($cache_key);
+    if (is_array($cached) && !empty($cached)) {
+      return $cached;
+    }
+    if (!function_exists('get_core_checksums')) {
+      require_once ABSPATH . 'wp-admin/includes/update.php';
+    }
+    $cap_timeout = function ($args, $url) use ($deadline) {
+      if ($deadline !== null && strpos($url, 'api.wordpress.org/core/checksums') !== false) {
+        $args['timeout'] = max(1, min((float) $args['timeout'], $deadline - microtime(true)));
+      }
+      return $args;
+    };
+    add_filter('http_request_args', $cap_timeout, 10, 2);
+    try {
+      foreach (array_unique([get_locale(), 'en_US']) as $locale) {
+        if ($deadline !== null && $deadline - microtime(true) < 1.0) {
+          return null;
+        }
+        $checksums = get_core_checksums($version, $locale);
+        if (is_array($checksums) && !empty($checksums)) {
+          set_site_transient($cache_key, $checksums, DAY_IN_SECONDS);
+          return $checksums;
+        }
+      }
+    } finally {
+      remove_filter('http_request_args', $cap_timeout, 10);
+    }
+    return null;
+  }
+
+  /** A relative core path we may read or change: no traversal, never wp-content or wp-config.php. */
+  private function is_safe_core_path($path) {
+    return is_string($path)
+      && preg_match('#^[A-Za-z0-9._/-]+$#', $path)
+      && strpos($path, '..') === false
+      && strpos($path, 'wp-content/') !== 0
+      && $path !== 'wp-config.php';
+  }
+
+  /** PHP files in wp-admin/ or wp-includes/ that are not part of WordPress. */
+  private function is_unexpected_candidate($path) {
+    return $this->is_safe_core_path($path) && preg_match('#^(wp-admin|wp-includes)/.+\.php$#', $path);
+  }
+
+  /**
+   * Scans core files under a time budget. Returns ['modified' => paths,
+   * 'unexpected' => paths, 'complete' => bool] or null without checksums.
+   */
+  private function scan_core_files($deadline, $with_modified = true) {
+    $checksums = $this->fetch_core_checksums($deadline);
+    if (!is_array($checksums)) {
+      return null;
+    }
+    $modified = [];
+    $complete = true;
+    foreach ($with_modified ? $checksums : [] as $file => $md5) {
+      if (microtime(true) > $deadline) {
+        $complete = false;
+        break;
+      }
+      if (!$this->is_safe_core_path($file)) {
+        continue;
+      }
+      $path = ABSPATH . $file;
+      if (is_file($path) && md5_file($path) !== $md5) {
+        $modified[] = $file;
+      }
+    }
+
+    $unexpected = [];
+    foreach (['wp-admin', 'wp-includes'] as $dir) {
+      if (!$complete || !is_dir(ABSPATH . $dir)) {
+        continue;
+      }
+      $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(ABSPATH . $dir, \FilesystemIterator::SKIP_DOTS));
+      foreach ($it as $file) {
+        if (microtime(true) > $deadline) {
+          $complete = false;
+          break 2;
+        }
+        $rel = str_replace('\\', '/', substr($file->getPathname(), strlen(ABSPATH)));
+        if ($file->isFile() && !isset($checksums[$rel]) && $this->is_unexpected_candidate($rel)) {
+          $unexpected[] = $rel;
+        }
+      }
+    }
+    sort($modified);
+    sort($unexpected);
+    return ['modified' => $modified, 'unexpected' => $unexpected, 'complete' => $complete];
+  }
+
+  /** Downloads the official copy of a core file and checks it against the official checksum. */
+  private function official_core_file($path, $checksums) {
+    if (!isset($checksums[$path])) {
+      return new \WP_Error('not_core', 'Not a WordPress core file.');
+    }
+    $url = 'https://core.svn.wordpress.org/tags/' . rawurlencode(get_bloginfo('version')) . '/' . implode('/', array_map('rawurlencode', explode('/', $path)));
+    $response = wp_remote_get($url, ['timeout' => 15]);
+    if (is_wp_error($response) || (int) wp_remote_retrieve_response_code($response) !== 200) {
+      return new \WP_Error('download', sprintf('The official copy of %s could not be downloaded.', $path));
+    }
+    $body = wp_remote_retrieve_body($response);
+    if (md5($body) !== $checksums[$path]) {
+      return new \WP_Error('checksum', sprintf('The downloaded copy of %s does not match the official checksum.', $path));
+    }
+    return $body;
+  }
+
+  private function split_lines($text) {
+    $lines = explode("\n", str_replace("\r\n", "\n", (string) $text));
+    if (end($lines) === '') {
+      array_pop($lines);
+    }
+    return $lines;
+  }
+
+  /** Unified diff (3 lines of context), capped at $max_bytes. Returns [text, truncated]. */
+  private function unified_diff($old_text, $new_text, $max_bytes) {
+    if (!class_exists('Text_Diff', false)) {
+      require_once ABSPATH . WPINC . '/Text/Diff.php';
+    }
+    $diff = new \Text_Diff('auto', [$this->split_lines($old_text), $this->split_lines($new_text)]);
+    $lines = [];
+    foreach ($diff->getDiff() as $op) {
+      if ($op instanceof \Text_Diff_Op_copy) {
+        foreach ((array) $op->orig as $line) {
+          $lines[] = [' ', $line];
+        }
+        continue;
+      }
+      foreach (is_array($op->orig) ? $op->orig : [] as $line) {
+        $lines[] = ['-', $line];
+      }
+      foreach (is_array($op->final) ? $op->final : [] as $line) {
+        $lines[] = ['+', $line];
+      }
+    }
+
+    $count = count($lines);
+    $keep = array_fill(0, $count, false);
+    foreach ($lines as $i => $line) {
+      if ($line[0] !== ' ') {
+        for ($j = max(0, $i - 3); $j <= min($count - 1, $i + 3); $j++) {
+          $keep[$j] = true;
+        }
+      }
+    }
+
+    $out = '';
+    $old = 0;
+    $new = 0;
+    $i = 0;
+    while ($i < $count) {
+      if (!$keep[$i]) {
+        $old++;
+        $new++;
+        $i++;
+        continue;
+      }
+      $start_old = $old + 1;
+      $start_new = $new + 1;
+      $body = '';
+      $old_count = 0;
+      $new_count = 0;
+      while ($i < $count && $keep[$i]) {
+        list($kind, $text) = $lines[$i];
+        $body .= $kind . $text . "\n";
+        if ($kind !== '+') { $old++; $old_count++; }
+        if ($kind !== '-') { $new++; $new_count++; }
+        $i++;
+      }
+      $out .= sprintf("@@ -%d,%d +%d,%d @@\n", $start_old, $old_count, $start_new, $new_count) . $body;
+      if (strlen($out) > $max_bytes) {
+        return [substr($out, 0, $max_bytes), true];
+      }
+    }
+    return [$out, false];
+  }
+
+  /** GET /core-files — paths of modified and unexpected core files (no contents). */
+  public function route_core_files(\WP_REST_Request $req) {
+    $scan = $this->scan_core_files(microtime(true) + self::CORE_SCAN_BUDGET_SECONDS);
+    if ($scan === null) {
+      return new \WP_Error('checksums_unavailable', 'Official WordPress checksums could not be loaded.', ['status' => 503]);
+    }
+    return [
+      'success'    => true,
+      'version'    => get_bloginfo('version'),
+      'modified'   => $scan['modified'],
+      'unexpected' => $scan['unexpected'],
+      'complete'   => $scan['complete'],
+    ];
+  }
+
+  /**
+   * GET /core-files/diff?path=… — the changed lines of one core file against
+   * the official copy, or the start of an unexpected file. Only core
+   * locations; never wp-config.php or wp-content.
+   */
+  public function route_core_file_diff(\WP_REST_Request $req) {
+    $path = (string) $req->get_param('path');
+    if (!$this->is_safe_core_path($path) || !is_file(ABSPATH . $path)) {
+      return new \WP_Error('invalid_path', 'Not a core file on this site.', ['status' => 400]);
+    }
+    $checksums = $this->fetch_core_checksums(microtime(true) + 5.0);
+    if (!is_array($checksums)) {
+      return new \WP_Error('checksums_unavailable', 'Official WordPress checksums could not be loaded.', ['status' => 503]);
+    }
+    $size = (int) @filesize(ABSPATH . $path);
+    $current = $size <= self::CORE_FILE_MAX_BYTES ? (string) @file_get_contents(ABSPATH . $path) : null;
+
+    if (isset($checksums[$path])) {
+      if (md5_file(ABSPATH . $path) === $checksums[$path]) {
+        return ['success' => true, 'path' => $path, 'kind' => 'unchanged', 'diff' => '', 'truncated' => false];
+      }
+      if ($current === null) {
+        return ['success' => true, 'path' => $path, 'kind' => 'modified', 'diff' => null, 'truncated' => true, 'size' => $size];
+      }
+      $official = $this->official_core_file($path, $checksums);
+      if (is_wp_error($official)) {
+        return new \WP_Error($official->get_error_code(), $official->get_error_message(), ['status' => 502]);
+      }
+      list($diff, $truncated) = $this->unified_diff($official, $current, self::CORE_DIFF_MAX_BYTES);
+      return ['success' => true, 'path' => $path, 'kind' => 'modified', 'diff' => $diff, 'truncated' => $truncated, 'size' => $size];
+    }
+
+    if (!$this->is_unexpected_candidate($path)) {
+      return new \WP_Error('invalid_path', 'Only files in wp-admin and wp-includes can be reviewed.', ['status' => 400]);
+    }
+    list($diff, $truncated) = $this->unified_diff('', (string) $current, self::CORE_DIFF_MAX_BYTES);
+    return ['success' => true, 'path' => $path, 'kind' => 'unexpected', 'diff' => $diff, 'truncated' => $truncated || $current === null, 'size' => $size];
+  }
+
+  /** Zips the given core files (relative paths) into a restore point of kind "core". */
+  private function create_core_restore_point($paths) {
+    $dir = $this->ensure_backup_dir();
+    if (!$dir) {
+      return new \WP_Error('backup_dir', 'The restore-point folder could not be created.');
+    }
+    $id = bin2hex(random_bytes(16));
+    $zip_path = "$dir/$id.zip";
+    if (!class_exists('ZipArchive')) {
+      return new \WP_Error('backup_zip', 'PHP ZipArchive is required to save core files before changing them.');
+    }
+    $zip = new \ZipArchive();
+    if ($zip->open($zip_path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+      return new \WP_Error('backup_zip', 'The restore point could not be written.');
+    }
+    foreach ($paths as $path) {
+      $zip->addFile(ABSPATH . $path, $path);
+    }
+    if (!$zip->close() || !file_exists($zip_path)) {
+      @unlink($zip_path);
+      return new \WP_Error('backup_zip', 'The restore point could not be written.');
+    }
+    $points = $this->get_restore_points();
+    $points[$id] = ['kind' => 'core', 'plugin' => '__core__', 'files' => array_values($paths), 'createdAt' => time()];
+    $this->save_restore_points($points);
+    return $id;
+  }
+
+  /** Puts core files back from a "core" restore point: checked in staging first, then copied into place. */
+  private function restore_core_point($id) {
+    global $wp_filesystem;
+    $points = $this->get_restore_points();
+    if (!preg_match('/^[a-f0-9]{32}$/', $id) || !isset($points[$id]) || (isset($points[$id]['kind']) ? $points[$id]['kind'] : '') !== 'core') {
+      return new \WP_Error('restore_missing', 'The restore point no longer exists.');
+    }
+    $zip = $this->backup_dir() . "/$id.zip";
+    if (!file_exists($zip) || !$this->init_filesystem()) {
+      return new \WP_Error('restore_missing', 'The restore point file is missing or files cannot be written.');
+    }
+    $files = array_values(array_filter((array) $points[$id]['files'], function ($path) {
+      return $this->is_safe_core_path($path);
+    }));
+    $staging = $this->backup_dir() . '/restore-' . bin2hex(random_bytes(8));
+    $unzipped = unzip_file($zip, $staging);
+    foreach ($files as $path) {
+      if (is_wp_error($unzipped) || !is_file("$staging/$path")) {
+        $wp_filesystem->delete($staging, true);
+        return new \WP_Error('restore_corrupt', 'The restore point could not be unpacked; nothing was changed.');
+      }
+    }
+    foreach ($files as $path) {
+      wp_mkdir_p(dirname(ABSPATH . $path));
+      if (!@copy("$staging/$path", ABSPATH . $path)) {
+        $wp_filesystem->delete($staging, true);
+        return new \WP_Error('restore_write', sprintf('%s could not be written.', $path));
+      }
+    }
+    $wp_filesystem->delete($staging, true);
+    return true;
+  }
+
+  /**
+   * restore_core_files: replaces modified core files with the official copies
+   * (each checked against the official checksum before anything is written).
+   * `paths: "modified"` or a list. The previous contents go into a restore
+   * point; if the site stops loading, they are put back at once.
+   */
+  private function apply_restore_core_files_action($action_id, $payload) {
+    $type = 'restore_core_files';
+    if (!$this->init_filesystem()) {
+      return $this->action_result($action_id, $type, 'failed', 'WordPress cannot write files directly on this server. Reinstall WordPress from Dashboard → Updates instead.');
+    }
+    $checksums = $this->fetch_core_checksums(microtime(true) + 5.0);
+    if (!is_array($checksums)) {
+      return $this->action_result($action_id, $type, 'failed', 'Official WordPress checksums could not be loaded. Nothing was changed.');
+    }
+
+    $requested = isset($payload['paths']) ? $payload['paths'] : 'modified';
+    if ($requested === 'modified') {
+      $scan = $this->scan_core_files(microtime(true) + self::CORE_SCAN_BUDGET_SECONDS);
+      $paths = $scan ? $scan['modified'] : [];
+    } else {
+      $paths = array_values(array_filter((array) $requested, function ($p) use ($checksums) {
+        return $this->is_safe_core_path($p) && isset($checksums[$p]) && is_file(ABSPATH . $p) && md5_file(ABSPATH . $p) !== $checksums[$p];
+      }));
+    }
+    $paths = array_slice(array_values(array_unique($paths)), 0, self::CORE_FILES_PER_ACTION);
+    if (empty($paths)) {
+      return $this->action_result($action_id, $type, 'skipped', 'All core files already match the official release.');
+    }
+
+    // Download and check every official copy first: all or nothing.
+    $official = [];
+    foreach ($paths as $path) {
+      $content = $this->official_core_file($path, $checksums);
+      if (is_wp_error($content)) {
+        return $this->action_result($action_id, $type, 'failed', $content->get_error_message() . ' Nothing was changed.');
+      }
+      $official[$path] = $content;
+    }
+
+    $baseline = $this->site_responds();
+    $point = $this->create_core_restore_point($paths);
+    if (is_wp_error($point)) {
+      return $this->action_result($action_id, $type, 'failed', $point->get_error_message() . ' Nothing was changed.');
+    }
+    foreach ($official as $path => $content) {
+      if (@file_put_contents(ABSPATH . $path, $content) === false) {
+        $this->restore_core_point($point);
+        return $this->action_result($action_id, $type, 'failed', sprintf('%s could not be written; every file was put back.', $path));
+      }
+    }
+    if ($baseline === true && $this->site_responds() === false) {
+      $this->restore_core_point($point);
+      return $this->action_result($action_id, $type, 'failed', 'The site stopped loading after the official files were restored, so the previous files were put back. The site may depend on these changes; review them with a developer.');
+    }
+
+    delete_transient('getsafe360_audit_scans');
+    return $this->action_result(
+      $action_id, $type, 'applied',
+      sprintf('%d core file(s) restored to the official WordPress %s version.', count($paths), get_bloginfo('version')),
+      ['files' => $paths],
+      ['id' => $action_id . '-rollback', 'type' => 'restore_core_backup', 'payload' => ['restorePoint' => $point]]
+    );
+  }
+
+  /**
+   * quarantine_core_files: removes PHP files from wp-admin/wp-includes that are
+   * not part of WordPress (a common hiding place for backdoors). They are kept
+   * in a restore point and come back on undo, or at once if the site breaks.
+   */
+  private function apply_quarantine_core_files_action($action_id, $payload) {
+    $type = 'quarantine_core_files';
+    if (!$this->init_filesystem()) {
+      return $this->action_result($action_id, $type, 'failed', 'WordPress cannot write files directly on this server. Ask your host to remove these files.');
+    }
+    $checksums = $this->fetch_core_checksums(microtime(true) + 5.0);
+    if (!is_array($checksums)) {
+      return $this->action_result($action_id, $type, 'failed', 'Official WordPress checksums could not be loaded. Nothing was changed.');
+    }
+    $requested = isset($payload['paths']) ? $payload['paths'] : 'unexpected';
+    if ($requested === 'unexpected') {
+      $scan = $this->scan_core_files(microtime(true) + self::CORE_SCAN_BUDGET_SECONDS);
+      $paths = $scan ? $scan['unexpected'] : [];
+    } else {
+      $paths = array_values(array_filter((array) $requested, function ($p) use ($checksums) {
+        return $this->is_unexpected_candidate($p) && !isset($checksums[$p]) && is_file(ABSPATH . $p);
+      }));
+    }
+    $paths = array_slice(array_values(array_unique($paths)), 0, self::CORE_FILES_PER_ACTION);
+    if (empty($paths)) {
+      return $this->action_result($action_id, $type, 'skipped', 'No unexpected files were found in wp-admin or wp-includes.');
+    }
+
+    $baseline = $this->site_responds();
+    $point = $this->create_core_restore_point($paths);
+    if (is_wp_error($point)) {
+      return $this->action_result($action_id, $type, 'failed', $point->get_error_message() . ' Nothing was changed.');
+    }
+    foreach ($paths as $path) {
+      @unlink(ABSPATH . $path);
+    }
+    if ($baseline === true && $this->site_responds() === false) {
+      $this->restore_core_point($point);
+      return $this->action_result($action_id, $type, 'failed', 'The site stopped loading without these files, so they were put back. Review them with a developer.');
+    }
+
+    delete_transient('getsafe360_audit_scans');
+    return $this->action_result(
+      $action_id, $type, 'applied',
+      sprintf('%d unexpected file(s) moved to quarantine.', count($paths)),
+      ['files' => $paths],
+      ['id' => $action_id . '-rollback', 'type' => 'restore_core_backup', 'payload' => ['restorePoint' => $point]]
+    );
+  }
+
+  /** restore_core_backup: the undo of restore_core_files and quarantine_core_files. */
+  private function apply_restore_core_backup_action($action_id, $payload) {
+    $type = 'restore_core_backup';
+    $id = isset($payload['restorePoint']) ? (string) $payload['restorePoint'] : '';
+    $result = $this->restore_core_point($id);
+    if ($result !== true) {
+      return $this->action_result($action_id, $type, 'failed', $result->get_error_message());
+    }
+    delete_transient('getsafe360_audit_scans');
+    $points = $this->get_restore_points();
+    return $this->action_result($action_id, $type, 'applied', sprintf('%d file(s) put back as they were.', count($points[$id]['files'])), ['files' => $points[$id]['files']]);
+  }
+
+  /** Cached file-scan count for the audit: PHP files in wp-admin/wp-includes that are not part of WordPress. */
+  private function audit_unexpected_core_files($deadline) {
+    // The modified-file count has its own scan; here only the directory walk is needed.
+    $scan = $this->scan_core_files($deadline, false);
+    return ($scan === null || !$scan['complete']) ? null : count($scan['unexpected']);
   }
 
   // ---------- site audit (read-only) ----------
@@ -1682,6 +2130,7 @@ class GetSafe360_Connector {
     $result = [
       'uploadsPhpFiles'    => $this->audit_count_uploads_php($deadline),
       'coreModifiedFiles'  => $this->audit_core_modified_files($deadline),
+      'unexpectedCoreFiles' => $this->audit_unexpected_core_files($deadline),
       'scannedAt'          => gmdate('c'),
     ];
     set_transient('getsafe360_audit_scans', $result, self::AUDIT_CACHE_TTL);
@@ -1725,32 +2174,7 @@ class GetSafe360_Connector {
   }
 
   private function audit_core_modified_files($deadline) {
-    if (!function_exists('get_core_checksums')) {
-      require_once ABSPATH . 'wp-admin/includes/update.php';
-    }
-
-    // The checksum download counts against the same budget as the scans.
-    $cap_timeout = function ($args, $url) use ($deadline) {
-      if (strpos($url, 'api.wordpress.org/core/checksums') !== false) {
-        $args['timeout'] = max(1, min((float) $args['timeout'], $deadline - microtime(true)));
-      }
-      return $args;
-    };
-    add_filter('http_request_args', $cap_timeout, 10, 2);
-    try {
-      $checksums = null;
-      foreach (array_unique([get_locale(), 'en_US']) as $locale) {
-        if ($deadline - microtime(true) < 1.0) {
-          return null;
-        }
-        $checksums = get_core_checksums(get_bloginfo('version'), $locale);
-        if (is_array($checksums) && !empty($checksums)) {
-          break;
-        }
-      }
-    } finally {
-      remove_filter('http_request_args', $cap_timeout, 10);
-    }
+    $checksums = $this->fetch_core_checksums($deadline);
     if (!is_array($checksums) || empty($checksums)) {
       return null;
     }
@@ -1874,6 +2298,19 @@ class GetSafe360_Connector {
       'methods' => 'GET',
       'callback' => [$this, 'route_audit'],
       'permission_callback' => [$this, 'auth_api_key']
+    ]);
+
+    // Core integrity (1.9): modified/unexpected core file paths, and one file's changed lines
+    register_rest_route('getsafe360/v1', '/core-files', [
+      'methods' => 'GET',
+      'callback' => [$this, 'route_core_files'],
+      'permission_callback' => [$this, 'auth_api_key']
+    ]);
+    register_rest_route('getsafe360/v1', '/core-files/diff', [
+      'methods' => 'GET',
+      'callback' => [$this, 'route_core_file_diff'],
+      'permission_callback' => [$this, 'auth_api_key'],
+      'args' => ['path' => ['required' => true, 'type' => 'string']],
     ]);
 
     // Actions endpoint - apply allowlisted connector-native mutations
@@ -2084,6 +2521,9 @@ class GetSafe360_Connector {
         'cleanup_database'        => 'apply_cleanup_action',
         'update_plugins'          => 'apply_update_plugins_action',
         'restore_plugins'         => 'apply_restore_plugins_action',
+        'restore_core_files'      => 'apply_restore_core_files_action',
+        'quarantine_core_files'   => 'apply_quarantine_core_files_action',
+        'restore_core_backup'     => 'apply_restore_core_backup_action',
       ];
       if (isset($handlers[$action_type])) {
         $results[] = $this->{$handlers[$action_type]}($action_id, $action_payload);
@@ -2255,6 +2695,7 @@ class GetSafe360_Connector {
         'autoUpdatesPlugins'   => true,
         'databaseCleanup'      => true,
         'pluginUpdates'        => true,
+        'coreIntegrity'        => true,
       ],
     ];
   }
