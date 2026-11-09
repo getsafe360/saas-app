@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Globe,
   Link as LinkIcon,
@@ -53,9 +54,26 @@ function detectPlatform(cmsType: string): Platform {
   return PLATFORMS.find((p) => p.id === cmsType.toLowerCase()) ?? PLATFORMS[PLATFORMS.length - 1];
 }
 
+/** Platforms whose name is a description rather than a brand. */
+const TRANSLATED_PLATFORMS = new Set(["custom", "unknown"]);
+
+type Translator = ReturnType<typeof useTranslations<"SiteCockpit.connection">>;
+
+function platformName(platform: Platform, t: Translator): string {
+  return TRANSLATED_PLATFORMS.has(platform.id) ? t(`platforms.${platform.id as "custom" | "unknown"}`) : platform.name;
+}
+
+/** Renders `<code>head</code>` in a message as the literal tag <head>. */
+const headTag = (chunks: React.ReactNode) => (
+  <code className="text-xs px-1.5 py-0.5 rounded" style={{ background: "var(--background-default)" }}>
+    &lt;{chunks}&gt;
+  </code>
+);
+
 // ─── Uptime sparkline ─────────────────────────────────────────────────────────
 
 function UptimeSparkline({ data }: { data: (0 | 1)[] }) {
+  const t = useTranslations("SiteCockpit.connection");
   const w = 84;
   const h = 20;
   const gap = w / (data.length - 1);
@@ -88,7 +106,7 @@ function UptimeSparkline({ data }: { data: (0 | 1)[] }) {
         ))}
       </svg>
       <span className="text-xs" style={{ color: "var(--text-subtle)" }}>
-        {upPct}% uptime · 7d
+        {t("uptime", { percent: upPct })}
       </span>
     </div>
   );
@@ -97,6 +115,7 @@ function UptimeSparkline({ data }: { data: (0 | 1)[] }) {
 // ─── Code block with copy ─────────────────────────────────────────────────────
 
 function CodeBlock({ code, language = "html" }: { code: string; language?: string }) {
+  const t = useTranslations("SiteCockpit.connection");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -118,7 +137,7 @@ function CodeBlock({ code, language = "html" }: { code: string; language?: strin
           style={{ color: "var(--text-subtle)" }}
         >
           {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-          {copied ? "Copied!" : "Copy"}
+          {copied ? t("copied") : t("copy")}
         </button>
       </div>
       <pre className="p-3 text-xs overflow-x-auto leading-relaxed" style={{ color: "var(--text-primary)" }}>
@@ -131,13 +150,14 @@ function CodeBlock({ code, language = "html" }: { code: string; language?: strin
 // ─── Coming soon badge ────────────────────────────────────────────────────────
 
 function SoonBadge() {
+  const t = useTranslations("SiteCockpit.connection");
   return (
     <span
       className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tracking-wide"
       style={{ background: "var(--border-default)", color: "var(--text-subtle)" }}
     >
       <Lock className="h-2 w-2" />
-      Soon
+      {t("soon")}
     </span>
   );
 }
@@ -159,7 +179,11 @@ function MiniBenefit({ icon, title, text }: { icon: React.ReactNode; title: stri
   );
 }
 
+const WITHOUT_CONNECTION = ["external", "perfSeo", "a11y", "headers", "structured"] as const;
+const WITH_CONNECTION = ["workflows", "fixes", "diagnostics", "monitoring", "audit"] as const;
+
 function SiteConnectionInfoModal({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("SiteCockpit.connection");
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -183,14 +207,14 @@ function SiteConnectionInfoModal({ onClose }: { onClose: () => void }) {
               <Info className="h-3.5 w-3.5" />
             </span>
             <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-              Why connect?
+              {t("whyConnect")}
             </h2>
           </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg transition-colors hover:opacity-70 cursor-pointer"
             style={{ color: "var(--text-subtle)" }}
-            aria-label="Close"
+            aria-label={t("close")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -199,13 +223,10 @@ function SiteConnectionInfoModal({ onClose }: { onClose: () => void }) {
         {/* Body */}
         <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-            Analysis works without a connection. Optimization needs trusted access.
+            {t("info.lead")}
           </p>
           <p className="text-sm leading-relaxed" style={{ color: "var(--text-subtle)" }}>
-            GetSafe 360 AI can already inspect your public website from the outside — including
-            performance, SEO, accessibility, security headers, content quality, structured data,
-            and CMS signals. Connecting your site adds the secure layer required to diagnose
-            internal WordPress details and safely apply AI-assisted fixes.
+            {t("info.body")}
           </p>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -215,19 +236,13 @@ function SiteConnectionInfoModal({ onClose }: { onClose: () => void }) {
               style={{ background: "var(--background-default)", border: "1px solid var(--border-default)" }}
             >
               <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-subtle)" }}>
-                Available without connection
+                {t("info.withoutTitle")}
               </div>
               <ul className="space-y-1.5">
-                {[
-                  "External website analysis",
-                  "Performance and SEO checks",
-                  "Accessibility and content review",
-                  "Security header inspection",
-                  "Structured data validation",
-                ].map((item) => (
+                {WITHOUT_CONNECTION.map((item) => (
                   <li key={item} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-primary)" }}>
                     <Check className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: "var(--text-subtle)" }} />
-                    {item}
+                    {t(`info.without.${item}`)}
                   </li>
                 ))}
               </ul>
@@ -239,19 +254,13 @@ function SiteConnectionInfoModal({ onClose }: { onClose: () => void }) {
               style={{ background: "oklch(from var(--color-primary-500) l c h / 0.06)", border: "1px solid oklch(from var(--color-primary-500) l c h / 0.2)" }}
             >
               <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--color-primary-400, #60a5fa)" }}>
-                Unlocked after connection
+                {t("info.withTitle")}
               </div>
               <ul className="space-y-1.5">
-                {[
-                  "AI-powered optimization workflows",
-                  "Automated WordPress fixes",
-                  "CMS/plugin-level diagnostics",
-                  "Continuous monitoring",
-                  "Safe repair actions with audit history",
-                ].map((item) => (
+                {WITH_CONNECTION.map((item) => (
                   <li key={item} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-primary)" }}>
                     <CheckCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: "var(--color-primary-400, #60a5fa)" }} />
-                    {item}
+                    {t(`info.with.${item}`)}
                   </li>
                 ))}
               </ul>
@@ -261,18 +270,18 @@ function SiteConnectionInfoModal({ onClose }: { onClose: () => void }) {
           <div className="grid gap-3 sm:grid-cols-3">
             <MiniBenefit
               icon={<ShieldCheck className="h-4 w-4" />}
-              title="Secure"
-              text="Uses a trusted connector — never guesses from public HTML."
+              title={t("info.benefits.secure.title")}
+              text={t("info.benefits.secure.text")}
             />
             <MiniBenefit
               icon={<Wrench className="h-4 w-4" />}
-              title="Actionable"
-              text="Turns findings into fixes, not just recommendations."
+              title={t("info.benefits.actionable.title")}
+              text={t("info.benefits.actionable.text")}
             />
             <MiniBenefit
               icon={<Activity className="h-4 w-4" />}
-              title="Ongoing"
-              text="Keeps your site monitored after the first scan."
+              title={t("info.benefits.ongoing.title")}
+              text={t("info.benefits.ongoing.text")}
             />
           </div>
         </div>
@@ -312,7 +321,10 @@ export function ConnectionCard({
   wpVersion,
   pluginVersion,
 }: ConnectionCardProps) {
+  const t = useTranslations("SiteCockpit.connection");
+  const locale = useLocale();
   const platform = detectPlatform(cmsType);
+  const platformLabel = platformName(platform, t);
   const [forceWizard, setForceWizard] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
 
@@ -408,7 +420,7 @@ export function ConnectionCard({
             }}
           >
             <CheckCircle className="h-4 w-4 shrink-0" />
-            WordPress site connected — AI optimizations are now available.
+            {t("justConnected")}
           </div>
         )}
         <div className="flex items-center justify-between gap-3 mb-4">
@@ -424,12 +436,12 @@ export function ConnectionCard({
             </span>
             <div>
               <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-subtle)" }}>
-                Site Connection
+                {t("title")}
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                  Connected — {platform.name}
+                  {t("connectedTo", { platform: platformLabel })}
                 </span>
               </div>
             </div>
@@ -460,7 +472,8 @@ export function ConnectionCard({
             }}
             className="p-1.5 rounded-lg transition-colors hover:opacity-70"
             style={{ color: "var(--text-subtle)" }}
-            title="Refresh connection status"
+            title={t("refresh")}
+            aria-label={t("refresh")}
             disabled={isCheckingHealth}
           >
             <RefreshCw className={`h-4 w-4 ${isCheckingHealth ? "animate-spin" : ""}`} />
@@ -469,14 +482,14 @@ export function ConnectionCard({
 
         <div className="grid grid-cols-2 gap-3 mb-4 text-xs">
           <div>
-            <div style={{ color: "var(--text-subtle)" }}>Platform</div>
-            <div style={{ color: "var(--text-primary)" }}>{platform.name}</div>
+            <div style={{ color: "var(--text-subtle)" }}>{t("platform")}</div>
+            <div style={{ color: "var(--text-primary)" }}>{platformLabel}</div>
           </div>
           {lastConnected && (
             <div>
-              <div style={{ color: "var(--text-subtle)" }}>Connected since</div>
+              <div style={{ color: "var(--text-subtle)" }}>{t("connectedSince")}</div>
               <div style={{ color: "var(--text-primary)" }}>
-                {new Date(lastConnected).toLocaleDateString()}
+                {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(lastConnected))}
               </div>
             </div>
           )}
@@ -488,7 +501,7 @@ export function ConnectionCard({
           )}
           {pluginVersion && (
             <div>
-              <div style={{ color: "var(--text-subtle)" }}>Plugin</div>
+              <div style={{ color: "var(--text-subtle)" }}>{t("plugin")}</div>
               <div style={{ color: "var(--text-primary)" }}>v{pluginVersion}</div>
             </div>
           )}
@@ -506,7 +519,7 @@ export function ConnectionCard({
             className="text-xs underline opacity-50 hover:opacity-90 transition-opacity"
             style={{ color: "var(--text-subtle)" }}
           >
-            Reconnect or change connection method
+            {t("reconnect")}
           </button>
         </div>
       </div>
@@ -537,20 +550,20 @@ export function ConnectionCard({
         </span>
         <div className="flex-1">
           <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--text-subtle)" }}>
-            Site Connection
+            {t("title")}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-              Connect to enable AI optimization &amp; automated fixes.
+              {t("tagline")}
             </span>
             <button
               onClick={() => setShowInfoModal(true)}
               className="inline-flex items-center gap-1 text-xs transition-colors cursor-pointer hover:opacity-70 shrink-0"
               style={{ color: "var(--text-primary)" }}
-              aria-label="Why connect?"
+              aria-label={t("whyConnect")}
             >
               <Info className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Why connect?</span>
+              <span className="hidden sm:inline">{t("whyConnect")}</span>
             </button>
           </div>
         </div>
@@ -582,7 +595,7 @@ export function ConnectionCard({
         <div className="p-5 space-y-4">
           <div>
             <div className="text-xs font-medium mb-3" style={{ color: "var(--text-subtle)" }}>
-              Detected platform
+              {t("detect.detected")}
             </div>
             <div
               className="flex items-center gap-3 rounded-xl border p-3"
@@ -591,7 +604,7 @@ export function ConnectionCard({
               <Globe className="h-5 w-5 shrink-0" style={{ color: "var(--text-subtle)" }} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>
-                  {platform.name}
+                  {platformLabel}
                 </div>
                 <div className="text-xs truncate" style={{ color: "var(--text-subtle)" }}>{siteUrl}</div>
               </div>
@@ -601,7 +614,7 @@ export function ConnectionCard({
 
           <div>
             <div className="text-xs font-medium mb-2" style={{ color: "var(--text-subtle)" }}>
-              Not the right platform?
+              {t("detect.wrong")}
             </div>
             <select
               className="w-full rounded-lg border px-3 py-2 text-sm transition-colors focus:outline-none"
@@ -617,7 +630,7 @@ export function ConnectionCard({
               }}
             >
               {PLATFORMS.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id}>{platformName(p, t)}</option>
               ))}
             </select>
           </div>
@@ -627,7 +640,7 @@ export function ConnectionCard({
               onClick={() => setStep("method")}
               className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all duration-200 bg-blue-600 hover:bg-blue-700 active:brightness-95"
             >
-              Continue
+              {t("continue")}
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
@@ -638,7 +651,7 @@ export function ConnectionCard({
       {step === "method" && (
         <div className="p-5 space-y-3">
           <div className="text-xs font-medium mb-3" style={{ color: "var(--text-subtle)" }}>
-            Choose connection method
+            {t("method.title")}
           </div>
 
           {/* WordPress Plugin */}
@@ -660,16 +673,16 @@ export function ConnectionCard({
             </span>
             <div className="flex-1">
               <div className="text-sm font-semibold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-                WordPress Plugin
+                {t("method.wordpress.title")}
                 {platform.id === "wordpress" && (
                   <span className="text-xs px-1.5 py-0.5 rounded-full text-emerald-400 font-medium"
                     style={{ background: "oklch(from var(--category-performance) l c h / 0.12)" }}>
-                    Recommended
+                    {t("recommended")}
                   </span>
                 )}
               </div>
               <div className="text-xs mt-0.5" style={{ color: "var(--text-subtle)" }}>
-                Deep plugin/theme analysis, health checks, AI repair
+                {t("method.wordpress.description")}
               </div>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "var(--text-subtle)" }} />
@@ -689,16 +702,16 @@ export function ConnectionCard({
             </span>
             <div className="flex-1">
               <div className="text-sm font-semibold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-                JS Monitoring Snippet
+                {t("method.snippet.title")}
                 {platform.id !== "wordpress" && (
                   <span className="text-xs px-1.5 py-0.5 rounded-full text-emerald-400 font-medium"
                     style={{ background: "oklch(from var(--category-performance) l c h / 0.12)" }}>
-                    Recommended
+                    {t("recommended")}
                   </span>
                 )}
               </div>
               <div className="text-xs mt-0.5" style={{ color: "var(--text-subtle)" }}>
-                Works on any site — paste one tag into &lt;head&gt;
+                {t.rich("method.snippet.description", { code: headTag })}
               </div>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "var(--text-subtle)" }} />
@@ -718,10 +731,10 @@ export function ConnectionCard({
             </span>
             <div className="flex-1">
               <div className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                REST API Key
+                {t("method.apikey.title")}
               </div>
               <div className="text-xs mt-0.5" style={{ color: "var(--text-subtle)" }}>
-                For headless or API-driven sites — secure bearer token
+                {t("method.apikey.description")}
               </div>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "var(--text-subtle)" }} />
@@ -740,7 +753,7 @@ export function ConnectionCard({
             </span>
             <div className="flex-1">
               <div className="text-sm font-semibold flex items-center gap-2" style={{ color: "var(--text-subtle)" }}>
-                OAuth Integration
+                {t("method.oauth.title")}
                 <SoonBadge />
               </div>
               <div className="text-xs mt-0.5" style={{ color: "var(--text-subtle)" }}>
@@ -754,7 +767,7 @@ export function ConnectionCard({
             className="text-xs underline opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
             style={{ color: "var(--text-subtle)" }}
           >
-            ← Back
+            ← {t("back")}
           </button>
         </div>
       )}
@@ -796,7 +809,7 @@ export function ConnectionCard({
             className="text-xs underline opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
             style={{ color: "var(--text-subtle)" }}
           >
-            ← Back
+            ← {t("back")}
           </button>
         </div>
       )}
@@ -811,6 +824,7 @@ const SECONDARY_BTN =
   "inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--background-default)] font-medium text-[var(--text-subtle)] transition-colors hover:border-[var(--color-primary-500)] hover:bg-white/10 hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-50";
 
 function PluginDetectedBadge({ detected, version }: { detected: boolean | null; version?: string | null }) {
+  const t = useTranslations("SiteCockpit.connection");
   if (detected === null) return null;
   return detected ? (
     <div
@@ -818,7 +832,7 @@ function PluginDetectedBadge({ detected, version }: { detected: boolean | null; 
       style={{ background: "oklch(from var(--category-performance) l c h / 0.1)", border: "1px solid oklch(from var(--category-performance) l c h / 0.25)", color: "var(--category-performance)" }}
     >
       <CheckCircle className="h-3.5 w-3.5 shrink-0" />
-      {version ? `Plugin detected — version ${version}` : "Plugin detected on your site"}
+      {version ? t("pairing.detectedVersion", { version }) : t("pairing.detected")}
     </div>
   ) : (
     <div
@@ -826,12 +840,13 @@ function PluginDetectedBadge({ detected, version }: { detected: boolean | null; 
       style={{ background: "oklch(from #f59e0b l c h / 0.1)", border: "1px solid oklch(from #f59e0b l c h / 0.25)", color: "#fbbf24" }}
     >
       <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-      Plugin not detected — install it before pasting the code
+      {t("pairing.notDetected")}
     </div>
   );
 }
 
 function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPairing> }) {
+  const t = useTranslations("SiteCockpit.connection");
   const isGenerating = pairing.pairingStatus === "generating";
   const hasCode = !!pairing.pairCode;
   const isWaiting = pairing.pairingStatus === "waiting";
@@ -841,7 +856,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
   return (
     <div className="space-y-4">
       <div className="text-xs font-medium" style={{ color: "var(--text-subtle)" }}>
-        WordPress Plugin — 3 steps
+        {t("pairing.title")}
       </div>
 
       {/* Steps */}
@@ -849,7 +864,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
         {[
           {
             n: 1,
-            title: "Download & install plugin",
+            title: t("pairing.step1"),
             action: (
               <a
                 href="/wp-plugin/getsafe360-connector.zip"
@@ -857,13 +872,13 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
                 className={`${SECONDARY_BTN} text-xs px-3 py-1.5`}
               >
                 <ExternalLink className="h-3 w-3" />
-                Download Plugin
+                {t("pairing.download")}
               </a>
             ),
           },
           {
             n: 2,
-            title: "Generate your pairing code",
+            title: t("pairing.step2"),
             action: !hasCode ? (
               <button
                 onClick={() => pairing.startPairing()}
@@ -871,9 +886,9 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
                 className={`${SECONDARY_BTN} text-xs px-3 py-1.5`}
               >
                 {isGenerating ? (
-                  <><Loader2 className="h-3 w-3 animate-spin" />Generating…</>
+                  <><Loader2 className="h-3 w-3 animate-spin" />{t("pairing.generating")}</>
                 ) : (
-                  <><LinkIcon className="h-3 w-3" />Generate Code</>
+                  <><LinkIcon className="h-3 w-3" />{t("pairing.generate")}</>
                 )}
               </button>
             ) : (
@@ -893,18 +908,18 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
                     className={`${SECONDARY_BTN} px-2 py-1 text-xs`}
                   >
                     {pairing.copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                    {pairing.copied ? "Copied!" : "Copy"}
+                    {pairing.copied ? t("copied") : t("copy")}
                   </button>
                 </div>
                 <div className="text-xs" style={{ color: "var(--text-subtle)" }}>
-                  Expires in ~10 min · Single use only
+                  {t("pairing.expires")}
                 </div>
               </div>
             ),
           },
           {
             n: 3,
-            title: "Paste code in WordPress Admin → GetSafe 360 AI",
+            title: t("pairing.step3"),
             action: null,
           },
         ].map(({ n, title, action }) => (
@@ -933,7 +948,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
           style={{ background: "oklch(from var(--color-primary-500, #3b82f6) l c h / 0.1)", border: "1px solid oklch(from var(--color-primary-500, #3b82f6) l c h / 0.25)", color: "var(--color-primary-400, #60a5fa)" }}
         >
           <div className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "currentColor" }} />
-          Waiting for plugin confirmation…
+          {t("pairing.messages.waiting")}
         </div>
       )}
 
@@ -944,14 +959,14 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
             style={{ background: "oklch(from #ef4444 l c h / 0.1)", border: "1px solid oklch(from #ef4444 l c h / 0.25)", color: "#fca5a5" }}
           >
             <AlertCircle className="h-4 w-4 shrink-0" />
-            {pairing.pairingMessage}
+            {t(`pairing.messages.${pairing.pairingMessageKey ?? "generic"}`)}
           </div>
           <button
             onClick={() => pairing.startPairing()}
             className={`${SECONDARY_BTN} text-xs px-3 py-1.5`}
           >
             <RefreshCw className="h-3 w-3" />
-            Generate new code
+            {t("pairing.newCode")}
           </button>
         </div>
       )}
@@ -962,7 +977,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
           style={{ background: "oklch(from var(--category-performance) l c h / 0.1)", border: "1px solid oklch(from var(--category-performance) l c h / 0.25)", color: "var(--category-performance)" }}
         >
           <CheckCircle className="h-4 w-4 shrink-0" />
-          Connection established — syncing dashboard…
+          {t("pairing.messages.connected")}
         </div>
       )}
     </div>
@@ -986,6 +1001,7 @@ function SnippetSetup({
   siteId?: string;
   onConfirmed?: () => void;
 }) {
+  const t = useTranslations("SiteCockpit.connection");
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
@@ -1001,10 +1017,11 @@ function SnippetSetup({
       });
       let data: Record<string, any> = {};
       try { data = await res.json(); } catch { /* ignore */ }
-      if (!res.ok) throw new Error(data.error || `Error ${res.status} → try again`);
+      if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
       onConfirmed?.();
     } catch (e: any) {
-      setConfirmError(e.message || "Confirmation failed → try again");
+      console.warn("[ConnectionCard] snippet confirmation failed:", e?.message);
+      setConfirmError(t("snippet.confirmFailed"));
     } finally {
       setIsConfirming(false);
     }
@@ -1014,7 +1031,7 @@ function SnippetSetup({
     return (
       <div className="flex items-center justify-center py-8 gap-2" style={{ color: "var(--text-subtle)" }}>
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span className="text-sm">Generating snippet…</span>
+        <span className="text-sm">{t("snippet.loading")}</span>
       </div>
     );
   }
@@ -1022,7 +1039,7 @@ function SnippetSetup({
   return (
     <div className="space-y-4">
       <div className="text-xs font-medium" style={{ color: "var(--text-subtle)" }}>
-        JS Monitoring Snippet — works on any platform
+        {t("snippet.title")}
       </div>
 
       <ol className="space-y-4 text-sm">
@@ -1030,7 +1047,7 @@ function SnippetSetup({
           <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold mt-0.5"
             style={{ background: "var(--border-default)", color: "var(--text-subtle)" }}>1</span>
           <div className="flex-1 space-y-2">
-            <div style={{ color: "var(--text-primary)" }}>Copy this snippet</div>
+            <div style={{ color: "var(--text-primary)" }}>{t("snippet.step1")}</div>
             <CodeBlock code={provision.snippet} />
           </div>
         </li>
@@ -1038,14 +1055,14 @@ function SnippetSetup({
           <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold mt-0.5"
             style={{ background: "var(--border-default)", color: "var(--text-subtle)" }}>2</span>
           <div style={{ color: "var(--text-primary)" }}>
-            Paste it inside the <code className="text-xs px-1.5 py-0.5 rounded" style={{ background: "var(--background-default)" }}>&lt;head&gt;</code> of every page — or use your tag manager
+            {t.rich("snippet.step2", { code: headTag })}
           </div>
         </li>
         <li className="flex gap-3">
           <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold mt-0.5"
             style={{ background: "var(--border-default)", color: "var(--text-subtle)" }}>3</span>
           <div className="flex-1 space-y-2">
-            <div style={{ color: "var(--text-primary)" }}>Confirm installation</div>
+            <div style={{ color: "var(--text-primary)" }}>{t("snippet.step3")}</div>
             {siteId && (
               <button
                 onClick={handleConfirm}
@@ -1054,9 +1071,9 @@ function SnippetSetup({
                 style={{ background: "var(--color-primary-500, #3b82f6)" }}
               >
                 {isConfirming ? (
-                  <><Loader2 className="h-3 w-3 animate-spin" />Confirming…</>
+                  <><Loader2 className="h-3 w-3 animate-spin" />{t("snippet.confirming")}</>
                 ) : (
-                  <><CheckCircle className="h-3 w-3" />I&apos;ve added the snippet</>
+                  <><CheckCircle className="h-3 w-3" />{t("snippet.confirm")}</>
                 )}
               </button>
             )}
@@ -1079,11 +1096,11 @@ function SnippetSetup({
       >
         <div className="flex items-center gap-1.5">
           <Clock className="h-3 w-3" />
-          Read-only monitoring — no server access required
+          {t("snippet.readOnly")}
         </div>
         <div className="flex items-center gap-1.5">
           <CheckCircle className="h-3 w-3 text-emerald-400" />
-          Tracks performance, errors, and uptime
+          {t("snippet.tracks")}
         </div>
       </div>
     </div>
@@ -1103,11 +1120,12 @@ function ApiKeySetup({
   copiedKey: string | null;
   onCopy: (text: string, key: string) => void;
 }) {
+  const t = useTranslations("SiteCockpit.connection");
   if (isLoading || !provision) {
     return (
       <div className="flex items-center justify-center py-8 gap-2" style={{ color: "var(--text-subtle)" }}>
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span className="text-sm">Generating API key…</span>
+        <span className="text-sm">{t("apikey.loading")}</span>
       </div>
     );
   }
@@ -1119,11 +1137,11 @@ function ApiKeySetup({
   return (
     <div className="space-y-4">
       <div className="text-xs font-medium" style={{ color: "var(--text-subtle)" }}>
-        REST API Key — for headless &amp; API-driven sites
+        {t("apikey.title")}
       </div>
 
       <div className="space-y-2">
-        <div className="text-xs" style={{ color: "var(--text-subtle)" }}>Your API key</div>
+        <div className="text-xs" style={{ color: "var(--text-subtle)" }}>{t("apikey.yourKey")}</div>
         <div
           className="flex items-center justify-between gap-2 rounded-lg px-3 py-2"
           style={{ background: "var(--background-default)", border: "1px solid var(--border-default)" }}
@@ -1137,13 +1155,13 @@ function ApiKeySetup({
             style={{ color: "var(--text-subtle)", background: "var(--header-bg)" }}
           >
             {copiedKey === "apikey" ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-            {copiedKey === "apikey" ? "Copied!" : "Copy"}
+            {copiedKey === "apikey" ? t("copied") : t("copy")}
           </button>
         </div>
       </div>
 
       <div className="space-y-2">
-        <div className="text-xs" style={{ color: "var(--text-subtle)" }}>Usage example</div>
+        <div className="text-xs" style={{ color: "var(--text-subtle)" }}>{t("apikey.usage")}</div>
         <CodeBlock code={curlExample} language="bash" />
       </div>
 
@@ -1153,11 +1171,11 @@ function ApiKeySetup({
       >
         <div className="flex items-center gap-1.5">
           <Key className="h-3 w-3" />
-          Keep this key secret — treat it like a password
+          {t("apikey.secret")}
         </div>
         <div className="flex items-center gap-1.5">
           <RefreshCw className="h-3 w-3" />
-          Contact support to rotate your key
+          {t("apikey.rotate")}
         </div>
       </div>
     </div>

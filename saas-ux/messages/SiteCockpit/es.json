@@ -353,7 +353,37 @@
         "lastUpdated": "Última actualización:",
         "disconnect": "Desconectar",
         "attempt": "Intento {attempt} de {total}",
-        "autoRetry": "{minutes, plural, one {Reintento automático en # minuto} other {Reintento automático en # minutos}}"
+        "autoRetry": "{minutes, plural, one {Reintento automático en # minuto} other {Reintento automático en # minutos}}",
+        "modal": {
+          "title": "Conexión de WordPress",
+          "close": "Cerrar",
+          "guideTitle": "Cómo conectar tu sitio WordPress",
+          "guideSteps": {
+            "step1": "Descarga, instala y activa nuestro <link>plugin</link>",
+            "step2": "Genera un código de vinculación y cópialo",
+            "step3": "Pega el código en el plugin y conecta",
+            "step4": "Vuelve a GetSafe 360: tu sitio aparecerá como conectado"
+          },
+          "status": {
+            "title": "Estado de la conexión",
+            "plugin": "Plugin instalado y activo",
+            "pairing": "Código de vinculación aceptado",
+            "site": "Sitio conectado"
+          },
+          "generateTitle": "Generar código de vinculación",
+          "generateHint": "Copia el código en el plugin y conecta.",
+          "download": "Descargar plugin",
+          "generate": "Generar código de vinculación",
+          "generating": "Generando…",
+          "codeLabel": "Código de vinculación",
+          "copyCode": "Copiar código",
+          "copied": "Copiado",
+          "expires": "Un solo uso, caduca en ~10 minutos.",
+          "success": "¡Conectado correctamente!",
+          "cancel": "Cancelar",
+          "refreshStatus": "Actualizar estado",
+          "reconnecting": "Reconectando…"
+        }
       },
       "version": {
         "title": "Versión de WordPress",
@@ -655,6 +685,134 @@
         "high": "Gravedad alta",
         "medium": "Gravedad media",
         "low": "Gravedad baja"
+      }
+    },
+    "connection": {
+      "title": "Conexión del sitio",
+      "tagline": "Conecta tu sitio para activar la optimización con IA y las correcciones automáticas.",
+      "whyConnect": "¿Por qué conectar?",
+      "close": "Cerrar",
+      "refresh": "Actualizar estado de la conexión",
+      "justConnected": "Sitio WordPress conectado: las optimizaciones con IA ya están disponibles.",
+      "connectedTo": "Conectado — {platform}",
+      "platform": "Plataforma",
+      "connectedSince": "Conectado desde",
+      "plugin": "Plugin",
+      "uptime": "{percent} % de disponibilidad · 7 días",
+      "reconnect": "Reconectar o cambiar el método de conexión",
+      "continue": "Continuar",
+      "back": "Atrás",
+      "copy": "Copiar",
+      "copied": "¡Copiado!",
+      "soon": "Pronto",
+      "recommended": "Recomendado",
+      "platforms": {
+        "custom": "Personalizado / HTML",
+        "unknown": "Otra"
+      },
+      "detect": {
+        "detected": "Plataforma detectada",
+        "wrong": "¿No es la plataforma correcta?"
+      },
+      "method": {
+        "title": "Elige el método de conexión",
+        "wordpress": {
+          "title": "Plugin de WordPress",
+          "description": "Análisis profundo de plugins y temas, comprobaciones de salud, reparación con IA"
+        },
+        "snippet": {
+          "title": "Snippet de monitorización JS",
+          "description": "Funciona en cualquier sitio: pega una etiqueta en el <code>head</code>"
+        },
+        "apikey": {
+          "title": "Clave de API REST",
+          "description": "Para sitios headless o basados en API: token bearer seguro"
+        },
+        "oauth": {
+          "title": "Integración OAuth"
+        }
+      },
+      "info": {
+        "lead": "El análisis funciona sin conexión. La optimización necesita un acceso de confianza.",
+        "body": "GetSafe 360 AI ya puede inspeccionar tu sitio público desde fuera: rendimiento, SEO, accesibilidad, cabeceras de seguridad, calidad del contenido, datos estructurados y señales del CMS. Al conectar tu sitio se añade la capa segura necesaria para diagnosticar detalles internos de WordPress y aplicar correcciones asistidas por IA de forma segura.",
+        "withoutTitle": "Disponible sin conexión",
+        "withTitle": "Disponible tras conectar",
+        "without": {
+          "external": "Análisis externo del sitio",
+          "perfSeo": "Comprobaciones de rendimiento y SEO",
+          "a11y": "Revisión de accesibilidad y contenido",
+          "headers": "Inspección de cabeceras de seguridad",
+          "structured": "Validación de datos estructurados"
+        },
+        "with": {
+          "workflows": "Flujos de optimización con IA",
+          "fixes": "Correcciones automáticas de WordPress",
+          "diagnostics": "Diagnóstico a nivel de CMS y plugins",
+          "monitoring": "Monitorización continua",
+          "audit": "Reparaciones seguras con historial de cambios"
+        },
+        "benefits": {
+          "secure": {
+            "title": "Seguro",
+            "text": "Usa un conector de confianza; nunca adivina a partir del HTML público."
+          },
+          "actionable": {
+            "title": "Accionable",
+            "text": "Convierte los hallazgos en correcciones, no solo en recomendaciones."
+          },
+          "ongoing": {
+            "title": "Continuo",
+            "text": "Mantiene tu sitio monitorizado después del primer análisis."
+          }
+        }
+      },
+      "pairing": {
+        "title": "Plugin de WordPress — 3 pasos",
+        "step1": "Descarga e instala el plugin",
+        "download": "Descargar plugin",
+        "step2": "Genera tu código de vinculación",
+        "generate": "Generar código",
+        "generating": "Generando…",
+        "expires": "Caduca en ~10 min · Un solo uso",
+        "step3": "Pega el código en el administrador de WordPress → GetSafe 360 AI",
+        "detectedVersion": "Plugin detectado — versión {version}",
+        "detected": "Plugin detectado en tu sitio",
+        "notDetected": "Plugin no detectado: instálalo antes de pegar el código",
+        "newCode": "Generar un código nuevo",
+        "messages": {
+          "pluginDetected": "Plugin detectado: abre el administrador de WordPress → GetSafe 360 → pega el código",
+          "pluginNotDetected": "Plugin no detectado: instala primero el plugin de GetSafe 360 y luego pega el código",
+          "openAdmin": "Abre el administrador de WordPress → GetSafe 360 → pega el código",
+          "waiting": "Esperando la confirmación del plugin…",
+          "connected": "Conexión establecida: sincronizando el panel…",
+          "expired": "Código caducado (límite de 10 min) → genera uno nuevo",
+          "noConfirmation": "No se recibió confirmación → pega el código en WordPress e inténtalo de nuevo",
+          "tooMany": "Demasiados intentos → espera 10 minutos e inténtalo de nuevo",
+          "unavailable": "Servicio no disponible temporalmente → inténtalo de nuevo en un momento",
+          "domainNotAllowed": "Dominio no permitido en este entorno → contacta con soporte",
+          "invalidUrl": "URL del sitio no válida → introdúcela con https://",
+          "generic": "No se pudo generar el código → inténtalo de nuevo"
+        }
+      },
+      "snippet": {
+        "title": "Snippet de monitorización JS — funciona en cualquier plataforma",
+        "loading": "Generando snippet…",
+        "step1": "Copia este snippet",
+        "step2": "Pégalo dentro del <code>head</code> de cada página, o usa tu gestor de etiquetas",
+        "step3": "Confirma la instalación",
+        "confirm": "Ya he añadido el snippet",
+        "confirming": "Confirmando…",
+        "confirmFailed": "La confirmación falló → inténtalo de nuevo",
+        "readOnly": "Monitorización de solo lectura: no requiere acceso al servidor",
+        "tracks": "Registra rendimiento, errores y disponibilidad"
+      },
+      "apikey": {
+        "title": "Clave de API REST — para sitios headless y basados en API",
+        "loading": "Generando clave de API…",
+        "yourKey": "Tu clave de API",
+        "usage": "Ejemplo de uso",
+        "secret": "Mantén esta clave en secreto, como una contraseña",
+        "rotate": "Contacta con soporte para renovar tu clave"
       }
     }
   }

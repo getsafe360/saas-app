@@ -1,4 +1,5 @@
 // components/site-cockpit/cards/wordpress/types.ts
+import type { PairingMessageKey } from '@/lib/wordpress/pairing-messages';
 
 import type { SiteCockpitResponse } from "@/types/site-cockpit";
 
@@ -58,6 +59,8 @@ export interface UseWordPressPairingReturn {
   pairingStatus: PairingStatus;
   pairCode: string | null;
   pairingMessage: string;
+  /** Translation key under SiteCockpit.connection.pairing.messages; null before the first message. */
+  pairingMessageKey: PairingMessageKey | null;
   pluginDetected: boolean | null;
   pluginVersion: string | null;
   copied: boolean;

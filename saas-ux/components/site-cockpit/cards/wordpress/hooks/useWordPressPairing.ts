@@ -1,32 +1,33 @@
 // components/site-cockpit/cards/wordpress/hooks/useWordPressPairing.ts
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { PairingStatus, UseWordPressPairingReturn } from '../types';
+import {
+  PAIRING_MESSAGES_EN,
+  classifyPairingError,
+  readyMessageKey,
+  type PairingMessageKey,
+} from '@/lib/wordpress/pairing-messages';
 
 const POLL_INTERVAL_MS = 2500;
 const MAX_POLL_ATTEMPTS = 120; // 5 minutes at 2.5 s/poll
-
-function mapErrorMessage(raw: string): string {
-  if (raw.includes('429') || raw.toLowerCase().includes('too many'))
-    return 'Too many attempts → wait 10 minutes and try again';
-  if (raw.includes('503') || raw.toLowerCase().includes('busy'))
-    return 'Service temporarily unavailable → retry in a moment';
-  if (raw.toLowerCase().includes('domain not allowed'))
-    return 'Domain not allowed in this environment';
-  if (raw.toLowerCase().includes('enter a valid'))
-    return 'Enter a valid site URL (include https://)';
-  return raw || 'Error generating code → try again';
-}
 
 export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPressPairingReturn {
   const [showPairingFlow, setShowPairingFlow] = useState(false);
   const [pairingStatus, setPairingStatus] = useState<PairingStatus>('idle');
   const [pairCode, setPairCode] = useState<string | null>(null);
-  const [pairingMessage, setPairingMessage] = useState('');
+  const [pairingMessage, setPairingMessageText] = useState('');
+  const [pairingMessageKey, setPairingMessageKey] = useState<PairingMessageKey | null>(null);
   const [pluginDetected, setPluginDetected] = useState<boolean | null>(null);
   const [pluginVersion, setPluginVersion] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const pollRef = useRef<number | null>(null);
   const pollAttemptsRef = useRef(0);
+
+  /** Sets the translatable key; `text` overrides the English text (raw server errors). */
+  function setPairingMessage(key: PairingMessageKey, text?: string) {
+    setPairingMessageKey(key);
+    setPairingMessageText(text ?? PAIRING_MESSAGES_EN[key]);
+  }
 
   function stopPolling() {
     if (pollRef.current) {
@@ -67,16 +68,13 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
       setPluginDetected(detected);
       setPluginVersion(typeof responseData.pluginVersion === 'string' ? responseData.pluginVersion : null);
       setPairCode(responseData.pairCode);
-      setPairingMessage(
-        detected === true
-          ? 'Plugin detected — open WordPress Admin → GetSafe 360 → paste the code'
-          : detected === false
-          ? 'Plugin not detected — install the GetSafe 360 plugin first, then paste the code'
-          : 'Open WordPress Admin → GetSafe 360 → paste the code',
-      );
+      setPairingMessage(readyMessageKey(detected));
       setPairingStatus('ready');
     } catch (e: any) {
-      setPairingMessage(mapErrorMessage(e.message || ''));
+      const raw: string = e?.message || '';
+      const key = classifyPairingError(raw);
+      // Untranslated callers keep seeing the server's own wording for unclassified errors.
+      setPairingMessage(key, key === 'generic' && raw ? raw : undefined);
       setPairingStatus('error');
     }
   }, [siteUrl, siteId, pairingStatus]);
@@ -121,7 +119,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
     if (!polling || !pairCode) return;
 
     setPairingStatus('waiting');
-    setPairingMessage('Waiting for plugin confirmation…');
+    setPairingMessage('waiting');
     pollAttemptsRef.current = 0;
 
     // Check every ~25 seconds (every 10 polls) whether DB already shows connected
@@ -137,7 +135,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
           stopPolling();
           setPluginDetected(true);
           setPairingStatus('connected');
-          setPairingMessage('Connection established — syncing dashboard…');
+          setPairingMessage('connected');
           // Signal ConnectionCard to show the "just connected" banner after reload.
           if (siteId) sessionStorage.setItem(`gs360_just_connected_${siteId}`, '1');
           setTimeout(() => { window.location.reload(); }, 1500);
@@ -147,7 +145,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
         if (data.expired) {
           stopPolling();
           setPairingStatus('error');
-          setPairingMessage('Code expired (10 min limit) → generate a new one');
+          setPairingMessage('expired');
           return;
         }
 
@@ -159,7 +157,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
             stopPolling();
             setPluginDetected(true);
             setPairingStatus('connected');
-            setPairingMessage('Connection established — syncing dashboard…');
+            setPairingMessage('connected');
             if (siteId) sessionStorage.setItem(`gs360_just_connected_${siteId}`, '1');
             setTimeout(() => { window.location.reload(); }, 1500);
             return;
@@ -169,7 +167,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
         if (pollAttemptsRef.current >= MAX_POLL_ATTEMPTS) {
           stopPolling();
           setPairingStatus('error');
-          setPairingMessage('No confirmation received — paste the code in WordPress and try again');
+          setPairingMessage('noConfirmation');
         }
       } catch {
         // ignore transient errors
@@ -186,6 +184,7 @@ export function useWordPressPairing(siteUrl: string, siteId?: string): UseWordPr
     pairingStatus,
     pairCode,
     pairingMessage,
+    pairingMessageKey,
     pluginDetected,
     pluginVersion,
     copied,
