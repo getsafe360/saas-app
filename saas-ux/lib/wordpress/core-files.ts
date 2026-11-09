@@ -26,6 +26,8 @@ export interface WordPressCoreFileDiff {
 }
 
 const CORE_PATH = /^[A-Za-z0-9._/-]+$/;
+/** "a/./b", "a//b", "./a", "/a" or "a/" would resolve to a real core file under another spelling. */
+const NON_CANONICAL = /(^|\/)\.(\/|$)|\/\/|^\/|\/$/;
 
 /** Same rule as the connector: a core location, never wp-config.php or wp-content. */
 export function isCorePath(path: unknown): path is string {
@@ -33,6 +35,7 @@ export function isCorePath(path: unknown): path is string {
     typeof path === 'string' &&
     CORE_PATH.test(path) &&
     !path.includes('..') &&
+    !NON_CANONICAL.test(path) &&
     !path.startsWith('wp-content/') &&
     path !== 'wp-config.php'
   );

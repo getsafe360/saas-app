@@ -1204,6 +1204,11 @@ class GetSafe360_Connector {
       return new \WP_Error('restore_move', 'The restore point could not be put in place; the installed version was kept.');
     }
     $wp_filesystem->delete($staging, true);
+    if (is_dir($target) && function_exists('wp_opcache_invalidate_directory')) {
+      wp_opcache_invalidate_directory($target);
+    } else {
+      $this->invalidate_php_cache($target);
+    }
     if (!empty($point['wasActive'])) {
       $this->set_plugins_active([$point['plugin']]);
     }
@@ -1400,6 +1405,7 @@ class GetSafe360_Connector {
   const CORE_FILE_MAX_BYTES = 1048576;
   const CORE_SCAN_BUDGET_SECONDS = 8.0;
   const CORE_FILES_PER_ACTION = 50;
+  const CORE_DOWNLOAD_BUDGET_SECONDS = 25.0;
 
   /**
    * Official checksums for this WordPress version, cached for a day. With a
@@ -1444,6 +1450,8 @@ class GetSafe360_Connector {
     return is_string($path)
       && preg_match('#^[A-Za-z0-9._/-]+$#', $path)
       && strpos($path, '..') === false
+      // Canonical spelling only: "a/./b", "a//b" or "./a" would dodge the checksum lookup.
+      && !preg_match('#(^|/)\.(/|$)|//|^/|/$#', $path)
       && strpos($path, 'wp-content/') !== 0
       && $path !== 'wp-config.php';
   }
@@ -1501,12 +1509,12 @@ class GetSafe360_Connector {
   }
 
   /** Downloads the official copy of a core file and checks it against the official checksum. */
-  private function official_core_file($path, $checksums) {
+  private function official_core_file($path, $checksums, $timeout = 15.0) {
     if (!isset($checksums[$path])) {
       return new \WP_Error('not_core', 'Not a WordPress core file.');
     }
     $url = 'https://core.svn.wordpress.org/tags/' . rawurlencode(get_bloginfo('version')) . '/' . implode('/', array_map('rawurlencode', explode('/', $path)));
-    $response = wp_remote_get($url, ['timeout' => 15]);
+    $response = wp_remote_get($url, ['timeout' => max(1.0, (float) $timeout)]);
     if (is_wp_error($response) || (int) wp_remote_retrieve_response_code($response) !== 200) {
       return new \WP_Error('download', sprintf('The official copy of %s could not be downloaded.', $path));
     }
@@ -1515,6 +1523,15 @@ class GetSafe360_Connector {
       return new \WP_Error('checksum', sprintf('The downloaded copy of %s does not match the official checksum.', $path));
     }
     return $body;
+  }
+
+  /** Makes PHP run the file as it is now on disk, also where OPcache never re-checks timestamps. */
+  private function invalidate_php_cache($absolute_path) {
+    if (function_exists('wp_opcache_invalidate')) {
+      wp_opcache_invalidate($absolute_path, true);
+    } elseif (function_exists('opcache_invalidate')) {
+      @opcache_invalidate($absolute_path, true);
+    }
   }
 
   private function split_lines($text) {
@@ -1698,6 +1715,7 @@ class GetSafe360_Connector {
         $wp_filesystem->delete($staging, true);
         return new \WP_Error('restore_write', sprintf('%s could not be written.', $path));
       }
+      $this->invalidate_php_cache(ABSPATH . $path);
     }
     $wp_filesystem->delete($staging, true);
     return true;
@@ -1733,15 +1751,27 @@ class GetSafe360_Connector {
       return $this->action_result($action_id, $type, 'skipped', 'All core files already match the official release.');
     }
 
-    // Download and check every official copy first: all or nothing.
+    // Download and check the official copies first. Downloads share a budget that leaves
+    // room for the backup, the writes and two health checks inside the SaaS's 60 s wait;
+    // whatever does not fit is left for the next run.
+    $download_deadline = microtime(true) + self::CORE_DOWNLOAD_BUDGET_SECONDS;
     $official = [];
     foreach ($paths as $path) {
-      $content = $this->official_core_file($path, $checksums);
+      $remaining = $download_deadline - microtime(true);
+      if ($remaining < 2.0) {
+        break;
+      }
+      $content = $this->official_core_file($path, $checksums, min(15.0, $remaining));
       if (is_wp_error($content)) {
         return $this->action_result($action_id, $type, 'failed', $content->get_error_message() . ' Nothing was changed.');
       }
       $official[$path] = $content;
     }
+    if (empty($official)) {
+      return $this->action_result($action_id, $type, 'failed', 'The official files could not be downloaded in time. Nothing was changed.');
+    }
+    $left_over = count($paths) - count($official);
+    $paths = array_keys($official);
 
     $baseline = $this->site_responds();
     $point = $this->create_core_restore_point($paths);
@@ -1753,6 +1783,7 @@ class GetSafe360_Connector {
         $this->restore_core_point($point);
         return $this->action_result($action_id, $type, 'failed', sprintf('%s could not be written; every file was put back.', $path));
       }
+      $this->invalidate_php_cache(ABSPATH . $path);
     }
     if ($baseline === true && $this->site_responds() === false) {
       $this->restore_core_point($point);
@@ -1762,7 +1793,8 @@ class GetSafe360_Connector {
     delete_transient('getsafe360_audit_scans');
     return $this->action_result(
       $action_id, $type, 'applied',
-      sprintf('%d core file(s) restored to the official WordPress %s version.', count($paths), get_bloginfo('version')),
+      sprintf('%d core file(s) restored to the official WordPress %s version.', count($paths), get_bloginfo('version'))
+        . ($left_over > 0 ? sprintf(' %d more remain; run the restore again.', $left_over) : ''),
       ['files' => $paths],
       ['id' => $action_id . '-rollback', 'type' => 'restore_core_backup', 'payload' => ['restorePoint' => $point]]
     );
@@ -1803,6 +1835,7 @@ class GetSafe360_Connector {
     }
     foreach ($paths as $path) {
       @unlink(ABSPATH . $path);
+      $this->invalidate_php_cache(ABSPATH . $path);
     }
     if ($baseline === true && $this->site_responds() === false) {
       $this->restore_core_point($point);

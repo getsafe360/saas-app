@@ -128,6 +128,11 @@ try {
   check(!file_exists(ABSPATH . $planted), 'quarantined again');
 
   check(run_action($key, 'quarantine_core_files', ['paths' => ['wp-includes/functions.php']])['status'] === 'skipped', 'never quarantines a real core file');
+  foreach (['wp-includes/./functions.php', 'wp-includes//functions.php'] as $alias) {
+    check(run_action($key, 'quarantine_core_files', ['paths' => [$alias]])['status'] === 'skipped' && file_exists(ABSPATH . 'wp-includes/functions.php'), "never quarantines a core file spelled $alias");
+    list($status) = core_get($key, '/core-files/diff', ['path' => $alias]);
+    check($status === 400, "refuses the diff for $alias");
+  }
   check(run_action($key, 'restore_core_files', ['paths' => ['wp-config.php']])['status'] === 'skipped', 'never touches wp-config.php');
   check(run_action($key, 'restore_core_backup', ['restorePoint' => '../../x'])['status'] === 'failed', 'rejects malformed restore points');
   $plugin_points = array_filter(get_option('getsafe360_restore_points', []), function ($p) { return ($p['kind'] ?? '') === 'core'; });

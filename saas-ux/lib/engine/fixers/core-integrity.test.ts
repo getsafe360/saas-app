@@ -59,7 +59,19 @@ test('connectors before 1.9 leave the unexpected-files check unknown', () => {
 test('core paths: never wp-config.php, wp-content or traversal', () => {
   assert.ok(isCorePath('wp-includes/version.php'));
   assert.ok(isCorePath('wp-login.php'));
-  for (const bad of ['wp-config.php', 'wp-content/plugins/x.php', '../etc/passwd', 'wp-includes/../wp-config.php', 'a b.php', 42]) {
+  for (const bad of [
+    'wp-config.php',
+    'wp-content/plugins/x.php',
+    '../etc/passwd',
+    'wp-includes/../wp-config.php',
+    'wp-includes/./functions.php',
+    'wp-includes//functions.php',
+    './wp-login.php',
+    '/wp-login.php',
+    'wp-includes/',
+    'a b.php',
+    42,
+  ]) {
     assert.equal(isCorePath(bad), false, String(bad));
   }
   const parsed = parseCoreFiles({
