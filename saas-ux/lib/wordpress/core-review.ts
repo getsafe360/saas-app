@@ -42,6 +42,8 @@ export interface CoreFileReview {
   signals: CoreSignal[];
   diff: string | null;
   truncated: boolean;
+  /** False when the connector could not provide the changes (e.g. the official copy failed to download). */
+  available: boolean;
 }
 
 const rank = (verdict: CoreVerdict) => VERDICTS.indexOf(verdict);
@@ -183,6 +185,7 @@ export function mergeCoreReview(
         signals: scan.signals,
         diff: diff.diff,
         truncated: diff.truncated,
+        available: diff.success,
       };
     })
     .sort((a, b) => rank(b.verdict) - rank(a.verdict) || a.path.localeCompare(b.path));

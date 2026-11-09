@@ -79,23 +79,28 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
     return NextResponse.json({ success: false, error: 'CORE_FILES_UNAVAILABLE' }, { status: 502 });
   }
 
+  const unexpected = new Set(list.unexpected);
   const candidates = [...list.unexpected, ...list.modified];
   const selected = candidates.slice(0, MAX_FILES);
-  const diffs = (
-    await Promise.all(
-      selected.map(async (path) => {
-        try {
-          return parseCoreFileDiff(await client.coreFileDiff(path));
-        } catch {
-          return null;
-        }
-      }),
-    )
-  ).filter((diff): diff is WordPressCoreFileDiff => diff !== null);
+  // A file whose changes cannot be loaded stays in the result as unavailable, never silently dropped.
+  const diffs: WordPressCoreFileDiff[] = await Promise.all(
+    selected.map(async (path) => {
+      let diff: WordPressCoreFileDiff | null = null;
+      try {
+        diff = parseCoreFileDiff(await client.coreFileDiff(path));
+      } catch {
+        diff = null;
+      }
+      return diff && diff.success
+        ? diff
+        : { success: false, path, kind: unexpected.has(path) ? 'unexpected' : 'modified', diff: null, truncated: false };
+    }),
+  );
+  const unavailable = diffs.filter((diff) => !diff.success).length;
 
   let aiUsed = false;
   let output = null;
-  if (diffs.length > 0 && coreReviewAvailable()) {
+  if (diffs.some((diff) => diff.success) && coreReviewAvailable()) {
     try {
       output = await reviewCoreDiffs({ version: list.version, locale, diffs });
       aiUsed = true;
@@ -111,6 +116,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
       complete: list.complete,
       aiUsed,
       omitted: candidates.length - selected.length,
+      unavailable,
       files: mergeCoreReview(diffs, output),
       reviewedAt: new Date().toISOString(),
     },

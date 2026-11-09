@@ -64,6 +64,16 @@ test('merge: the scan raises verdicts the model gave too low, never lowers them'
   );
 });
 
+test('files whose changes could not be loaded stay listed as unclear and unavailable', () => {
+  const [file] = mergeCoreReview(
+    [{ success: false, path: 'wp-includes/version.php', kind: 'modified', diff: null, truncated: false }],
+    null,
+  );
+  assert.equal(file.available, false);
+  assert.equal(file.verdict, 'unclear');
+  assert.equal(file.recommendation, 'review');
+});
+
 test('merge without the model: scan verdicts only', () => {
   const [file] = mergeCoreReview([diff('wp-includes/x.php', 'unexpected', "@@\n+system($_GET['c']);\n")], null);
   assert.equal(file.verdict, 'malicious');

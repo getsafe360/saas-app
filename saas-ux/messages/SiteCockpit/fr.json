@@ -604,7 +604,8 @@
           "writesRequest": "écrit des données de visiteurs dans des fichiers",
           "remoteFetch": "charge du contenu depuis un autre serveur",
           "readsRequest": "lit des données envoyées par les visiteurs"
-        }
+        },
+        "unavailable": "Les modifications n’ont pas pu être chargées (la copie officielle n’a peut-être pas été téléchargée). Réessayez plus tard."
       }
     },
     "mobile": {

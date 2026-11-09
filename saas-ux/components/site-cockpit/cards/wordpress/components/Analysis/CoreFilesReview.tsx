@@ -16,6 +16,7 @@ interface ReviewResponse {
   aiUsed?: boolean;
   complete?: boolean;
   omitted?: number;
+  unavailable?: number;
   files?: CoreFileReview[];
 }
 
@@ -142,7 +143,9 @@ export function CoreFilesReview({ siteId }: CoreFilesReviewProps) {
                 <p className="mt-1 text-[11px] font-medium" style={{ color: "var(--text-subtle)" }}>
                   {t(`recommendation.${file.recommendation}`)}
                 </p>
-                {file.diff ? (
+                {!file.available ? (
+                  <p className="mt-1 text-[11px] text-amber-300">{t("unavailable")}</p>
+                ) : file.diff ? (
                   <details className="mt-1">
                     <summary className="cursor-pointer text-[11px] text-sky-300">{t("showChanges")}</summary>
                     <DiffView diff={file.diff} />

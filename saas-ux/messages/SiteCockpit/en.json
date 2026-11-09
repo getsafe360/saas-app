@@ -604,7 +604,8 @@
           "writesRequest": "writes visitor data into files",
           "remoteFetch": "loads content from another server",
           "readsRequest": "reads visitor input"
-        }
+        },
+        "unavailable": "The changes could not be loaded (the official copy may not have downloaded). Review again later."
       }
     },
     "mobile": {

@@ -604,7 +604,8 @@
           "writesRequest": "schreibt Besucherdaten in Dateien",
           "remoteFetch": "lädt Inhalte von einem anderen Server",
           "readsRequest": "liest Besuchereingaben"
-        }
+        },
+        "unavailable": "Die Änderungen konnten nicht geladen werden (die Originaldatei wurde womöglich nicht heruntergeladen). Später erneut prüfen."
       }
     },
     "mobile": {

@@ -604,7 +604,8 @@
           "writesRequest": "scrive dati dei visitatori nei file",
           "remoteFetch": "carica contenuti da un altro server",
           "readsRequest": "legge dati inviati dai visitatori"
-        }
+        },
+        "unavailable": "Non è stato possibile caricare le modifiche (forse la copia ufficiale non è stata scaricata). Riprova più tardi."
       }
     },
     "mobile": {

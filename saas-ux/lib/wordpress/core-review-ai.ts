@@ -22,7 +22,8 @@ export async function reviewCoreDiffs(params: {
   locale: string;
   diffs: ReadonlyArray<WordPressCoreFileDiff>;
 }): Promise<CoreReviewModelOutput> {
-  const files = params.diffs.filter((diff) => diff.kind !== 'unchanged');
+  // Files whose changes could not be loaded have nothing to judge; they stay "unclear".
+  const files = params.diffs.filter((diff) => diff.kind !== 'unchanged' && diff.success);
   if (files.length === 0) return { files: [] };
   const { system, prompt } = buildCoreReviewPrompt({ version: params.version, locale: params.locale, files });
   const { object } = await generateObject({
