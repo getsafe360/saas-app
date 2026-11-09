@@ -5,7 +5,8 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
+import { PERMANENT_FIXER_IDS } from '@/lib/engine/fixers/catalog';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
 import { users } from '@/lib/db/schema/auth/users';
@@ -61,8 +62,17 @@ export async function GET(_request: Request, props: { params: Promise<{ id: stri
       and(
         eq(wordpressActionRuns.siteId, siteId),
         inArray(wordpressActionRuns.status, ['applied', 'failed', 'rolled_back']),
-        isNotNull(wordpressActionRuns.rollbackPayload),
-        sql`${wordpressActionRuns.rollbackPayload} <> 'null'::jsonb`,
+        or(
+          and(
+            isNotNull(wordpressActionRuns.rollbackPayload),
+            sql`${wordpressActionRuns.rollbackPayload} <> 'null'::jsonb`,
+          ),
+          // One-way changes (database cleanup, default role) have no inverse but did change the site.
+          and(
+            eq(wordpressActionRuns.status, 'applied'),
+            inArray(wordpressActionRuns.actionId, [...PERMANENT_FIXER_IDS]),
+          ),
+        ),
       ),
     )
     .orderBy(desc(wordpressActionRuns.startedAt))

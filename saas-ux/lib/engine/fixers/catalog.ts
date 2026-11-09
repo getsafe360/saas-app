@@ -11,6 +11,25 @@ export const AUTOMATIC_FIXER_IDS: ReadonlySet<string> = new Set([
   'wordpress-block-user-enumeration',
   'wordpress-disable-xmlrpc',
   'security-headers',
+  // Connector 1.7
+  'wordpress-disable-file-edit',
+  'wordpress-enable-core-auto-updates',
+  'wordpress-fix-default-role',
+  'wordpress-tighten-config-permissions',
+  'wordpress-enable-plugin-auto-updates',
+  'wordpress-clean-transients',
+  'wordpress-limit-revisions',
+]);
+
+/**
+ * Fixers whose change cannot be undone (deleted rows, or a default role the
+ * connector refuses to restore). They are never ticked in advance, and the
+ * Applied changes list shows them without Undo.
+ */
+export const PERMANENT_FIXER_IDS: ReadonlySet<string> = new Set([
+  'wordpress-fix-default-role',
+  'wordpress-clean-transients',
+  'wordpress-limit-revisions',
 ]);
 
 /**

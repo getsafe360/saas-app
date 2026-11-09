@@ -57,6 +57,8 @@ export interface WordPressAuditResponse {
     autoloadBytes: number | null;
     expiredTransients: number | null;
     revisions: number | null;
+    /** Revisions beyond the newest 5 per post (connector ≥ 1.7). */
+    revisionsRemovable?: number | null;
     sizeBytes: number | null;
   };
   cron: {
@@ -64,6 +66,17 @@ export interface WordPressAuditResponse {
     alternate: boolean;
     events: number;
     overdue: number;
+  };
+  /** Connector ≥ 1.7. */
+  autoUpdates?: {
+    /** WordPress's background updater is off (AUTOMATIC_UPDATER_DISABLED, DISALLOW_FILE_MODS, host). */
+    updaterDisabled: boolean | null;
+    /** Minor (security) core releases install automatically. */
+    coreMinor: boolean | null;
+    /** The per-plugin auto-update switch is available on this site. */
+    pluginsAllowed: boolean | null;
+    pluginsEnabled: number;
+    pluginsTotal: number;
   };
   redFlags: {
     uploadsPhpFiles: number | null;

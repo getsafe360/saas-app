@@ -31,6 +31,11 @@ export interface RuleOutcome {
   /** Overrides the rule's default evidence source for this outcome. */
   source?: EvidenceSource;
   impact?: FindingImpact;
+  /**
+   * Overrides the rule's fix for this outcome; `null` removes it, e.g. when the
+   * site's own configuration blocks the fixer and only a manual change helps.
+   */
+  fix?: FixRef | null;
 }
 
 /** Title and recommendation come from messages/Findings under the rule id. */
@@ -108,7 +113,7 @@ export function evaluateRules<Facts>(
               observed: outcome.observed,
               checkedAt: context.checkedAt,
             },
-      fix: rule.fix,
+      fix: outcome.fix === null ? undefined : (outcome.fix ?? rule.fix),
       impact: ACTIONABLE_STATUSES.has(outcome.status) ? outcome.impact : undefined,
       selectedByDefault: false,
     };

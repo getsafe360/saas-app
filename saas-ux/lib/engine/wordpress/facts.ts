@@ -65,6 +65,16 @@ export interface WordPressFacts {
     autoloadBytes: number | null;
     expiredTransients: number | null;
     revisions: number | null;
+    /** Revisions beyond the newest 5 per post; null before connector 1.7. */
+    revisionsRemovable: number | null;
+  };
+  /** Connector ≥ 1.7; every field null before. */
+  autoUpdates: {
+    updaterDisabled: boolean | null;
+    coreMinor: boolean | null;
+    pluginsAllowed: boolean | null;
+    pluginsEnabled: number | null;
+    pluginsTotal: number | null;
   };
   cron: {
     disabled: boolean | null;
@@ -167,6 +177,14 @@ export function buildWordPressFacts(apiData: Loose): WordPressFacts {
       autoloadBytes: asNumber(audit?.database.autoloadBytes),
       expiredTransients: asNumber(audit?.database.expiredTransients),
       revisions: asNumber(audit?.database.revisions),
+      revisionsRemovable: asNumber(audit?.database.revisionsRemovable),
+    },
+    autoUpdates: {
+      updaterDisabled: asBool(audit?.autoUpdates?.updaterDisabled),
+      coreMinor: asBool(audit?.autoUpdates?.coreMinor),
+      pluginsAllowed: asBool(audit?.autoUpdates?.pluginsAllowed),
+      pluginsEnabled: asNumber(audit?.autoUpdates?.pluginsEnabled),
+      pluginsTotal: asNumber(audit?.autoUpdates?.pluginsTotal),
     },
     cron: {
       disabled: asBool(audit?.cron.disabled),

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GetSafe 360 AI Connector
  * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 1.6.0
+ * Version: 1.7.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
@@ -20,11 +20,32 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '1.6.0';
+  const VERSION = '1.7.0';
   const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';
   const OPTION = 'getsafe360_connector';
   const ACTION_STATE_OPTION = 'getsafe360_action_state';
   const API_BASE = 'https://saasfly-one-psi.vercel.app';
+  /** Revisions kept per post by the revisions cleanup. */
+  const REVISIONS_KEEP = 5;
+  const CLEANUP_BUDGET_SECONDS = 15.0;
+
+  /** Connector settings the SaaS may toggle, with their labels for result messages. */
+  const SETTING_LABELS = [
+    'disableXmlRpc'             => 'XML-RPC protection',
+    'blockUserEnumeration'      => 'user enumeration protection',
+    'disableFileEditor'         => 'theme and plugin file editor lock',
+    'enableCoreSecurityUpdates' => 'automatic WordPress security updates',
+  ];
+
+  /** Capabilities a default role must never carry: they would let anyone who registers take over the site. */
+  const PRIVILEGED_CAPS = [
+    'manage_options', 'edit_users', 'create_users', 'promote_users', 'delete_users',
+    'install_plugins', 'activate_plugins', 'edit_plugins', 'edit_themes', 'unfiltered_upload',
+    // Editor level: publishing raw HTML or rewriting other people's content.
+    'unfiltered_html', 'edit_others_posts',
+  ];
+
+  private $state_cache = null;
 
   public function __construct() {
     load_plugin_textdomain('getsafe360-connector', false, dirname(plugin_basename(__FILE__)) . '/languages');
@@ -36,6 +57,8 @@ class GetSafe360_Connector {
     add_filter('rest_endpoints', [$this, 'filter_rest_endpoints']);
     add_action('template_redirect', [$this, 'block_author_enumeration']);
     add_action('send_headers', [$this, 'send_security_headers']);
+    add_filter('map_meta_cap', [$this, 'filter_file_editor_caps'], 10, 2);
+    add_filter('allow_minor_auto_core_updates', [$this, 'filter_minor_core_updates'], 20);
     add_filter('update_plugins_www.getsafe360.ai', [$this, 'check_for_update'], 10, 4);
     add_filter('plugins_api', [$this, 'plugin_api_info'], 10, 3);
     add_filter('plugin_action_links_' . plugin_basename(__FILE__), [$this, 'action_links']);
@@ -73,22 +96,33 @@ class GetSafe360_Connector {
   }
 
   private function get_action_state() {
-    $defaults = [
-      'disableXmlRpc' => false,
-      'blockUserEnumeration' => false,
-    ];
+    // map_meta_cap runs many times per request, so the state is read once.
+    if ($this->state_cache !== null) {
+      return $this->state_cache;
+    }
+    $defaults = array_fill_keys(array_keys(self::SETTING_LABELS), false);
 
     $state = get_option(self::ACTION_STATE_OPTION, []);
-    if (!is_array($state)) {
-      return $defaults;
-    }
-
-    return array_merge($defaults, $state);
+    $this->state_cache = is_array($state) ? array_merge($defaults, $state) : $defaults;
+    return $this->state_cache;
   }
 
   private function update_action_state($state) {
     update_option(self::ACTION_STATE_OPTION, $state, false);
+    $this->state_cache = $state;
     return $state;
+  }
+
+  /** Uniform result entry for the actions route. */
+  private function action_result($action_id, $type, $status, $message, $state = null, $rollback = null) {
+    return [
+      'id'       => $action_id,
+      'type'     => $type,
+      'status'   => $status,
+      'message'  => $message,
+      'state'    => $state,
+      'rollback' => $rollback,
+    ];
   }
 
   private function render_notice($type, $title, $message = '', $debug = null) {
@@ -517,6 +551,24 @@ class GetSafe360_Connector {
     }
   }
 
+  /** Locks the theme/plugin file editor, like DISALLOW_FILE_EDIT, without touching wp-config.php. */
+  public function filter_file_editor_caps($caps, $cap) {
+    if (!in_array($cap, ['edit_themes', 'edit_plugins', 'edit_files'], true)) {
+      return $caps;
+    }
+    $state = $this->get_action_state();
+    if (empty($state['disableFileEditor'])) {
+      return $caps;
+    }
+    $caps[] = 'do_not_allow';
+    return $caps;
+  }
+
+  public function filter_minor_core_updates($allow) {
+    $state = $this->get_action_state();
+    return empty($state['enableCoreSecurityUpdates']) ? $allow : true;
+  }
+
   // ---------- security headers ----------
 
   /**
@@ -621,6 +673,300 @@ class GetSafe360_Connector {
     ];
   }
 
+  // ---------- 1.7 actions ----------
+
+  private function wp_config_path() {
+    $path = ABSPATH . 'wp-config.php';
+    if (!file_exists($path)) {
+      $path = dirname(ABSPATH) . '/wp-config.php';
+    }
+    return file_exists($path) ? $path : null;
+  }
+
+  /** Which permission bits PHP itself reads wp-config.php through: 'owner', 'group', 'other', or null if unknown. */
+  private function config_reader_class($path) {
+    if (!function_exists('posix_geteuid')) {
+      return null;
+    }
+    $owner = @fileowner($path);
+    $group = @filegroup($path);
+    if ($owner === false || $group === false) {
+      return null;
+    }
+    if ($owner === posix_geteuid()) {
+      return 'owner';
+    }
+    $groups = function_exists('posix_getgroups') ? (array) posix_getgroups() : [];
+    $groups[] = posix_getegid();
+    return in_array($group, $groups, true) ? 'group' : 'other';
+  }
+
+  /**
+   * set_config_permissions: `mode: "tighten"` removes the "others" and execute
+   * bits; an explicit octal `mode` (rollback) restores a previous value. The
+   * read bit PHP depends on is never removed, and wp-config.php is never made
+   * world-writable.
+   */
+  private function apply_config_permissions_action($action_id, $payload) {
+    $type = 'set_config_permissions';
+    $path = $this->wp_config_path();
+    if (!$path) {
+      return $this->action_result($action_id, $type, 'failed', 'wp-config.php was not found. Nothing was changed.');
+    }
+    clearstatcache(true, $path);
+    $perms = @fileperms($path);
+    if ($perms === false) {
+      return $this->action_result($action_id, $type, 'failed', 'The permissions of wp-config.php could not be read. Nothing was changed.');
+    }
+    $current = $perms & 0777;
+
+    $mode = isset($payload['mode']) ? (string) $payload['mode'] : 'tighten';
+    if ($mode === 'tighten') {
+      $target = $current & ~0007 & ~0111;
+    } elseif (preg_match('/^0?[0-7]{3}$/', $mode)) {
+      $target = octdec($mode);
+    } else {
+      return $this->action_result($action_id, $type, 'failed', 'Unsupported permission mode. Nothing was changed.');
+    }
+    if ($target & 0002) {
+      return $this->action_result($action_id, $type, 'failed', 'wp-config.php must never be world-writable. Nothing was changed.');
+    }
+
+    $reader = $this->config_reader_class($path);
+    $needs = ['owner' => 0400, 'group' => 0040, 'other' => 0004];
+    if ($reader === null) {
+      return $this->action_result($action_id, $type, 'failed', 'Could not tell which account PHP uses to read wp-config.php, so its permissions were left unchanged. Ask your host to set them to 640.');
+    }
+    if (($target & $needs[$reader]) === 0) {
+      return $this->action_result($action_id, $type, 'failed', 'PHP reads wp-config.php through the "others" permission on this server; removing it would take the site offline. Ask your host to set the file to 640 with the PHP user as owner or group.');
+    }
+
+    $state = ['wpConfigMode' => sprintf('%04o', $target)];
+    // A world-writable original is not worth restoring.
+    $rollback = ($current & 0002) ? null : [
+      'id' => $action_id . '-rollback',
+      'type' => $type,
+      'payload' => ['mode' => sprintf('%04o', $current)],
+    ];
+    if ($target === $current) {
+      return $this->action_result($action_id, $type, 'applied', sprintf('wp-config.php already has permissions %04o.', $current), $state, $rollback);
+    }
+    if (!@chmod($path, $target)) {
+      return $this->action_result($action_id, $type, 'failed', 'The server did not allow changing the permissions of wp-config.php. Nothing was changed.');
+    }
+    clearstatcache(true, $path);
+    $after = @fileperms($path);
+    if ($after === false || ($after & 0777) !== $target) {
+      @chmod($path, $current);
+      return $this->action_result($action_id, $type, 'failed', 'The permission change did not take effect and was reverted.');
+    }
+
+    return $this->action_result(
+      $action_id, $type, 'applied',
+      sprintf('wp-config.php permissions changed from %04o to %04o.', $current, $target),
+      $state, $rollback
+    );
+  }
+
+  private function is_privileged_role($role_name) {
+    $role = get_role($role_name);
+    if (!$role) {
+      return true;
+    }
+    foreach (self::PRIVILEGED_CAPS as $cap) {
+      if ($role->has_cap($cap)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * set_default_role: the role new registrations receive. Only roles without
+   * administrative capabilities are accepted, so this action can close the
+   * "anyone can register as administrator" hole but never open it; for the
+   * same reason, replacing a privileged default role cannot be undone.
+   */
+  private function apply_default_role_action($action_id, $payload) {
+    $type = 'set_default_role';
+    $previous = (string) get_option('default_role', 'subscriber');
+    $role = isset($payload['role']) ? sanitize_key($payload['role']) : '';
+    if ($role === '' || $this->is_privileged_role($role)) {
+      return $this->action_result($action_id, $type, 'failed', 'Only an existing role without administrative capabilities can be the default role. Nothing was changed.', ['defaultRole' => $previous]);
+    }
+
+    update_option('default_role', $role);
+    $rollback = $this->is_privileged_role($previous) ? null : [
+      'id' => $action_id . '-rollback',
+      'type' => $type,
+      'payload' => ['role' => $previous],
+    ];
+    return $this->action_result($action_id, $type, 'applied', sprintf('New users now get the "%s" role.', $role), ['defaultRole' => $role], $rollback);
+  }
+
+  /** Loads the WordPress admin helpers the auto-update checks need (also in REST requests). */
+  private function load_update_helpers() {
+    foreach (['wp-admin/includes/plugin.php', 'wp-admin/includes/class-wp-automatic-updater.php', 'wp-admin/includes/update.php'] as $file) {
+      if (file_exists(ABSPATH . $file)) {
+        require_once ABSPATH . $file;
+      }
+    }
+  }
+
+  /** True when WordPress's background updater is switched off (constants, DISALLOW_FILE_MODS, filters). */
+  private function auto_updater_disabled() {
+    $this->load_update_helpers();
+    if (!class_exists('WP_Automatic_Updater')) {
+      return null;
+    }
+    $updater = new \WP_Automatic_Updater();
+    return (bool) $updater->is_disabled();
+  }
+
+  private function plugin_auto_updates_allowed() {
+    $this->load_update_helpers();
+    return function_exists('wp_is_auto_update_enabled_for_type') ? (bool) wp_is_auto_update_enabled_for_type('plugin') : null;
+  }
+
+  private function plugin_file_list($values) {
+    $clean = [];
+    foreach ((array) $values as $value) {
+      if (is_string($value) && preg_match('#^[A-Za-z0-9._/-]+\.php$#', $value) && strpos($value, '..') === false) {
+        $clean[] = $value;
+      }
+    }
+    return array_values(array_unique($clean));
+  }
+
+  /**
+   * set_plugin_auto_updates: `enable: "all"` turns on WordPress's own
+   * per-plugin auto-update for every installed plugin (the same switch as the
+   * Plugins screen); `plugins` with `replace` restores an exact previous list.
+   */
+  private function apply_plugin_auto_updates_action($action_id, $payload) {
+    $type = 'set_plugin_auto_updates';
+    $this->load_update_helpers();
+    $installed = array_keys(get_plugins());
+    $previous = $this->plugin_file_list(get_site_option('auto_update_plugins', []));
+
+    if (!empty($payload['replace'])) {
+      if (!isset($payload['plugins']) || !is_array($payload['plugins'])) {
+        return $this->action_result($action_id, $type, 'failed', 'Missing plugin list. Nothing was changed.');
+      }
+      $next = $this->plugin_file_list($payload['plugins']);
+    } elseif (isset($payload['enable']) && $payload['enable'] === 'all') {
+      if ($this->plugin_auto_updates_allowed() === false) {
+        return $this->action_result($action_id, $type, 'failed', 'Plugin auto-updates are switched off on this site (wp-config.php, the host or another plugin). Nothing was changed.');
+      }
+      $next = array_values(array_unique(array_merge($previous, $installed)));
+    } else {
+      return $this->action_result($action_id, $type, 'failed', 'Unsupported auto-update request. Nothing was changed.');
+    }
+
+    update_site_option('auto_update_plugins', $next);
+    $enabled = count(array_intersect($next, $installed));
+    return $this->action_result(
+      $action_id, $type, 'applied',
+      sprintf('Automatic updates are on for %d of %d plugins.', $enabled, count($installed)),
+      ['pluginsAutoUpdateEnabled' => $enabled, 'pluginsTotal' => count($installed)],
+      ['id' => $action_id . '-rollback', 'type' => $type, 'payload' => ['plugins' => $previous, 'replace' => true]]
+    );
+  }
+
+  private function count_expired_transients() {
+    global $wpdb;
+    $count = $wpdb->get_var($wpdb->prepare(
+      "SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE %s AND option_value < %d",
+      $wpdb->esc_like('_transient_timeout_') . '%',
+      time()
+    ));
+    return $count === null ? null : (int) $count;
+  }
+
+  /** Revisions beyond the newest REVISIONS_KEEP per post; autosaves are left alone. */
+  private function count_excess_revisions() {
+    global $wpdb;
+    $count = $wpdb->get_var($wpdb->prepare(
+      "SELECT COALESCE(SUM(GREATEST(c - %d, 0)), 0) FROM (
+         SELECT COUNT(*) AS c FROM {$wpdb->posts}
+         WHERE post_type = 'revision' AND post_name NOT LIKE %s
+         GROUP BY post_parent
+       ) AS per_post",
+      self::REVISIONS_KEEP,
+      '%' . $wpdb->esc_like('-autosave') . '%'
+    ));
+    return $count === null ? null : (int) $count;
+  }
+
+  /** Deletes revisions beyond the newest $keep per post, in batches, until $deadline. */
+  private function trim_revisions($keep, $deadline) {
+    global $wpdb;
+    $rows = $wpdb->get_results($wpdb->prepare(
+      "SELECT ID, post_parent FROM {$wpdb->posts}
+       WHERE post_type = 'revision' AND post_name NOT LIKE %s
+       ORDER BY post_parent ASC, post_date DESC, ID DESC",
+      '%' . $wpdb->esc_like('-autosave') . '%'
+    ), ARRAY_N);
+
+    $seen = [];
+    $excess = [];
+    foreach ((array) $rows as $row) {
+      $parent = (int) $row[1];
+      $seen[$parent] = isset($seen[$parent]) ? $seen[$parent] + 1 : 1;
+      if ($seen[$parent] > $keep) {
+        $excess[] = (int) $row[0];
+      }
+    }
+
+    $deleted = 0;
+    foreach (array_chunk($excess, 200) as $chunk) {
+      if (microtime(true) > $deadline) {
+        break;
+      }
+      $ids = implode(',', array_map('intval', $chunk));
+      $wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE post_id IN ($ids)");
+      $wpdb->query("DELETE FROM {$wpdb->term_relationships} WHERE object_id IN ($ids)");
+      $removed = $wpdb->query("DELETE FROM {$wpdb->posts} WHERE ID IN ($ids) AND post_type = 'revision'");
+      foreach ($chunk as $id) {
+        clean_post_cache($id);
+      }
+      $deleted += is_int($removed) ? $removed : 0;
+    }
+
+    return ['deleted' => $deleted, 'remaining' => max(0, count($excess) - $deleted)];
+  }
+
+  /**
+   * cleanup_database: removes data WordPress no longer needs. Deleted rows
+   * cannot be restored, so these actions return no rollback.
+   */
+  private function apply_cleanup_action($action_id, $payload) {
+    $type = 'cleanup_database';
+    $task = isset($payload['task']) ? sanitize_key($payload['task']) : '';
+
+    if ($task === 'expired_transients') {
+      $before = $this->count_expired_transients();
+      delete_expired_transients(true);
+      $after = $this->count_expired_transients();
+      return $this->action_result(
+        $action_id, $type, 'applied',
+        sprintf('%d expired transient(s) removed.', max(0, (int) $before - (int) $after)),
+        ['expiredTransients' => $after]
+      );
+    }
+
+    if ($task === 'revisions') {
+      $result = $this->trim_revisions(self::REVISIONS_KEEP, microtime(true) + self::CLEANUP_BUDGET_SECONDS);
+      $message = sprintf('%d old revision(s) removed; the newest %d per post were kept.', $result['deleted'], self::REVISIONS_KEEP);
+      if ($result['remaining'] > 0) {
+        $message .= sprintf(' %d more remain; run the cleanup again.', $result['remaining']);
+      }
+      return $this->action_result($action_id, $type, 'applied', $message, ['revisionsRemovable' => $result['remaining']]);
+    }
+
+    return $this->action_result($action_id, $type, 'failed', 'Unsupported cleanup task. Nothing was changed.');
+  }
+
   // ---------- site audit (read-only) ----------
 
   const AUDIT_SCHEMA = 1;
@@ -650,6 +996,7 @@ class GetSafe360_Connector {
       'performance' => $this->audit_performance(),
       'database'    => $this->audit_database(),
       'cron'        => $this->audit_cron(),
+      'autoUpdates' => $this->audit_auto_updates(),
       'redFlags'    => $this->audit_red_flags($refresh),
       'environment' => $this->audit_environment(),
       'durationMs'  => (int) round((microtime(true) - $started) * 1000),
@@ -677,6 +1024,7 @@ class GetSafe360_Connector {
 
   private function audit_security() {
     global $wpdb;
+    $state = $this->get_action_state();
 
     $admins = get_users(['role' => 'administrator', 'fields' => 'ID', 'number' => 100]);
     $weak_admin_login = false;
@@ -688,12 +1036,10 @@ class GetSafe360_Connector {
       }
     }
 
-    $wp_config = ABSPATH . 'wp-config.php';
-    if (!file_exists($wp_config)) {
-      $wp_config = dirname(ABSPATH) . '/wp-config.php';
-    }
+    $wp_config = $this->wp_config_path();
     $world_readable = null;
-    if (file_exists($wp_config)) {
+    if ($wp_config) {
+      clearstatcache(true, $wp_config);
       $perms = @fileperms($wp_config);
       $world_readable = $perms === false ? null : (bool) ($perms & 0x0004);
     }
@@ -703,7 +1049,9 @@ class GetSafe360_Connector {
       'hasAdminUsername'     => $weak_admin_login,
       'usersCanRegister'     => (bool) get_option('users_can_register'),
       'defaultRoleIsAdmin'   => get_option('default_role') === 'administrator',
-      'fileEditDisabled'     => defined('DISALLOW_FILE_EDIT') && DISALLOW_FILE_EDIT,
+      'fileEditDisabled'     => (defined('DISALLOW_FILE_EDIT') && DISALLOW_FILE_EDIT)
+        || (defined('DISALLOW_FILE_MODS') && DISALLOW_FILE_MODS)
+        || !empty($state['disableFileEditor']),
       'debug'                => defined('WP_DEBUG') && WP_DEBUG,
       'debugDisplay'         => defined('WP_DEBUG') && WP_DEBUG && (!defined('WP_DEBUG_DISPLAY') || WP_DEBUG_DISPLAY),
       'debugLog'             => defined('WP_DEBUG_LOG') && WP_DEBUG_LOG,
@@ -818,11 +1166,7 @@ class GetSafe360_Connector {
     $autoload = $wpdb->get_var(
       "SELECT SUM(LENGTH(option_value)) FROM {$wpdb->options} WHERE autoload IN ('yes','on','auto-on','auto')"
     );
-    $expired = $wpdb->get_var($wpdb->prepare(
-      "SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE %s AND option_value < %d",
-      $wpdb->esc_like('_transient_timeout_') . '%',
-      time()
-    ));
+    $expired = $this->count_expired_transients();
     $revisions = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'revision'");
 
     $size = null;
@@ -838,9 +1182,32 @@ class GetSafe360_Connector {
 
     return [
       'autoloadBytes'     => $autoload === null ? null : (int) $autoload,
-      'expiredTransients' => $expired === null ? null : (int) $expired,
+      'expiredTransients' => $expired,
       'revisions'         => $revisions === null ? null : (int) $revisions,
+      'revisionsRemovable' => $this->count_excess_revisions(),
       'sizeBytes'         => $size,
+    ];
+  }
+
+  /** Mirrors Core_Upgrader::should_update_to_version() for minor releases. */
+  private function audit_auto_updates() {
+    $disabled = $this->auto_updater_disabled();
+
+    $minor = get_site_option('auto_update_core_minor', 'enabled') === 'enabled';
+    if (defined('WP_AUTO_UPDATE_CORE')) {
+      $minor = WP_AUTO_UPDATE_CORE !== false;
+    }
+    $minor = (bool) apply_filters('allow_minor_auto_core_updates', $minor);
+
+    $installed = array_keys(get_plugins());
+    $enabled = array_intersect($this->plugin_file_list(get_site_option('auto_update_plugins', [])), $installed);
+
+    return [
+      'updaterDisabled' => $disabled,
+      'coreMinor'       => $disabled === true ? false : $minor,
+      'pluginsAllowed'  => $disabled === true ? false : $this->plugin_auto_updates_allowed(),
+      'pluginsEnabled'  => count($enabled),
+      'pluginsTotal'    => count($installed),
     ];
   }
 
@@ -1277,11 +1644,16 @@ class GetSafe360_Connector {
       $action_id = sanitize_text_field($action['id']);
       $action_type = sanitize_text_field($action['type']);
 
-      if ($action_type === 'set_security_headers') {
-        $results[] = $this->apply_security_headers_action(
-          $action_id,
-          isset($action['payload']) && is_array($action['payload']) ? $action['payload'] : []
-        );
+      $action_payload = isset($action['payload']) && is_array($action['payload']) ? $action['payload'] : [];
+      $handlers = [
+        'set_security_headers'    => 'apply_security_headers_action',
+        'set_config_permissions'  => 'apply_config_permissions_action',
+        'set_default_role'        => 'apply_default_role_action',
+        'set_plugin_auto_updates' => 'apply_plugin_auto_updates_action',
+        'cleanup_database'        => 'apply_cleanup_action',
+      ];
+      if (isset($handlers[$action_type])) {
+        $results[] = $this->{$handlers[$action_type]}($action_id, $action_payload);
         continue;
       }
 
@@ -1301,7 +1673,7 @@ class GetSafe360_Connector {
       $key = isset($setting['key']) ? sanitize_text_field($setting['key']) : '';
       $enabled = isset($setting['enabled']) ? (bool) $setting['enabled'] : true;
 
-      if (!in_array($key, ['disableXmlRpc', 'blockUserEnumeration'], true)) {
+      if (!isset(self::SETTING_LABELS[$key])) {
         $results[] = [
           'id' => $action_id,
           'type' => $action_type,
@@ -1313,13 +1685,24 @@ class GetSafe360_Connector {
         continue;
       }
 
+      // The background updater must be running for the security-update switch to mean anything.
+      if ($key === 'enableCoreSecurityUpdates' && $enabled && $this->auto_updater_disabled()) {
+        $results[] = [
+          'id' => $action_id,
+          'type' => $action_type,
+          'status' => 'failed',
+          'message' => 'WordPress automatic updates are switched off on this site (AUTOMATIC_UPDATER_DISABLED, DISALLOW_FILE_MODS or the host). Nothing was changed.',
+          'state' => $state,
+          'rollback' => null,
+        ];
+        continue;
+      }
+
       $previous = !empty($state[$key]);
       $state[$key] = $enabled;
       $this->update_action_state($state);
 
-      $label = $key === 'disableXmlRpc'
-        ? 'XML-RPC protection'
-        : 'user enumeration protection';
+      $label = self::SETTING_LABELS[$key];
 
       $results[] = [
         'id' => $action_id,
@@ -1432,6 +1815,12 @@ class GetSafe360_Connector {
         'securityHeaders'      => true,
         'siteAudit'            => true,
         'rollback'             => true,
+        'securityDisableFileEditor' => true,
+        'securityDefaultRole'  => true,
+        'securityConfigPermissions' => true,
+        'autoUpdatesCore'      => true,
+        'autoUpdatesPlugins'   => true,
+        'databaseCleanup'      => true,
       ],
     ];
   }

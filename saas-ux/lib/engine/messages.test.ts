@@ -99,6 +99,7 @@ test('every message a rule can emit exists in the catalog', () => {
         ...(block.includes('healthyWhenTrue(') ? ['pass', 'fail'] : []),
         ...(block.includes('NOT_REPORTED') ? ['common.notReported'] : []),
         ...(block.includes('NEEDS_AUDIT') ? ['common.needsAudit'] : []),
+        ...(block.includes('NEEDS_PLUGIN_17') ? ['common.needsPlugin17'] : []),
         ...(block.includes('NOT_WORDPRESS') ? ['common.notWordPress'] : []),
         ...(block.includes('NO_TITLE') ? ['common.noTitle'] : []),
         ...(block.includes('NO_DESCRIPTION') ? ['common.noDescription'] : []),

@@ -546,6 +546,7 @@
         "undoneAt": "on {date}",
         "undo": "Undo",
         "newerFirst": "Undo the newer change to this setting first.",
+        "permanent": "Permanent: this change cannot be undone.",
         "errors": {
           "undo": "Undo failed → Try again, or reconnect the site.",
           "undoNewerFirst": "A newer change to the same setting is still applied → Undo that one first."

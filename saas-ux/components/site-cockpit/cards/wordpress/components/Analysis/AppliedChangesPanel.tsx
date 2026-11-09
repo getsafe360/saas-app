@@ -117,7 +117,11 @@ export function AppliedChangesPanel({ siteId, refreshKey, onUndo, onUndone }: Ap
               </div>
             </div>
             {change.state !== "undone" && (
-              change.undoable ? (
+              change.permanent ? (
+                <span className="max-w-[14rem] text-[11px]" style={{ color: "var(--text-subtle)" }}>
+                  {t("permanent")}
+                </span>
+              ) : change.undoable ? (
                 <button
                   type="button"
                   className="inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-xs text-white disabled:opacity-60"

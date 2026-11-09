@@ -66,3 +66,18 @@ test('falls back to the single finding id and respects the limit', () => {
   const many = Array.from({ length: 30 }, (_, i) => run({ id: `r${i}`, startedAt: new Date(2026, 0, i + 1).toISOString() }));
   assert.equal(toAppliedChanges(many, 5).length, 5);
 });
+
+test('one-way changes are listed as permanent, never undoable', () => {
+  const changes = toAppliedChanges([
+    run({ id: 'cleanup', actionId: 'wordpress-limit-revisions', rollbackPayload: null }),
+    run({ id: 'refused', actionId: 'wordpress-limit-revisions', status: 'failed', rollbackPayload: null }),
+    run({ id: 'guided', actionId: 'wordpress-update-core', rollbackPayload: null }),
+  ]);
+  assert.deepEqual(changes.map((c) => c.runId), ['cleanup'], 'only applied one-way fixers count; refusals and guided runs do not');
+  assert.equal(changes[0].permanent, true);
+  assert.equal(changes[0].undoable, false);
+  assert.equal(changes[0].state, 'active');
+
+  const [reversible] = toAppliedChanges([run({ id: 'headers' })]);
+  assert.equal(reversible.permanent, false);
+});

@@ -26,3 +26,4 @@ mkdir -p wordpress/wp-content/plugins/getsafe360-connector
 cp "$PLUGIN" wordpress/wp-content/plugins/getsafe360-connector/
 $WP plugin activate getsafe360-connector --quiet
 $WP eval-file "$HERE/audit-test.php"
+$WP eval-file "$HERE/actions-test.php"

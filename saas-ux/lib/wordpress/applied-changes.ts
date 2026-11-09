@@ -4,6 +4,7 @@
 // it: only runs that actually modified WordPress, newest first, with Undo
 // offered exactly where the rollback route would accept it.
 
+import { PERMANENT_FIXER_IDS } from '@/lib/engine/fixers/catalog';
 import { parseRollbackRequest, planRollback, type RollbackCandidate } from './rollback';
 
 export type AppliedChangeState =
@@ -26,6 +27,8 @@ export interface AppliedChange {
   /** When it was undone (rolled_back runs only). */
   undoneAt: string | null;
   undoable: boolean;
+  /** The change cannot be undone at all (e.g. deleted revisions). */
+  permanent: boolean;
 }
 
 export interface ActionRunRow extends RollbackCandidate {
@@ -47,10 +50,16 @@ function findingIdsOf(run: ActionRunRow): string[] {
   return typeof payload?.findingId === 'string' ? [payload.findingId] : [];
 }
 
-/** True when the run changed the site: the connector applied it and returned an inverse. */
+const hasInverse = (run: ActionRunRow) => parseRollbackRequest(run.rollbackPayload) !== null;
+
+/**
+ * True when the run changed the site: the connector applied it and returned an
+ * inverse, or it is a verified one-way change such as a database cleanup.
+ */
 function changedSite(run: ActionRunRow): boolean {
   if (run.status === 'rolled_back') return true;
-  return (run.status === 'applied' || run.status === 'failed') && parseRollbackRequest(run.rollbackPayload) !== null;
+  if (run.status === 'applied' && PERMANENT_FIXER_IDS.has(run.actionId)) return true;
+  return (run.status === 'applied' || run.status === 'failed') && hasInverse(run);
 }
 
 export function toAppliedChanges(runs: ReadonlyArray<ActionRunRow>, limit = 20): AppliedChange[] {
@@ -62,8 +71,9 @@ export function toAppliedChanges(runs: ReadonlyArray<ActionRunRow>, limit = 20):
   return relevant.map((run) => {
     const state: AppliedChangeState =
       run.status === 'rolled_back' ? 'undone' : run.status === 'applied' && run.verificationOk !== false ? 'active' : 'unverified';
+    const permanent = state !== 'undone' && !hasInverse(run);
     // Same check the rollback route runs: blocked while a newer change to the same setting is applied.
-    const plan = state === 'undone' ? null : planRollback([run], runs);
+    const plan = state === 'undone' || permanent ? null : planRollback([run], runs);
     return {
       runId: run.id,
       actionId: run.actionId,
@@ -73,6 +83,7 @@ export function toAppliedChanges(runs: ReadonlyArray<ActionRunRow>, limit = 20):
       appliedAt: iso(run.startedAt),
       undoneAt: state === 'undone' && run.completedAt ? iso(run.completedAt) : null,
       undoable: plan !== null && plan.planned.length === 1 && plan.blocked.length === 0,
+      permanent,
     };
   });
 }

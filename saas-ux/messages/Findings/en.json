@@ -9,7 +9,8 @@
       "notWordPress": "Only applies to WordPress sites.",
       "noTitle": "The page has no title to measure.",
       "noDescription": "The page has no meta description to measure.",
-      "pageNotRead": "The page content could not be read."
+      "pageNotRead": "The page content could not be read.",
+      "needsPlugin17": "Needs the GetSafe 360 plugin 1.7 or newer."
     },
     "wp-core-version": {
       "title": "WordPress core version",
@@ -152,6 +153,13 @@
       "supported": "PHP {branch} is supported.",
       "uninterpretable": "PHP version \"{version}\" could not be interpreted."
     },
+    "wp-core-auto-updates": {
+      "title": "Automatic security updates",
+      "recommendation": "Let GetSafe 360 switch on automatic WordPress security releases, or remove define('WP_AUTO_UPDATE_CORE', false); from wp-config.php.",
+      "on": "WordPress installs security releases automatically.",
+      "off": "WordPress security releases are not installed automatically, so known vulnerabilities stay open until someone updates by hand.",
+      "disabledByConfig": "Automatic updates are switched off in wp-config.php (AUTOMATIC_UPDATER_DISABLED or DISALLOW_FILE_MODS) or by your host. If your host does not update WordPress for you, remove that setting."
+    },
     "wp-debug-log": {
       "title": "Debug log",
       "recommendation": "Turn off WP_DEBUG_LOG on production, or write the log outside the web root.",
@@ -176,6 +184,14 @@
       "unknown": "Theme update data is not available yet.",
       "available": "An update is available for the active theme.",
       "upToDate": "The active theme is up to date."
+    },
+    "wp-plugin-auto-updates": {
+      "title": "Plugin auto-updates",
+      "recommendation": "Switch on automatic updates for your plugins, either here or under Plugins → Enable auto-updates.",
+      "all": "{total, plural, one {The plugin updates} other {All # plugins update}} automatically.",
+      "some": "{enabled, number} of {total, number} plugins update automatically.",
+      "none": "None of the {total, number} plugins update automatically.",
+      "disabledByConfig": "Plugin auto-updates are switched off on this site by wp-config.php, your host or another plugin."
     },
     "wp-autoload-size": {
       "title": "Autoloaded options",

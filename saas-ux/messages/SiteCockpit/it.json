@@ -546,6 +546,7 @@
         "undoneAt": "il {date}",
         "undo": "Annulla",
         "newerFirst": "Annulla prima la modifica più recente a questa impostazione.",
+        "permanent": "Definitiva: questa modifica non si può annullare.",
         "errors": {
           "undo": "Annullamento non riuscito → Riprova o ricollega il sito.",
           "undoNewerFirst": "Una modifica più recente alla stessa impostazione è ancora attiva → Annulla prima quella."

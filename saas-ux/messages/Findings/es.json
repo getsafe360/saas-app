@@ -9,7 +9,8 @@
       "notWordPress": "Solo se aplica a sitios WordPress.",
       "noTitle": "La página no tiene título que medir.",
       "noDescription": "La página no tiene meta descripción que medir.",
-      "pageNotRead": "No se pudo leer el contenido de la página."
+      "pageNotRead": "No se pudo leer el contenido de la página.",
+      "needsPlugin17": "Requiere el plugin GetSafe 360 1.7 o posterior."
     },
     "wp-core-version": {
       "title": "Versión del núcleo de WordPress",
@@ -152,6 +153,13 @@
       "supported": "PHP {branch} tiene soporte.",
       "uninterpretable": "No se pudo interpretar la versión de PHP \"{version}\"."
     },
+    "wp-core-auto-updates": {
+      "title": "Actualizaciones de seguridad automáticas",
+      "recommendation": "Deja que GetSafe 360 active las actualizaciones de seguridad automáticas de WordPress, o elimina define('WP_AUTO_UPDATE_CORE', false); de wp-config.php.",
+      "on": "WordPress instala automáticamente las versiones de seguridad.",
+      "off": "Las versiones de seguridad de WordPress no se instalan automáticamente, así que las vulnerabilidades conocidas siguen abiertas hasta que alguien actualice a mano.",
+      "disabledByConfig": "Las actualizaciones automáticas están desactivadas en wp-config.php (AUTOMATIC_UPDATER_DISABLED o DISALLOW_FILE_MODS) o por tu proveedor de hosting. Si tu proveedor no actualiza WordPress por ti, elimina ese ajuste."
+    },
     "wp-debug-log": {
       "title": "Registro de depuración",
       "recommendation": "Desactiva WP_DEBUG_LOG en producción o guarda el registro fuera de la raíz web.",
@@ -176,6 +184,14 @@
       "unknown": "Los datos de actualización del tema aún no están disponibles.",
       "available": "Hay una actualización disponible para el tema activo.",
       "upToDate": "El tema activo está actualizado."
+    },
+    "wp-plugin-auto-updates": {
+      "title": "Actualizaciones automáticas de plugins",
+      "recommendation": "Activa las actualizaciones automáticas de tus plugins, aquí o en Plugins → Activar actualizaciones automáticas.",
+      "all": "{total, plural, one {El plugin se actualiza} other {Los # plugins se actualizan}} automáticamente.",
+      "some": "{enabled, number} de {total, number} plugins se actualizan automáticamente.",
+      "none": "Ninguno de los {total, number} plugins se actualiza automáticamente.",
+      "disabledByConfig": "Las actualizaciones automáticas de plugins están desactivadas en este sitio por wp-config.php, tu proveedor de hosting u otro plugin."
     },
     "wp-autoload-size": {
       "title": "Opciones de carga automática",

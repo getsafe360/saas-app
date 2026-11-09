@@ -5,10 +5,34 @@
 // guided review in the planner.
 
 import type { ConnectorFixer } from './types';
-import { blockUserEnumerationFixer, disableXmlRpcFixer } from './wordpress/connector-settings';
+import {
+  blockUserEnumerationFixer,
+  coreAutoUpdatesFixer,
+  disableFileEditorFixer,
+  disableXmlRpcFixer,
+} from './wordpress/connector-settings';
 import { securityHeadersFixer } from './wordpress/security-headers';
+import {
+  cleanTransientsFixer,
+  configPermissionsFixer,
+  defaultRoleFixer,
+  pluginAutoUpdatesFixer,
+  revisionsFixer,
+} from './wordpress/site-maintenance';
 
-const FIXERS: ReadonlyArray<ConnectorFixer> = [blockUserEnumerationFixer, disableXmlRpcFixer, securityHeadersFixer];
+const FIXERS: ReadonlyArray<ConnectorFixer> = [
+  blockUserEnumerationFixer,
+  disableXmlRpcFixer,
+  securityHeadersFixer,
+  // Connector 1.7
+  disableFileEditorFixer,
+  coreAutoUpdatesFixer,
+  defaultRoleFixer,
+  configPermissionsFixer,
+  pluginAutoUpdatesFixer,
+  cleanTransientsFixer,
+  revisionsFixer,
+];
 
 const BY_ID = new Map(FIXERS.map((fixer) => [fixer.id, fixer]));
 

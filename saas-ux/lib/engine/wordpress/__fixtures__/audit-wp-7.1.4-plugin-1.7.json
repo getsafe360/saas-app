@@ -1,0 +1,93 @@
+{
+    "success": true,
+    "schema": 1,
+    "generatedAt": "2026-11-09T11:02:39+00:00",
+    "core": {
+        "version": "7.1.4",
+        "updateAvailable": null
+    },
+    "security": {
+        "adminCount": 1,
+        "hasAdminUsername": true,
+        "usersCanRegister": false,
+        "defaultRoleIsAdmin": false,
+        "fileEditDisabled": false,
+        "debug": false,
+        "debugDisplay": false,
+        "debugLog": false,
+        "saltsConfigured": true,
+        "dbPrefixDefault": true,
+        "xmlrpcEnabled": true,
+        "homeHttps": true,
+        "adminHttps": true,
+        "wpConfigWorldReadable": true
+    },
+    "plugins": {
+        "total": 2,
+        "active": 1,
+        "inactive": 1,
+        "updatesAvailable": null,
+        "mustUse": 0,
+        "items": [
+            {
+                "slug": "getsafe360-connector",
+                "version": "1.7.0",
+                "active": true,
+                "updateAvailable": null
+            },
+            {
+                "slug": "hello",
+                "version": "1.7.2",
+                "active": false,
+                "updateAvailable": null
+            }
+        ]
+    },
+    "themes": {
+        "total": 15,
+        "inactive": 14,
+        "childTheme": false,
+        "activeUpdateAvailable": null
+    },
+    "performance": {
+        "phpVersion": "8.3.6",
+        "mysqlVersion": "10.11.14",
+        "memoryLimitBytes": -1,
+        "maxExecutionTime": 0,
+        "opcache": false,
+        "objectCache": false,
+        "pageCache": false
+    },
+    "database": {
+        "autoloadBytes": 30299,
+        "expiredTransients": 0,
+        "revisions": 0,
+        "revisionsRemovable": 0,
+        "sizeBytes": 737280
+    },
+    "cron": {
+        "disabled": false,
+        "alternate": false,
+        "events": 8,
+        "overdue": 7
+    },
+    "autoUpdates": {
+        "updaterDisabled": false,
+        "coreMinor": true,
+        "pluginsAllowed": true,
+        "pluginsEnabled": 0,
+        "pluginsTotal": 2
+    },
+    "redFlags": {
+        "uploadsPhpFiles": 0,
+        "coreModifiedFiles": null,
+        "scannedAt": "2026-11-09T10:59:04+00:00"
+    },
+    "environment": {
+        "multisite": false,
+        "woocommerce": false,
+        "multilingual": null,
+        "locale": "en_US"
+    },
+    "durationMs": 5
+}

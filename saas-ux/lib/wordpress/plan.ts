@@ -22,6 +22,12 @@ const CAPABILITY_LABELS: Record<string, string> = {
   securityDisableXmlrpc: 'disable XML-RPC from the connector',
   securityBlockUserEnumeration: 'block user enumeration from the connector',
   securityHeaders: 'send security headers (connector 1.5 or newer)',
+  securityDisableFileEditor: 'lock the file editor (connector 1.7 or newer)',
+  securityDefaultRole: 'change the default role (connector 1.7 or newer)',
+  securityConfigPermissions: 'change wp-config.php permissions (connector 1.7 or newer)',
+  autoUpdatesCore: 'switch on security updates (connector 1.7 or newer)',
+  autoUpdatesPlugins: 'switch on plugin auto-updates (connector 1.7 or newer)',
+  databaseCleanup: 'clean up the database (connector 1.7 or newer)',
 };
 
 function makeActionId(finding: RemediationFindingInput): string {
