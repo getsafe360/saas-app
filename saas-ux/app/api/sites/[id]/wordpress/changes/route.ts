@@ -53,6 +53,7 @@ export async function GET(_request: Request, props: { params: Promise<{ id: stri
       status: wordpressActionRuns.status,
       rollbackPayload: wordpressActionRuns.rollbackPayload,
       inputPayload: wordpressActionRuns.inputPayload,
+      resultPayload: wordpressActionRuns.resultPayload,
       verificationOk: wordpressActionRuns.verificationOk,
       startedAt: wordpressActionRuns.startedAt,
       completedAt: wordpressActionRuns.completedAt,
@@ -67,11 +68,9 @@ export async function GET(_request: Request, props: { params: Promise<{ id: stri
             isNotNull(wordpressActionRuns.rollbackPayload),
             sql`${wordpressActionRuns.rollbackPayload} <> 'null'::jsonb`,
           ),
-          // One-way changes (database cleanup, default role) have no inverse but did change the site.
-          and(
-            eq(wordpressActionRuns.status, 'applied'),
-            inArray(wordpressActionRuns.actionId, [...PERMANENT_FIXER_IDS]),
-          ),
+          // One-way changes (database cleanup, default role) have no inverse but did change the site,
+          // including when the live check afterwards failed (toAppliedChanges confirms the connector applied it).
+          inArray(wordpressActionRuns.actionId, [...PERMANENT_FIXER_IDS]),
         ),
       ),
     )

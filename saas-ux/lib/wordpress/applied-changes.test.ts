@@ -70,7 +70,13 @@ test('falls back to the single finding id and respects the limit', () => {
 test('one-way changes are listed as permanent, never undoable', () => {
   const changes = toAppliedChanges([
     run({ id: 'cleanup', actionId: 'wordpress-limit-revisions', rollbackPayload: null }),
-    run({ id: 'refused', actionId: 'wordpress-limit-revisions', status: 'failed', rollbackPayload: null }),
+    run({
+      id: 'refused',
+      actionId: 'wordpress-limit-revisions',
+      status: 'failed',
+      rollbackPayload: null,
+      resultPayload: { connectorResult: { status: 'failed' } },
+    }),
     run({ id: 'guided', actionId: 'wordpress-update-core', rollbackPayload: null }),
   ]);
   assert.deepEqual(changes.map((c) => c.runId), ['cleanup'], 'only applied one-way fixers count; refusals and guided runs do not');
@@ -80,4 +86,22 @@ test('one-way changes are listed as permanent, never undoable', () => {
 
   const [reversible] = toAppliedChanges([run({ id: 'headers' })]);
   assert.equal(reversible.permanent, false);
+});
+
+test('a one-way change the connector made stays listed when its live check fails', () => {
+  const [partial] = toAppliedChanges([
+    run({
+      id: 'partial',
+      actionId: 'wordpress-limit-revisions',
+      startedAt: '2026-11-08T21:00:00Z',
+      status: 'failed',
+      verificationOk: false,
+      rollbackPayload: null,
+      resultPayload: { message: 'Old revisions remain', connectorResult: { status: 'applied' } },
+    }),
+  ]);
+  assert.equal(partial.runId, 'partial');
+  assert.equal(partial.state, 'unverified');
+  assert.equal(partial.permanent, true);
+  assert.equal(partial.undoable, false);
 });

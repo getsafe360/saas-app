@@ -27,7 +27,8 @@ class GetSafe360_Connector {
   const API_BASE = 'https://saasfly-one-psi.vercel.app';
   /** Revisions kept per post by the revisions cleanup. */
   const REVISIONS_KEEP = 5;
-  const CLEANUP_BUDGET_SECONDS = 15.0;
+  /** Well under the SaaS client's 10 s request timeout, so the caller always gets the result. */
+  const CLEANUP_BUDGET_SECONDS = 6.0;
 
   /** Connector settings the SaaS may toggle, with their labels for result messages. */
   const SETTING_LABELS = [

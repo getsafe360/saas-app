@@ -34,6 +34,8 @@ export interface AppliedChange {
 export interface ActionRunRow extends RollbackCandidate {
   title: string;
   inputPayload: unknown;
+  /** `{ message, connectorResult }` as the remediate route stores it. */
+  resultPayload?: unknown;
   verificationOk: boolean | null;
   completedAt: Date | string | null;
 }
@@ -52,13 +54,22 @@ function findingIdsOf(run: ActionRunRow): string[] {
 
 const hasInverse = (run: ActionRunRow) => parseRollbackRequest(run.rollbackPayload) !== null;
 
+/** The connector reported the change as made, whatever the live check said afterwards. */
+function connectorApplied(run: ActionRunRow): boolean {
+  const result = run.resultPayload as { connectorResult?: { status?: unknown } | null } | null | undefined;
+  return result?.connectorResult?.status === 'applied';
+}
+
 /**
  * True when the run changed the site: the connector applied it and returned an
  * inverse, or it is a verified one-way change such as a database cleanup.
  */
 function changedSite(run: ActionRunRow): boolean {
   if (run.status === 'rolled_back') return true;
-  if (run.status === 'applied' && PERMANENT_FIXER_IDS.has(run.actionId)) return true;
+  // A one-way change that failed its live check (e.g. revisions left for a second run) still happened.
+  if (PERMANENT_FIXER_IDS.has(run.actionId)) {
+    return run.status === 'applied' || (run.status === 'failed' && connectorApplied(run));
+  }
   return (run.status === 'applied' || run.status === 'failed') && hasInverse(run);
 }
 
