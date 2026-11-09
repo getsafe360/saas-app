@@ -1,7 +1,7 @@
 // components/site-cockpit/cards/wordpress/WordPressCard.tsx
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { CockpitCard } from "../CockpitCard";
 import { WordPressAIIcon } from "@/components/icons/WordPressAI";
@@ -20,6 +20,7 @@ import {
   type UndoOutcome,
 } from "./components/Analysis/HealthFindingsPanel";
 import type { RemediationItem } from "@/lib/wordpress/remediation-result";
+import { AppliedChangesPanel } from "./components/Analysis/AppliedChangesPanel";
 import type { WordPressCardProps } from "./types";
 import type { WordPressHealthFinding } from "@/types/site-cockpit";
 
@@ -50,6 +51,12 @@ export function WordPressCard({
   const t = useTranslations("SiteCockpit");
   const locale = useLocale();
   const findingText = useFindingText();
+  // Bumped after the checklist applies or undoes, so Applied changes reloads.
+  const [changesVersion, setChangesVersion] = useState(0);
+  const [undoneElsewhere, setUndoneElsewhere] = useState<ReadonlySet<string>>(new Set());
+  const markUndone = useCallback((runIds: string[]) => {
+    setUndoneElsewhere((prev) => new Set([...prev, ...runIds]));
+  }, []);
   const { wordpress, cms } = data;
 
   // Custom hooks handle all logic
@@ -219,6 +226,7 @@ export function WordPressCard({
         console.warn("[WordPressCard] remediation failed", response.status, body?.error);
         return { ok: false, error: "apply" };
       }
+      setChangesVersion((v) => v + 1);
       return { ok: true, items: Array.isArray(body.items) ? (body.items as RemediationItem[]) : [] };
     } catch (error) {
       console.error("[WordPressCard] remediation failed", error);
@@ -238,6 +246,7 @@ export function WordPressCard({
       if (body?.error === "UNDO_NEWER_CHANGES_FIRST") return { ok: false, error: "undoNewerFirst" };
       const outcomes: Array<{ runId: string; status: string }> = Array.isArray(body?.outcomes) ? body.outcomes : [];
       if (outcomes.length === 0) return { ok: false, error: "undo" };
+      setChangesVersion((v) => v + 1);
       return {
         ok: true,
         undoneRunIds: outcomes.filter((o) => o.status === "rolled_back").map((o) => o.runId),
@@ -417,8 +426,18 @@ export function WordPressCard({
           onApply={handleApply}
           onUndo={handleUndo}
           onRescan={handleRescan}
+          externallyUndone={undoneElsewhere}
           currentScore={wordpress.score ?? undefined}
         />
+
+        {siteId && (
+          <AppliedChangesPanel
+            siteId={siteId}
+            refreshKey={changesVersion}
+            onUndo={handleUndo}
+            onUndone={markUndone}
+          />
+        )}
       </div>
     </CockpitCard>
   );

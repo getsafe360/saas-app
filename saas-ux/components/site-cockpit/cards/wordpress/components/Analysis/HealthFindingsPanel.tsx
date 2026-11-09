@@ -38,6 +38,8 @@ interface HealthFindingsPanelProps {
   onUndo?: (runIds: string[]) => Promise<UndoOutcome>;
   onRescan?: () => void;
   currentScore?: number;
+  /** Runs undone elsewhere (the Applied changes list), so results here stay truthful. */
+  externallyUndone?: ReadonlySet<string>;
 }
 
 const CATEGORY_LABEL: Record<WordPressHealthFinding["category"], string> = {
@@ -68,6 +70,7 @@ export function HealthFindingsPanel({
   onUndo,
   onRescan,
   currentScore = 0,
+  externallyUndone,
 }: HealthFindingsPanelProps) {
   const t = useTranslations("SiteCockpit.wordpress.findings");
   const text = useFindingText();
@@ -90,7 +93,11 @@ export function HealthFindingsPanel({
   const [safeMode, setSafeMode] = useState(true);
   const [applying, setApplying] = useState(false);
   const [items, setItems] = useState<RemediationItem[] | null>(null);
-  const [undoneRunIds, setUndoneRunIds] = useState<Set<string>>(new Set());
+  const [undoneHere, setUndoneRunIds] = useState<Set<string>>(new Set());
+  const undoneRunIds = useMemo(
+    () => new Set([...undoneHere, ...(externallyUndone ?? [])]),
+    [undoneHere, externallyUndone],
+  );
   const [undoingRunIds, setUndoingRunIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 

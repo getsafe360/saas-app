@@ -503,7 +503,24 @@
       "agentTitle": "WordPress-Optimierungsagent",
       "agentEyebrow": "WordPress KI",
       "agentDescription": "Ein fokussierter Arbeitsbereich für WordPress-Daten, angeleitete Korrekturen und den Prüfverlauf.",
-      "openWorkspace": "Agent-Arbeitsbereich öffnen"
+      "openWorkspace": "Agent-Arbeitsbereich öffnen",
+      "changes": {
+        "title": "Vorgenommene Änderungen",
+        "description": "Änderungen, die GetSafe 360 an Ihrer Website vorgenommen hat. Rückgängig stellt die vorherige Einstellung wieder her.",
+        "state": {
+          "active": "Aktiv",
+          "unverified": "Angewendet, noch nicht sichtbar",
+          "undone": "Rückgängig gemacht"
+        },
+        "appliedAt": "Angewendet am {date}",
+        "undoneAt": "am {date}",
+        "undo": "Rückgängig",
+        "newerFirst": "Machen Sie zuerst die neuere Änderung an dieser Einstellung rückgängig.",
+        "errors": {
+          "undo": "Rückgängig machen fehlgeschlagen → Erneut versuchen oder die Website neu verbinden.",
+          "undoNewerFirst": "Eine neuere Änderung an derselben Einstellung ist noch aktiv → Machen Sie zuerst diese rückgängig."
+        }
+      }
     },
     "mobile": {
       "title": "Mobil",
