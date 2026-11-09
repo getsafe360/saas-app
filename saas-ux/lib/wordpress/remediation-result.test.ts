@@ -24,7 +24,8 @@ test('every rule marked auto has a registered fixer', () => {
 test('fix mode: only auto + registered fixer is automatic', () => {
   assert.equal(fixModeFor('security-headers', 'auto'), 'automatic');
   assert.equal(fixModeFor('security-headers', 'guided'), 'guided');
-  assert.equal(fixModeFor('wordpress-update-plugins', 'auto'), 'guided');
+  assert.equal(fixModeFor('wordpress-update-plugins', 'auto'), 'automatic');
+  assert.equal(fixModeFor('wordpress-update-theme', 'auto'), 'guided', 'auto without a registered fixer stays guided');
   assert.equal(fixModeFor('wordpress-upgrade-php', 'manual'), 'manual');
   assert.equal(fixModeFor(undefined, undefined), 'manual');
 });

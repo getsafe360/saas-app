@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GetSafe 360 AI Connector
  * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 1.7.0
+ * Version: 1.8.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
@@ -20,7 +20,7 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '1.7.0';
+  const VERSION = '1.8.0';
   const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';
   const OPTION = 'getsafe360_connector';
   const ACTION_STATE_OPTION = 'getsafe360_action_state';
@@ -988,6 +988,393 @@ class GetSafe360_Connector {
     return $this->action_result($action_id, $type, 'failed', 'Unsupported cleanup task. Nothing was changed.');
   }
 
+  // ---------- 1.8 plugin updates with restore points ----------
+
+  const RESTORE_POINTS_OPTION = 'getsafe360_restore_points';
+  const RESTORE_POINT_DAYS = 14;
+  const RESTORE_POINTS_PER_PLUGIN = 3;
+  const MAX_UPDATES_PER_RUN = 5;
+  /** No new update starts after this many seconds, so a run ends well inside the SaaS timeout. */
+  const UPDATE_START_BUDGET_SECONDS = 20.0;
+
+  private function backup_dir() {
+    return WP_CONTENT_DIR . '/getsafe360-backups';
+  }
+
+  /** Creates the restore-point folder and blocks web access to it (Apache, IIS; zip names are random for the rest). */
+  private function ensure_backup_dir() {
+    $dir = $this->backup_dir();
+    if (!is_dir($dir) && !wp_mkdir_p($dir)) {
+      return false;
+    }
+    $guards = [
+      'index.php'  => "<?php\n// Silence is golden.\n",
+      '.htaccess'  => "Require all denied\n<IfModule !mod_authz_core.c>\nDeny from all\n</IfModule>\n",
+      'web.config' => "<?xml version=\"1.0\"?>\n<configuration><system.webServer><authorization><deny users=\"*\" /></authorization></system.webServer></configuration>\n",
+    ];
+    foreach ($guards as $name => $content) {
+      if (!file_exists("$dir/$name")) {
+        @file_put_contents("$dir/$name", $content);
+      }
+    }
+    return is_writable($dir) ? $dir : false;
+  }
+
+  private function get_restore_points() {
+    $points = get_option(self::RESTORE_POINTS_OPTION, []);
+    return is_array($points) ? $points : [];
+  }
+
+  private function save_restore_points($points) {
+    update_option(self::RESTORE_POINTS_OPTION, $points, false);
+  }
+
+  /** Drops restore points older than RESTORE_POINT_DAYS and beyond the newest few per plugin. */
+  private function prune_restore_points() {
+    $points = $this->get_restore_points();
+    uasort($points, function ($a, $b) { return $b['createdAt'] <=> $a['createdAt']; });
+    $cutoff = time() - self::RESTORE_POINT_DAYS * DAY_IN_SECONDS;
+    $per_plugin = [];
+    foreach ($points as $id => $point) {
+      $plugin = isset($point['plugin']) ? $point['plugin'] : '';
+      $per_plugin[$plugin] = isset($per_plugin[$plugin]) ? $per_plugin[$plugin] + 1 : 1;
+      if ($point['createdAt'] < $cutoff || $per_plugin[$plugin] > self::RESTORE_POINTS_PER_PLUGIN) {
+        @unlink($this->backup_dir() . '/' . $id . '.zip');
+        unset($points[$id]);
+      }
+    }
+    $this->save_restore_points($points);
+  }
+
+  /** Absolute path of a plugin's code: its folder, or the file for single-file plugins. */
+  private function plugin_path($plugin_file) {
+    $dir = dirname($plugin_file);
+    return $dir === '.' ? WP_PLUGIN_DIR . '/' . $plugin_file : WP_PLUGIN_DIR . '/' . $dir;
+  }
+
+  /** Zips the plugin's current files. Returns the restore point id, or a WP_Error. */
+  private function create_restore_point($plugin_file, $version, $was_active, $update_offer) {
+    $dir = $this->ensure_backup_dir();
+    if (!$dir) {
+      return new \WP_Error('backup_dir', 'The restore-point folder could not be created.');
+    }
+    $source = $this->plugin_path($plugin_file);
+    $id = bin2hex(random_bytes(16));
+    $zip_path = "$dir/$id.zip";
+    $base = WP_PLUGIN_DIR . '/';
+
+    $files = [];
+    if (is_dir($source)) {
+      $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS));
+      foreach ($it as $file) {
+        if ($file->isFile()) {
+          $files[] = $file->getPathname();
+        }
+      }
+    } elseif (is_file($source)) {
+      $files[] = $source;
+    }
+    if (empty($files)) {
+      return new \WP_Error('backup_empty', 'The plugin files could not be read.');
+    }
+
+    if (class_exists('ZipArchive')) {
+      $zip = new \ZipArchive();
+      if ($zip->open($zip_path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+        return new \WP_Error('backup_zip', 'The restore point could not be written.');
+      }
+      foreach ($files as $path) {
+        $zip->addFile($path, substr($path, strlen($base)));
+      }
+      $ok = $zip->close();
+    } else {
+      require_once ABSPATH . 'wp-admin/includes/class-pclzip.php';
+      $zip = new \PclZip($zip_path);
+      $ok = $zip->create($files, PCLZIP_OPT_REMOVE_PATH, rtrim($base, '/')) !== 0;
+    }
+    if (!$ok || !file_exists($zip_path)) {
+      @unlink($zip_path);
+      return new \WP_Error('backup_zip', 'The restore point could not be written.');
+    }
+
+    $points = $this->get_restore_points();
+    $points[$id] = [
+      'plugin'    => $plugin_file,
+      'version'   => (string) $version,
+      'wasActive' => (bool) $was_active,
+      'createdAt' => time(),
+      // Put back into the update list on restore, so the site still reports the update.
+      'update'    => $update_offer ? wp_json_encode($update_offer) : null,
+    ];
+    $this->save_restore_points($points);
+    return $id;
+  }
+
+  /** Marks plugins active again without loading their code in this request (like a silent deactivation, reversed). */
+  private function set_plugins_active($plugin_files) {
+    if (empty($plugin_files)) {
+      return;
+    }
+    $active = (array) get_option('active_plugins', []);
+    foreach ($plugin_files as $file) {
+      if (!in_array($file, $active, true)) {
+        $active[] = $file;
+      }
+    }
+    sort($active);
+    update_option('active_plugins', array_values($active));
+  }
+
+  private function init_filesystem() {
+    require_once ABSPATH . 'wp-admin/includes/file.php';
+    if (get_filesystem_method() !== 'direct') {
+      return false;
+    }
+    return WP_Filesystem();
+  }
+
+  /** Plugin updates need direct file access and must not be disabled by DISALLOW_FILE_MODS. */
+  private function plugin_updates_possible() {
+    require_once ABSPATH . 'wp-admin/includes/file.php';
+    return wp_is_file_mod_allowed('capability_update_plugin') && get_filesystem_method() === 'direct';
+  }
+
+  /**
+   * Loads the homepage the way a visitor would. Returns true (healthy), false
+   * (server error or PHP fatal) or null (the site cannot reach itself, so the
+   * check is inconclusive).
+   */
+  private function site_responds() {
+    $url = add_query_arg('gs360_health', (string) microtime(true), home_url('/'));
+    $response = wp_remote_get($url, [
+      'timeout'     => 10,
+      'redirection' => 3,
+      'sslverify'   => apply_filters('https_local_ssl_verify', false),
+      'headers'     => ['Cache-Control' => 'no-cache'],
+    ]);
+    if (is_wp_error($response)) {
+      return null;
+    }
+    $code = (int) wp_remote_retrieve_response_code($response);
+    $body = (string) wp_remote_retrieve_body($response);
+    if ($code >= 500 || stripos($body, '<b>Fatal error</b>') !== false || stripos($body, 'Fatal error: ') !== false) {
+      return false;
+    }
+    return $code > 0 && $code < 500;
+  }
+
+  /** Replaces the plugin's files with a restore point. Returns true or a WP_Error. */
+  private function restore_from_point($id) {
+    global $wp_filesystem;
+    $points = $this->get_restore_points();
+    if (!preg_match('/^[a-f0-9]{32}$/', $id) || !isset($points[$id])) {
+      return new \WP_Error('restore_missing', 'The restore point no longer exists.');
+    }
+    $point = $points[$id];
+    $zip = $this->backup_dir() . "/$id.zip";
+    if (!file_exists($zip)) {
+      return new \WP_Error('restore_missing', 'The restore point file is missing.');
+    }
+    if (!$this->init_filesystem()) {
+      return new \WP_Error('filesystem', 'WordPress cannot write plugin files directly on this server.');
+    }
+
+    $target = $this->plugin_path($point['plugin']);
+    if (file_exists($target)) {
+      $wp_filesystem->delete($target, true);
+    }
+    $result = unzip_file($zip, WP_PLUGIN_DIR);
+    if (is_wp_error($result)) {
+      return $result;
+    }
+    if (!empty($point['wasActive'])) {
+      $this->set_plugins_active([$point['plugin']]);
+    }
+    if (!empty($point['update'])) {
+      $offer = json_decode($point['update']);
+      $transient = get_site_transient('update_plugins');
+      if (is_object($transient) && is_object($offer)) {
+        $transient->response[$point['plugin']] = $offer;
+        unset($transient->no_update[$point['plugin']]);
+        set_site_transient('update_plugins', $transient);
+      }
+    }
+    if (function_exists('wp_clean_plugins_cache')) {
+      wp_clean_plugins_cache(false);
+    }
+    return true;
+  }
+
+  /**
+   * update_plugins: updates outdated plugins one at a time. Each update is
+   * preceded by a restore point; if the site then fails to load, the old
+   * version is put back at once. The rollback restores every plugin this run
+   * updated. Payload: `plugins: "outdated"` or a list of plugin files.
+   */
+  private function apply_update_plugins_action($action_id, $payload) {
+    $type = 'update_plugins';
+    $started = microtime(true);
+    $this->load_update_helpers();
+    require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+    require_once ABSPATH . 'wp-admin/includes/misc.php';
+
+    if (is_multisite()) {
+      return $this->action_result($action_id, $type, 'failed', 'On multisite networks, update plugins from the network admin. Nothing was changed.');
+    }
+    if (!$this->plugin_updates_possible() || !$this->init_filesystem()) {
+      return $this->action_result($action_id, $type, 'failed', 'WordPress cannot update plugins on this server without FTP credentials, or file changes are disabled (DISALLOW_FILE_MODS). Update plugins in the WordPress dashboard instead.');
+    }
+    if (function_exists('set_time_limit')) {
+      @set_time_limit(120);
+    }
+
+    $transient = get_site_transient('update_plugins');
+    $offers = (is_object($transient) && isset($transient->response) && is_array($transient->response)) ? $transient->response : [];
+    $installed = get_plugins();
+    $self = plugin_basename(__FILE__);
+
+    $requested = isset($payload['plugins']) ? $payload['plugins'] : 'outdated';
+    $candidates = $requested === 'outdated' ? array_keys($offers) : $this->plugin_file_list($requested);
+
+    $plan = [];
+    $skipped = [];
+    foreach ($candidates as $file) {
+      if ($file === $self || !isset($installed[$file]) || !isset($offers[$file])) {
+        continue;
+      }
+      if (empty($offers[$file]->package)) {
+        $skipped[] = ['plugin' => $file, 'reason' => 'no_package'];
+        continue;
+      }
+      $plan[] = $file;
+    }
+    if (empty($plan)) {
+      return $this->action_result($action_id, $type, 'skipped', empty($skipped)
+        ? 'No plugin updates are available.'
+        : 'The available updates need a licence or download link that WordPress does not have; update those plugins in the dashboard.', ['skipped' => $skipped]);
+    }
+
+    $this->prune_restore_points();
+    $baseline = $this->site_responds();
+    $results = [];
+    $restore_ids = [];
+
+    foreach ($plan as $index => $file) {
+      if ($index >= self::MAX_UPDATES_PER_RUN || microtime(true) - $started > self::UPDATE_START_BUDGET_SECONDS) {
+        $results[] = ['plugin' => $file, 'status' => 'pending'];
+        continue;
+      }
+      $from = isset($installed[$file]['Version']) ? (string) $installed[$file]['Version'] : '';
+      $to = isset($offers[$file]->new_version) ? (string) $offers[$file]->new_version : '';
+      $was_active = is_plugin_active($file);
+
+      $point = $this->create_restore_point($file, $from, $was_active, $offers[$file]);
+      if (is_wp_error($point)) {
+        $results[] = ['plugin' => $file, 'status' => 'failed', 'from' => $from, 'to' => $to, 'reason' => $point->get_error_message()];
+        continue;
+      }
+
+      $upgrader = new \Plugin_Upgrader(new \Automatic_Upgrader_Skin());
+      $outcome = $upgrader->upgrade($file, ['clear_update_cache' => false]);
+      // Outside cron WordPress deactivates the plugin and leaves reactivation to a later page load.
+      if ($was_active) {
+        $this->set_plugins_active([$file]);
+      }
+      if ($outcome !== true) {
+        $message = is_wp_error($outcome) ? $outcome->get_error_message() : 'WordPress could not install the update.';
+        $restored = $this->restore_from_point($point);
+        $results[] = ['plugin' => $file, 'status' => 'failed', 'from' => $from, 'to' => $to, 'reason' => $message, 'restored' => $restored === true];
+        continue;
+      }
+
+      $health = $baseline === true ? $this->site_responds() : null;
+      if ($health === false) {
+        $restored = $this->restore_from_point($point);
+        $results[] = ['plugin' => $file, 'status' => 'restored', 'from' => $from, 'to' => $to, 'reason' => 'site_error', 'restored' => $restored === true];
+        continue;
+      }
+
+      $restore_ids[] = $point;
+      $results[] = ['plugin' => $file, 'status' => 'updated', 'from' => $from, 'to' => $to, 'healthChecked' => $health === true];
+    }
+
+    // The upgrader dropped the cached update list; keep it, minus what is now up to date.
+    if (is_object($transient)) {
+      $fresh = get_site_transient('update_plugins');
+      $list = is_object($fresh) ? $fresh : $transient;
+      foreach ($results as $entry) {
+        if ($entry['status'] === 'updated') {
+          unset($list->response[$entry['plugin']]);
+        } elseif (isset($offers[$entry['plugin']])) {
+          $list->response[$entry['plugin']] = $offers[$entry['plugin']];
+        }
+      }
+      set_site_transient('update_plugins', $list);
+    }
+    wp_clean_plugins_cache(false);
+
+    $count = function ($status) use ($results) {
+      return count(array_filter($results, function ($entry) use ($status) { return $entry['status'] === $status; }));
+    };
+    $updated = $count('updated');
+    $parts = [sprintf('%d plugin(s) updated', $updated)];
+    if ($count('restored') > 0) {
+      $parts[] = sprintf('%d put back to the previous version because the site stopped loading', $count('restored'));
+    }
+    if ($count('failed') > 0) {
+      $parts[] = sprintf('%d failed', $count('failed'));
+    }
+    if ($count('pending') > 0) {
+      $parts[] = sprintf('%d left for the next run', $count('pending'));
+    }
+    if (!empty($skipped)) {
+      $parts[] = sprintf('%d need a licence or manual update', count($skipped));
+    }
+    if ($updated > 0 && $baseline !== true) {
+      $parts[] = 'the site could not load itself to check the result, so verify it from outside';
+    }
+
+    return $this->action_result(
+      $action_id, $type, $updated > 0 ? 'applied' : 'failed',
+      ucfirst(implode('; ', $parts)) . '.',
+      ['plugins' => $results, 'skipped' => $skipped],
+      empty($restore_ids) ? null : [
+        'id' => $action_id . '-rollback',
+        'type' => 'restore_plugins',
+        'payload' => ['restorePoints' => $restore_ids],
+      ]
+    );
+  }
+
+  /** restore_plugins: puts plugins back to the versions saved in the given restore points. */
+  private function apply_restore_plugins_action($action_id, $payload) {
+    $type = 'restore_plugins';
+    $this->load_update_helpers();
+    $ids = isset($payload['restorePoints']) && is_array($payload['restorePoints']) ? $payload['restorePoints'] : [];
+    $ids = array_values(array_filter($ids, function ($id) { return is_string($id) && preg_match('/^[a-f0-9]{32}$/', $id); }));
+    if (empty($ids)) {
+      return $this->action_result($action_id, $type, 'failed', 'No valid restore points were given. Nothing was changed.');
+    }
+    $points = $this->get_restore_points();
+    $restored = [];
+    $errors = [];
+    foreach ($ids as $id) {
+      $result = $this->restore_from_point($id);
+      $plugin = isset($points[$id]['plugin']) ? $points[$id]['plugin'] : $id;
+      if ($result === true) {
+        $restored[] = ['plugin' => $plugin, 'version' => $points[$id]['version']];
+      } else {
+        $errors[] = ['plugin' => $plugin, 'reason' => $result->get_error_message()];
+      }
+    }
+    $status = empty($errors) ? 'applied' : (empty($restored) ? 'failed' : 'applied');
+    $message = sprintf('%d plugin(s) restored to their previous version.', count($restored));
+    if (!empty($errors)) {
+      $message .= sprintf(' %d could not be restored: %s', count($errors), implode('; ', array_map(function ($e) { return $e['plugin'] . ' (' . $e['reason'] . ')'; }, $errors)));
+    }
+    return $this->action_result($action_id, $type, $status, $message, ['restored' => $restored, 'errors' => $errors]);
+  }
+
   // ---------- site audit (read-only) ----------
 
   const AUDIT_SCHEMA = 1;
@@ -1116,13 +1503,18 @@ class GetSafe360_Connector {
       : null;
 
     $items = [];
+    $without_package = 0;
     foreach ($all as $file => $data) {
       $items[] = [
         'slug'            => strpos($file, '/') !== false ? strstr($file, '/', true) : basename($file, '.php'),
         'version'         => isset($data['Version']) ? (string) $data['Version'] : '',
         'active'          => in_array($file, $active, true) || (is_multisite() && is_plugin_active_for_network($file)),
         'updateAvailable' => $pending === null ? null : isset($pending[$file]),
+        'newVersion'      => ($pending !== null && isset($pending[$file]->new_version)) ? (string) $pending[$file]->new_version : null,
       ];
+      if ($pending !== null && isset($pending[$file]) && empty($pending[$file]->package)) {
+        $without_package++;
+      }
     }
 
     $active_count = count(array_filter($items, function ($item) { return $item['active']; }));
@@ -1133,6 +1525,9 @@ class GetSafe360_Connector {
       'inactive'         => count($items) - $active_count,
       'updatesAvailable' => $pending === null ? null : count(array_intersect_key($pending, $all)),
       'mustUse'          => count(get_mu_plugins()),
+      // 1.8: whether the connector can install updates, and how many updates need a licence first.
+      'updatesPossible'  => !is_multisite() && $this->plugin_updates_possible(),
+      'updatesWithoutPackage' => $pending === null ? null : $without_package,
       'items'            => $items,
     ];
   }
@@ -1672,6 +2067,8 @@ class GetSafe360_Connector {
         'set_default_role'        => 'apply_default_role_action',
         'set_plugin_auto_updates' => 'apply_plugin_auto_updates_action',
         'cleanup_database'        => 'apply_cleanup_action',
+        'update_plugins'          => 'apply_update_plugins_action',
+        'restore_plugins'         => 'apply_restore_plugins_action',
       ];
       if (isset($handlers[$action_type])) {
         $results[] = $this->{$handlers[$action_type]}($action_id, $action_payload);
@@ -1842,6 +2239,7 @@ class GetSafe360_Connector {
         'autoUpdatesCore'      => true,
         'autoUpdatesPlugins'   => true,
         'databaseCleanup'      => true,
+        'pluginUpdates'        => true,
       ],
     ];
   }

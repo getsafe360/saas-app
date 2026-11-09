@@ -15,10 +15,14 @@ import { wordpressActionRuns } from '@/lib/db/schema/wordpress/agent';
 import { publishEvent } from '@/lib/cockpit/event-bus';
 import { createWordPressClient } from '@/lib/wordpress/client';
 import { planRollback } from '@/lib/wordpress/rollback';
+import { connectorTimeoutFor } from '@/lib/wordpress/timeouts';
 
 type RollbackOutcome = { runId: string; status: 'rolled_back' | 'failed'; message: string };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Restoring plugins from restore points can take up to a minute.
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const { id: siteId } = await props.params;
@@ -121,13 +125,17 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
 
   publishEvent(siteId, { type: 'repair', state: 'repairing', message: 'Undoing WordPress changes', platform: 'wordpress' });
 
-  const client = createWordPressClient({ siteUrl: site.siteUrl, tokenHash, timeout: 10000 });
   const outcomes: RollbackOutcome[] = [];
 
   // One request at a time: rollback ids can repeat across runs of the same fixer,
   // and order matters when several runs touched the same setting.
   for (const { runId, request: rollbackRequest } of planned) {
     try {
+      const client = createWordPressClient({
+        siteUrl: site.siteUrl,
+        tokenHash,
+        timeout: connectorTimeoutFor(rollbackRequest.type),
+      });
       const response = await client.applyActions([rollbackRequest]);
       const result = response.results?.find((item) => item.id === rollbackRequest.id);
       const ok = response.success && result?.status === 'applied';

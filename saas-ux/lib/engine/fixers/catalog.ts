@@ -19,6 +19,8 @@ export const AUTOMATIC_FIXER_IDS: ReadonlySet<string> = new Set([
   'wordpress-enable-plugin-auto-updates',
   'wordpress-clean-transients',
   'wordpress-limit-revisions',
+  // Connector 1.8
+  'wordpress-update-plugins',
 ]);
 
 /**

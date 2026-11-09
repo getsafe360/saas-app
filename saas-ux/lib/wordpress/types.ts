@@ -111,6 +111,8 @@ export type WordPressActionType =
   | 'set_default_role'
   | 'set_plugin_auto_updates'
   | 'cleanup_database'
+  | 'update_plugins'
+  | 'restore_plugins'
   | 'flush_cache'
   | 'verify_render';
 
@@ -198,13 +200,25 @@ export interface WordPressCleanupPayload {
   task: 'expired_transients' | 'revisions';
 }
 
+/** `'outdated'` updates every plugin with an installable update (the connector itself excluded). */
+export interface WordPressUpdatePluginsPayload {
+  plugins: 'outdated' | string[];
+}
+
+/** Restore point ids (32 hex characters) returned by an update_plugins run. */
+export interface WordPressRestorePluginsPayload {
+  restorePoints: string[];
+}
+
 export type WordPressConnectorActionRequest =
   | { id: string; type: 'update_connector_setting'; payload: WordPressConnectorSettingPayload }
   | { id: string; type: 'set_security_headers'; payload: WordPressSecurityHeadersPayload }
   | { id: string; type: 'set_config_permissions'; payload: WordPressConfigPermissionsPayload }
   | { id: string; type: 'set_default_role'; payload: WordPressDefaultRolePayload }
   | { id: string; type: 'set_plugin_auto_updates'; payload: WordPressPluginAutoUpdatesPayload }
-  | { id: string; type: 'cleanup_database'; payload: WordPressCleanupPayload };
+  | { id: string; type: 'cleanup_database'; payload: WordPressCleanupPayload }
+  | { id: string; type: 'update_plugins'; payload: WordPressUpdatePluginsPayload }
+  | { id: string; type: 'restore_plugins'; payload: WordPressRestorePluginsPayload };
 
 export interface WordPressConnectorActionResult {
   id: string;

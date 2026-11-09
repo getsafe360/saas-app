@@ -35,7 +35,18 @@ export interface WordPressAuditResponse {
     inactive: number;
     updatesAvailable: number | null;
     mustUse: number;
-    items: Array<{ slug: string; version: string; active: boolean; updateAvailable: boolean | null }>;
+    /** Connector ≥ 1.8: it can install updates (direct file access, not multisite, file mods allowed). */
+    updatesPossible?: boolean;
+    /** Connector ≥ 1.8: updates that have no download package (usually a missing licence). */
+    updatesWithoutPackage?: number | null;
+    items: Array<{
+      slug: string;
+      version: string;
+      active: boolean;
+      updateAvailable: boolean | null;
+      /** Connector ≥ 1.8. */
+      newVersion?: string | null;
+    }>;
   };
   themes: {
     total: number;

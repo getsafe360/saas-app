@@ -6,6 +6,7 @@ import type {
   WordPressConnectorActionRequest,
   WordPressPlannedAction,
 } from '@/lib/wordpress/types';
+import { connectorTimeoutFor } from '@/lib/wordpress/timeouts';
 import { verifyWordPressAction } from '@/lib/wordpress/verify';
 
 function toConnectorRequest(action: WordPressPlannedAction): WordPressConnectorActionRequest | null {
@@ -34,11 +35,12 @@ export async function executeWordPressActionPlan(params: {
   tokenHash: string;
   plan: WordPressActionPlan;
 }): Promise<WordPressActionExecutionResult[]> {
-  const client = createWordPressClient({
-    siteUrl: params.siteUrl,
-    tokenHash: params.tokenHash,
-    timeout: 10000,
-  });
+  const clientFor = (type: string) =>
+    createWordPressClient({
+      siteUrl: params.siteUrl,
+      tokenHash: params.tokenHash,
+      timeout: connectorTimeoutFor(type),
+    });
 
   const results: WordPressActionExecutionResult[] = [];
 
@@ -58,7 +60,7 @@ export async function executeWordPressActionPlan(params: {
     }
 
     try {
-      const connectorResponse = await client.applyActions([request]);
+      const connectorResponse = await clientFor(request.type).applyActions([request]);
       const connectorResult = connectorResponse.results.find((item) => item.id === action.id) ?? null;
 
       if (!connectorResponse.success || !connectorResult || connectorResult.status !== 'applied') {

@@ -46,6 +46,8 @@ export interface WordPressFacts {
     inactive: number | null;
     outdated: number | null;
     vulnerable: number | null;
+    /** The connector can install plugin updates itself (≥ 1.8); null when unknown. */
+    updatesPossible: boolean | null;
   };
   themes: {
     inactive: number | null;
@@ -160,6 +162,7 @@ export function buildWordPressFacts(apiData: Loose): WordPressFacts {
       outdated: asNumber(audit?.plugins.updatesAvailable) ?? asNumber(telemetry.pluginHealth?.outdated),
       // Needs a vulnerability database; not observed yet.
       vulnerable: asNumber(telemetry.pluginHealth?.vulnerable),
+      updatesPossible: asBool(audit?.plugins.updatesPossible),
     },
     themes: {
       inactive: asNumber(audit?.themes.inactive),
