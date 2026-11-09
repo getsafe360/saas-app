@@ -5,6 +5,7 @@ import test from 'node:test';
 
 import { IntlMessageFormat } from 'intl-messageformat';
 import { FOCUS_CATEGORIES } from './focus';
+import { PAIRING_MESSAGE_KEYS } from '../wordpress/pairing-messages';
 
 const root = path.resolve(__dirname, '../..');
 const LOCALES = ['en', 'de', 'es', 'fr', 'it', 'pt'];
@@ -33,12 +34,14 @@ const COMPONENTS: Array<[file: string, namespace: string]> = [
   ['components/site-cockpit/cards/wordpress/components/Analysis/PluginsPanel.tsx', 'wordpress.plugins.'],
   ['components/site-cockpit/cards/wordpress/components/ConnectionStatus/ConnectionBanner.tsx', 'wordpress.connection.'],
   ['components/site-cockpit/cards/wordpress/components/Analysis/AppliedChangesPanel.tsx', 'wordpress.changes.'],
+  ['components/site-cockpit/cards/ConnectionCard.tsx', 'connection.'],
+  ['components/site-cockpit/cards/wordpress/components/ConnectionStatus/ReconnectionModal.tsx', 'wordpress.connection.modal.'],
 ];
 
 test('every literal translation key used by the cockpit exists in all six languages', () => {
   for (const [file, namespace] of COMPONENTS) {
     const source = readFileSync(path.join(root, file), 'utf8');
-    const keys = [...source.matchAll(/\bt\(\s*"([\w.]+)"/g)].map((m) => namespace + m[1]);
+    const keys = [...source.matchAll(/\bt(?:\.rich)?\(\s*"([\w.]+)"/g)].map((m) => namespace + m[1]);
     assert.ok(keys.length > 0, `${file}: no keys found`);
     for (const key of keys) {
       for (const locale of LOCALES) {
@@ -58,10 +61,14 @@ test('keys built from known lists exist, and every message parses', () => {
     ...['security', 'performance', 'stability', 'seoUx', 'redFlags'].map((k) => `wordpress.findings.categories.${k}`),
     ...['active', 'unverified', 'undone'].map((k) => `wordpress.changes.state.${k}`),
     ...['undo', 'undoNewerFirst'].map((k) => `wordpress.changes.errors.${k}`),
+    ...PAIRING_MESSAGE_KEYS.map((k) => `connection.pairing.messages.${k}`),
+    ...['custom', 'unknown'].map((k) => `connection.platforms.${k}`),
+    ...['external', 'perfSeo', 'a11y', 'headers', 'structured'].map((k) => `connection.info.without.${k}`),
+    ...['workflows', 'fixes', 'diagnostics', 'monitoring', 'audit'].map((k) => `connection.info.with.${k}`),
   ];
   for (const locale of LOCALES) {
     for (const key of dynamic) assert.equal(typeof lookup(catalogs[locale], key), 'string', `${locale}: ${key}`);
-    for (const section of ['focus', 'nextStep', 'wordpress']) {
+    for (const section of ['focus', 'nextStep', 'wordpress', 'connection']) {
       const walk = (node: any, prefix: string) => {
         for (const [k, v] of Object.entries(node)) {
           // Parsing with tags enabled (as next-intl does) catches broken ICU syntax.
@@ -70,6 +77,20 @@ test('keys built from known lists exist, and every message parses', () => {
         }
       };
       walk(catalogs[locale][section], section);
+    }
+  }
+});
+
+test('rich-text messages keep their tags in every language', () => {
+  const tagged: Array<[key: string, tag: string]> = [
+    ['connection.method.snippet.description', '<code>head</code>'],
+    ['connection.snippet.step2', '<code>head</code>'],
+    ['wordpress.connection.modal.guideSteps.step1', '<link>'],
+  ];
+  for (const locale of LOCALES) {
+    for (const [key, tag] of tagged) {
+      const message = lookup(catalogs[locale], key);
+      assert.ok(typeof message === 'string' && message.includes(tag), `${locale}: ${key} lacks ${tag}`);
     }
   }
 });

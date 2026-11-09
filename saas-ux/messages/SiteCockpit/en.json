@@ -344,20 +344,6 @@
         "reconnect": "Reconnect",
         "connectionLost": "Connection Lost",
         "pluginDeactivated": "Plugin may be deactivated",
-        "modalTitle": "WordPress Connection",
-        "guideTitle": "How to connect your WP site to us",
-        "guideSteps": {
-          "step1": "Download, install & activate our Plugin",
-          "step2": "Generate Pairing Code and copy",
-          "step3": "Paste auth code into the plugin & connect",
-          "step4": "Come back to GetSafe 360 and you see your site connected"
-        },
-        "status": {
-          "title": "Connection status",
-          "plugin": "Plugin (installed & active)",
-          "pairing": "Pairing Code accepted",
-          "site": "Site conx"
-        },
         "reconnectingMessage": "Reconnecting to your site…",
         "errorRetry": "Connection error → Click to retry",
         "waiting": "Waiting for the site to respond…",
@@ -367,7 +353,37 @@
         "lastUpdated": "Last updated:",
         "disconnect": "Disconnect",
         "attempt": "Attempt {attempt} of {total}",
-        "autoRetry": "{minutes, plural, one {Retrying automatically in # minute} other {Retrying automatically in # minutes}}"
+        "autoRetry": "{minutes, plural, one {Retrying automatically in # minute} other {Retrying automatically in # minutes}}",
+        "modal": {
+          "title": "WordPress Connection",
+          "close": "Close",
+          "guideTitle": "How to connect your WordPress site",
+          "guideSteps": {
+            "step1": "Download, install & activate our <link>plugin</link>",
+            "step2": "Generate a pairing code and copy it",
+            "step3": "Paste the code into the plugin & connect",
+            "step4": "Come back to GetSafe 360 — your site shows as connected"
+          },
+          "status": {
+            "title": "Connection status",
+            "plugin": "Plugin installed & active",
+            "pairing": "Pairing code accepted",
+            "site": "Site connected"
+          },
+          "generateTitle": "Generate Pairing Code",
+          "generateHint": "Copy the code into the plugin and connect.",
+          "download": "Download Plugin",
+          "generate": "Generate Pairing Code",
+          "generating": "Generating…",
+          "codeLabel": "Pairing code",
+          "copyCode": "Copy code",
+          "copied": "Copied",
+          "expires": "Single use, expires in ~10 minutes.",
+          "success": "Successfully connected!",
+          "cancel": "Cancel",
+          "refreshStatus": "Refresh status",
+          "reconnecting": "Reconnecting…"
+        }
       },
       "version": {
         "title": "WordPress Version",
@@ -669,6 +685,134 @@
         "high": "High severity",
         "medium": "Medium severity",
         "low": "Low severity"
+      }
+    },
+    "connection": {
+      "title": "Site Connection",
+      "tagline": "Connect to enable AI optimization & automated fixes.",
+      "whyConnect": "Why connect?",
+      "close": "Close",
+      "refresh": "Refresh connection status",
+      "justConnected": "WordPress site connected — AI optimizations are now available.",
+      "connectedTo": "Connected — {platform}",
+      "platform": "Platform",
+      "connectedSince": "Connected since",
+      "plugin": "Plugin",
+      "uptime": "{percent}% uptime · 7 days",
+      "reconnect": "Reconnect or change connection method",
+      "continue": "Continue",
+      "back": "Back",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "soon": "Soon",
+      "recommended": "Recommended",
+      "platforms": {
+        "custom": "Custom / HTML",
+        "unknown": "Other"
+      },
+      "detect": {
+        "detected": "Detected platform",
+        "wrong": "Not the right platform?"
+      },
+      "method": {
+        "title": "Choose connection method",
+        "wordpress": {
+          "title": "WordPress Plugin",
+          "description": "Deep plugin/theme analysis, health checks, AI repair"
+        },
+        "snippet": {
+          "title": "JS Monitoring Snippet",
+          "description": "Works on any site — paste one tag into the <code>head</code>"
+        },
+        "apikey": {
+          "title": "REST API Key",
+          "description": "For headless or API-driven sites — secure bearer token"
+        },
+        "oauth": {
+          "title": "OAuth Integration"
+        }
+      },
+      "info": {
+        "lead": "Analysis works without a connection. Optimization needs trusted access.",
+        "body": "GetSafe 360 AI can already inspect your public website from the outside — including performance, SEO, accessibility, security headers, content quality, structured data, and CMS signals. Connecting your site adds the secure layer required to diagnose internal WordPress details and safely apply AI-assisted fixes.",
+        "withoutTitle": "Available without connection",
+        "withTitle": "Unlocked after connection",
+        "without": {
+          "external": "External website analysis",
+          "perfSeo": "Performance and SEO checks",
+          "a11y": "Accessibility and content review",
+          "headers": "Security header inspection",
+          "structured": "Structured data validation"
+        },
+        "with": {
+          "workflows": "AI-powered optimization workflows",
+          "fixes": "Automated WordPress fixes",
+          "diagnostics": "CMS/plugin-level diagnostics",
+          "monitoring": "Continuous monitoring",
+          "audit": "Safe repair actions with audit history"
+        },
+        "benefits": {
+          "secure": {
+            "title": "Secure",
+            "text": "Uses a trusted connector — never guesses from public HTML."
+          },
+          "actionable": {
+            "title": "Actionable",
+            "text": "Turns findings into fixes, not just recommendations."
+          },
+          "ongoing": {
+            "title": "Ongoing",
+            "text": "Keeps your site monitored after the first scan."
+          }
+        }
+      },
+      "pairing": {
+        "title": "WordPress Plugin — 3 steps",
+        "step1": "Download & install plugin",
+        "download": "Download Plugin",
+        "step2": "Generate your pairing code",
+        "generate": "Generate Code",
+        "generating": "Generating…",
+        "expires": "Expires in ~10 min · Single use only",
+        "step3": "Paste code in WordPress Admin → GetSafe 360 AI",
+        "detectedVersion": "Plugin detected — version {version}",
+        "detected": "Plugin detected on your site",
+        "notDetected": "Plugin not detected — install it before pasting the code",
+        "newCode": "Generate new code",
+        "messages": {
+          "pluginDetected": "Plugin detected — open WordPress Admin → GetSafe 360 → paste the code",
+          "pluginNotDetected": "Plugin not detected — install the GetSafe 360 plugin first, then paste the code",
+          "openAdmin": "Open WordPress Admin → GetSafe 360 → paste the code",
+          "waiting": "Waiting for plugin confirmation…",
+          "connected": "Connection established — syncing dashboard…",
+          "expired": "Code expired (10 min limit) → generate a new one",
+          "noConfirmation": "No confirmation received → paste the code in WordPress and try again",
+          "tooMany": "Too many attempts → wait 10 minutes and try again",
+          "unavailable": "Service temporarily unavailable → retry in a moment",
+          "domainNotAllowed": "Domain not allowed in this environment → contact support",
+          "invalidUrl": "Invalid site URL → enter it with https://",
+          "generic": "Code could not be generated → try again"
+        }
+      },
+      "snippet": {
+        "title": "JS Monitoring Snippet — works on any platform",
+        "loading": "Generating snippet…",
+        "step1": "Copy this snippet",
+        "step2": "Paste it inside the <code>head</code> of every page — or use your tag manager",
+        "step3": "Confirm installation",
+        "confirm": "I've added the snippet",
+        "confirming": "Confirming…",
+        "confirmFailed": "Confirmation failed → try again",
+        "readOnly": "Read-only monitoring — no server access required",
+        "tracks": "Tracks performance, errors, and uptime"
+      },
+      "apikey": {
+        "title": "REST API Key — for headless & API-driven sites",
+        "loading": "Generating API key…",
+        "yourKey": "Your API key",
+        "usage": "Usage example",
+        "secret": "Keep this key secret — treat it like a password",
+        "rotate": "Contact support to rotate your key"
       }
     }
   }
