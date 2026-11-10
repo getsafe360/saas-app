@@ -9,7 +9,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useWordPressConnection } from "./hooks/useWordPressConnection";
 import { useWordPressPairing } from "./hooks/useWordPressPairing";
 import { useFindingText } from "./hooks/useFindingText";
-import { NotConnected } from "./components/EmptyStates/NotConnected";
+import { ConnectPreview } from "./components/EmptyStates/ConnectPreview";
+import { problemIdsFrom } from "@/lib/wordpress/connect-preview";
 import { NoWordPress } from "./components/EmptyStates/NoWordPress";
 import { VersionStatus } from "./components/Analysis/VersionStatus";
 import { SecurityOverview } from "./components/Analysis/SecurityOverview";
@@ -173,7 +174,11 @@ export function WordPressCard({
         onToggleMinimize={onToggleMinimize}
         editable={editable}
       >
-        <NotConnected pairing={pairing} version={cms.wp?.version} pluginVersion={pluginVersion} />
+        <ConnectPreview
+          domain={data.domain}
+          problemIds={problemIdsFrom(data.summary.categoryInsights)}
+          pluginVersion={pluginVersion}
+        />
       </CockpitCard>
     );
   }
@@ -420,12 +425,6 @@ export function WordPressCard({
           </div>
         )}
 
-        <VersionStatus
-          version={wordpress.version}
-          recommendations={wordpress.recommendations}
-        />
-        <SecurityOverview security={wordpress.security} />
-        <PluginsPanel plugins={wordpress.plugins} />
         <HealthFindingsPanel
           findings={wordpress.healthFindings ?? []}
           onApply={handleApply}
@@ -435,10 +434,14 @@ export function WordPressCard({
           currentScore={wordpress.score ?? undefined}
         />
 
-        {siteId &&
-          (wordpress.healthFindings ?? []).some(
-            (finding) => CORE_FILE_FINDINGS.has(finding.id) && finding.status === "fail",
-          ) && <CoreFilesReview siteId={siteId} />}
+        {siteId && (
+          <AppliedChangesPanel
+            siteId={siteId}
+            refreshKey={changesVersion}
+            onUndo={handleUndo}
+            onUndone={markUndone}
+          />
+        )}
 
         {siteId &&
           (wordpress.healthFindings ?? []).some(
@@ -451,14 +454,18 @@ export function WordPressCard({
             />
           )}
 
-        {siteId && (
-          <AppliedChangesPanel
-            siteId={siteId}
-            refreshKey={changesVersion}
-            onUndo={handleUndo}
-            onUndone={markUndone}
-          />
-        )}
+        {siteId &&
+          (wordpress.healthFindings ?? []).some(
+            (finding) => CORE_FILE_FINDINGS.has(finding.id) && finding.status === "fail",
+          ) && <CoreFilesReview siteId={siteId} />}
+
+        {/* Details for reference, after the things to act on. */}
+        <VersionStatus
+          version={wordpress.version}
+          recommendations={wordpress.recommendations}
+        />
+        <SecurityOverview security={wordpress.security} />
+        <PluginsPanel plugins={wordpress.plugins} />
       </div>
     </CockpitCard>
   );

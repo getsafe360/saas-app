@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
+import { CURRENT_PLUGIN_VERSION } from '@/lib/wordpress/plugin-version';
 
-// Bump PLUGIN_VERSION and set WP_PLUGIN_DOWNLOAD_URL env var with each release.
+// Bump CURRENT_PLUGIN_VERSION (lib/wordpress/plugin-version.ts) and set WP_PLUGIN_DOWNLOAD_URL env var with each release.
 // WP_PLUGIN_DOWNLOAD_URL should point to the publicly accessible plugin ZIP
 // (e.g. a Vercel Blob URL: https://xxxx.blob.vercel-storage.com/getsafe360-connector-v0.3.0.zip)
-const PLUGIN_VERSION = '1.10.0';
+const PLUGIN_VERSION = CURRENT_PLUGIN_VERSION;
 
 export async function GET() {
     const downloadUrl = process.env.WP_PLUGIN_DOWNLOAD_URL ?? '';

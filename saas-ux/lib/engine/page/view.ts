@@ -22,6 +22,8 @@ export interface PageCardInsights {
   topIssues: string[];
   /** The same problems with their message keys, so the card can translate them. */
   topFindings: Array<{ id: string; title: string; critical: boolean; messages?: FindingMessages }>;
+  /** Ids of every failing or warning check, most severe first. */
+  problemIds: string[];
 }
 
 export interface PageCardReport {
@@ -47,6 +49,7 @@ function insightsFor(findings: Finding[]): PageCardInsights {
     passed: findings.filter((f) => f.status === 'pass').length,
     topIssues: top.map((f) => f.title),
     topFindings: top.map((f) => ({ id: f.id, title: f.title, critical: isCritical(f), messages: f.messages })),
+    problemIds: problems.map((f) => f.id),
   };
 }
 

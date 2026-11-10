@@ -696,6 +696,7 @@ export interface Summary {
       passed: number;
       topIssues: string[];
       topFindings?: CategoryTopFinding[];
+      problemIds?: string[];
     };
     security: {
       criticalIssues: number;
@@ -703,6 +704,7 @@ export interface Summary {
       passed: number;
       topIssues: string[];
       topFindings?: CategoryTopFinding[];
+      problemIds?: string[];
     };
     seo: {
       criticalIssues: number;
@@ -710,6 +712,7 @@ export interface Summary {
       passed: number;
       topIssues: string[];
       topFindings?: CategoryTopFinding[];
+      problemIds?: string[];
     };
     accessibility: {
       criticalIssues: number;
@@ -717,6 +720,7 @@ export interface Summary {
       passed: number;
       topIssues: string[];
       topFindings?: CategoryTopFinding[];
+      problemIds?: string[];
     };
     content: {
       criticalIssues: number;
@@ -724,6 +728,7 @@ export interface Summary {
       passed: number;
       topIssues: string[];
       topFindings?: CategoryTopFinding[];
+      problemIds?: string[];
     };
   };
   criticalIssues: number;

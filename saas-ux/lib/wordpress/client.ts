@@ -8,7 +8,7 @@ import type {
 } from '@/lib/wordpress/types';
 
 /** Latest published version of the GetSafe360 Connector plugin. */
-export const CURRENT_PLUGIN_VERSION = "1.4.0";
+export { CURRENT_PLUGIN_VERSION } from "./plugin-version";
 
 /**
  * WordPress API error codes

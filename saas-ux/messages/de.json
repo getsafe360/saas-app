@@ -37,6 +37,8 @@
     "addNewSite": "Neue Website hinzufügen",
     "optimize": "Optimieren",
     "connectNow": "Jetzt verbinden",
+    "wordpress": "WordPress",
+    "notConnected": "Noch nicht verbunden",
     "toggleSidebar": "Seitenleiste umschalten",
     "content": "Content"
   },

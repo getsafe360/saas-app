@@ -4,6 +4,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+import { siteConnectionStatus } from '@/lib/wordpress/connection-status';
 import { effectiveScores } from "@/lib/cockpit/stored";
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
@@ -65,6 +66,9 @@ export async function GET(_request: NextRequest) {
         lastFaviconUrl: sites.lastFaviconUrl,
         lastScreenshotUrl: sites.lastScreenshotUrl,
         lastCms: sites.lastCms,
+        cms: sites.cms,
+        connectionStatus: sites.connectionStatus,
+        isConnected: sites.isConnected,
         lastFindingCount: sites.lastFindingCount,
         status: sites.status,
         createdAt: sites.createdAt,
@@ -98,7 +102,8 @@ export async function GET(_request: NextRequest) {
         } | null,
         lastFaviconUrl: site.lastFaviconUrl,
         lastScreenshotUrl: site.lastScreenshotUrl,
-        cms: site.lastCms,
+        cms: site.cms ?? site.lastCms,
+        connectionStatus: siteConnectionStatus(site),
         findingCount: site.lastFindingCount,
         status: site.status,
         createdAt: site.createdAt,

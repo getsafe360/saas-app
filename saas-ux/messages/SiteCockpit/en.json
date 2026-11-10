@@ -530,10 +530,10 @@
         "plugins": "Plugins",
         "notMeasured": "Not measured yet"
       },
-      "agentTitle": "WordPress Optimization Agent",
+      "agentTitle": "WordPress",
       "agentEyebrow": "WordPress AI",
-      "agentDescription": "A focused workspace for WordPress telemetry, guided fixes, and verification history.",
-      "openWorkspace": "Open Agent Workspace",
+      "agentDescription": "Health checks, one-click fixes with undo, and every change we made to your site, in one place.",
+      "openWorkspace": "Open WordPress page",
       "changes": {
         "title": "Applied changes",
         "description": "Changes GetSafe 360 made to your site. Undo restores the previous setting.",
@@ -637,6 +637,36 @@
           "TEST_RUNNING": "A test is already running → Undo it under Applied changes before starting a new one.",
           "WORDPRESS_NOT_CONNECTED": "The site is not connected → Reconnect the GetSafe 360 plugin."
         }
+      },
+      "preview": {
+        "title": "What connecting fixes on {domain}",
+        "automaticTitle": "Fixed with one click, with undo",
+        "testedTitle": "Tested safely first",
+        "cspTested": "We build a policy from what your site loads and test it in report-only mode before it blocks anything.",
+        "insideTitle": "Checked inside WordPress after connecting",
+        "inside": {
+          "updates": "Plugin updates, with a restore point before each one",
+          "core": "Changed or unexpected WordPress core files",
+          "settings": "Risky settings such as the file editor and automatic security updates",
+          "database": "Database clean-up: expired transients and old revisions"
+        },
+        "nothingPublic": "Your public checks need nothing from WordPress right now. Connecting adds the checks below.",
+        "pluginOutdated": "Plugin {installed} is installed; {latest} is available → Download the update and upload it in WordPress under Plugins → Add New.",
+        "download": "Download {version}",
+        "privacy": "The plugin reports settings and counts, not your posts or customer data. Every change appears under Applied changes, most with Undo.",
+        "cta": "Connect now",
+        "lastingTitle": "Fixed with one click, lasting",
+        "hstsLasting": "Browsers remember this setting for a year, so turning it off later does not undo it for returning visitors."
+      },
+      "teaser": {
+        "eyebrow": "WordPress",
+        "title": "Connect WordPress for checks inside your site and one-click fixes",
+        "fixableTitle": "{count, plural, one {# issue} other {# issues}} can be fixed from here once WordPress is connected",
+        "detail": "Install the free GetSafe 360 plugin and pair it. It takes about two minutes.",
+        "cta": "Set up WordPress",
+        "brokenTitle": "The WordPress connection needs attention",
+        "brokenDetail": "We cannot reach the plugin right now, so fixes are paused.",
+        "brokenCta": "Check connection"
       }
     },
     "mobile": {

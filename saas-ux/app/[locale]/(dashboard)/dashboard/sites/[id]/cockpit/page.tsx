@@ -10,6 +10,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { SiteCockpitLoader } from "@/components/site-cockpit/SiteCockpitLoader";
+import { siteConnectionStatus } from "@/lib/wordpress/connection-status";
 import type { ConnectionStatus } from "@/components/site-cockpit/cards/wordpress/types";
 
 export const runtime = "nodejs";
@@ -18,18 +19,7 @@ export const dynamic = "force-dynamic";
 const DEFAULT_LOCALE = "en";
 
 function toConnectionStatus(site: Awaited<ReturnType<typeof getSiteFromDB>>): ConnectionStatus {
-  if (!site) return "disconnected";
-  // connectionStatus is authoritative when the column has been written by any write path
-  const cs = site.connectionStatus;
-  if (cs === "connected") return "connected";
-  if (cs === "reconnecting") return "reconnecting";
-  if (cs === "error") return "error";
-  if (cs === "pending") return "pending";
-  if (cs === "disconnected") return "disconnected";
-  // cs is NULL: pre-migration row — fall back to isConnected flag then legacy status enum
-  if (site.isConnected) return "connected";
-  if (site.status === "connected") return "connected";
-  return "disconnected";
+  return siteConnectionStatus(site);
 }
 
 

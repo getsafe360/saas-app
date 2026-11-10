@@ -530,10 +530,10 @@
         "plugins": "Plugins",
         "notMeasured": "Noch nicht gemessen"
       },
-      "agentTitle": "WordPress-Optimierungsagent",
+      "agentTitle": "WordPress",
       "agentEyebrow": "WordPress KI",
-      "agentDescription": "Ein fokussierter Arbeitsbereich für WordPress-Daten, angeleitete Korrekturen und den Prüfverlauf.",
-      "openWorkspace": "Agent-Arbeitsbereich öffnen",
+      "agentDescription": "Zustandsprüfungen, Korrekturen mit einem Klick samt Rückgängig und jede Änderung an Ihrer Website an einem Ort.",
+      "openWorkspace": "WordPress-Seite öffnen",
       "changes": {
         "title": "Vorgenommene Änderungen",
         "description": "Änderungen, die GetSafe 360 an Ihrer Website vorgenommen hat. Rückgängig stellt die vorherige Einstellung wieder her.",
@@ -637,6 +637,36 @@
           "TEST_RUNNING": "Es läuft bereits ein Test → Ihn unter „Vorgenommene Änderungen“ rückgängig machen, bevor Sie einen neuen starten.",
           "WORDPRESS_NOT_CONNECTED": "Die Website ist nicht verbunden → Das GetSafe-360-Plugin neu verbinden."
         }
+      },
+      "preview": {
+        "title": "Was die Verbindung auf {domain} behebt",
+        "automaticTitle": "Mit einem Klick behoben, mit Rückgängig",
+        "testedTitle": "Zuerst sicher getestet",
+        "cspTested": "Wir erstellen eine Richtlinie aus dem, was Ihre Website lädt, und testen sie im Nur-Bericht-Modus, bevor sie etwas blockiert.",
+        "insideTitle": "Nach dem Verbinden in WordPress geprüft",
+        "inside": {
+          "updates": "Plugin-Updates, jeweils mit Wiederherstellungspunkt",
+          "core": "Geänderte oder unerwartete WordPress-Kerndateien",
+          "settings": "Riskante Einstellungen wie der Datei-Editor und automatische Sicherheitsupdates",
+          "database": "Datenbank-Bereinigung: abgelaufene Transients und alte Revisionen"
+        },
+        "nothingPublic": "Ihre öffentlichen Prüfungen brauchen gerade nichts von WordPress. Die Verbindung ergänzt die Prüfungen unten.",
+        "pluginOutdated": "Plugin {installed} ist installiert, {latest} ist verfügbar → Update herunterladen und in WordPress unter Plugins → Neues Plugin hinzufügen hochladen.",
+        "download": "{version} herunterladen",
+        "privacy": "Das Plugin meldet Einstellungen und Zahlen, nicht Ihre Beiträge oder Kundendaten. Jede Änderung erscheint unter „Vorgenommene Änderungen“, die meisten mit Rückgängig.",
+        "cta": "Jetzt verbinden",
+        "lastingTitle": "Mit einem Klick behoben, dauerhaft",
+        "hstsLasting": "Browser merken sich diese Einstellung ein Jahr lang; ein späteres Abschalten wirkt für wiederkehrende Besucher daher nicht sofort."
+      },
+      "teaser": {
+        "eyebrow": "WordPress",
+        "title": "WordPress verbinden: Prüfungen innerhalb Ihrer Website und Korrekturen mit einem Klick",
+        "fixableTitle": "{count, plural, one {# Problem lässt} other {# Probleme lassen}} sich hier beheben, sobald WordPress verbunden ist",
+        "detail": "Installieren Sie das kostenlose GetSafe-360-Plugin und koppeln Sie es. Das dauert etwa zwei Minuten.",
+        "cta": "WordPress einrichten",
+        "brokenTitle": "Die WordPress-Verbindung braucht Aufmerksamkeit",
+        "brokenDetail": "Wir erreichen das Plugin gerade nicht, Korrekturen sind daher pausiert.",
+        "brokenCta": "Verbindung prüfen"
       }
     },
     "mobile": {
