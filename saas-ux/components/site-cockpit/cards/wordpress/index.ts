@@ -37,7 +37,7 @@ export { UpdateButton } from "./components/Actions/UpdateButton";
 export { SyncButton } from "./components/Actions/SyncButton";
 
 // Components - EmptyStates
-export { NotConnected } from "./components/EmptyStates/NotConnected";
+export { ConnectPreview } from "./components/EmptyStates/ConnectPreview";
 export { NoWordPress } from "./components/EmptyStates/NoWordPress";
 
 // Utils

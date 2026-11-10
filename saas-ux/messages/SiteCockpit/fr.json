@@ -530,10 +530,10 @@
         "plugins": "Plugins",
         "notMeasured": "Pas encore mesuré"
       },
-      "agentTitle": "Agent d’optimisation WordPress",
+      "agentTitle": "WordPress",
       "agentEyebrow": "IA WordPress",
-      "agentDescription": "Un espace dédié aux données WordPress, aux corrections guidées et à l’historique des vérifications.",
-      "openWorkspace": "Ouvrir l’espace de l’agent",
+      "agentDescription": "Contrôles de santé, corrections en un clic annulables et chaque modification apportée à votre site, au même endroit.",
+      "openWorkspace": "Ouvrir la page WordPress",
       "changes": {
         "title": "Modifications appliquées",
         "description": "Modifications apportées à votre site par GetSafe 360. Annuler rétablit le réglage précédent.",
@@ -637,6 +637,34 @@
           "TEST_RUNNING": "Un test est déjà en cours → Annulez-le dans Modifications appliquées avant d’en lancer un nouveau.",
           "WORDPRESS_NOT_CONNECTED": "Le site n’est pas connecté → Reconnectez le plugin GetSafe 360."
         }
+      },
+      "preview": {
+        "title": "Ce que la connexion corrige sur {domain}",
+        "automaticTitle": "Corrigé en un clic, annulable",
+        "testedTitle": "Testé d’abord en toute sécurité",
+        "cspTested": "Nous créons une politique à partir de ce que charge votre site et la testons en mode rapport seul avant qu’elle ne bloque quoi que ce soit.",
+        "insideTitle": "Vérifié dans WordPress après la connexion",
+        "inside": {
+          "updates": "Mises à jour des extensions, avec un point de restauration avant chacune",
+          "core": "Fichiers du cœur de WordPress modifiés ou inattendus",
+          "settings": "Réglages risqués comme l’éditeur de fichiers et les mises à jour de sécurité automatiques",
+          "database": "Nettoyage de la base de données : transients expirés et anciennes révisions"
+        },
+        "nothingPublic": "Vos contrôles publics n’ont besoin de rien de WordPress pour l’instant. La connexion ajoute les contrôles ci-dessous.",
+        "pluginOutdated": "L’extension {installed} est installée ; {latest} est disponible → Téléchargez la mise à jour et téléversez-la dans WordPress sous Extensions → Ajouter.",
+        "download": "Télécharger {version}",
+        "privacy": "L’extension transmet des réglages et des chiffres, pas vos articles ni les données de vos clients. Chaque modification apparaît dans Modifications appliquées, la plupart annulables.",
+        "cta": "Se connecter"
+      },
+      "teaser": {
+        "eyebrow": "WordPress",
+        "title": "Connectez WordPress pour des contrôles à l’intérieur de votre site et des corrections en un clic",
+        "fixableTitle": "{count, plural, one {# problème peut} other {# problèmes peuvent}} être corrigés d’ici une fois WordPress connecté",
+        "detail": "Installez l’extension gratuite GetSafe 360 et associez-la. Cela prend environ deux minutes.",
+        "cta": "Configurer WordPress",
+        "brokenTitle": "La connexion WordPress demande votre attention",
+        "brokenDetail": "Nous ne joignons pas l’extension pour le moment, les corrections sont donc en pause.",
+        "brokenCta": "Vérifier la connexion"
       }
     },
     "mobile": {

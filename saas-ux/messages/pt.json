@@ -37,6 +37,8 @@
     "addNewSite": "Adicionar novo site",
     "optimize": "Otimizar",
     "connectNow": "Conectar agora",
+    "wordpress": "WordPress",
+    "notConnected": "Ainda não conectado",
     "toggleSidebar": "Alternar barra lateral",
     "content": "Content"
   },

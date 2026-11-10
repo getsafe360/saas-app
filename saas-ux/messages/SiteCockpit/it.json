@@ -530,10 +530,10 @@
         "plugins": "Plugin",
         "notMeasured": "Non ancora misurato"
       },
-      "agentTitle": "Agente di ottimizzazione WordPress",
+      "agentTitle": "WordPress",
       "agentEyebrow": "IA per WordPress",
-      "agentDescription": "Uno spazio di lavoro dedicato ai dati di WordPress, alle correzioni guidate e alla cronologia delle verifiche.",
-      "openWorkspace": "Apri lo spazio dell’agente",
+      "agentDescription": "Controlli di salute, correzioni con un clic annullabili e ogni modifica fatta al tuo sito, in un unico posto.",
+      "openWorkspace": "Apri la pagina WordPress",
       "changes": {
         "title": "Modifiche applicate",
         "description": "Modifiche apportate al sito da GetSafe 360. Annulla ripristina l’impostazione precedente.",
@@ -637,6 +637,34 @@
           "TEST_RUNNING": "È già in corso un test → Annullalo in Modifiche applicate prima di avviarne uno nuovo.",
           "WORDPRESS_NOT_CONNECTED": "Il sito non è collegato → Ricollega il plugin GetSafe 360."
         }
+      },
+      "preview": {
+        "title": "Cosa corregge il collegamento su {domain}",
+        "automaticTitle": "Corretto con un clic, annullabile",
+        "testedTitle": "Prima testato in sicurezza",
+        "cspTested": "Creiamo una policy da ciò che carica il tuo sito e la testiamo in modalità solo report prima che blocchi qualcosa.",
+        "insideTitle": "Controllato dentro WordPress dopo il collegamento",
+        "inside": {
+          "updates": "Aggiornamenti dei plugin, con un punto di ripristino prima di ognuno",
+          "core": "File del core di WordPress modificati o inattesi",
+          "settings": "Impostazioni rischiose come l’editor di file e gli aggiornamenti di sicurezza automatici",
+          "database": "Pulizia del database: transient scaduti e vecchie revisioni"
+        },
+        "nothingPublic": "I tuoi controlli pubblici ora non richiedono nulla da WordPress. Il collegamento aggiunge i controlli qui sotto.",
+        "pluginOutdated": "Il plugin {installed} è installato; è disponibile {latest} → Scarica l’aggiornamento e caricalo in WordPress da Plugin → Aggiungi nuovo.",
+        "download": "Scarica {version}",
+        "privacy": "Il plugin invia impostazioni e conteggi, non i tuoi articoli né i dati dei clienti. Ogni modifica compare in Modifiche applicate, quasi sempre annullabile.",
+        "cta": "Collega ora"
+      },
+      "teaser": {
+        "eyebrow": "WordPress",
+        "title": "Collega WordPress per controlli dentro il tuo sito e correzioni con un clic",
+        "fixableTitle": "{count, plural, one {# problema può} other {# problemi possono}} essere corretti da qui una volta collegato WordPress",
+        "detail": "Installa il plugin gratuito di GetSafe 360 e associalo. Ci vogliono circa due minuti.",
+        "cta": "Configura WordPress",
+        "brokenTitle": "Il collegamento con WordPress richiede attenzione",
+        "brokenDetail": "Al momento non raggiungiamo il plugin, quindi le correzioni sono in pausa.",
+        "brokenCta": "Controlla il collegamento"
       }
     },
     "mobile": {

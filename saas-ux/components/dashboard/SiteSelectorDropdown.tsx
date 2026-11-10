@@ -16,12 +16,18 @@ import {
   Check,
   FileText,
 } from "lucide-react";
+import { WordPressAIIcon } from "@/components/icons/WordPressAI";
+import { wordpressPagePath } from "@/lib/wordpress/connection-status";
 
 interface SiteData {
   id: string;
   siteUrl: string;
   canonicalHost: string;
   status?: "pending" | "connected" | "disconnected" | string;
+  /** Detected CMS ("wordpress", …), when the site was analysed. */
+  cms?: string | null;
+  /** Connector pairing state; the legacy `status` is only a fallback. */
+  connectionStatus?: string;
   lastScores?: {
     performance?: number;
     security?: number;
@@ -102,6 +108,9 @@ export function SiteSelectorDropdown({
   const tNav = useTranslations("DashboardNav");
 
   const currentSite = sites.find((s) => s.id === currentSiteId);
+  const isWordPress = currentSite?.cms === "wordpress";
+  const isConnected = (currentSite?.connectionStatus ?? currentSite?.status) === "connected";
+  const onWordPressPage = pathname.includes("/wordpress-agent");
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -232,15 +241,39 @@ export function SiteSelectorDropdown({
             <span className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider">
               {tNav("optimize")}
             </span>
-            {currentSite.status !== "connected" && (
+            {!isConnected && (
               <Link
-                href={`/dashboard/sites/connect?siteId=${currentSite.id}`}
+                href={isWordPress ? wordpressPagePath(currentSite.id, true) : `/dashboard/sites/connect?siteId=${currentSite.id}`}
                 className="text-xs text-amber-600 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 underline underline-offset-2"
               >
                 {tNav("connectNow")}
               </Link>
             )}
           </div>
+          {isWordPress && (
+            <Link
+              href={wordpressPagePath(currentSite.id)}
+              aria-current={onWordPressPage ? "page" : undefined}
+              className={`cockpit-nav-item flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                onWordPressPage ? "cockpit-nav-item--active" : "hover:text-[var(--text-default)]"
+              }`}
+            >
+              <span
+                className="inline-flex items-center justify-center rounded-md p-1.5"
+                style={{ background: "oklch(from var(--category-wordpress) l c h / 0.15)" }}
+              >
+                <WordPressAIIcon size={16} className="h-4 w-4" />
+              </span>
+              <span className="text-sm">{tNav("wordpress")}</span>
+              {!isConnected && (
+                <span
+                  className="ml-auto h-1.5 w-1.5 rounded-full bg-amber-400"
+                  title={tNav("notConnected")}
+                  aria-label={tNav("notConnected")}
+                />
+              )}
+            </Link>
+          )}
           {CATEGORY_LINKS.map((category) => {
             const Icon = category.icon;
             const href = category.href(currentSite.id);

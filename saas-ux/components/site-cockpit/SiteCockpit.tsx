@@ -25,6 +25,8 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { WordPressCard } from "./cards/wordpress/WordPressCard";
+import { WordPressTeaser } from "./WordPressTeaser";
+import { problemIdsFrom } from "@/lib/wordpress/connect-preview";
 import { OptimizationCard } from "./cards/optimization";
 import { LoopProgressPanel } from "@/components/optimization/LoopProgressPanel";
 import { PerformanceCard } from "./cards/PerformanceCard";
@@ -312,6 +314,16 @@ export function SiteCockpit({
   const isConnected = wordpressConnectionStatus === "connected";
   // Automatic fixes need a paired WordPress connector; everything else is advice for now.
   const canFix = isConnected && isWordPress;
+  // Links such as the sidebar's "Connect now" land on #connection-card, which only
+  // exists once the analysis has loaded, so the browser cannot scroll there itself.
+  useEffect(() => {
+    if (window.location.hash !== "#connection-card") return;
+    const timer = window.setTimeout(() => {
+      document.getElementById("connection-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const scrollToConnection = useCallback(() => {
     document
       .getElementById("connection-card")
@@ -437,8 +449,8 @@ export function SiteCockpit({
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* The one thing to do next */}
-        {siteId && (
+        {/* The one thing to do next (the WordPress page has its own flow) */}
+        {siteId && !wordpressOnly && (
           <div className="mb-6">
             <NextStepBanner
               siteId={siteId}
@@ -453,15 +465,53 @@ export function SiteCockpit({
         )}
 
         {/* AI Site Summary — shown between hero and card grid when available */}
-        {siteSummary && (
+        {siteSummary && !wordpressOnly && (
           <div className="mb-6">
             <SiteSummaryCard summary={siteSummary} />
           </div>
         )}
 
-        {/* Connection Card — always visible, handles all connection methods */}
-        {siteId && (
-          <div id="connection-card" className="mb-6">
+        {/* The WordPress page: what it is for, above the connection steps */}
+        {wordpressOnly && (
+          <div
+            className="mb-6 rounded-2xl border p-5 backdrop-blur-sm"
+            style={{
+              borderColor: "var(--border-default)",
+              background: "var(--header-bg)",
+            }}
+          >
+            <div
+              className="text-xs uppercase tracking-[0.18em]"
+              style={{ color: "var(--text-subtle)" }}
+            >
+              {t("wordpress.agentEyebrow")}
+            </div>
+            <h2
+              className="mt-2 text-2xl font-semibold"
+              style={{ color: "var(--text-primary)" }}
+            >
+              {t("wordpress.agentTitle")}
+            </h2>
+            <p className="mt-2 text-sm" style={{ color: "var(--text-subtle)" }}>
+              {t("wordpress.agentDescription")}
+            </p>
+          </div>
+        )}
+
+        {/* WordPress sites connect on the WordPress page; the cockpit links there. */}
+        {siteId && isWordPress && !isConnected && !wordpressOnly && (
+          <div id="connection-card" className="mb-6 scroll-mt-4">
+            <WordPressTeaser
+              siteId={siteId}
+              connectionStatus={wordpressConnectionStatus}
+              problemIds={problemIdsFrom(data.summary.categoryInsights)}
+            />
+          </div>
+        )}
+
+        {/* Connection Card — handles all connection methods */}
+        {siteId && (wordpressOnly || !isWordPress || isConnected) && (
+          <div id="connection-card" className="mb-6 scroll-mt-4">
             <ConnectionCard
               siteId={siteId}
               siteUrl={data.finalUrl}
@@ -530,36 +580,9 @@ export function SiteCockpit({
               </div>
             )}
 
-            {/* WordPress AI banner — expanded for the dedicated agent workspace */}
-            {wordpressOnly && (
-              <div
-                className="mb-6 rounded-2xl border p-5 backdrop-blur-sm"
-                style={{
-                  borderColor: "var(--border-default)",
-                  background: "var(--header-bg)",
-                }}
-              >
-                <div
-                  className="text-xs uppercase tracking-[0.18em]"
-                  style={{ color: "var(--text-subtle)" }}
-                >
-                  {t("wordpress.agentEyebrow")}
-                </div>
-                <h2
-                  className="mt-2 text-2xl font-semibold"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {t("wordpress.agentTitle")}
-                </h2>
-                <p className="mt-2 text-sm" style={{ color: "var(--text-subtle)" }}>
-                  {t("wordpress.agentDescription")}
-                </p>
-              </div>
-            )}
-
             <div
               className={
-                focus === "all"
+                focus === "all" && !wordpressOnly
                   ? "grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch"
                   : "grid grid-cols-1 gap-6"
               }

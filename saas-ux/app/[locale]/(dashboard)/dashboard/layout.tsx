@@ -28,6 +28,9 @@ interface SiteData {
   };
   lastFaviconUrl?: string;
   lastScreenshotUrl?: string;
+  cms?: string | null;
+  connectionStatus?: string;
+  status?: string;
 }
 
 export default function DashboardLayout({

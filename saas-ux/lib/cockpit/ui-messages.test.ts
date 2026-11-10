@@ -38,6 +38,8 @@ const COMPONENTS: Array<[file: string, namespace: string]> = [
   ['components/site-cockpit/cards/ConnectionCard.tsx', 'connection.'],
   ['components/site-cockpit/cards/wordpress/components/ConnectionStatus/ReconnectionModal.tsx', 'wordpress.connection.modal.'],
   ['components/site-cockpit/cards/wordpress/components/Analysis/CoreFilesReview.tsx', 'wordpress.coreReview.'],
+  ['components/site-cockpit/cards/wordpress/components/EmptyStates/ConnectPreview.tsx', 'wordpress.preview.'],
+  ['components/site-cockpit/WordPressTeaser.tsx', 'wordpress.teaser.'],
   ['components/site-cockpit/cards/wordpress/components/Analysis/CspPanel.tsx', 'wordpress.csp.'],
 ];
 
@@ -73,6 +75,7 @@ test('keys built from known lists exist, and every message parses', () => {
     ...['GENERIC', 'RATE_LIMITED', 'SITE_UNREACHABLE', 'CONNECTOR_UPDATE', 'CONNECTOR_UNREACHABLE', 'CONNECTOR_FAILED', 'WORDPRESS_NOT_CONNECTED', 'TEST_RUNNING'].map(
       (k) => `wordpress.csp.errors.${k}`,
     ),
+    ...['updates', 'core', 'settings', 'database'].map((k) => `wordpress.preview.inside.${k}`),
     ...['custom', 'unknown'].map((k) => `connection.platforms.${k}`),
     ...['external', 'perfSeo', 'a11y', 'headers', 'structured'].map((k) => `connection.info.without.${k}`),
     ...['workflows', 'fixes', 'diagnostics', 'monitoring', 'audit'].map((k) => `connection.info.with.${k}`),

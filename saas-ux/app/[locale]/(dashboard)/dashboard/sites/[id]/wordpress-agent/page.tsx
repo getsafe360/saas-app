@@ -6,22 +6,14 @@ import { getOwnedSite } from "@/lib/auth/site-access";
 import { parseStoredSite } from "@/lib/cockpit/stored";
 import type { Metadata } from "next";
 import { SiteCockpitLoader } from "@/components/site-cockpit/SiteCockpitLoader";
+import { siteConnectionStatus } from "@/lib/wordpress/connection-status";
 import type { ConnectionStatus } from "@/components/site-cockpit/cards/wordpress/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function toConnectionStatus(site: Awaited<ReturnType<typeof getSiteFromDB>>): ConnectionStatus {
-  if (!site) return "disconnected";
-  const cs = site.connectionStatus;
-  if (cs === "connected") return "connected";
-  if (cs === "reconnecting") return "reconnecting";
-  if (cs === "error") return "error";
-  if (cs === "pending") return "pending";
-  if (cs === "disconnected") return "disconnected";
-  if (site.isConnected) return "connected";
-  if (site.status === "connected") return "connected";
-  return "disconnected";
+  return siteConnectionStatus(site);
 }
 
 function getSiteFromDB(id: string) {
