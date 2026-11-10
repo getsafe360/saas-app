@@ -654,7 +654,9 @@
         "pluginOutdated": "Il plugin {installed} è installato; è disponibile {latest} → Scarica l’aggiornamento e caricalo in WordPress da Plugin → Aggiungi nuovo.",
         "download": "Scarica {version}",
         "privacy": "Il plugin invia impostazioni e conteggi, non i tuoi articoli né i dati dei clienti. Ogni modifica compare in Modifiche applicate, quasi sempre annullabile.",
-        "cta": "Collega ora"
+        "cta": "Collega ora",
+        "lastingTitle": "Corretto con un clic, in modo duraturo",
+        "hstsLasting": "I browser ricordano questa impostazione per un anno, quindi disattivarla in seguito non la annulla per chi ha già visitato il sito."
       },
       "teaser": {
         "eyebrow": "WordPress",

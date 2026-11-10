@@ -654,7 +654,9 @@
         "pluginOutdated": "Plugin {installed} ist installiert, {latest} ist verfügbar → Update herunterladen und in WordPress unter Plugins → Neues Plugin hinzufügen hochladen.",
         "download": "{version} herunterladen",
         "privacy": "Das Plugin meldet Einstellungen und Zahlen, nicht Ihre Beiträge oder Kundendaten. Jede Änderung erscheint unter „Vorgenommene Änderungen“, die meisten mit Rückgängig.",
-        "cta": "Jetzt verbinden"
+        "cta": "Jetzt verbinden",
+        "lastingTitle": "Mit einem Klick behoben, dauerhaft",
+        "hstsLasting": "Browser merken sich diese Einstellung ein Jahr lang; ein späteres Abschalten wirkt für wiederkehrende Besucher daher nicht sofort."
       },
       "teaser": {
         "eyebrow": "WordPress",

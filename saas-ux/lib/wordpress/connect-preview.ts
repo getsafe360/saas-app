@@ -4,13 +4,16 @@
 // public checks a site already has. Shown before pairing, so the owner sees
 // the value of connecting on their own findings.
 
-/** automatic: one click, with undo. tested: tried in report-only mode first. */
-export type ConnectFixKind = 'automatic' | 'tested';
+/**
+ * automatic: one click, with undo. lasting: one click, but browsers keep the
+ * effect after an undo (HSTS). tested: tried in report-only mode first.
+ */
+export type ConnectFixKind = 'automatic' | 'lasting' | 'tested';
 
 export const CONNECT_FIXES: Readonly<Record<string, ConnectFixKind>> = {
   'sec-wp-xmlrpc': 'automatic',
   'sec-wp-user-enum': 'automatic',
-  'sec-hsts': 'automatic',
+  'sec-hsts': 'lasting',
   'sec-nosniff': 'automatic',
   'sec-referrer-policy': 'automatic',
   'sec-frame-options': 'automatic',
@@ -19,6 +22,7 @@ export const CONNECT_FIXES: Readonly<Record<string, ConnectFixKind>> = {
 
 export interface ConnectPreview {
   automatic: string[];
+  lasting: string[];
   tested: string[];
 }
 
@@ -26,6 +30,7 @@ export function connectPreview(problemIds: ReadonlyArray<string>): ConnectPrevie
   const unique = [...new Set(problemIds)];
   return {
     automatic: unique.filter((id) => CONNECT_FIXES[id] === 'automatic'),
+    lasting: unique.filter((id) => CONNECT_FIXES[id] === 'lasting'),
     tested: unique.filter((id) => CONNECT_FIXES[id] === 'tested'),
   };
 }

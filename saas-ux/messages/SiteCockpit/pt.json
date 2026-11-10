@@ -654,7 +654,9 @@
         "pluginOutdated": "O plugin {installed} está instalado; {latest} está disponível → Baixe a atualização e envie-a no WordPress em Plugins → Adicionar novo.",
         "download": "Baixar {version}",
         "privacy": "O plugin envia configurações e contagens, não seus posts nem dados de clientes. Cada alteração aparece em Alterações aplicadas, a maioria com desfazer.",
-        "cta": "Conectar agora"
+        "cta": "Conectar agora",
+        "lastingTitle": "Corrigido com um clique, de forma duradoura",
+        "hstsLasting": "Os navegadores lembram esta configuração por um ano, por isso desativá-la depois não a desfaz para quem já visitou o site."
       },
       "teaser": {
         "eyebrow": "WordPress",

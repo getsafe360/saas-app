@@ -654,7 +654,9 @@
         "pluginOutdated": "Plugin {installed} is installed; {latest} is available → Download the update and upload it in WordPress under Plugins → Add New.",
         "download": "Download {version}",
         "privacy": "The plugin reports settings and counts, not your posts or customer data. Every change appears under Applied changes, most with Undo.",
-        "cta": "Connect now"
+        "cta": "Connect now",
+        "lastingTitle": "Fixed with one click, lasting",
+        "hstsLasting": "Browsers remember this setting for a year, so turning it off later does not undo it for returning visitors."
       },
       "teaser": {
         "eyebrow": "WordPress",

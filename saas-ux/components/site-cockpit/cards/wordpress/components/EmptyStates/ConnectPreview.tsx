@@ -26,7 +26,7 @@ function scrollToConnection() {
 export function ConnectPreview({ domain, problemIds, pluginVersion }: ConnectPreviewProps) {
   const t = useTranslations("SiteCockpit.wordpress.preview");
   const tFindings = useTranslations("Findings");
-  const { automatic, tested } = connectPreview(problemIds);
+  const { automatic, lasting, tested } = connectPreview(problemIds);
   const title = (id: string) => (tFindings.has(`${id}.title`) ? tFindings(`${id}.title`) : id);
   const outdated = !!pluginVersion && isPluginOutdated(pluginVersion);
 
@@ -36,7 +36,7 @@ export function ConnectPreview({ domain, problemIds, pluginVersion }: ConnectPre
         {t("title", { domain })}
       </p>
 
-      {automatic.length === 0 && tested.length === 0 && (
+      {automatic.length === 0 && lasting.length === 0 && tested.length === 0 && (
         <p className="text-xs" style={{ color: "var(--text-subtle)" }}>
           {t("nothingPublic")}
         </p>
@@ -53,6 +53,30 @@ export function ConnectPreview({ domain, problemIds, pluginVersion }: ConnectPre
               <li key={id} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-primary)" }}>
                 <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-emerald-300" />
                 {title(id)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {lasting.length > 0 && (
+        <section aria-labelledby="preview-lasting">
+          <h5 id="preview-lasting" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+            <Wand2 className="h-3.5 w-3.5 text-amber-300" />
+            {t("lastingTitle")}
+          </h5>
+          <ul className="space-y-1">
+            {lasting.map((id) => (
+              <li key={id} className="text-xs" style={{ color: "var(--text-primary)" }}>
+                <span className="flex items-start gap-2">
+                  <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-300" />
+                  {title(id)}
+                </span>
+                {id === "sec-hsts" && (
+                  <span className="mt-0.5 block text-[11px]" style={{ color: "var(--text-subtle)", paddingLeft: "1.375rem" }}>
+                    {t("hstsLasting")}
+                  </span>
+                )}
               </li>
             ))}
           </ul>

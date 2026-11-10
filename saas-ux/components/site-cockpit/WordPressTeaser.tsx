@@ -21,8 +21,8 @@ interface WordPressTeaserProps {
  */
 export function WordPressTeaser({ siteId, connectionStatus, problemIds }: WordPressTeaserProps) {
   const t = useTranslations("SiteCockpit.wordpress.teaser");
-  const { automatic, tested } = connectPreview(problemIds);
-  const fixable = automatic.length + tested.length;
+  const { automatic, lasting, tested } = connectPreview(problemIds);
+  const fixable = automatic.length + lasting.length + tested.length;
   const broken = connectionStatus === "error" || connectionStatus === "reconnecting";
 
   return (

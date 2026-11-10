@@ -654,7 +654,9 @@
         "pluginOutdated": "El plugin {installed} está instalado; {latest} está disponible → Descarga la actualización y súbela en WordPress en Plugins → Añadir nuevo.",
         "download": "Descargar {version}",
         "privacy": "El plugin informa de ajustes y recuentos, no de tus entradas ni de datos de clientes. Cada cambio aparece en Cambios aplicados, la mayoría con deshacer.",
-        "cta": "Conectar ahora"
+        "cta": "Conectar ahora",
+        "lastingTitle": "Corregido con un clic, de forma duradera",
+        "hstsLasting": "Los navegadores recuerdan este ajuste durante un año, así que desactivarlo después no lo deshace para quienes ya visitaron el sitio."
       },
       "teaser": {
         "eyebrow": "WordPress",

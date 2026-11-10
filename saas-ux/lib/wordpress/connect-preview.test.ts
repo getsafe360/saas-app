@@ -6,15 +6,18 @@ import { connectPreview, CONNECT_FIXES, problemIdsFrom } from './connect-preview
 
 test('sorts public findings into one-click fixes and tested ones', () => {
   const preview = connectPreview(['sec-csp', 'sec-version-disclosure', 'sec-wp-xmlrpc', 'sec-hsts', 'sec-wp-xmlrpc']);
-  assert.deepEqual(preview.automatic, ['sec-wp-xmlrpc', 'sec-hsts']);
+  assert.deepEqual(preview.automatic, ['sec-wp-xmlrpc']);
+  assert.deepEqual(preview.lasting, ['sec-hsts']);
   assert.deepEqual(preview.tested, ['sec-csp']);
 });
 
-test('header findings promised as automatic have an automatic fixer', () => {
+test('header findings promised as one-click have an automatic fixer, and undo only when reversible', () => {
   for (const rule of SECURITY_HEADER_RULES) {
-    if (CONNECT_FIXES[rule.id] !== 'automatic') continue;
+    const kind = CONNECT_FIXES[rule.id];
+    if (kind !== 'automatic' && kind !== 'lasting') continue;
     assert.equal(rule.fix?.automation, 'auto', rule.id);
     assert.ok(AUTOMATIC_FIXER_IDS.has(rule.fix!.fixerId), rule.id);
+    assert.equal(rule.fix?.reversible, kind === 'automatic', rule.id);
   }
 });
 
