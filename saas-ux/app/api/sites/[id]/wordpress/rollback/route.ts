@@ -16,7 +16,7 @@ import { publishEvent } from '@/lib/cockpit/event-bus';
 import { createWordPressClient } from '@/lib/wordpress/client';
 import { planRollback } from '@/lib/wordpress/rollback';
 import { connectorTimeoutFor } from '@/lib/wordpress/timeouts';
-import { clearTestState } from '@/lib/security/csp/reports';
+import { clearTestState, saveTestState } from '@/lib/security/csp/reports';
 import { CSP_TEST_ACTION_ID } from '@/lib/security/csp/start';
 
 type RollbackOutcome = { runId: string; status: 'rolled_back' | 'failed'; message: string };
@@ -162,7 +162,9 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
   // Undoing the CSP test ends it: drop its saved policy and reports.
   const rolledBackIds = new Set(rolledBack.map((outcome) => outcome.runId));
   if (runs.some((run) => rolledBackIds.has(run.id) && run.actionId === CSP_TEST_ACTION_ID)) {
-    await clearTestState(siteId).catch(() => undefined);
+    // The connector restores the policy that was there before. If that was an
+    // earlier test that is still applied, the test continues with that policy.
+    await reconcileCspTest(siteId, rolledBackIds).catch(() => undefined);
   }
   let auditChangeSetId: string | undefined;
   let auditError: string | undefined;
@@ -228,5 +230,37 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
     outcomes,
     auditChangeSetId,
     ...(auditError ? { auditError } : {}),
+  });
+}
+
+async function reconcileCspTest(siteId: string, rolledBackIds: ReadonlySet<string>): Promise<void> {
+  const db = getDrizzle();
+  const earlier = await db
+    .select({
+      id: wordpressActionRuns.id,
+      inputPayload: wordpressActionRuns.inputPayload,
+      startedAt: wordpressActionRuns.startedAt,
+    })
+    .from(wordpressActionRuns)
+    .where(
+      and(
+        eq(wordpressActionRuns.siteId, siteId),
+        eq(wordpressActionRuns.actionId, CSP_TEST_ACTION_ID),
+        eq(wordpressActionRuns.status, 'applied'),
+      ),
+    );
+  const active = earlier
+    .filter((run) => !rolledBackIds.has(run.id))
+    .sort((a, b) => (b.startedAt?.getTime() ?? 0) - (a.startedAt?.getTime() ?? 0))[0];
+  const policy = (active?.inputPayload as { policy?: unknown } | null)?.policy;
+  if (!active || typeof policy !== 'string') {
+    await clearTestState(siteId);
+    return;
+  }
+  await saveTestState(siteId, {
+    mode: 'report-only',
+    policy,
+    startedAt: (active.startedAt ?? new Date()).toISOString(),
+    runId: active.id,
   });
 }

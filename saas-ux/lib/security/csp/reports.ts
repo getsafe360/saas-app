@@ -114,10 +114,15 @@ const memHash = (key: string) => {
   return hash;
 };
 
-export async function storeViolations(siteId: string, violations: ReadonlyArray<CspViolation>): Promise<void> {
+type RedisClient = NonNullable<ReturnType<typeof getRedis>>;
+
+export async function storeViolations(
+  siteId: string,
+  violations: ReadonlyArray<CspViolation>,
+  redis: Pick<RedisClient, 'hlen' | 'pipeline'> | null = getRedis(),
+): Promise<void> {
   if (violations.length === 0) return;
   const k = keys(siteId);
-  const redis = getRedis();
   if (!redis) {
     const counts = memHash(k.counts);
     const pages = memHash(k.pages);
@@ -129,17 +134,34 @@ export async function storeViolations(siteId: string, violations: ReadonlyArray<
     }
     return;
   }
-  const size = await redis.hlen(k.counts);
-  const pipeline = redis.pipeline();
+  // One entry per source in this batch, so the cap below is checked once per field.
+  const batch = new Map<string, { count: number; page: string }>();
   for (const v of violations) {
     const field = `${v.directive} ${v.blocked}`;
-    // New sources stop being added once the list is full; known ones keep counting.
-    if (size >= MAX_ENTRIES) {
-      pipeline.hincrby(k.counts, field, 0);
-      continue;
+    const entry = batch.get(field);
+    if (entry) entry.count += 1;
+    else batch.set(field, { count: 1, page: v.page });
+  }
+  const fields = [...batch.keys()];
+  let size = await redis.hlen(k.counts);
+  // Known sources always keep counting; new ones are admitted only while the list
+  // has room. Concurrent requests can overshoot by at most one batch.
+  // With room for every field, treat them all as admitted.
+  let known: Set<string> = new Set(fields);
+  if (size + fields.length > MAX_ENTRIES) {
+    const check = redis.pipeline();
+    for (const field of fields) check.hexists(k.counts, field);
+    const exists = (await check.exec()) as unknown[];
+    known = new Set(fields.filter((_, index) => Number(exists[index]) === 1));
+  }
+  const pipeline = redis.pipeline();
+  for (const [field, { count, page }] of batch) {
+    if (!known.has(field)) {
+      if (size >= MAX_ENTRIES) continue;
+      size += 1;
     }
-    pipeline.hincrby(k.counts, field, 1);
-    pipeline.hsetnx(k.pages, field, v.page);
+    pipeline.hincrby(k.counts, field, count);
+    pipeline.hsetnx(k.pages, field, page);
   }
   pipeline.expire(k.counts, TTL_SECONDS);
   pipeline.expire(k.pages, TTL_SECONDS);

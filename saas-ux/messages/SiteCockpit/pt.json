@@ -634,6 +634,7 @@
           "CONNECTOR_UPDATE": "Testar uma CSP requer o plugin GetSafe 360 1.10 ou mais recente → Atualize o plugin.",
           "CONNECTOR_UNREACHABLE": "O plugin GetSafe 360 não respondeu → Verifique a conexão e tente novamente.",
           "CONNECTOR_FAILED": "O plugin não aplicou a política → Tente novamente ou atualize o plugin.",
+          "TEST_RUNNING": "Já há um teste em andamento → Desfaça-o em Alterações aplicadas antes de iniciar outro.",
           "WORDPRESS_NOT_CONNECTED": "O site não está conectado → Reconecte o plugin GetSafe 360."
         }
       }

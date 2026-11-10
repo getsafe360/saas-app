@@ -32,7 +32,7 @@ interface Preview {
   connectorReady: boolean;
 }
 
-const ERRORS = new Set(["RATE_LIMITED", "SITE_UNREACHABLE", "CONNECTOR_UPDATE", "CONNECTOR_UNREACHABLE", "CONNECTOR_FAILED", "WORDPRESS_NOT_CONNECTED"]);
+const ERRORS = new Set(["RATE_LIMITED", "SITE_UNREACHABLE", "CONNECTOR_UPDATE", "CONNECTOR_UNREACHABLE", "CONNECTOR_FAILED", "WORDPRESS_NOT_CONNECTED", "TEST_RUNNING"]);
 
 function errorKey(code: unknown): string {
   return typeof code === "string" && ERRORS.has(code) ? code : "GENERIC";
@@ -76,6 +76,11 @@ export function CspPanel({ siteId, refreshKey = 0, onStarted }: CspPanelProps) {
       const body = await response.json().catch(() => null);
       if (!response.ok || !body?.success) {
         setError(errorKey(body?.error));
+        // Another tab already started a test: show it instead of the preview.
+        if (body?.error === "TEST_RUNNING") {
+          setPreview(null);
+          await load();
+        }
         return;
       }
       if (kind === "preview") {

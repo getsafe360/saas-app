@@ -8,7 +8,7 @@ import { getDrizzle } from '@/lib/db/postgres';
 import { wordpressActionRuns } from '@/lib/db/schema/wordpress/agent';
 import { isPublicUrlResolved } from '@/lib/net/isPublicUrlResolved';
 import { fetchFollowingSafely } from '@/lib/net/safeFetch';
-import { saveTestState } from '@/lib/security/csp/reports';
+import { readTestState, saveTestState } from '@/lib/security/csp/reports';
 import { scanSitePages } from '@/lib/security/csp/scan';
 import { CSP_TEST_ACTION_ID, CSP_TEST_HEADER, policyFromScan, preparePolicy } from '@/lib/security/csp/start';
 import { createWordPressClient } from '@/lib/wordpress/client';
@@ -37,6 +37,11 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
   if ('error' in access) return access.error;
   const { site } = access;
   const tokenHash = access.tokenHash as string;
+
+  // One test at a time: a second start would stack undo steps on the first.
+  if (await readTestState(siteId).catch(() => null)) {
+    return NextResponse.json({ success: false, error: 'TEST_RUNNING' }, { status: 409 });
+  }
 
   const client = createWordPressClient({ siteUrl: site.siteUrl, tokenHash, timeout: 10_000 });
   try {
