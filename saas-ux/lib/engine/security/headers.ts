@@ -69,6 +69,11 @@ export const SECURITY_HEADER_RULES: ReadonlyArray<Rule<SiteHeaderFacts>> = SECUR
       };
     }
 
+    // A policy in report-only mode is being tested: progress, not yet protection.
+    if (spec.header === 'content-security-policy' && headers['content-security-policy-report-only']) {
+      return { status: 'warn', message: 'reportOnly', observed: headers['content-security-policy-report-only'] };
+    }
+
     if (spec.header === 'strict-transport-security') {
       if (https === null) return unknown('httpsUnknown');
       if (!https) return { status: 'not-applicable', message: 'notApplicable' };

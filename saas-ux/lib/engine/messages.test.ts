@@ -123,6 +123,7 @@ test('every message a rule can emit exists in the catalog', () => {
     'sec-hsts.httpsUnknown',
     'sec-hsts.notApplicable',
     'sec-frame-options.frameAncestors',
+    'sec-csp.reportOnly',
     'common.notEvaluated',
   ]) {
     assert.ok(hasMessage(key), key);

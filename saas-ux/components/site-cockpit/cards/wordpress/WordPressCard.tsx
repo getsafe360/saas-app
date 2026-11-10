@@ -22,6 +22,7 @@ import {
 import type { RemediationItem } from "@/lib/wordpress/remediation-result";
 import { AppliedChangesPanel } from "./components/Analysis/AppliedChangesPanel";
 import { CoreFilesReview } from "./components/Analysis/CoreFilesReview";
+import { CspPanel } from "./components/Analysis/CspPanel";
 
 /** Findings whose fixes replace or remove core files; the AI review explains them first. */
 const CORE_FILE_FINDINGS = new Set(["red-flag-core-modifications", "red-flag-unexpected-core-files"]);
@@ -438,6 +439,17 @@ export function WordPressCard({
           (wordpress.healthFindings ?? []).some(
             (finding) => CORE_FILE_FINDINGS.has(finding.id) && finding.status === "fail",
           ) && <CoreFilesReview siteId={siteId} />}
+
+        {siteId &&
+          (wordpress.healthFindings ?? []).some(
+            (finding) => finding.id === "sec-csp" && (finding.status === "fail" || finding.status === "warning"),
+          ) && (
+            <CspPanel
+              siteId={siteId}
+              refreshKey={changesVersion + undoneElsewhere.size}
+              onStarted={() => setChangesVersion((version) => version + 1)}
+            />
+          )}
 
         {siteId && (
           <AppliedChangesPanel

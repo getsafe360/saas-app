@@ -606,6 +606,37 @@
           "readsRequest": "liest Besuchereingaben"
         },
         "unavailable": "Die Änderungen konnten nicht geladen werden (die Originaldatei wurde womöglich nicht heruntergeladen). Später erneut prüfen."
+      },
+      "csp": {
+        "title": "Content-Security-Policy",
+        "description": "Eine CSP legt fest, welche Server auf Ihrer Website Skripte ausführen und Inhalte laden dürfen – ein eingeschleustes Skript von woanders wird so blockiert. GetSafe 360 erstellt eine Richtlinie aus dem, was Ihre Seiten laden, und testet sie zuerst, ohne etwas zu blockieren.",
+        "build": "Richtlinie erstellen",
+        "building": "Seiten werden geprüft…",
+        "scanned": "{count, plural, one {Aus # Seite erstellt.} other {Aus # Seiten erstellt.}} Vorgeschlagene Richtlinie:",
+        "inlineNote": "Ihr Theme oder Ihre Plugins nutzen Inline-Skripte, daher erlaubt die Richtlinie diese. Sie begrenzt trotzdem, welche Server Code ausführen dürfen, blockiert Plugins und Base-Tag-Tricks und verhindert, dass fremde Websites Ihre einbetten.",
+        "reportOnlyNote": "Der Test läuft im Nur-Bericht-Modus: Die Browser Ihrer Besucher melden, was die Richtlinie blockieren würde, aber nichts wird blockiert. Sie können ihn jederzeit unter „Vorgenommene Änderungen“ beenden.",
+        "start": "Test starten (nur Bericht)",
+        "testingSince": "Test seit {date} ({days, plural, =0 {heute} one {# Tag} other {# Tage}}).",
+        "reports": "{count, plural, =0 {Noch keine Berichte} one {# Bericht} other {# Berichte}}",
+        "refresh": "Aktualisieren",
+        "noReports": "Noch kein Browser hat ein Problem gemeldet. Lassen Sie den Test einige Tage mit normalem Besucherverkehr laufen.",
+        "columns": {
+          "directive": "Regel",
+          "source": "Blockierte Quelle",
+          "count": "Berichte",
+          "page": "Beispielseite"
+        },
+        "testingHint": "Jede Zeile ist etwas, das die Richtlinie blockiert hätte. Nach einigen Tagen hilft Ihnen Claude zu entscheiden, was erlaubt werden soll, bevor Sie die Richtlinie einschalten. Zum Beenden machen Sie den Test unter „Vorgenommene Änderungen“ rückgängig.",
+        "errors": {
+          "GENERIC": "Etwas ist schiefgelaufen → Gleich erneut versuchen.",
+          "RATE_LIMITED": "Zu viele Prüfungen in der letzten Stunde → Später erneut versuchen.",
+          "SITE_UNREACHABLE": "Ihre Seiten konnten nicht geladen werden → Prüfen, ob die Website erreichbar ist, und erneut versuchen.",
+          "CONNECTOR_UPDATE": "Für den CSP-Test wird das GetSafe-360-Plugin 1.10 oder neuer benötigt → Plugin aktualisieren.",
+          "CONNECTOR_UNREACHABLE": "Das GetSafe-360-Plugin hat nicht geantwortet → Verbindung prüfen und erneut versuchen.",
+          "CONNECTOR_FAILED": "Das Plugin hat die Richtlinie nicht übernommen → Erneut versuchen oder das Plugin aktualisieren.",
+          "TEST_RUNNING": "Es läuft bereits ein Test → Ihn unter „Vorgenommene Änderungen“ rückgängig machen, bevor Sie einen neuen starten.",
+          "WORDPRESS_NOT_CONNECTED": "Die Website ist nicht verbunden → Das GetSafe-360-Plugin neu verbinden."
+        }
       }
     },
     "mobile": {

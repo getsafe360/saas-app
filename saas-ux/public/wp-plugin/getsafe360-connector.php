@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GetSafe 360 AI Connector
  * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 1.9.0
+ * Version: 1.10.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPL v2 or later
@@ -20,7 +20,7 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '1.9.0';
+  const VERSION = '1.10.0';
   const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';
   const OPTION = 'getsafe360_connector';
   const ACTION_STATE_OPTION = 'getsafe360_action_state';
@@ -576,9 +576,80 @@ class GetSafe360_Connector {
    * Allowlisted headers and the values accepted for each. Anything else is
    * rejected, so the SaaS can never inject arbitrary headers.
    */
+  const CSP_DIRECTIVES = [
+    'default-src', 'script-src', 'style-src', 'img-src', 'font-src', 'connect-src', 'media-src',
+    'frame-src', 'worker-src', 'manifest-src', 'object-src', 'base-uri', 'form-action',
+    'frame-ancestors', 'upgrade-insecure-requests', 'report-uri',
+  ];
+
+  /** CSP reports may only go to GetSafe 360, never to a third party. */
+  private function csp_report_hosts() {
+    $hosts = ['getsafe360.ai', 'www.getsafe360.ai'];
+    $api = parse_url(self::API_BASE, PHP_URL_HOST);
+    if ($api) {
+      $hosts[] = strtolower($api);
+    }
+    return $hosts;
+  }
+
+  private function is_csp_source($token) {
+    static $keywords = ["'self'", "'none'", "'unsafe-inline'", "'unsafe-eval'", "'strict-dynamic'", "'unsafe-hashes'", "'wasm-unsafe-eval'", "'report-sample'"];
+    static $schemes = ['https:', 'http:', 'data:', 'blob:', 'wss:', 'ws:', 'mediastream:'];
+    return $token === '*'
+      || in_array($token, $keywords, true)
+      || in_array($token, $schemes, true)
+      || preg_match("#^'sha(256|384|512)-[A-Za-z0-9+/]+=*'$#", $token)
+      || preg_match('#^(?:(?:https?|wss?)://)?(?:\*\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)*(?::(?:\d{1,5}|\*))?(?:/[A-Za-z0-9._~/-]*)?$#i', $token);
+  }
+
+  /** Known directives once each, valid sources, a default-src, reports only to GetSafe 360, at most 4 KB. */
+  private function sanitize_csp($value) {
+    if ($value === '' || strlen($value) > 4096 || preg_match('/[\x00-\x1f\x7f,]/', $value)) {
+      return null;
+    }
+    $seen = [];
+    foreach (explode(';', $value) as $part) {
+      $tokens = preg_split('/\s+/', trim($part), -1, PREG_SPLIT_NO_EMPTY);
+      if (empty($tokens)) {
+        continue;
+      }
+      $name = strtolower(array_shift($tokens));
+      if (!in_array($name, self::CSP_DIRECTIVES, true) || isset($seen[$name])) {
+        return null;
+      }
+      $seen[$name] = true;
+      if ($name === 'upgrade-insecure-requests') {
+        if (!empty($tokens)) {
+          return null;
+        }
+        continue;
+      }
+      if (empty($tokens)) {
+        return null;
+      }
+      if ($name === 'report-uri') {
+        $parts = count($tokens) === 1 ? parse_url($tokens[0]) : false;
+        if (!$parts || (isset($parts['scheme']) ? $parts['scheme'] : '') !== 'https'
+          || !in_array(strtolower(isset($parts['host']) ? $parts['host'] : ''), $this->csp_report_hosts(), true)) {
+          return null;
+        }
+        continue;
+      }
+      foreach ($tokens as $token) {
+        if (!$this->is_csp_source($token)) {
+          return null;
+        }
+      }
+    }
+    return isset($seen['default-src']) ? $value : null;
+  }
+
   private function sanitize_security_header($name, $value) {
     $value = trim((string) $value);
     switch ($name) {
+      case 'Content-Security-Policy':
+      case 'Content-Security-Policy-Report-Only':
+        return $this->sanitize_csp($value);
       case 'Strict-Transport-Security':
         return preg_match('/^max-age=\d{1,9}(; ?includeSubDomains)?(; ?preload)?$/i', $value) ? $value : null;
       case 'X-Content-Type-Options':
@@ -627,11 +698,16 @@ class GetSafe360_Connector {
   private function apply_security_headers_action($action_id, $payload) {
     $previous = $this->get_security_headers();
     $requested = isset($payload['headers']) && is_array($payload['headers']) ? $payload['headers'] : [];
-    $next = !empty($payload['replace']) ? [] : $previous;
+    $replace = !empty($payload['replace']);
+    $next = $replace ? [] : $previous;
     $rejected = [];
+    // Undo restores only the headers this run touched (1.10), so independent runs
+    // (e.g. security headers, then a CSP test) can be undone in any order.
+    $restore = [];
 
     foreach ($requested as $name => $value) {
       $name = sanitize_text_field((string) $name);
+      $restore[$name] = array_key_exists($name, $previous) ? $previous[$name] : null;
       if ($value === null) {
         unset($next[$name]);
         continue;
@@ -666,10 +742,10 @@ class GetSafe360_Connector {
       'rollback' => [
         'id' => $action_id . '-rollback',
         'type' => 'set_security_headers',
-        'payload' => [
-          'replace' => true,
-          'headers' => empty($previous) ? new \stdClass() : $previous,
-        ],
+        'payload' => $replace
+          // Undoing a wholesale replace (pre-1.10 rollbacks) restores the whole previous set.
+          ? ['replace' => true, 'headers' => empty($previous) ? new \stdClass() : $previous]
+          : ['headers' => empty($restore) ? new \stdClass() : $restore],
       ],
     ];
   }
@@ -2729,6 +2805,7 @@ class GetSafe360_Connector {
         'databaseCleanup'      => true,
         'pluginUpdates'        => true,
         'coreIntegrity'        => true,
+        'securityCsp'          => true,
       ],
     ];
   }

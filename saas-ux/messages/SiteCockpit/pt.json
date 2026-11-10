@@ -606,6 +606,37 @@
           "readsRequest": "lê dados enviados por visitantes"
         },
         "unavailable": "Não foi possível carregar as alterações (talvez a cópia oficial não tenha sido baixada). Analise novamente mais tarde."
+      },
+      "csp": {
+        "title": "Content-Security-Policy",
+        "description": "Uma CSP diz aos navegadores quais servidores podem executar scripts e carregar conteúdo no seu site, assim um script injetado de outro lugar é bloqueado. O GetSafe 360 cria uma política a partir do que suas páginas carregam e primeiro a testa sem bloquear nada.",
+        "build": "Criar uma política",
+        "building": "Analisando suas páginas…",
+        "scanned": "{count, plural, one {Criada a partir de # página.} other {Criada a partir de # páginas.}} Política proposta:",
+        "inlineNote": "Seu tema ou plugins usam scripts inline, então a política os permite. Ela ainda limita quais servidores podem executar código, bloqueia plugins e truques com a tag base e impede que outros sites incorporem o seu.",
+        "reportOnlyNote": "O teste roda no modo somente relatório: os navegadores dos visitantes informam o que a política bloquearia, mas nada é bloqueado. Você pode pará-lo a qualquer momento em Alterações aplicadas.",
+        "start": "Iniciar teste (somente relatório)",
+        "testingSince": "Em teste desde {date} ({days, plural, =0 {hoje} one {# dia} other {# dias}}).",
+        "reports": "{count, plural, =0 {Nenhum relatório ainda} one {# relatório} other {# relatórios}}",
+        "refresh": "Atualizar",
+        "noReports": "Nenhum navegador relatou problemas ainda. Deixe o teste rodar alguns dias com tráfego normal.",
+        "columns": {
+          "directive": "Regra",
+          "source": "Origem bloqueada",
+          "count": "Relatórios",
+          "page": "Página de exemplo"
+        },
+        "testingHint": "Cada linha é algo que a política teria bloqueado. Depois de alguns dias, o Claude ajudará você a decidir o que permitir antes de ativar a política. Para parar o teste, desfaça-o em Alterações aplicadas.",
+        "errors": {
+          "GENERIC": "Algo deu errado → Tente novamente em instantes.",
+          "RATE_LIMITED": "Análises demais na última hora → Tente mais tarde.",
+          "SITE_UNREACHABLE": "Não foi possível carregar suas páginas → Verifique se o site está no ar e tente novamente.",
+          "CONNECTOR_UPDATE": "Testar uma CSP requer o plugin GetSafe 360 1.10 ou mais recente → Atualize o plugin.",
+          "CONNECTOR_UNREACHABLE": "O plugin GetSafe 360 não respondeu → Verifique a conexão e tente novamente.",
+          "CONNECTOR_FAILED": "O plugin não aplicou a política → Tente novamente ou atualize o plugin.",
+          "TEST_RUNNING": "Já há um teste em andamento → Desfaça-o em Alterações aplicadas antes de iniciar outro.",
+          "WORDPRESS_NOT_CONNECTED": "O site não está conectado → Reconecte o plugin GetSafe 360."
+        }
       }
     },
     "mobile": {
