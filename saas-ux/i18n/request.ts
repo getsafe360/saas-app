@@ -27,6 +27,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     termsMessages,
     metaFaqMessages,
     pricingMessages,
+    reportsMessages,
     // Add more as you create them:
     // dashboardMessages,
     // settingsMessages,
@@ -41,6 +42,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     import(`@/messages/Terms/${locale}.json`),
     import(`@/locales/${locale}/metaFaq.json`),
     import(`@/locales/${locale}/pricing.json`),
+    import(`@/messages/Reports/${locale}.json`),
     // import(`@/messages/Dashboard/${locale}.json`),
     // import(`@/messages/Settings/${locale}.json`),
     // import(`@/messages/i18n/${locale}.json`),
@@ -61,6 +63,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       Terms: termsMessages.default.Terms,
       metaFaq: metaFaqMessages.default,
       pricing: pricingMessages.default,
+      Reports: reportsMessages.default.Reports,
 
       // Future features (uncomment as you add them):
       // Dashboard: dashboardMessages.default.Dashboard,

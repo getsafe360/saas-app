@@ -1,0 +1,169 @@
+{
+  "Reports": {
+    "document": {
+      "title": "Relatório de manutenção do site",
+      "period": "{from} – {to}",
+      "preparedBy": "Preparado por {company}",
+      "generatedOn": "Criado em {date}",
+      "summary": {
+        "heading": "Resumo",
+        "fixes": "{count, plural, =0 {Nenhuma alteração foi necessária neste período} one {# melhoria feita neste período} other {# melhorias feitas neste período}}",
+        "score": "Pontuação geral: {score}/100 ({grade})",
+        "health": "Saúde do WordPress: {now}/100",
+        "healthChange": "Saúde do WordPress: {before} → {now}/100",
+        "open": "{count, plural, =0 {Nenhum ponto em aberto} one {# recomendação para os próximos passos} other {# recomendações para os próximos passos}}"
+      },
+      "scores": {
+        "heading": "Pontuações",
+        "category": "Área",
+        "score": "Pontos",
+        "grade": "Nota",
+        "overall": "Geral",
+        "wordpress": "Saúde do WordPress"
+      },
+      "categories": {
+        "performance": "Desempenho",
+        "security": "Segurança",
+        "seo": "SEO",
+        "accessibility": "Acessibilidade",
+        "content": "Conteúdo"
+      },
+      "fixed": {
+        "heading": "O que corrigimos",
+        "intro": "Cada alteração abaixo foi aplicada ao site no ar e verificada em seguida.",
+        "none": "Nenhuma alteração foi necessária neste período.",
+        "date": "Data",
+        "change": "Problema corrigido",
+        "why": "Por que importa",
+        "unverified": "aplicada; ainda não confirmada no site no ar",
+        "undoNote": "Cada alteração fica registrada e a maioria pode ser desfeita com um clique, se necessário."
+      },
+      "protection": {
+        "heading": "Proteção contínua",
+        "csp": "Desde {date}, uma Content-Security-Policy está em teste no modo apenas relatório: os navegadores informam o que ela bloquearia, sem afetar os visitantes."
+      },
+      "next": {
+        "heading": "Próximos passos recomendados",
+        "none": "As últimas verificações não encontraram pontos em aberto."
+      },
+      "severity": {
+        "critical": "Crítico",
+        "high": "Alto",
+        "medium": "Médio",
+        "low": "Baixo"
+      },
+      "footer": {
+        "method": "As pontuações vêm de verificações automáticas do site público e, quando conectada, da instalação do WordPress, em {date}.",
+        "poweredBy": "Com tecnologia GetSafe 360 AI"
+      },
+      "whyFallback": "Melhora a segurança, a velocidade ou a confiabilidade do site.",
+      "why": {
+        "sec-hsts": "Os navegadores agora usam sempre a conexão criptografada, então os visitantes não podem ser levados a uma conexão insegura, por exemplo em Wi-Fi público.",
+        "sec-nosniff": "Os navegadores não adivinham mais o tipo de arquivo, fechando um truque para executar scripts disfarçados.",
+        "sec-referrer-policy": "Endereços completos das páginas, que podem conter dados privados, não são mais repassados a outros sites.",
+        "sec-frame-options": "Outros sites não podem mais incorporar suas páginas de forma invisível para enganar visitantes e fazê-los clicar (clickjacking).",
+        "sec-csp": "Uma Content-Security-Policy está em teste: a defesa mais forte do navegador contra scripts injetados.",
+        "wp-xmlrpc": "Fecha uma interface antiga que atacantes usam para testar senhas em massa.",
+        "wp-user-enumeration": "Os nomes de usuário não são mais listados publicamente, então falta aos atacantes metade de um login.",
+        "wp-file-editing": "Mesmo com uma senha de administrador roubada, ninguém consegue alterar o código do site pelo painel.",
+        "wp-core-auto-updates": "As atualizações de segurança do WordPress agora são instaladas automaticamente, em geral poucas horas após o lançamento.",
+        "wp-open-admin-registration": "Novos cadastros não recebem mais direitos de administrador, fechando um caminho direto para tomar o site.",
+        "wp-config-permissions": "O arquivo com a senha do banco de dados não pode mais ser lido por outras contas no servidor.",
+        "wp-plugin-auto-updates": "Os plugins agora recebem correções de segurança automaticamente, sem esperar que alguém clique em atualizar.",
+        "wp-expired-transients": "Dados de cache expirados foram removidos, mantendo o banco de dados enxuto e o site ágil.",
+        "wp-revisions": "Revisões antigas de páginas foram limpas, deixando o banco de dados menor e os backups mais rápidos.",
+        "wp-outdated-plugins": "Os plugins foram atualizados com um ponto de restauração, fechando falhas de segurança e erros conhecidos.",
+        "red-flag-core-modifications": "Arquivos de sistema do WordPress alterados foram substituídos por cópias oficiais verificadas.",
+        "red-flag-unexpected-core-files": "Arquivos desconhecidos nas pastas de sistema do WordPress foram movidos para quarentena, onde não podem ser executados."
+      }
+    },
+    "nav": "Relatórios",
+    "card": {
+      "eyebrow": "Relatórios para clientes",
+      "title": "Entregue ao seu cliente um relatório do que foi corrigido e por que importa, em PDF ou Markdown.",
+      "howItWorks": "Como funciona",
+      "benefits": {
+        "billing": {
+          "title": "Justifique a cobrança",
+          "text": "Transforme o trabalho no site em uma entrega documentada."
+        },
+        "whiteLabel": {
+          "title": "Pronto para white-label",
+          "text": "Plano Agência: seu logo e sua marca, sem menção ao GetSafe 360 AI."
+        },
+        "languages": {
+          "title": "Seis idiomas",
+          "text": "Crie cada relatório no idioma do seu cliente."
+        }
+      },
+      "planFree": "Pro: 5 relatórios por mês · Agência: ilimitados + white-label",
+      "planPro": "5 relatórios por mês incluídos",
+      "planAgency": "Relatórios ilimitados · white-label",
+      "upgrade": "Mudar para o Pro",
+      "open": "Criar relatório"
+    },
+    "info": {
+      "title": "Por que criar relatórios?",
+      "lead": "O trabalho em um site tem valor, mas sem documentação o seu cliente nunca o vê.",
+      "body": "Um relatório lista o que o GetSafe 360 alterou no site, por que cada alteração importa, as pontuações atuais e os próximos passos. Entregue a um cliente, anexe a uma fatura ou guarde como registro.",
+      "includedTitle": "O que inclui",
+      "included": {
+        "fixes": "Cada alteração do período, com o motivo",
+        "scores": "Pontuação geral e por área",
+        "wordpress": "Saúde do WordPress antes e depois (se conectado)",
+        "next": "Próximos passos por prioridade",
+        "formats": "PDF ou Markdown, em seis idiomas"
+      },
+      "agencyTitle": "O plano Agência acrescenta",
+      "agency": {
+        "unlimited": "Relatórios ilimitados",
+        "whiteLabel": "Seu logo, nome da empresa e cor",
+        "noBranding": "Sem menção ao GetSafe 360 AI"
+      },
+      "close": "Fechar"
+    },
+    "page": {
+      "title": "Relatórios",
+      "description": "Relatórios prontos para clientes de {host}: o que foi corrigido, por que importa e o que vem a seguir.",
+      "back": "Voltar ao cockpit",
+      "createTitle": "Novo relatório",
+      "format": "Formato",
+      "formats": {
+        "pdf": "PDF",
+        "markdown": "Markdown"
+      },
+      "language": "Idioma do relatório",
+      "period": "Período",
+      "periods": {
+        "30": "Últimos 30 dias",
+        "90": "Últimos 90 dias",
+        "365": "Últimos 12 meses"
+      },
+      "whiteLabel": "White-label: sem o GetSafe 360 AI",
+      "whiteLabelHint": "Usa o nome e o logo da sua empresa quando a marca estiver configurada.",
+      "preview": "Pré-visualizar",
+      "previewHint": "As pré-visualizações são gratuitas e não contam nos relatórios do mês.",
+      "create": "Criar relatório",
+      "creating": "Criando…",
+      "quota": "{used} de {limit} relatórios usados este mês",
+      "unlimited": "Relatórios ilimitados",
+      "historyTitle": "Relatórios anteriores",
+      "noHistory": "Ainda não há relatórios.",
+      "download": "Baixar",
+      "status": {
+        "generating": "Criando…",
+        "failed": "Falhou"
+      },
+      "created": "Relatório criado: {name}",
+      "errors": {
+        "QUOTA_EXHAUSTED": "Limite mensal de relatórios atingido → Mude para o plano Agência para relatórios ilimitados.",
+        "UPGRADE_REQUIRED": "Os relatórios fazem parte do plano Pro → Faça upgrade para criar relatórios.",
+        "RATE_LIMITED": "Muitas solicitações → Aguarde um minuto e tente novamente.",
+        "GENERIC": "Não foi possível criar o relatório → Tente novamente em instantes."
+      },
+      "upgradeTitle": "Os relatórios fazem parte do Pro",
+      "upgradeText": "Mostre aos seus clientes o que foi corrigido e por que importa. O Pro inclui 5 relatórios por mês; o Agência acrescenta relatórios white-label ilimitados.",
+      "upgradeCta": "Ver planos"
+    }
+  }
+}

@@ -3,7 +3,7 @@ import { fetchFollowingSafely, type UrlValidator } from "@/lib/net/safeFetch";
 import { balanceTags, decodeHtmlEntities, extractTitle, restoreLt } from "@/lib/net/sanitizeHtml";
 
 type CmsInfo =
-  | { type: "wordpress"; signals: string[]; wp: { version?: string | null; jsonApi: boolean | null; xmlrpc: boolean | null; usersExposed?: boolean | null } }
+  | { type: "wordpress"; signals: string[]; wp: { version?: string | null; jsonApi: boolean | null; xmlrpc: boolean | null; usersExposed?: boolean | null; loginExposed?: boolean | null } }
   | { type: "unknown" };
 
 function detectLang(html: string): string | null {
@@ -40,6 +40,23 @@ export async function usersEndpointExposed(origin: string, validate?: UrlValidat
     const text = (await res.text()).slice(0, 50_000);
     const body = JSON.parse(text);
     return Array.isArray(body) && body.some((u) => u && typeof u === "object" && ("slug" in u || "id" in u));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * true  = the default /wp-login.php shows the WordPress login form to anyone
+ * false = it does not (404/403/401, or no login form: moved by a plugin such as WPS Hide Login)
+ * null  = could not tell (timeout, server error)
+ */
+export async function loginPageExposed(origin: string, validate?: UrlValidator): Promise<boolean | null> {
+  try {
+    const res = await fetchFollowingSafely(`${origin}/wp-login.php`, { timeoutMs: 2500, validate });
+    if (res.status === 401 || res.status === 403 || res.status === 404 || res.status === 410) return false;
+    if (res.status !== 200) return null;
+    const html = (await res.text()).slice(0, 100_000);
+    return /id=["']loginform["']|name=["']log["']/i.test(html);
   } catch {
     return null;
   }
@@ -114,6 +131,7 @@ export async function preScan(inputUrl: string, opts: { validate?: UrlValidator 
     // users route must return records to an anonymous caller (true), refuse (false), or we
     // could not tell (null).
     const usersExposed = origin ? await usersEndpointExposed(origin, validate) : null;
+    const loginExposed = origin ? await loginPageExposed(origin, validate) : null;
 
     cms = {
       type: "wordpress",
@@ -123,6 +141,7 @@ export async function preScan(inputUrl: string, opts: { validate?: UrlValidator 
         jsonApi: jsonApiHead ? true : null,   // null = unknown (timeout)
         xmlrpc: xmlrpcHead ? true : null,
         usersExposed,
+        loginExposed,
       }
     };
   }

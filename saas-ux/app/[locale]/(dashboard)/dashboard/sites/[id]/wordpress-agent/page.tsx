@@ -7,6 +7,7 @@ import { parseStoredSite } from "@/lib/cockpit/stored";
 import type { Metadata } from "next";
 import { SiteCockpitLoader } from "@/components/site-cockpit/SiteCockpitLoader";
 import { siteConnectionStatus } from "@/lib/wordpress/connection-status";
+import { getOwnerPlan } from "@/lib/plans/owner-plan";
 import type { ConnectionStatus } from "@/components/site-cockpit/cards/wordpress/types";
 
 export const runtime = "nodejs";
@@ -47,10 +48,12 @@ export default async function WordPressAgentPage({
   if (!site) {
     return notFound();
   }
+  const planName = await getOwnerPlan(site.userId ?? null);
 
   return (
     <SiteCockpitLoader
       siteId={id}
+      planName={planName}
       siteUrl={site.siteUrl}
       stored={parseStoredSite(site.lastScores)}
       storedCms={site.cms ?? site.lastCms}

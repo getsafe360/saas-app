@@ -83,6 +83,9 @@ export interface ReportMetadata {
 
   // Custom categories included (for scope='custom')
   includedCategories?: string[];
+  /** Report language and period (client reports). */
+  locale?: string;
+  periodDays?: number;
 
   // Generation details
   generationTimeMs?: number;

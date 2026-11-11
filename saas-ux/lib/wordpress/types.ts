@@ -88,6 +88,8 @@ export interface WordPressSiteSnapshot {
     overall: number | null;
     coverage: number;
     categories: Partial<Record<string, number | null>>;
+    /** Failing and warning checks at that time (for client reports); absent on older snapshots. */
+    problems?: Array<{ id: string; severity: 'critical' | 'high' | 'medium' | 'low' }>;
   };
   issues: WordPressIssue[];
 }

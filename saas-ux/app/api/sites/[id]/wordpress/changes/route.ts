@@ -5,13 +5,12 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { and, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
-import { PERMANENT_FIXER_IDS } from '@/lib/engine/fixers/catalog';
+import { eq } from 'drizzle-orm';
 import { getDrizzle } from '@/lib/db/postgres';
 import { sites } from '@/lib/db/schema/sites/sites';
 import { users } from '@/lib/db/schema/auth/users';
-import { wordpressActionRuns } from '@/lib/db/schema/wordpress/agent';
 import { toAppliedChanges } from '@/lib/wordpress/applied-changes';
+import { loadChangeRuns } from '@/lib/wordpress/change-runs';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,37 +44,7 @@ export async function GET(_request: Request, props: { params: Promise<{ id: stri
     return NextResponse.json({ success: false, error: 'FORBIDDEN' }, { status: 403 });
   }
 
-  const runs = await db
-    .select({
-      id: wordpressActionRuns.id,
-      actionId: wordpressActionRuns.actionId,
-      title: wordpressActionRuns.title,
-      status: wordpressActionRuns.status,
-      rollbackPayload: wordpressActionRuns.rollbackPayload,
-      inputPayload: wordpressActionRuns.inputPayload,
-      resultPayload: wordpressActionRuns.resultPayload,
-      verificationOk: wordpressActionRuns.verificationOk,
-      startedAt: wordpressActionRuns.startedAt,
-      completedAt: wordpressActionRuns.completedAt,
-    })
-    .from(wordpressActionRuns)
-    .where(
-      and(
-        eq(wordpressActionRuns.siteId, siteId),
-        inArray(wordpressActionRuns.status, ['applied', 'failed', 'rolled_back']),
-        or(
-          and(
-            isNotNull(wordpressActionRuns.rollbackPayload),
-            sql`${wordpressActionRuns.rollbackPayload} <> 'null'::jsonb`,
-          ),
-          // One-way changes (database cleanup, default role) have no inverse but did change the site,
-          // including when the live check afterwards failed (toAppliedChanges confirms the connector applied it).
-          inArray(wordpressActionRuns.actionId, [...PERMANENT_FIXER_IDS]),
-        ),
-      ),
-    )
-    .orderBy(desc(wordpressActionRuns.startedAt))
-    .limit(HISTORY_LIMIT);
+  const runs = await loadChangeRuns(db, siteId, HISTORY_LIMIT);
 
   return NextResponse.json(
     { success: true, changes: toAppliedChanges(runs) },

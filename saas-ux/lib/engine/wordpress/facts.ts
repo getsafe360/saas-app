@@ -142,7 +142,11 @@ export function buildWordPressFacts(apiData: Loose): WordPressFacts {
     security: {
       xmlrpcReachable: asBool(apiData?.cms?.wp?.xmlrpc),
       xmlrpcEnabled: asBool(sec.xmlrpcEnabled),
-      loginProtected: asBool(telemetry.security?.loginProtected),
+      // What the public probe saw (a login URL moved by e.g. WPS Hide Login counts as protected).
+      loginProtected: asBool(telemetry.security?.loginProtected) ?? (() => {
+        const exposed = asBool((apiData?.publicCms ?? apiData?.cms)?.wp?.loginExposed);
+        return exposed === null ? null : !exposed;
+      })(),
       debugMode: asBool(sec.debug) ?? asBool(telemetry.security?.wpDebugMode),
       debugDisplay: asBool(sec.debugDisplay),
       debugLog: asBool(sec.debugLog),
