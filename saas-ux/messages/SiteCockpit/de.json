@@ -637,7 +637,8 @@
           "TEST_RUNNING": "Es läuft bereits ein Test → Ihn unter „Vorgenommene Änderungen“ rückgängig machen, bevor Sie einen neuen starten.",
           "WORDPRESS_NOT_CONNECTED": "Die Website ist nicht verbunden → Das GetSafe-360-Plugin neu verbinden.",
           "NO_TEST": "Es läuft kein Test, der eingeschaltet werden könnte → Starten Sie zuerst einen Test.",
-          "INVALID_POLICY": "Die entstehende Richtlinie ist ungültig → Entfernen Sie den Haken bei der zuletzt hinzugefügten Quelle und versuchen Sie es erneut."
+          "INVALID_POLICY": "Die entstehende Richtlinie ist ungültig → Entfernen Sie den Haken bei der zuletzt hinzugefügten Quelle und versuchen Sie es erneut.",
+          "REVIEW_STALE": "Die Meldungen haben sich seit Ihrer Prüfung geändert → Prüfen Sie erneut, bevor Sie die Richtlinie einschalten."
         },
         "switch": {
           "title": "Richtlinie einschalten",

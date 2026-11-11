@@ -84,3 +84,17 @@ test('the prompt fences browser reports as untrusted data and asks for the owner
   assert.match(system, /in German/);
   assert.match(prompt, /<reports>[\s\S]*https:\/\/evil\.example[\s\S]*<\/reports>/);
 });
+
+test('a new worker-src starts from script-src, as browsers fall back', () => {
+  const policy = "default-src 'self'; script-src 'self' https://scripts.example";
+  const candidates = buildCandidates(policy, [{ directive: 'worker-src', blocked: 'blob:', count: 5, page: '/' }]);
+  assert.match(applyVerdicts(policy, candidates, ['worker-src blob:']), /worker-src 'self' https:\/\/scripts\.example blob:/);
+  // A worker source script-src already allows is not a candidate.
+  assert.equal(buildCandidates(policy, [{ directive: 'worker-src', blocked: 'https://scripts.example', count: 5, page: '/' }]).length, 0);
+});
+
+test('the review list is capped, the full list is not', () => {
+  const many = Array.from({ length: 70 }, (_, i) => ({ directive: 'img-src', blocked: `https://h${i}.example`, count: 100 - i, page: '/' }));
+  assert.equal(buildCandidates(tested, many).length, 60);
+  assert.equal(buildCandidates(tested, many, Number.POSITIVE_INFINITY).length, 70);
+});

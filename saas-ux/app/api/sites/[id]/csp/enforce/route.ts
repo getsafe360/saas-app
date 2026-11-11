@@ -48,7 +48,14 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
 
   const body = (await request.json().catch(() => ({}))) as { allow?: unknown };
   const allow = Array.isArray(body.allow) ? body.allow.filter((key): key is string => typeof key === 'string').slice(0, 200) : [];
-  const candidates = buildCandidates(state.policy, await readViolations(siteId));
+  // Every candidate, not only the top ones shown for review: an allowed source
+  // must not drop out because other reports outranked it in the meantime.
+  const candidates = buildCandidates(state.policy, await readViolations(siteId), Number.POSITIVE_INFINITY);
+  const known = new Set(candidates.map((candidate) => candidate.key));
+  if (allow.some((key) => !known.has(key))) {
+    // The reports changed since the review (e.g. old ones expired): review again rather than switch on something else.
+    return NextResponse.json({ success: false, error: 'REVIEW_STALE' }, { status: 409 });
+  }
   const policy = preparePolicy(siteId, applyVerdicts(state.policy, candidates, allow));
   if (!policy) return NextResponse.json({ success: false, error: 'INVALID_POLICY' }, { status: 400 });
 

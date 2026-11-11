@@ -27,7 +27,7 @@ interface CspSwitchOnProps {
 
 /** A week of normal traffic usually shows everything a site loads. */
 const RECOMMENDED_DAYS = 7;
-const ERRORS = new Set(["RATE_LIMITED", "NO_TEST", "INVALID_POLICY", "CONNECTOR_UPDATE", "CONNECTOR_UNREACHABLE", "CONNECTOR_FAILED", "WORDPRESS_NOT_CONNECTED"]);
+const ERRORS = new Set(["RATE_LIMITED", "NO_TEST", "REVIEW_STALE", "INVALID_POLICY", "CONNECTOR_UPDATE", "CONNECTOR_UNREACHABLE", "CONNECTOR_FAILED", "WORDPRESS_NOT_CONNECTED"]);
 
 /**
  * Phase 2 of the CSP builder: Claude reviews what the test reported, the owner

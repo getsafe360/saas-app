@@ -50,16 +50,24 @@ function tokenFor(blocked: string): string | null {
 
 const RISKY = new Set(["'unsafe-inline'", "'unsafe-eval'", "'wasm-unsafe-eval'", 'http:', 'https:', 'ws:', 'wss:', '*']);
 
-/** What a directive currently allows, falling back to default-src as browsers do. */
+/**
+ * What a directive currently allows, following the browser's fallback chain:
+ * worker-src falls back to script-src (child-src is not used here) before
+ * default-src; base-uri, form-action and frame-ancestors have no fallback.
+ */
 function effectiveSources(policy: CspPolicy, directive: CspDirective): string[] {
   const own = policy[directive];
   if (own) return own;
-  // base-uri, form-action and frame-ancestors do not fall back to default-src.
   if (directive === 'base-uri' || directive === 'form-action' || directive === 'frame-ancestors') return [];
+  if (directive === 'worker-src' && policy['script-src']) return policy['script-src'];
   return policy['default-src'] ?? [];
 }
 
-export function buildCandidates(policyHeader: string, violations: ReadonlyArray<CspViolationSummary>): CspCandidate[] {
+export function buildCandidates(
+  policyHeader: string,
+  violations: ReadonlyArray<CspViolationSummary>,
+  limit: number = MAX_CANDIDATES,
+): CspCandidate[] {
   const policy = parseCsp(policyHeader);
   const byKey = new Map<string, CspCandidate>();
   for (const violation of violations) {
@@ -77,7 +85,7 @@ export function buildCandidates(policyHeader: string, violations: ReadonlyArray<
       byKey.set(key, { key, directive, source, count: violation.count, page: violation.page, risky: RISKY.has(source) });
     }
   }
-  return [...byKey.values()].sort((a, b) => b.count - a.count).slice(0, MAX_CANDIDATES);
+  return [...byKey.values()].sort((a, b) => b.count - a.count).slice(0, limit);
 }
 
 /** Without advice: allow ordinary sources, keep the policy-weakening ones blocked. */

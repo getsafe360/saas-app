@@ -637,7 +637,8 @@
           "TEST_RUNNING": "A test is already running → Undo it under Applied changes before starting a new one.",
           "WORDPRESS_NOT_CONNECTED": "The site is not connected → Reconnect the GetSafe 360 plugin.",
           "NO_TEST": "There is no running test to switch on → Start a test first.",
-          "INVALID_POLICY": "The resulting policy is not valid → Untick the source you added last and try again."
+          "INVALID_POLICY": "The resulting policy is not valid → Untick the source you added last and try again.",
+          "REVIEW_STALE": "The reports changed since your review → Review again before switching the policy on."
         },
         "switch": {
           "title": "Switch the policy on",

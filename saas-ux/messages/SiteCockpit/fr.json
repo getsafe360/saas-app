@@ -637,7 +637,8 @@
           "TEST_RUNNING": "Un test est déjà en cours → Annulez-le dans Modifications appliquées avant d’en lancer un nouveau.",
           "WORDPRESS_NOT_CONNECTED": "Le site n’est pas connecté → Reconnectez le plugin GetSafe 360.",
           "NO_TEST": "Aucun test en cours à activer → Lancez d’abord un test.",
-          "INVALID_POLICY": "La politique obtenue n’est pas valide → Décochez la dernière source ajoutée et réessayez."
+          "INVALID_POLICY": "La politique obtenue n’est pas valide → Décochez la dernière source ajoutée et réessayez.",
+          "REVIEW_STALE": "Les rapports ont changé depuis votre analyse → Relancez l’analyse avant d’activer la politique."
         },
         "switch": {
           "title": "Activer la politique",

@@ -73,7 +73,7 @@ test('keys built from known lists exist, and every message parses', () => {
     ...RECOMMENDATIONS.map((k) => `wordpress.coreReview.recommendation.${k}`),
     ...['modified', 'unexpected'].map((k) => `wordpress.coreReview.kind.${k}`),
     ...['GENERIC', 'RATE_LIMITED', 'WORDPRESS_NOT_CONNECTED', 'CORE_FILES_UNAVAILABLE'].map((k) => `wordpress.coreReview.errors.${k}`),
-    ...['GENERIC', 'RATE_LIMITED', 'SITE_UNREACHABLE', 'CONNECTOR_UPDATE', 'CONNECTOR_UNREACHABLE', 'CONNECTOR_FAILED', 'WORDPRESS_NOT_CONNECTED', 'TEST_RUNNING', 'NO_TEST', 'INVALID_POLICY'].map(
+    ...['GENERIC', 'RATE_LIMITED', 'SITE_UNREACHABLE', 'CONNECTOR_UPDATE', 'CONNECTOR_UNREACHABLE', 'CONNECTOR_FAILED', 'WORDPRESS_NOT_CONNECTED', 'TEST_RUNNING', 'NO_TEST', 'INVALID_POLICY', 'REVIEW_STALE'].map(
       (k) => `wordpress.csp.errors.${k}`,
     ),
     ...['updates', 'core', 'settings', 'database'].map((k) => `wordpress.preview.inside.${k}`),
