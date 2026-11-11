@@ -9,6 +9,7 @@ import { SECURITY_HEADER_RULES } from '@/lib/engine/security/headers';
 import type { AppliedChange } from '@/lib/wordpress/applied-changes';
 import { buildReportContent, reportFilename } from './content';
 import { DEFAULT_BRAND, renderHtml, renderMarkdown } from './render';
+import { resolveBrand } from './brand';
 import { REPORT_LOCALES, reportText } from './text';
 
 const root = path.resolve(__dirname, '../..');
@@ -51,6 +52,21 @@ test('a grouped change lists every finding it fixed, and none of them stays open
   });
   assert.deepEqual(grouped.fixes.map((fix) => fix.findingId), ['sec-nosniff', 'sec-frame-options']);
   assert.deepEqual(grouped.openIssues.map((issue) => issue.id), ['sec-csp']);
+});
+
+test('agency branding fills the footer', () => {
+  const brand = resolveBrand('agency', true, {
+    companyName: 'Webagentur Berlin',
+    logoUrl: null,
+    config: { colors: { primary: '#0f766e' }, contact: { website: 'https://webagentur.berlin', email: 'hallo@webagentur.berlin' }, footerText: 'Fragen? Rufen Sie uns an.' },
+  });
+  const html = renderHtml(content, textFor('de'), brand);
+  assert.match(html, /Webagentur Berlin · webagentur\.berlin · hallo@webagentur\.berlin/);
+  assert.match(html, /Fragen\? Rufen Sie uns an\./);
+  assert.match(html, /#0f766e/);
+  assert.doesNotMatch(html, /GetSafe 360/);
+  // Pro cannot white-label, whatever is stored.
+  assert.equal(resolveBrand('pro', true, null).poweredBy, true);
 });
 
 test('only an embedded image can appear as the logo', () => {

@@ -14,6 +14,10 @@ export interface ReportBrand {
   primaryColor: string;
   /** Show "Powered by GetSafe 360 AI". */
   poweredBy: boolean;
+  /** Agency contact line for the footer, e.g. "webagentur.berlin · hallo@webagentur.berlin". */
+  contact?: string | null;
+  /** Agency's own footer sentence. */
+  footerText?: string | null;
 }
 
 export const DEFAULT_BRAND: ReportBrand = {
@@ -113,6 +117,8 @@ export function renderMarkdown(content: ReportContent, text: ReportText, brand: 
   }
 
   out.push('---', '', `_${text.t('footer.method', { date: text.date(content.generatedAt) })}_`);
+  if (brand.footerText) out.push('', brand.footerText);
+  if (brand.companyName && brand.contact) out.push('', `${brand.companyName} · ${brand.contact}`);
   if (brand.poweredBy) out.push('', `_${text.t('footer.poweredBy')}_`);
   return out.join('\n') + '\n';
 }
@@ -201,6 +207,8 @@ export function renderHtml(content: ReportContent, text: ReportText, brand: Repo
   .sev-medium { background: #fef3c7; color: #92400e; }
   .sev-low { background: #e5e7eb; color: #374151; }
   footer { margin-top: 28px; padding-top: 10px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 8.5pt; }
+  footer .agency-note { color: #374151; margin-top: 6px; }
+  footer .agency { color: ${color}; font-weight: 600; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -245,6 +253,8 @@ ${content.openIssues.length === 0 ? `<p class="muted">${t('next.none')}</p>` : `
 
 <footer>
   <div>${t('footer.method', { date: text.date(content.generatedAt) })}</div>
+  ${brand.footerText ? `<div class="agency-note">${esc(brand.footerText)}</div>` : ''}
+  ${brand.companyName && brand.contact ? `<div class="agency">${esc(brand.companyName)} · ${esc(brand.contact)}</div>` : ''}
   ${brand.poweredBy ? `<div>${t('footer.poweredBy')}</div>` : ''}
 </footer>
 </body>

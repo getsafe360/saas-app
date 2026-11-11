@@ -1,6 +1,8 @@
 // app/[locale]/(dashboard)/dashboard/settings/page.tsx
 import { UserProfile } from "@clerk/nextjs";
-import { CreditCard, Zap, ExternalLink, TrendingUp } from "lucide-react";
+import { CreditCard, Zap, ExternalLink, TrendingUp, Palette } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/navigation";
 import { getDbUserFromClerk, findCurrentUserTeam } from "@/lib/auth/current";
 import { PLANS, type PlanName } from "@/lib/plans/config";
 import { TOKEN_PACKS } from "@/config/billing/token-packs";
@@ -59,6 +61,7 @@ export default async function SettingsPage() {
     : null;
 
   const isPaidPlan = planKey !== "free";
+  const tBranding = await getTranslations("Reports.branding");
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
@@ -223,6 +226,25 @@ export default async function SettingsPage() {
           Open Billing Portal
           <ExternalLink className="h-4 w-4" />
         </a>
+      </section>
+
+      {/* Report branding (Agency white-label) */}
+      <section className="rounded-xl border border-[var(--border-default)] bg-[var(--card-bg,white)] dark:bg-gray-900 p-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-900/30">
+            <Palette className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--text-default)]">{tBranding("title")}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{tBranding("settingsText")}</p>
+          </div>
+        </div>
+        <Link
+          href="/dashboard/settings/branding"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--border-default)] text-sm font-medium text-[var(--text-default)] hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        >
+          {tBranding("settingsCta")}
+        </Link>
       </section>
 
       {/* Profile */}
