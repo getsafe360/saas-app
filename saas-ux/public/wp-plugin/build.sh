@@ -6,7 +6,10 @@
 #
 #   getsafe360-connector/
 #   ├── getsafe360-connector.php
+#   ├── readme.txt
 #   └── languages/…
+#
+# The same ZIP is what gets submitted to WordPress.org.
 #
 # Two things went wrong with the previously committed ZIP:
 #
@@ -45,7 +48,7 @@ STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 
 mkdir -p "$STAGE/$SLUG"
-cp "$SLUG.php" "$STAGE/$SLUG/"
+cp "$SLUG.php" readme.txt "$STAGE/$SLUG/"
 if [[ -d languages ]]; then
   mkdir -p "$STAGE/$SLUG/languages"
   cp languages/*.mo languages/*.po languages/*.pot "$STAGE/$SLUG/languages/" 2>/dev/null || true
@@ -57,6 +60,12 @@ rm -f "$ZIP_NAME"
 # Guard against the two historical failure modes.
 if unzip -l "$ZIP_NAME" | grep -q '\\'; then
   echo "ERROR: archive contains backslash paths — build it on Linux/macOS or in WSL." >&2
+  exit 1
+fi
+# WordPress.org reads the stable version from readme.txt; it must match the plugin header.
+STABLE_TAG="$(grep -m1 -oE '^Stable tag:\s*\S+' readme.txt | awk '{print $NF}')"
+if [[ "$STABLE_TAG" != "$PLUGIN_VERSION" ]]; then
+  echo "ERROR: readme.txt Stable tag ($STABLE_TAG) does not match the plugin version ($PLUGIN_VERSION)." >&2
   exit 1
 fi
 if ! unzip -l "$ZIP_NAME" | grep -q " $SLUG/$SLUG.php$"; then

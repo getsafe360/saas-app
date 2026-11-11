@@ -1,30 +1,39 @@
 <?php
 /**
- * Plugin Name: GetSafe 360 AI Connector
- * Description: Secure connector between your WordPress site and GetSafe 360 AI for automated security scanning, performance monitoring, and AI-powered repairs.
- * Version: 1.10.0
+ * Plugin Name: GetSafe360 Connector
+ * Plugin URI: https://www.getsafe360.ai/docs/wordpress-connector
+ * Description: Connects your site to GetSafe 360 AI: health, security and speed checks from inside WordPress, and safe one-click fixes with undo.
+ * Version: 1.11.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
- * License: GPL v2 or later
- * Requires at least: 5.0
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Requires at least: 5.6
  * Requires PHP: 7.2
  * Text Domain: getsafe360-connector
  * Domain Path: /languages
- * Update URI: https://www.getsafe360.ai
  */
-/*
-// saas-ux/public/wp-plugin/getsafe360-connector.php
-// saas-ux/public/wp-plugin/getsafe360-connector.zip
-*/
 
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_Connector {
-  const VERSION = '1.10.0';
+  const VERSION = '1.11.0';
   const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';
   const OPTION = 'getsafe360_connector';
   const ACTION_STATE_OPTION = 'getsafe360_action_state';
-  const API_BASE = 'https://saasfly-one-psi.vercel.app';
+  /** The GetSafe 360 service. Staging setups can point elsewhere with the GETSAFE360_API_BASE constant. */
+  const API_BASE = 'https://www.getsafe360.ai';
+  /** Markup allowed in translated admin sentences. */
+  const INLINE_HTML = [
+    'strong' => [],
+    'code'   => [],
+    'a'      => ['href' => [], 'target' => [], 'rel' => []],
+  ];
+  /** Tags an SEO fix may place in <head> (JSON-LD is handled separately). */
+  const HEAD_HTML = [
+    'meta' => ['name' => [], 'property' => [], 'content' => [], 'charset' => [], 'http-equiv' => []],
+    'link' => ['rel' => [], 'href' => [], 'type' => [], 'sizes' => [], 'hreflang' => [], 'media' => []],
+  ];
   /** Revisions kept per post by the revisions cleanup. */
   const REVISIONS_KEEP = 5;
   /** Well under the SaaS client's 10 s request timeout, so the caller always gets the result. */
@@ -49,7 +58,7 @@ class GetSafe360_Connector {
   private $state_cache = null;
 
   public function __construct() {
-    load_plugin_textdomain('getsafe360-connector', false, dirname(plugin_basename(__FILE__)) . '/languages');
+    add_action('init', [$this, 'load_textdomain']);
     add_action('admin_menu', [$this, 'menu']);
     add_action('rest_api_init', [$this, 'routes']);
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
@@ -60,10 +69,24 @@ class GetSafe360_Connector {
     add_action('send_headers', [$this, 'send_security_headers']);
     add_filter('map_meta_cap', [$this, 'filter_file_editor_caps'], 10, 2);
     add_filter('allow_minor_auto_core_updates', [$this, 'filter_minor_core_updates'], 20);
-    add_filter('update_plugins_www.getsafe360.ai', [$this, 'check_for_update'], 10, 4);
-    add_filter('plugins_api', [$this, 'plugin_api_info'], 10, 3);
     add_filter('plugin_action_links_' . plugin_basename(__FILE__), [$this, 'action_links']);
-    add_filter('pre_set_site_transient_update_plugins', [$this, 'register_for_updates']);
+  }
+
+  /**
+   * Bundled translations, for sites without a language pack from
+   * translate.wordpress.org; a language pack, when installed, takes precedence.
+   */
+  public function load_textdomain() {
+    // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- bundled translations until the language packs are complete.
+    load_plugin_textdomain('getsafe360-connector', false, dirname(plugin_basename(__FILE__)) . '/languages');
+  }
+
+  /** Base URL of the GetSafe 360 service, without a trailing slash. */
+  private function api_base() {
+    if (defined('GETSAFE360_API_BASE') && is_string(GETSAFE360_API_BASE) && strpos(GETSAFE360_API_BASE, 'https://') === 0) {
+      return untrailingslashit(GETSAFE360_API_BASE);
+    }
+    return self::API_BASE;
   }
 
   // ---------- helpers ----------
@@ -89,7 +112,7 @@ class GetSafe360_Connector {
 
     // Add bypass header only for protected *.vercel.app previews AND when token is defined
     // This is only used for development/staging environments
-    $host = parse_url(self::API_BASE, PHP_URL_HOST);
+    $host = wp_parse_url($this->api_base(), PHP_URL_HOST);
     if ($host && $this->str_ends_with($host, '.vercel.app') && defined('VERCEL_AUTOMATION_BYPASS_SECRET') && VERCEL_AUTOMATION_BYPASS_SECRET) {
       $headers['x-vercel-protection-bypass'] = VERCEL_AUTOMATION_BYPASS_SECRET;
     }
@@ -162,27 +185,11 @@ class GetSafe360_Connector {
     );
   }
 
-  /** Add "View details" and "Settings" to the plugins list action links. */
+  /** Add "Settings" to the plugins list action links. */
   public function action_links($links) {
-    $details_url = admin_url('plugin-install.php?tab=plugin-information&plugin=getsafe360-connector&TB_iframe=true&width=620&height=560');
-    $detail_link = '<a href="' . esc_url($details_url) . '" class="thickbox open-plugin-details-modal">' . esc_html__('View details', 'getsafe360-connector') . '</a>';
     $settings_link = '<a href="' . esc_url(admin_url('admin.php?page=getsafe360')) . '">' . esc_html__('Settings', 'getsafe360-connector') . '</a>';
-    array_unshift($links, $detail_link, $settings_link);
+    array_unshift($links, $settings_link);
     return $links;
-  }
-
-  /**
-   * Ensure this plugin appears in the update_plugins transient so WordPress
-   * always shows the auto-update toggle, even when no update is pending.
-   */
-  public function register_for_updates($transient) {
-    if (!is_object($transient)) $transient = new \stdClass();
-    $plugin_file = plugin_basename(__FILE__);
-    if (!isset($transient->checked)) $transient->checked = [];
-    if (!isset($transient->checked[$plugin_file])) {
-      $transient->checked[$plugin_file] = self::VERSION;
-    }
-    return $transient;
   }
 
   public function enqueue_admin_assets($hook) {
@@ -217,7 +224,7 @@ class GetSafe360_Connector {
 
     // Handle connect
     if (isset($_POST['pair_code']) && check_admin_referer('getsafe360_connect')) {
-      $pair_code = sanitize_text_field($_POST['pair_code']);
+      $pair_code = sanitize_text_field(wp_unslash($_POST['pair_code']));
       $site_url = get_site_url();
       $payload = [
         'pairCode'      => $pair_code,
@@ -226,7 +233,7 @@ class GetSafe360_Connector {
         'pluginVersion' => self::VERSION
       ];
 
-      $endpoint = trailingslashit(self::API_BASE) . 'api/connect/handshake';
+      $endpoint = $this->api_base() . '/api/connect/handshake';
       $headers  = $this->api_headers();
 
       $resp = wp_remote_post($endpoint, [
@@ -238,7 +245,7 @@ class GetSafe360_Connector {
 
       // Build debug context
       $debug = [
-        'api_base'   => self::API_BASE,
+        'api_base'   => $this->api_base(),
         'endpoint'   => $endpoint,
         'payload'    => $payload,
         'plugin_version' => self::VERSION,
@@ -302,8 +309,10 @@ class GetSafe360_Connector {
     // The SaaS dashboard can append ?gs360_code=XXXXXX to the WP admin URL so the
     // code is already filled in — users just click Connect without any copy-paste.
     $prefill_code = '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only pre-fills a form field; connecting still needs the nonce-checked submit.
     if (!$is_connected && isset($_GET['gs360_code'])) {
-      $prefill_code = preg_replace('/[^0-9]/', '', sanitize_text_field($_GET['gs360_code']));
+      // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- see above.
+      $prefill_code = preg_replace('/[^0-9]/', '', sanitize_text_field(wp_unslash($_GET['gs360_code'])));
       if (strlen($prefill_code) === 6) {
         echo '<div class="getsafe360-deeplink-notice">✓ ' . esc_html__('Pairing code filled in from GetSafe 360 AI — just click Connect.', 'getsafe360-connector') . '</div>';
       } else {
@@ -319,7 +328,10 @@ class GetSafe360_Connector {
           </svg>
           <?php esc_html_e('GetSafe 360 AI Connector', 'getsafe360-connector'); ?>
         </h1>
-        <p><?php printf(esc_html__('Version %s', 'getsafe360-connector'), esc_html(self::VERSION)); ?></p>
+        <p><?php
+          /* translators: %s: plugin version number. */
+          printf(esc_html__('Version %s', 'getsafe360-connector'), esc_html(self::VERSION));
+        ?></p>
 
         <?php if (!$is_connected): ?>
           <!-- NOT CONNECTED STATE -->
@@ -330,22 +342,26 @@ class GetSafe360_Connector {
             <div class="getsafe360-help">
               <strong><?php esc_html_e('How to connect:', 'getsafe360-connector'); ?></strong>
               <ol style="margin: 8px 0 0 20px;">
-                <li><?php printf(
+                <li><?php echo wp_kses(sprintf(
+                  /* translators: %1$s and %2$s: opening and closing <strong> tags. */
                   __('Log in to your %1$sGetSafe 360 AI dashboard%2$s', 'getsafe360-connector'),
                   '<strong>', '</strong>'
-                ); ?></li>
-                <li><?php printf(
+                ), self::INLINE_HTML); ?></li>
+                <li><?php echo wp_kses(sprintf(
+                  /* translators: %1$s, %3$s: opening <strong> tags; %2$s, %4$s: closing tags. */
                   __('Click %1$s"Add Site"%2$s or %3$s"Generate Pairing Code"%4$s', 'getsafe360-connector'),
                   '<strong>', '</strong>', '<strong>', '</strong>'
-                ); ?></li>
-                <li><?php printf(
+                ), self::INLINE_HTML); ?></li>
+                <li><?php echo wp_kses(sprintf(
+                  /* translators: %1$s and %2$s: opening and closing <strong> tags. */
                   __('Copy the %1$s6-digit code%2$s', 'getsafe360-connector'),
                   '<strong>', '</strong>'
-                ); ?></li>
-                <li><?php printf(
+                ), self::INLINE_HTML); ?></li>
+                <li><?php echo wp_kses(sprintf(
+                  /* translators: %1$s and %2$s: opening and closing <strong> tags. */
                   __('Paste it below and click %1$s"Connect"%2$s', 'getsafe360-connector'),
                   '<strong>', '</strong>'
-                ); ?></li>
+                ), self::INLINE_HTML); ?></li>
               </ol>
             </div>
 
@@ -377,6 +393,7 @@ class GetSafe360_Connector {
 
             <p style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #ddd; color: #666; font-size: 13px;">
               <?php printf(
+                /* translators: %s: this site's URL. */
                 esc_html__('Note: The pairing code expires in 10 minutes. Make sure you generated the code for this exact site URL: %s', 'getsafe360-connector'),
                 '<code>' . esc_html(get_site_url()) . '</code>'
               ); ?>
@@ -460,22 +477,26 @@ class GetSafe360_Connector {
           <div class="getsafe360-help" style="margin-top: 20px;">
             <strong>✨ <?php esc_html_e("What's Next?", 'getsafe360-connector'); ?></strong>
             <ul style="margin: 8px 0 0 20px;">
-              <li><?php printf(
+              <li><?php echo wp_kses(sprintf(
+                /* translators: %1$s and %2$s: opening and closing <strong> tags. */
                 __('Visit your %1$sGetSafe 360 AI dashboard%2$s to run security scans', 'getsafe360-connector'),
                 '<strong>', '</strong>'
-              ); ?></li>
-              <li><?php printf(
+              ), self::INLINE_HTML); ?></li>
+              <li><?php echo wp_kses(sprintf(
+                /* translators: %1$s and %2$s: opening and closing <strong> tags. */
                 __('Enable %1$sAI-powered automatic repairs%2$s for common issues', 'getsafe360-connector'),
                 '<strong>', '</strong>'
-              ); ?></li>
-              <li><?php printf(
+              ), self::INLINE_HTML); ?></li>
+              <li><?php echo wp_kses(sprintf(
+                /* translators: %1$s and %2$s: opening and closing <strong> tags. */
                 __('Set up %1$sscheduled scans%2$s to monitor your site 24/7', 'getsafe360-connector'),
                 '<strong>', '</strong>'
-              ); ?></li>
-              <li><?php printf(
+              ), self::INLINE_HTML); ?></li>
+              <li><?php echo wp_kses(sprintf(
+                /* translators: %1$s and %2$s: opening and closing <strong> tags. */
                 __('View detailed %1$sperformance reports%2$s and recommendations', 'getsafe360-connector'),
                 '<strong>', '</strong>'
-              ); ?></li>
+              ), self::INLINE_HTML); ?></li>
             </ul>
           </div>
         <?php endif; ?>
@@ -483,13 +504,14 @@ class GetSafe360_Connector {
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
           <p>
             <strong><?php esc_html_e('Need Help?', 'getsafe360-connector'); ?></strong>
-            <?php printf(
+            <?php echo wp_kses(sprintf(
+              /* translators: %1$s and %2$s wrap the link to the documentation, %3$s and %4$s the link to support. */
               __('Visit our %1$sdocumentation%2$s or %3$scontact support%4$s.', 'getsafe360-connector'),
-              '<a href="https://www.getsafe360.ai/docs/wordpress-connector" target="_blank">',
+              '<a href="https://www.getsafe360.ai/docs/wordpress-connector" target="_blank" rel="noopener noreferrer">',
               '</a>',
-              '<a href="https://www.getsafe360.ai/support" target="_blank">',
+              '<a href="https://www.getsafe360.ai/support" target="_blank" rel="noopener noreferrer">',
               '</a>'
-            ); ?>
+            ), self::INLINE_HTML); ?>
           </p>
         </div>
       </div>
@@ -540,7 +562,8 @@ class GetSafe360_Connector {
       return;
     }
 
-    $author_probe = isset($_GET['author']) ? sanitize_text_field($_GET['author']) : '';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- reads the public ?author= probe in order to block it; no state changes.
+    $author_probe = isset($_GET['author']) ? sanitize_text_field(wp_unslash($_GET['author'])) : '';
     if ($author_probe !== '' && ctype_digit($author_probe)) {
       status_header(403);
       nocache_headers();
@@ -585,7 +608,7 @@ class GetSafe360_Connector {
   /** CSP reports may only go to GetSafe 360, never to a third party. */
   private function csp_report_hosts() {
     $hosts = ['getsafe360.ai', 'www.getsafe360.ai'];
-    $api = parse_url(self::API_BASE, PHP_URL_HOST);
+    $api = wp_parse_url($this->api_base(), PHP_URL_HOST);
     if ($api) {
       $hosts[] = strtolower($api);
     }
@@ -628,7 +651,7 @@ class GetSafe360_Connector {
         return null;
       }
       if ($name === 'report-uri') {
-        $parts = count($tokens) === 1 ? parse_url($tokens[0]) : false;
+        $parts = count($tokens) === 1 ? wp_parse_url($tokens[0]) : false;
         if (!$parts || (isset($parts['scheme']) ? $parts['scheme'] : '') !== 'https'
           || !in_array(strtolower(isset($parts['host']) ? $parts['host'] : ''), $this->csp_report_hosts(), true)) {
           return null;
@@ -828,13 +851,14 @@ class GetSafe360_Connector {
     if ($target === $current) {
       return $this->action_result($action_id, $type, 'applied', sprintf('wp-config.php already has permissions %04o.', $current), $state, $rollback);
     }
+    // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- owner-approved permission fix for wp-config.php, verified and reverted below.
     if (!@chmod($path, $target)) {
       return $this->action_result($action_id, $type, 'failed', 'The server did not allow changing the permissions of wp-config.php. Nothing was changed.');
     }
     clearstatcache(true, $path);
     $after = @fileperms($path);
     if ($after === false || ($after & 0777) !== $target) {
-      @chmod($path, $current);
+      @chmod($path, $current); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- reverts the change above.
       return $this->action_result($action_id, $type, 'failed', 'The permission change did not take effect and was reverted.');
     }
 
@@ -950,6 +974,7 @@ class GetSafe360_Connector {
     );
   }
 
+  // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- counts and cleanup on core tables need live results; there is no WordPress API for them.
   private function count_expired_transients() {
     global $wpdb;
     $count = $wpdb->get_var($wpdb->prepare(
@@ -1012,10 +1037,12 @@ class GetSafe360_Connector {
           $keep
         ));
         foreach (array_chunk(array_map('intval', $ids), 200) as $chunk) {
-          $list = implode(',', $chunk);
-          $wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE post_id IN ($list)");
-          $wpdb->query("DELETE FROM {$wpdb->term_relationships} WHERE object_id IN ($list)");
-          $removed = $wpdb->query("DELETE FROM {$wpdb->posts} WHERE ID IN ($list) AND post_type = 'revision'");
+          $in = implode(',', array_fill(0, count($chunk), '%d'));
+          // phpcs:disable WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $in holds only %d placeholders.
+          $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->postmeta} WHERE post_id IN ($in)", $chunk));
+          $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->term_relationships} WHERE object_id IN ($in)", $chunk));
+          $removed = $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->posts} WHERE ID IN ($in) AND post_type = 'revision'", $chunk));
+          // phpcs:enable WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
           foreach ($chunk as $id) {
             clean_post_cache($id);
           }
@@ -1032,6 +1059,7 @@ class GetSafe360_Connector {
     $remaining = $this->count_excess_revisions();
     return ['deleted' => $deleted, 'remaining' => $remaining === null ? 0 : $remaining];
   }
+  // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
   /**
    * cleanup_database: removes data WordPress no longer needs. Deleted rows
@@ -1093,7 +1121,7 @@ class GetSafe360_Connector {
         @file_put_contents("$dir/$name", $content);
       }
     }
-    return is_writable($dir) ? $dir : false;
+    return wp_is_writable($dir) ? $dir : false;
   }
 
   private function get_restore_points() {
@@ -1115,7 +1143,7 @@ class GetSafe360_Connector {
       $plugin = isset($point['plugin']) ? $point['plugin'] : '';
       $per_plugin[$plugin] = isset($per_plugin[$plugin]) ? $per_plugin[$plugin] + 1 : 1;
       if ($point['createdAt'] < $cutoff || $per_plugin[$plugin] > self::RESTORE_POINTS_PER_PLUGIN) {
-        @unlink($this->backup_dir() . '/' . $id . '.zip');
+        wp_delete_file($this->backup_dir() . '/' . $id . '.zip');
         unset($points[$id]);
       }
     }
@@ -1169,7 +1197,7 @@ class GetSafe360_Connector {
       $ok = $zip->create($files, PCLZIP_OPT_REMOVE_PATH, rtrim($base, '/')) !== 0;
     }
     if (!$ok || !file_exists($zip_path)) {
-      @unlink($zip_path);
+      wp_delete_file($zip_path);
       return new \WP_Error('backup_zip', 'The restore point could not be written.');
     }
 
@@ -1225,6 +1253,7 @@ class GetSafe360_Connector {
     $response = wp_remote_get($url, [
       'timeout'     => 10,
       'redirection' => 3,
+      // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- the core filter for loopback requests.
       'sslverify'   => apply_filters('https_local_ssl_verify', false),
       'headers'     => ['Cache-Control' => 'no-cache'],
     ]);
@@ -1323,7 +1352,7 @@ class GetSafe360_Connector {
       return $this->action_result($action_id, $type, 'failed', 'WordPress cannot update plugins on this server without FTP credentials, or file changes are disabled (DISALLOW_FILE_MODS). Update plugins in the WordPress dashboard instead.');
     }
     if (function_exists('set_time_limit')) {
-      @set_time_limit(120);
+      @set_time_limit(120); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- plugin updates can take longer than the default limit.
     }
 
     $transient = get_site_transient('update_plugins');
@@ -1754,7 +1783,7 @@ class GetSafe360_Connector {
       $zip->addFile(ABSPATH . $path, $path);
     }
     if (!$zip->close() || !file_exists($zip_path)) {
-      @unlink($zip_path);
+      wp_delete_file($zip_path);
       return new \WP_Error('backup_zip', 'The restore point could not be written.');
     }
     $points = $this->get_restore_points();
@@ -1787,6 +1816,7 @@ class GetSafe360_Connector {
     }
     foreach ($files as $path) {
       wp_mkdir_p(dirname(ABSPATH . $path));
+      // phpcs:ignore PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- puts back core files from this plugin's own restore point.
       if (!@copy("$staging/$path", ABSPATH . $path)) {
         $wp_filesystem->delete($staging, true);
         return new \WP_Error('restore_write', sprintf('%s could not be written.', $path));
@@ -1855,6 +1885,7 @@ class GetSafe360_Connector {
       return $this->action_result($action_id, $type, 'failed', $point->get_error_message() . ' Nothing was changed.');
     }
     foreach ($official as $path => $content) {
+      // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, PluginCheck.CodeAnalysis.WriteFile.ABSPATHDetected -- restores an official WordPress core file, verified against the official checksum.
       if (@file_put_contents(ABSPATH . $path, $content) === false) {
         $this->restore_core_point($point);
         return $this->action_result($action_id, $type, 'failed', sprintf('%s could not be written; every file was put back.', $path));
@@ -1910,7 +1941,7 @@ class GetSafe360_Connector {
       return $this->action_result($action_id, $type, 'failed', $point->get_error_message() . ' Nothing was changed.');
     }
     foreach ($paths as $path) {
-      @unlink(ABSPATH . $path);
+      wp_delete_file(ABSPATH . $path);
       $this->invalidate_php_cache(ABSPATH . $path);
     }
     if ($baseline === true && $this->site_responds() === false) {
@@ -2037,6 +2068,7 @@ class GetSafe360_Connector {
       'debugLog'             => defined('WP_DEBUG_LOG') && WP_DEBUG_LOG,
       'saltsConfigured'      => $this->audit_salts_configured(),
       'dbPrefixDefault'      => $wpdb->prefix === 'wp_',
+      // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- reads the core setting.
       'xmlrpcEnabled'        => (bool) apply_filters('xmlrpc_enabled', true),
       'homeHttps'            => strpos(home_url(), 'https://') === 0,
       'adminHttps'           => defined('FORCE_SSL_ADMIN') && FORCE_SSL_ADMIN,
@@ -2148,6 +2180,7 @@ class GetSafe360_Connector {
     ];
   }
 
+  // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- counts and cleanup on core tables need live results; there is no WordPress API for them.
   private function audit_database() {
     global $wpdb;
 
@@ -2176,6 +2209,7 @@ class GetSafe360_Connector {
       'sizeBytes'         => $size,
     ];
   }
+  // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
   /** Mirrors Core_Upgrader::should_update_to_version() for minor releases. */
   private function audit_auto_updates() {
@@ -2185,7 +2219,7 @@ class GetSafe360_Connector {
     if (defined('WP_AUTO_UPDATE_CORE')) {
       $minor = WP_AUTO_UPDATE_CORE !== false;
     }
-    $minor = (bool) apply_filters('allow_minor_auto_core_updates', $minor);
+    $minor = (bool) apply_filters('allow_minor_auto_core_updates', $minor); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- reads the core setting.
 
     $installed = array_keys(get_plugins());
     $enabled = array_intersect($this->plugin_file_list(get_site_option('auto_update_plugins', [])), $installed);
@@ -2527,23 +2561,8 @@ class GetSafe360_Connector {
           $fix_log[$fix_id]['skip_reason'] = 'non-head content blocked by connector';
           $skipped[] = $fix_id;
         } else {
-          // Strip any PHP tags and only allow HTML / JSON-LD content for safety.
-          // wp_kses strips <script> entirely; JSON-LD is handled via regex below.
-          $safe_snippet = wp_kses($snippet, [
-            'meta' => ['name' => [], 'property' => [], 'content' => [], 'charset' => [], 'http-equiv' => []],
-            'link' => ['rel' => [], 'href' => [], 'type' => [], 'sizes' => []],
-          ]);
-
-          // Extract JSON-LD <script> blocks from the original (wp_kses removes them).
-          $jsonld_blocks = [];
-          preg_match_all(
-            '/<script\s[^>]*type\s*=\s*["\']application\/ld\+json["\'][^>]*>.*?<\/script>/is',
-            $snippet,
-            $jsonld_blocks
-          );
-          if (!empty($jsonld_blocks[0])) {
-            $safe_snippet = trim($safe_snippet . "\n" . implode("\n", $jsonld_blocks[0]));
-          }
+          // Only <meta>, <link> and valid JSON-LD survive; everything else is dropped.
+          $safe_snippet = $this->sanitize_head_snippet($snippet);
 
           // After sanitisation, a non-empty result means we have valid head content.
           if (!empty(trim($safe_snippet))) {
@@ -2576,14 +2595,43 @@ class GetSafe360_Connector {
    */
   public function output_seo_injections() {
     $injections = get_option('getsafe360_seo_injections', []);
-    if (empty($injections)) return;
+    if (empty($injections) || !is_array($injections)) return;
 
     echo "\n<!-- GetSafe360 SEO fixes -->\n";
     foreach ($injections as $id => $snippet) {
-      $safe_id = esc_attr($id);
-      echo "<!-- fix:{$safe_id} -->\n" . $snippet . "\n";
+      echo '<!-- fix:' . esc_html(str_replace('--', '', (string) $id)) . " -->\n";
+      // Sanitised again on output, so nothing stored earlier can reach the page unchecked.
+      echo wp_kses($this->sanitize_head_snippet((string) $snippet), self::HEAD_HTML + ['script' => ['type' => []]]) . "\n";
     }
     echo "<!-- /GetSafe360 SEO fixes -->\n";
+  }
+
+  /**
+   * Head markup an SEO fix may add: <meta> and <link> tags from an allowlist,
+   * and JSON-LD blocks whose content is valid JSON, re-encoded so it cannot
+   * close the script element. Anything else, including text, is dropped.
+   */
+  private function sanitize_head_snippet($snippet) {
+    $out = [];
+    if (preg_match_all('/<(?:meta|link)\b[^>]*>/i', $snippet, $tags)) {
+      foreach ($tags[0] as $tag) {
+        $clean = trim(wp_kses($tag, self::HEAD_HTML));
+        if ($clean !== '') {
+          $out[] = $clean;
+        }
+      }
+    }
+    if (preg_match_all('/<script\b[^>]*\btype\s*=\s*["\']application\/ld\+json["\'][^>]*>(.*?)<\/script>/is', $snippet, $blocks)) {
+      foreach ($blocks[1] as $json) {
+        $data = json_decode(trim($json), true);
+        if (is_array($data)) {
+          $out[] = '<script type="application/ld+json">'
+            . wp_json_encode($data, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+            . '</script>';
+        }
+      }
+    }
+    return implode("\n", $out);
   }
 
   public function route_pull(\WP_REST_Request $req) {
@@ -2806,97 +2854,6 @@ class GetSafe360_Connector {
         'pluginUpdates'        => true,
         'coreIntegrity'        => true,
         'securityCsp'          => true,
-      ],
-    ];
-  }
-
-  /**
-   * Inject update info into the WP update transient.
-   * Fires via filter: update_plugins_www.getsafe360.ai
-   */
-  public function check_for_update($update, $plugin_data, $plugin_file, $locales) {
-    if (plugin_basename(__FILE__) !== $plugin_file) return $update;
-
-    $remote = wp_remote_get(trailingslashit(self::API_BASE) . 'api/wp-plugin/info', [
-      'timeout' => 10,
-      'headers' => ['Accept' => 'application/json'],
-    ]);
-
-    if (is_wp_error($remote) || wp_remote_retrieve_response_code($remote) !== 200) {
-      return $update;
-    }
-
-    $data = json_decode(wp_remote_retrieve_body($remote), true);
-    if (!is_array($data) || empty($data['version'])) return $update;
-
-    if (!version_compare($data['version'], self::VERSION, '>')) return $update;
-
-    return (object) [
-      'slug'         => 'getsafe360-connector',
-      'plugin'       => $plugin_file,
-      'new_version'  => sanitize_text_field($data['version']),
-      'url'          => 'https://www.getsafe360.ai',
-      'package'      => esc_url_raw($data['download_url'] ?? ''),
-      'icons'        => ['svg' => 'https://www.getsafe360.ai/icons/360.svg'],
-      'banners'      => [],
-      'tested'       => sanitize_text_field($data['tested'] ?? ''),
-      'requires_php' => '7.2',
-    ];
-  }
-
-  /**
-   * Provide plugin details for the "View details" popup in WP admin.
-   */
-  public function plugin_api_info($result, $action, $args) {
-    if ($action !== 'plugin_information') return $result;
-    if (empty($args->slug) || $args->slug !== 'getsafe360-connector') return $result;
-
-    $remote = wp_remote_get(trailingslashit(self::API_BASE) . 'api/wp-plugin/info', [
-      'timeout' => 10,
-      'headers' => ['Accept' => 'application/json'],
-    ]);
-
-    $data = [];
-    if (!is_wp_error($remote) && wp_remote_retrieve_response_code($remote) === 200) {
-      $data = json_decode(wp_remote_retrieve_body($remote), true) ?: [];
-    }
-
-    return (object) [
-      'name'          => 'GetSafe 360 AI Connector',
-      'slug'          => 'getsafe360-connector',
-      'version'       => sanitize_text_field($data['version'] ?? self::VERSION),
-      'author'        => '<a href="https://www.getsafe360.ai">GetSafe 360 AI</a>',
-      'homepage'      => 'https://www.getsafe360.ai',
-      'requires'      => '5.0',
-      'tested'        => sanitize_text_field($data['tested'] ?? '6.7'),
-      'requires_php'  => '7.2',
-      'download_link' => esc_url_raw($data['download_url'] ?? ''),
-      'icons'         => ['svg' => 'https://www.getsafe360.ai/icons/360.svg'],
-      'banners'       => ['high' => '', 'low' => ''],
-      'sections'      => [
-        'description' => wp_kses_post(
-          $data['description'] ??
-          '<p>Secure connector between your WordPress site and <strong>GetSafe 360 AI</strong> for automated security scanning, performance monitoring, and AI-powered repairs.</p>'
-          . '<h4>Why connect?</h4>'
-          . '<p>GetSafe 360 AI can already inspect your public website from the outside. Connecting adds the secure layer needed to diagnose internal WordPress details and safely apply AI-assisted fixes.</p>'
-          . '<ul>'
-          . '<li><strong>Without connection:</strong> External analysis, performance/SEO checks, security header inspection, structured data validation</li>'
-          . '<li><strong>After connection:</strong> AI-powered optimization workflows, automated WordPress fixes, CMS/plugin-level diagnostics, continuous monitoring, safe repair actions with audit history</li>'
-          . '</ul>'
-          . '<p>Learn more at <a href="https://www.getsafe360.ai/docs/wordpress-connector">getsafe360.ai/docs/wordpress-connector</a></p>'
-        ),
-        'installation' => '<ol>'
-          . '<li>Install and activate the plugin</li>'
-          . '<li>Log in to your <a href="https://www.getsafe360.ai">GetSafe 360 AI dashboard</a></li>'
-          . '<li>Add your site and click "Generate Pairing Code"</li>'
-          . '<li>Enter the 6-digit code in the plugin settings and click Connect</li>'
-          . '</ol>',
-        'changelog'   => wp_kses_post(
-          $data['changelog'] ??
-          '<h4>0.3.0</h4><ul><li>Automatic updates via WordPress update system</li><li>Full i18n: German, Spanish, French, Italian, Portuguese</li><li>Deep-link pairing: arrive from the dashboard with code pre-filled</li><li>GetSafe 360 AI brand icon in admin menu and page header</li></ul>'
-          . '<h4>0.2.1</h4><ul><li>SEO injection via wp_head</li><li>REST API routes: ping, status, push, pull</li></ul>'
-          . '<h4>0.2.0</h4><ul><li>Initial release</li></ul>'
-        ),
       ],
     ];
   }

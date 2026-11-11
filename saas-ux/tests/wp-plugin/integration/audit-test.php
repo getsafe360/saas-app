@@ -2,11 +2,11 @@
 // Runs inside WordPress via `wp eval-file`. Exits non-zero on the first failed check.
 // Exercises the connector's /audit endpoint against a real WordPress install.
 
-$fails = 0;
+// eval-file runs this file inside a function, so the counter must live in $GLOBALS.
+$GLOBALS['fails'] = 0;
 function check($ok, $label) {
-  global $fails;
   echo ($ok ? 'ok: ' : 'FAIL: '), $label, "\n";
-  if (!$ok) $fails++;
+  if (!$ok) $GLOBALS['fails']++;
 }
 
 update_option('getsafe360_connector', ['site_token' => 'integration-token']);
@@ -98,4 +98,4 @@ try {
   delete_transient('getsafe360_audit_scans');
 }
 
-exit($fails ? 1 : 0);
+exit($GLOBALS['fails'] ? 1 : 0);
