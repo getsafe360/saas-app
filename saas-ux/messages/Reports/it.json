@@ -204,11 +204,13 @@
         "INVALID_EMAIL": "Questa email non è valida → Controllala e riprova.",
         "TOO_LONG": "Un campo è troppo lungo → Accorcialo e riprova.",
         "RATE_LIMITED": "Troppe modifiche in poco tempo → Attendi un minuto e riprova.",
-        "GENERIC": "Non è stato possibile salvare il branding → Riprova tra un momento."
+        "GENERIC": "Non è stato possibile salvare il branding → Riprova tra un momento.",
+        "LOAD_FAILED": "Non è stato possibile caricare il branding salvato → Ricaricalo prima di salvare, così non sovrascrivi nulla."
       },
       "upgradeTitle": "Il branding fa parte del piano Agenzia",
       "upgradeText": "Con il piano Agenzia, i report per i clienti portano il tuo nome, logo e colore al posto di GetSafe 360 AI.",
-      "upgradeCta": "Vedi i piani"
+      "upgradeCta": "Vedi i piani",
+      "retry": "Riprova"
     }
   }
 }

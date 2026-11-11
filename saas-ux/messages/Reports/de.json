@@ -204,11 +204,13 @@
         "INVALID_EMAIL": "Diese E-Mail-Adresse ist ungültig → Prüfen und erneut versuchen.",
         "TOO_LONG": "Ein Feld ist zu lang → Kürzen und erneut versuchen.",
         "RATE_LIMITED": "Zu viele Änderungen in kurzer Zeit → Eine Minute warten und erneut versuchen.",
-        "GENERIC": "Das Branding konnte nicht gespeichert werden → Gleich noch einmal versuchen."
+        "GENERIC": "Das Branding konnte nicht gespeichert werden → Gleich noch einmal versuchen.",
+        "LOAD_FAILED": "Ihr gespeichertes Branding konnte nicht geladen werden → Erneut laden, bevor Sie speichern, damit nichts überschrieben wird."
       },
       "upgradeTitle": "Branding ist Teil des Agentur-Tarifs",
       "upgradeText": "Im Agentur-Tarif tragen Kundenberichte Ihren Namen, Ihr Logo und Ihre Farbe statt GetSafe 360 AI.",
-      "upgradeCta": "Tarife ansehen"
+      "upgradeCta": "Tarife ansehen",
+      "retry": "Erneut versuchen"
     }
   }
 }

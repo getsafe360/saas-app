@@ -1,7 +1,7 @@
 // components/reports/BrandingSettings.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Crown, ImageUp, Loader2, Palette, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/navigation";
@@ -37,29 +37,41 @@ export function BrandingSettings({ allowed }: { allowed: boolean }) {
   const [confirmRemove, setConfirmRemove] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!allowed) return;
-    (async () => {
-      try {
-        const response = await fetch("/api/reports/branding", { cache: "no-store" });
-        const body = await response.json().catch(() => null);
-        if (body?.branding) {
-          const b = body.branding;
-          setForm({
-            companyName: b.companyName ?? "",
-            logoUrl: b.logoUrl ?? null,
-            primaryColor: b.primaryColor ?? DEFAULT_PRIMARY_COLOR,
-            website: b.website ?? "",
-            email: b.email ?? "",
-            footerText: b.footerText ?? "",
-          });
-          setStored(true);
-        }
-      } finally {
-        setBusy(null);
+  // Saving replaces the whole branding, so it stays off until the stored one has loaded
+  // (or is known not to exist): a failed load must never be saved over.
+  const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  const load = useCallback(async () => {
+    setBusy("load");
+    setLoadFailed(false);
+    try {
+      const response = await fetch("/api/reports/branding", { cache: "no-store" });
+      const body = await response.json().catch(() => null);
+      if (!response.ok || !body?.success) throw new Error("load");
+      const b = body.branding;
+      if (b) {
+        setForm({
+          companyName: b.companyName ?? "",
+          logoUrl: b.logoUrl ?? null,
+          primaryColor: b.primaryColor ?? DEFAULT_PRIMARY_COLOR,
+          website: b.website ?? "",
+          email: b.email ?? "",
+          footerText: b.footerText ?? "",
+        });
       }
-    })();
-  }, [allowed]);
+      setStored(!!b);
+      setLoaded(true);
+    } catch {
+      setLoadFailed(true);
+    } finally {
+      setBusy(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (allowed) void load();
+  }, [allowed, load]);
 
   const update = (patch: Partial<Branding>) => {
     setForm((current) => ({ ...current, ...patch }));
@@ -238,7 +250,7 @@ export function BrandingSettings({ allowed }: { allowed: boolean }) {
               <button
                 type="button"
                 onClick={save}
-                disabled={busy !== null}
+                disabled={busy !== null || !loaded}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
               >
                 {busy === "save" && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -248,7 +260,7 @@ export function BrandingSettings({ allowed }: { allowed: boolean }) {
                 <button
                   type="button"
                   onClick={remove}
-                  disabled={busy !== null}
+                  disabled={busy !== null || !loaded}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/40 px-3 py-2 text-sm text-red-300 hover:bg-red-500/10 disabled:opacity-60"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -256,6 +268,12 @@ export function BrandingSettings({ allowed }: { allowed: boolean }) {
                 </button>
               )}
             </div>
+            {loadFailed && (
+              <p role="alert" className="flex flex-wrap items-center gap-2 rounded-md border border-amber-500/40 p-2 text-xs text-amber-300">
+                {t("errors.LOAD_FAILED")}
+                <button type="button" onClick={() => void load()} className="underline">{t("retry")}</button>
+              </p>
+            )}
             {status && <p role="status" className="text-xs text-emerald-300">{status}</p>}
             {error && <p role="alert" className="rounded-md border border-red-500/40 p-2 text-xs text-red-300">{t(`errors.${error}`)}</p>}
           </section>

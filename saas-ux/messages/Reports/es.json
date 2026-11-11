@@ -204,11 +204,13 @@
         "INVALID_EMAIL": "Ese email no es válido → Revísalo y vuelve a intentarlo.",
         "TOO_LONG": "Un campo es demasiado largo → Acórtalo y vuelve a intentarlo.",
         "RATE_LIMITED": "Demasiados cambios en poco tiempo → Espera un minuto y vuelve a intentarlo.",
-        "GENERIC": "No se pudo guardar la marca → Vuelve a intentarlo en un momento."
+        "GENERIC": "No se pudo guardar la marca → Vuelve a intentarlo en un momento.",
+        "LOAD_FAILED": "No se pudo cargar tu marca guardada → Vuelve a cargarla antes de guardar para no sobrescribir nada."
       },
       "upgradeTitle": "La marca forma parte del plan Agencia",
       "upgradeText": "Con el plan Agencia, los informes para clientes llevan tu nombre, logo y color en lugar de GetSafe 360 AI.",
-      "upgradeCta": "Ver planes"
+      "upgradeCta": "Ver planes",
+      "retry": "Reintentar"
     }
   }
 }

@@ -204,11 +204,13 @@
         "INVALID_EMAIL": "Cet e-mail n’est pas valide → Vérifiez-le et réessayez.",
         "TOO_LONG": "Un champ est trop long → Raccourcissez-le et réessayez.",
         "RATE_LIMITED": "Trop de modifications en peu de temps → Patientez une minute puis réessayez.",
-        "GENERIC": "L’image de marque n’a pas pu être enregistrée → Réessayez dans un instant."
+        "GENERIC": "L’image de marque n’a pas pu être enregistrée → Réessayez dans un instant.",
+        "LOAD_FAILED": "Votre image de marque enregistrée n’a pas pu être chargée → Rechargez-la avant d’enregistrer pour ne rien écraser."
       },
       "upgradeTitle": "L’image de marque fait partie de l’offre Agence",
       "upgradeText": "Avec l’offre Agence, les rapports clients portent votre nom, votre logo et votre couleur au lieu de GetSafe 360 AI.",
-      "upgradeCta": "Voir les offres"
+      "upgradeCta": "Voir les offres",
+      "retry": "Réessayer"
     }
   }
 }
