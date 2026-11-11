@@ -25,9 +25,8 @@ export async function GET(request: NextRequest, props: { params: Promise<{ siteI
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'private, no-store',
-      // The preview is shown in a sandboxed frame; it never needs scripts or outside requests
-      // beyond the branding logo.
-      'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; img-src https: data:; frame-ancestors 'self'",
+      // Static page: no scripts and no outside requests (the logo is embedded).
+      'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; img-src data:; frame-ancestors 'self'",
     },
   });
 }

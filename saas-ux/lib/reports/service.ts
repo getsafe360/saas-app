@@ -10,6 +10,7 @@ import { getOwnedSite } from '@/lib/auth/site-access';
 import { getOwnerTeam } from '@/lib/plans/owner-plan';
 import { canGenerateReports, getReportsPerMonth, type PlanName } from '@/lib/plans/config';
 import { resolveBrand } from './brand';
+import { logoDataUrl } from './logo';
 import { buildReportContent, REPORT_PERIODS, type ReportFormat, type ReportPeriodDays } from './content';
 import { collectReportInput } from './data';
 import { renderHtml, renderMarkdown } from './render';
@@ -99,7 +100,8 @@ export async function renderReport(context: ReportContext, options: ReportOption
       : Promise.resolve(null),
   ]);
   const content = buildReportContent(input);
-  const brand = resolveBrand(context.plan, options.whiteLabel, branding);
+  const resolved = resolveBrand(context.plan, options.whiteLabel, branding);
+  const brand = { ...resolved, logoUrl: await logoDataUrl(resolved.logoUrl) };
   return {
     content,
     brand,

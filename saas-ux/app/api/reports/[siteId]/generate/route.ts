@@ -58,14 +58,14 @@ export async function POST(request: NextRequest, props: { params: Promise<{ site
       status: 'generating',
       title: rendered.content.site.host,
       filename,
-      brandingApplied: rendered.brand.poweredBy ? null : { companyName: rendered.brand.companyName, logoUrl: rendered.brand.logoUrl },
+      brandingApplied: rendered.brand.poweredBy ? null : { companyName: rendered.brand.companyName, logo: Boolean(rendered.brand.logoUrl) },
     })
     .returning({ id: generatedReports.id });
 
   try {
     const file =
       options.format === 'pdf'
-        ? await htmlToPdf(rendered.html, rendered.brand.logoUrl ? [rendered.brand.logoUrl] : [])
+        ? await htmlToPdf(rendered.html)
         : Buffer.from(rendered.markdown, 'utf8');
     const blob = await put(`reports/${siteId}/${report.id}/${filename}`, file, {
       access: 'public',

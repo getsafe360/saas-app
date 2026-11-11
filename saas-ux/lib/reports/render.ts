@@ -9,7 +9,7 @@ import type { ReportText } from './text';
 export interface ReportBrand {
   /** Shown as the author; null leaves the author out (white-label without branding). */
   companyName: string | null;
-  /** https logo URL, already checked to be public. */
+  /** Embedded logo (data: URL), or null. */
   logoUrl: string | null;
   primaryColor: string;
   /** Show "Powered by GetSafe 360 AI". */
@@ -205,7 +205,7 @@ export function renderHtml(content: ReportContent, text: ReportText, brand: Repo
 </head>
 <body>
 <header>
-  <div>${brand.logoUrl ? `<img src="${esc(brand.logoUrl)}" alt="">` : ''}${brand.companyName ? `<div class="company">${esc(brand.companyName)}</div>` : ''}</div>
+  <div>${brand.logoUrl?.startsWith('data:image/') ? `<img src="${esc(brand.logoUrl)}" alt="">` : ''}${brand.companyName ? `<div class="company">${esc(brand.companyName)}</div>` : ''}</div>
   <div class="meta">${t('generatedOn', { date: text.date(content.generatedAt) })}</div>
 </header>
 

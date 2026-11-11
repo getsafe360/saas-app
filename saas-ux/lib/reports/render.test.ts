@@ -42,6 +42,24 @@ const content = buildReportContent({
   cspTestSince: new Date('2026-11-05T00:00:00Z'),
 });
 
+test('a grouped change lists every finding it fixed, and none of them stays open', () => {
+  const grouped = buildReportContent({
+    site: { host: 'x.de', url: 'https://x.de/' }, generatedAt: now, periodDays: 30, scores: { overall: 90 },
+    wordpressHealth: null, cspTestSince: null,
+    changes: [change({ actionId: 'security-headers', findingIds: ['sec-nosniff', 'sec-frame-options'], title: 'Security headers' })],
+    openIssues: [{ id: 'sec-frame-options', severity: 'medium' }, { id: 'sec-csp', severity: 'medium' }],
+  });
+  assert.deepEqual(grouped.fixes.map((fix) => fix.findingId), ['sec-nosniff', 'sec-frame-options']);
+  assert.deepEqual(grouped.openIssues.map((issue) => issue.id), ['sec-csp']);
+});
+
+test('only an embedded image can appear as the logo', () => {
+  const remote = renderHtml(content, textFor('en'), { ...DEFAULT_BRAND, logoUrl: 'https://169.254.169.254/logo.png' });
+  assert.doesNotMatch(remote, /<img/);
+  const embedded = renderHtml(content, textFor('en'), { ...DEFAULT_BRAND, logoUrl: 'data:image/png;base64,AAAA' });
+  assert.match(embedded, /<img src="data:image\/png;base64,AAAA"/);
+});
+
 test('keeps changes from the period that are still in place, oldest first', () => {
   assert.deepEqual(content.fixes.map((fix) => fix.findingId), ['wp-xmlrpc', 'sec-referrer-policy']);
   assert.equal(content.fixes[1].unverified, true);

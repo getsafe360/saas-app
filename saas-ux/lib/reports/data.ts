@@ -5,9 +5,12 @@
 // period and what is still open.
 
 import { and, asc, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { list } from '@vercel/blob';
 import { parseStoredSite } from '@/lib/cockpit/stored';
 import { getDrizzle } from '@/lib/db/postgres';
 import { wordpressSiteSnapshots } from '@/lib/db/schema/wordpress/agent';
+import { scanJobs } from '@/lib/db/schema';
+import type { ScanReport } from '@/lib/scan/types';
 import { readTestState } from '@/lib/security/csp/reports';
 import { toAppliedChanges } from '@/lib/wordpress/applied-changes';
 import { loadChangeRuns } from '@/lib/wordpress/change-runs';
@@ -77,6 +80,33 @@ async function wordpressHealth(siteId: string, periodStart: Date) {
   };
 }
 
+/**
+ * Every issue of the site's latest finished scan. The cockpit snapshot keeps only
+ * the top three, which would hide open issues once those three are fixed.
+ */
+async function scanIssues(siteId: string, fallback: ReportIssueInput[]): Promise<ReportIssueInput[]> {
+  try {
+    const [job] = await getDrizzle()
+      .select({ id: scanJobs.id, reportBlobKey: scanJobs.reportBlobKey })
+      .from(scanJobs)
+      .where(and(eq(scanJobs.siteId, siteId), eq(scanJobs.status, 'done')))
+      .orderBy(desc(scanJobs.updatedAt))
+      .limit(1);
+    if (!job) return fallback;
+    const key = job.reportBlobKey || `scan-results/${job.id}.json`;
+    const { blobs } = await list({ prefix: key });
+    const match = blobs.find((blob) => blob.pathname === key);
+    if (!match) return fallback;
+    const response = await fetch(match.url, { cache: 'no-store' });
+    const body = (await response.json().catch(() => null)) as { report?: ScanReport } | null;
+    const issues = body?.report?.issues;
+    if (!Array.isArray(issues)) return fallback;
+    return issues.map((issue) => ({ id: issue.id, severity: asSeverity(issue.severity), title: issue.title }));
+  } catch {
+    return fallback;
+  }
+}
+
 export async function collectReportInput(
   site: ReportSite,
   periodDays: ReportPeriodDays,
@@ -90,17 +120,17 @@ export async function collectReportInput(
     scan?.categoryScores?.[category] ?? quick?.[category] ?? null;
 
   const db = getDrizzle();
-  const [runs, wordpress, cspState] = await Promise.all([
-    loadChangeRuns(db, site.id, CHANGE_LIMIT),
-    wordpressHealth(site.id, periodStart).catch(() => ({ health: null, problems: [] as ReportIssueInput[] })),
-    readTestState(site.id).catch(() => null),
-  ]);
-
-  const scanIssues: ReportIssueInput[] = (scan?.top ?? []).map((issue) => ({
+  const topIssues: ReportIssueInput[] = (scan?.top ?? []).map((issue) => ({
     id: issue.id,
     severity: asSeverity(issue.severity),
     title: issue.title,
   }));
+  const [runs, wordpress, cspState, scanIssueList] = await Promise.all([
+    loadChangeRuns(db, site.id, CHANGE_LIMIT),
+    wordpressHealth(site.id, periodStart).catch(() => ({ health: null, problems: [] as ReportIssueInput[] })),
+    readTestState(site.id).catch(() => null),
+    scan ? scanIssues(site.id, topIssues) : Promise.resolve([] as ReportIssueInput[]),
+  ]);
 
   return {
     site: { host: hostOf(site), url: site.siteUrl },
@@ -116,7 +146,7 @@ export async function collectReportInput(
     },
     wordpressHealth: wordpress.health,
     changes: toAppliedChanges(runs, CHANGE_LIMIT),
-    openIssues: [...wordpress.problems, ...scanIssues],
+    openIssues: [...wordpress.problems, ...scanIssueList],
     cspTestSince: cspState ? new Date(cspState.startedAt) : null,
   };
 }

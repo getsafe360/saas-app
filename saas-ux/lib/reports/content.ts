@@ -68,13 +68,16 @@ export function buildReportContent(input: ReportInput): ReportContent {
   const fixes = input.changes
     .filter((change) => change.state !== 'undone' && new Date(change.appliedAt) >= periodStart)
     .sort((a, b) => new Date(a.appliedAt).getTime() - new Date(b.appliedAt).getTime())
-    .map((change) => ({
-      findingId: change.findingIds[0] ?? null,
-      title: change.title,
-      appliedAt: new Date(change.appliedAt),
-      unverified: change.state === 'unverified',
-      undoable: change.undoable,
-    }));
+    // A grouped change (e.g. several security headers) fixed each of its findings: one row per finding.
+    .flatMap((change) =>
+      (change.findingIds.length > 0 ? change.findingIds : [null]).map((findingId) => ({
+        findingId,
+        title: change.title,
+        appliedAt: new Date(change.appliedAt),
+        unverified: change.state === 'unverified',
+        undoable: change.undoable,
+      })),
+    );
 
   // A fixed finding is not also "still open", whatever an older scan said.
   const fixedIds = new Set(fixes.map((fix) => fix.findingId).filter(Boolean));
