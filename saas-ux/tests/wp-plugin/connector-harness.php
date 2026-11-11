@@ -81,4 +81,14 @@ foreach ([
 }
 check(!isset($GLOBALS['opts']['getsafe360_security_headers']['Content-Security-Policy']), 'rejected CSPs change nothing');
 
+// 6. Phase 2: switching the tested policy on in one step, and undo returning to the test.
+$GLOBALS['opts']['getsafe360_security_headers'] = ['X-Frame-Options' => 'DENY', 'Content-Security-Policy-Report-Only' => $csp];
+$enforce = $apply->invoke($c, 'security-csp-enforce', ['headers' => ['Content-Security-Policy' => $csp, 'Content-Security-Policy-Report-Only' => null]]);
+check($enforce['status'] === 'applied'
+  && $GLOBALS['opts']['getsafe360_security_headers'] === ['X-Frame-Options' => 'DENY', 'Content-Security-Policy' => $csp],
+  'switching on replaces the report-only header with the enforcing one and keeps other headers');
+$apply->invoke($c, 'security-csp-enforce-rollback', json_decode(json_encode($enforce['rollback']['payload']), true));
+check($GLOBALS['opts']['getsafe360_security_headers'] === ['X-Frame-Options' => 'DENY', 'Content-Security-Policy-Report-Only' => $csp],
+  'undo switches the policy off and resumes the report-only test');
+
 exit($fails ? 1 : 0);

@@ -41,6 +41,7 @@ const COMPONENTS: Array<[file: string, namespace: string]> = [
   ['components/site-cockpit/cards/wordpress/components/EmptyStates/ConnectPreview.tsx', 'wordpress.preview.'],
   ['components/site-cockpit/WordPressTeaser.tsx', 'wordpress.teaser.'],
   ['components/site-cockpit/cards/wordpress/components/Analysis/CspPanel.tsx', 'wordpress.csp.'],
+  ['components/site-cockpit/cards/wordpress/components/Analysis/CspSwitchOn.tsx', 'wordpress.csp.switch.'],
 ];
 
 test('every literal translation key used by the cockpit exists in all six languages', () => {
@@ -72,7 +73,7 @@ test('keys built from known lists exist, and every message parses', () => {
     ...RECOMMENDATIONS.map((k) => `wordpress.coreReview.recommendation.${k}`),
     ...['modified', 'unexpected'].map((k) => `wordpress.coreReview.kind.${k}`),
     ...['GENERIC', 'RATE_LIMITED', 'WORDPRESS_NOT_CONNECTED', 'CORE_FILES_UNAVAILABLE'].map((k) => `wordpress.coreReview.errors.${k}`),
-    ...['GENERIC', 'RATE_LIMITED', 'SITE_UNREACHABLE', 'CONNECTOR_UPDATE', 'CONNECTOR_UNREACHABLE', 'CONNECTOR_FAILED', 'WORDPRESS_NOT_CONNECTED', 'TEST_RUNNING'].map(
+    ...['GENERIC', 'RATE_LIMITED', 'SITE_UNREACHABLE', 'CONNECTOR_UPDATE', 'CONNECTOR_UNREACHABLE', 'CONNECTOR_FAILED', 'WORDPRESS_NOT_CONNECTED', 'TEST_RUNNING', 'NO_TEST', 'INVALID_POLICY', 'REVIEW_STALE'].map(
       (k) => `wordpress.csp.errors.${k}`,
     ),
     ...['updates', 'core', 'settings', 'database'].map((k) => `wordpress.preview.inside.${k}`),

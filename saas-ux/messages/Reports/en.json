@@ -40,7 +40,8 @@
       },
       "protection": {
         "heading": "Ongoing protection",
-        "csp": "Since {date}, a Content-Security-Policy has been tested in report-only mode: browsers report what it would block, without affecting visitors."
+        "csp": "Since {date}, a Content-Security-Policy has been tested in report-only mode: browsers report what it would block, without affecting visitors.",
+        "cspEnforced": "Since {date}, a Content-Security-Policy is switched on: browsers block scripts and content from servers the site does not use, and report what they block."
       },
       "next": {
         "heading": "Recommended next steps",
@@ -62,7 +63,7 @@
         "sec-nosniff": "Browsers no longer guess file types, which closes a trick for running disguised scripts.",
         "sec-referrer-policy": "Full page addresses, which can contain private details, are no longer passed on to other websites.",
         "sec-frame-options": "Other sites can no longer embed your pages invisibly to trick visitors into clicking (clickjacking).",
-        "sec-csp": "A Content-Security-Policy is being tested: the strongest browser defence against injected scripts.",
+        "sec-csp": "A Content-Security-Policy now tells browsers which servers may run code on the site: the strongest browser defence against injected scripts.",
         "wp-xmlrpc": "Closes an old interface that attackers use to guess passwords in bulk.",
         "wp-user-enumeration": "Usernames are no longer listed publicly, so attackers have one less half of a login to guess.",
         "wp-file-editing": "Even with a stolen admin password, nobody can change the site's code from the dashboard.",
@@ -74,7 +75,8 @@
         "wp-revisions": "Old page revisions were cleaned up, keeping the database smaller and backups faster.",
         "wp-outdated-plugins": "Plugins were updated with a restore point, closing known security holes and bugs.",
         "red-flag-core-modifications": "Altered WordPress system files were replaced with official, verified copies.",
-        "red-flag-unexpected-core-files": "Unknown files in WordPress system folders were moved to quarantine, where they cannot run."
+        "red-flag-unexpected-core-files": "Unknown files in WordPress system folders were moved to quarantine, where they cannot run.",
+        "sec-csp-test": "A Content-Security-Policy was tested in report-only mode, to learn what the site loads before switching it on."
       }
     },
     "nav": "Reports",

@@ -129,3 +129,18 @@ test('file names are safe and dated', () => {
   assert.equal(reportFilename('www.sk-rent.de', now, 'pdf'), 'sk-rent.de-report-2026-11-11.pdf');
   assert.equal(reportFilename('a/b', now, 'markdown'), 'a-b-report-2026-11-11.md');
 });
+
+test('a CSP that is switched on is reported differently from the test', () => {
+  const enforced = buildReportContent({
+    site: { host: 'x.de', url: 'https://x.de/' }, generatedAt: now, periodDays: 30, scores: { overall: 90 },
+    wordpressHealth: null, cspTestSince: new Date('2026-11-08T00:00:00Z'), cspEnforced: true, openIssues: [],
+    changes: [
+      change({ runId: 't', actionId: 'security-csp-report-only', findingIds: ['sec-csp'], appliedAt: '2026-11-01T09:00:00Z' }),
+      change({ runId: 'e', actionId: 'security-csp-enforce', findingIds: ['sec-csp'], appliedAt: '2026-11-08T09:00:00Z' }),
+    ],
+  });
+  const md = renderMarkdown(enforced, textFor('en'), DEFAULT_BRAND);
+  assert.match(md, /tested in report-only mode, to learn what the site loads/);
+  assert.match(md, /now tells browsers which servers may run code/);
+  assert.match(md, /a Content-Security-Policy is switched on/);
+});

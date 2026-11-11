@@ -195,7 +195,8 @@ export async function readViolations(siteId: string): Promise<CspViolationSummar
 }
 
 export interface CspTestState {
-  mode: 'report-only';
+  /** report-only: the test (phase 1). enforced: the policy is switched on (phase 2). */
+  mode: 'report-only' | 'enforced';
   policy: string;
   startedAt: string;
   runId: string | null;

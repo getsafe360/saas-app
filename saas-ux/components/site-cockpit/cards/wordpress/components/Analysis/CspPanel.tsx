@@ -4,12 +4,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { CspSwitchOn } from "./CspSwitchOn";
 
 interface CspPanelProps {
   siteId: string;
   /** Bumped after Undo elsewhere, so a stopped test disappears. */
   refreshKey?: number;
   onStarted?: () => void;
+  /** The site already sends a CSP: without a test or enforced policy of ours there is nothing to offer. */
+  hasOwnPolicy?: boolean;
 }
 
 interface Violation {
@@ -20,7 +23,7 @@ interface Violation {
 }
 
 interface Status {
-  state: { policy: string; startedAt: string } | null;
+  state: { mode: "report-only" | "enforced"; policy: string; startedAt: string } | null;
   violations: Violation[];
   totalReports: number;
 }
@@ -42,13 +45,14 @@ function errorKey(code: unknown): string {
  * Content-Security-Policy builder: proposes a policy from what the site loads,
  * tests it in report-only mode and shows what browsers would have blocked.
  */
-export function CspPanel({ siteId, refreshKey = 0, onStarted }: CspPanelProps) {
+export function CspPanel({ siteId, refreshKey = 0, onStarted, hasOwnPolicy = false }: CspPanelProps) {
   const t = useTranslations("SiteCockpit.wordpress.csp");
   const locale = useLocale();
   const [status, setStatus] = useState<Status | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [busy, setBusy] = useState<"preview" | "start" | "refresh" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notLive, setNotLive] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -103,9 +107,51 @@ export function CspPanel({ siteId, refreshKey = 0, onStarted }: CspPanelProps) {
     setBusy(null);
   };
 
-  const testing = status?.state ?? null;
+  const current = status?.state ?? null;
+  const enforced = current?.mode === "enforced" ? current : null;
+  const testing = current && !enforced ? current : null;
   const date = (value: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(value));
-  const days = testing ? Math.max(0, Math.floor((Date.now() - new Date(testing.startedAt).getTime()) / 86_400_000)) : 0;
+  const days = current ? Math.max(0, Math.floor((Date.now() - new Date(current.startedAt).getTime()) / 86_400_000)) : 0;
+
+  // A policy the site set up itself: nothing to build, test or switch on here.
+  if (status && !current && hasOwnPolicy) return null;
+
+  const reportTable = (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-[11px]">
+        <thead style={{ color: "var(--text-subtle)" }}>
+          <tr>
+            <th className="py-1 pr-3 font-medium">{t("columns.directive")}</th>
+            <th className="py-1 pr-3 font-medium">{t("columns.source")}</th>
+            <th className="py-1 pr-3 text-right font-medium">{t("columns.count")}</th>
+            <th className="py-1 font-medium">{t("columns.page")}</th>
+          </tr>
+        </thead>
+        <tbody style={{ color: "var(--text-primary)" }}>
+          {(status?.violations ?? []).map((violation) => (
+            <tr key={`${violation.directive} ${violation.blocked}`} className="border-t" style={{ borderColor: "var(--border-default)" }}>
+              <td className="py-1 pr-3"><code>{violation.directive}</code></td>
+              <td className="break-all py-1 pr-3"><code>{violation.blocked}</code></td>
+              <td className="py-1 pr-3 text-right">{violation.count}</td>
+              <td className="break-all py-1"><code>{violation.page ?? "—"}</code></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const refreshButton = (
+    <button
+      type="button"
+      onClick={refresh}
+      disabled={busy !== null}
+      className="gs-btn gs-btn-secondary inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px]"
+    >
+      <RefreshCw className={`h-3 w-3 ${busy === "refresh" ? "animate-spin" : ""}`} />
+      {t("refresh")}
+    </button>
+  );
 
   return (
     <section
@@ -118,7 +164,7 @@ export function CspPanel({ siteId, refreshKey = 0, onStarted }: CspPanelProps) {
         {t("title")}
       </h5>
 
-      {!testing && (
+      {!current && (
         <>
           <p className="mb-3 text-xs" style={{ color: "var(--text-subtle)" }}>
             {t("description")}
@@ -137,7 +183,7 @@ export function CspPanel({ siteId, refreshKey = 0, onStarted }: CspPanelProps) {
         </>
       )}
 
-      {preview && !testing && (
+      {preview && !current && (
         <div className="mt-2 space-y-3">
           <p className="text-xs" style={{ color: "var(--text-primary)" }}>
             {t("scanned", { count: preview.pages.length })}
@@ -182,15 +228,7 @@ export function CspPanel({ siteId, refreshKey = 0, onStarted }: CspPanelProps) {
             <span className="text-xs" style={{ color: "var(--text-subtle)" }}>
               {t("reports", { count: status?.totalReports ?? 0 })}
             </span>
-            <button
-              type="button"
-              onClick={refresh}
-              disabled={busy !== null}
-              className="gs-btn gs-btn-secondary inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px]"
-            >
-              <RefreshCw className={`h-3 w-3 ${busy === "refresh" ? "animate-spin" : ""}`} />
-              {t("refresh")}
-            </button>
+            {refreshButton}
           </div>
 
           {(status?.violations.length ?? 0) === 0 ? (
@@ -198,31 +236,51 @@ export function CspPanel({ siteId, refreshKey = 0, onStarted }: CspPanelProps) {
               {t("noReports")}
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-[11px]">
-                <thead style={{ color: "var(--text-subtle)" }}>
-                  <tr>
-                    <th className="py-1 pr-3 font-medium">{t("columns.directive")}</th>
-                    <th className="py-1 pr-3 font-medium">{t("columns.source")}</th>
-                    <th className="py-1 pr-3 text-right font-medium">{t("columns.count")}</th>
-                    <th className="py-1 font-medium">{t("columns.page")}</th>
-                  </tr>
-                </thead>
-                <tbody style={{ color: "var(--text-primary)" }}>
-                  {status!.violations.map((violation) => (
-                    <tr key={`${violation.directive} ${violation.blocked}`} className="border-t" style={{ borderColor: "var(--border-default)" }}>
-                      <td className="py-1 pr-3"><code>{violation.directive}</code></td>
-                      <td className="break-all py-1 pr-3"><code>{violation.blocked}</code></td>
-                      <td className="py-1 pr-3 text-right">{violation.count}</td>
-                      <td className="break-all py-1"><code>{violation.page ?? "—"}</code></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            reportTable
           )}
           <p className="text-[11px]" style={{ color: "var(--text-subtle)" }}>
             {t("testingHint")}
+          </p>
+          <CspSwitchOn
+            siteId={siteId}
+            days={days}
+            onEnforced={(visible) => {
+              setNotLive(!visible);
+              onStarted?.();
+              void load();
+            }}
+          />
+        </div>
+      )}
+
+      {enforced && (
+        <div className="mt-1 space-y-3">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-300">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            {t("enforcedSince", { date: date(enforced.startedAt), days })}
+          </p>
+          {notLive && <p className="text-[11px] text-amber-300">{t("notLive")}</p>}
+          <div className="flex items-center gap-2">
+            <span className="text-xs" style={{ color: "var(--text-subtle)" }}>
+              {t("blockedCount", { count: status?.totalReports ?? 0 })}
+            </span>
+            {refreshButton}
+          </div>
+          {(status?.violations.length ?? 0) === 0 ? (
+            <p className="text-[11px]" style={{ color: "var(--text-subtle)" }}>
+              {t("noBlocks")}
+            </p>
+          ) : (
+            reportTable
+          )}
+          <details className="text-[11px]">
+            <summary className="gs-link cursor-pointer text-sky-300">{t("switch.showPolicy")}</summary>
+            <code className="mt-1 block break-all rounded-md border p-2" style={{ borderColor: "var(--border-default)", color: "var(--text-primary)" }}>
+              {enforced.policy}
+            </code>
+          </details>
+          <p className="text-[11px]" style={{ color: "var(--text-subtle)" }}>
+            {t("enforcedHint")}
           </p>
         </div>
       )}

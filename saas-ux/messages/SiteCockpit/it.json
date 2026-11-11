@@ -635,8 +635,35 @@
           "CONNECTOR_UNREACHABLE": "Il plugin GetSafe 360 non ha risposto → Verifica la connessione e riprova.",
           "CONNECTOR_FAILED": "Il plugin non ha applicato la policy → Riprova o aggiorna il plugin.",
           "TEST_RUNNING": "È già in corso un test → Annullalo in Modifiche applicate prima di avviarne uno nuovo.",
-          "WORDPRESS_NOT_CONNECTED": "Il sito non è collegato → Ricollega il plugin GetSafe 360."
-        }
+          "WORDPRESS_NOT_CONNECTED": "Il sito non è collegato → Ricollega il plugin GetSafe 360.",
+          "NO_TEST": "Non c’è nessun test in corso da attivare → Avvia prima un test.",
+          "INVALID_POLICY": "La policy risultante non è valida → Togli la spunta all’ultima fonte aggiunta e riprova.",
+          "REVIEW_STALE": "I report sono cambiati dopo la tua analisi → Analizzali di nuovo prima di attivare la policy."
+        },
+        "switch": {
+          "title": "Attiva la policy",
+          "early": "Il test è attivo da {days, plural, =0 {meno di un giorno} one {# giorno} other {# giorni}}. Consigliamo almeno {recommended} giorni di traffico normale, così vengono coperte anche le pagine visitate di rado. Puoi comunque analizzare già adesso.",
+          "ready": "Il test ha raccolto abbastanza traffico. Claude esamina ciò che i browser hanno segnalato e suggerisce cosa consentire.",
+          "review": "Analizza i report con Claude",
+          "reviewing": "Claude sta analizzando…",
+          "reviewAgain": "Analizza di nuovo",
+          "aiUnavailable": "L’analisi di Claude non è disponibile al momento. La proposta consente le fonti comuni e continua a bloccare quelle che indeboliscono la protezione.",
+          "noCandidates": "Non è emerso nulla che la policy testata bloccherebbe. Può essere attivata così come è stata testata.",
+          "decide": "Le fonti spuntate vengono aggiunte alla policy. Quelle non spuntate verranno bloccate.",
+          "count": "{count, plural, one {# report} other {# report}}",
+          "allow": "consenti",
+          "block": "blocca",
+          "risky": "indebolisce la protezione",
+          "showPolicy": "Mostra la policy",
+          "warning": "Una volta attiva, i browser bloccano tutto ciò che la policy non elenca. I report continuano ad arrivare e puoi annullarla in Modifiche applicate.",
+          "enforce": "Attiva la policy",
+          "confirm": "Clicca di nuovo per attivare"
+        },
+        "enforcedSince": "Policy attiva dal {date} ({days, plural, =0 {oggi} one {# giorno} other {# giorni}}).",
+        "notLive": "Il plugin ha attivato la policy, ma la home page non la mostra ancora. Una cache delle pagine potrebbe servire ancora la versione precedente; svuotala nel tuo plugin di cache.",
+        "blockedCount": "{count, plural, =0 {Nulla bloccato finora} one {# blocco segnalato} other {# blocchi segnalati}}",
+        "noBlocks": "I browser non hanno segnalato nulla di bloccato dalla policy.",
+        "enforcedHint": "Ogni riga è qualcosa che la policy ha bloccato per un visitatore. Se qualcosa sul sito ha smesso di funzionare, annulla la policy in Modifiche applicate: il test riprende."
       },
       "preview": {
         "title": "Cosa corregge il collegamento su {domain}",

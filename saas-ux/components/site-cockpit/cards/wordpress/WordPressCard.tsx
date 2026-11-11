@@ -272,6 +272,8 @@ export function WordPressCard({
     if (analyzePath) router.push(`${analyzePath}?source=wordpress-remediate`);
   };
 
+  const cspFinding = (wordpress?.healthFindings ?? []).find((finding) => finding.id === "sec-csp");
+
   return (
     <CockpitCard
       id={id}
@@ -443,16 +445,16 @@ export function WordPressCard({
           />
         )}
 
-        {siteId &&
-          (wordpress.healthFindings ?? []).some(
-            (finding) => finding.id === "sec-csp" && (finding.status === "fail" || finding.status === "warning"),
-          ) && (
-            <CspPanel
-              siteId={siteId}
-              refreshKey={changesVersion + undoneElsewhere.size}
-              onStarted={() => setChangesVersion((version) => version + 1)}
-            />
-          )}
+        {/* Shown while there is something to build, test or watch; a policy of the
+            site's own (CSP check passing, no test of ours) hides it. */}
+        {siteId && cspFinding && (
+          <CspPanel
+            siteId={siteId}
+            refreshKey={changesVersion + undoneElsewhere.size}
+            onStarted={() => setChangesVersion((version) => version + 1)}
+            hasOwnPolicy={cspFinding.status === "pass"}
+          />
+        )}
 
         {siteId &&
           (wordpress.healthFindings ?? []).some(

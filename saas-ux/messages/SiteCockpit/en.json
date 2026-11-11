@@ -635,8 +635,35 @@
           "CONNECTOR_UNREACHABLE": "The GetSafe 360 plugin did not respond → Check the connection and try again.",
           "CONNECTOR_FAILED": "The plugin did not apply the policy → Try again, or update the plugin.",
           "TEST_RUNNING": "A test is already running → Undo it under Applied changes before starting a new one.",
-          "WORDPRESS_NOT_CONNECTED": "The site is not connected → Reconnect the GetSafe 360 plugin."
-        }
+          "WORDPRESS_NOT_CONNECTED": "The site is not connected → Reconnect the GetSafe 360 plugin.",
+          "NO_TEST": "There is no running test to switch on → Start a test first.",
+          "INVALID_POLICY": "The resulting policy is not valid → Untick the source you added last and try again.",
+          "REVIEW_STALE": "The reports changed since your review → Review again before switching the policy on."
+        },
+        "switch": {
+          "title": "Switch the policy on",
+          "early": "The test has run for {days, plural, =0 {less than a day} one {# day} other {# days}}. We recommend at least {recommended} days of normal traffic, so rarely used pages are covered too. You can review now anyway.",
+          "ready": "The test has collected enough traffic. Claude reviews what browsers reported and suggests what to allow.",
+          "review": "Review reports with Claude",
+          "reviewing": "Claude is reviewing…",
+          "reviewAgain": "Review again",
+          "aiUnavailable": "Claude's review is not available right now. The suggestion allows ordinary sources and keeps policy-weakening ones blocked.",
+          "noCandidates": "Nothing the tested policy would block came up. It can be switched on as tested.",
+          "decide": "Ticked sources are added to the policy. Unticked ones will be blocked.",
+          "count": "{count, plural, one {# report} other {# reports}}",
+          "allow": "allow",
+          "block": "block",
+          "risky": "weakens protection",
+          "showPolicy": "Show the policy",
+          "warning": "Once on, browsers block anything the policy does not list. Reports keep coming in, and you can undo it under Applied changes.",
+          "enforce": "Switch policy on",
+          "confirm": "Click again to switch on"
+        },
+        "enforcedSince": "Policy switched on since {date} ({days, plural, =0 {today} one {# day} other {# days}}).",
+        "notLive": "The plugin switched the policy on, but the homepage does not show it yet. A page cache may still serve the old version; clear it in your caching plugin.",
+        "blockedCount": "{count, plural, =0 {Nothing blocked so far} one {# block reported} other {# blocks reported}}",
+        "noBlocks": "Browsers have not reported anything the policy blocked.",
+        "enforcedHint": "Each line is something the policy blocked for a visitor. If something on your site stopped working, undo the policy under Applied changes: the test continues."
       },
       "preview": {
         "title": "What connecting fixes on {domain}",

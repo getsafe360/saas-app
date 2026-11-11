@@ -30,6 +30,8 @@ export const DEFAULT_BRAND: ReportBrand = {
 const SEVERITIES = ['critical', 'high', 'medium', 'low'] as const;
 
 function whyItMatters(fix: ReportFix, text: ReportText): string {
+  // The report-only CSP test protects nothing yet; it prepares the policy.
+  if (fix.actionId === 'security-csp-report-only') return text.t('why.sec-csp-test');
   if (fix.findingId && text.has(`why.${fix.findingId}`)) return text.t(`why.${fix.findingId}`);
   return text.t('whyFallback');
 }
@@ -99,7 +101,7 @@ export function renderMarkdown(content: ReportContent, text: ReportText, brand: 
 
   if (content.cspTestSince) {
     out.push(`## ${text.t('protection.heading')}`, '');
-    out.push(`- ${text.t('protection.csp', { date: text.date(content.cspTestSince) })}`, '');
+    out.push(`- ${text.t(content.cspEnforced ? 'protection.cspEnforced' : 'protection.csp', { date: text.date(content.cspTestSince) })}`, '');
   }
 
   out.push(`## ${text.t('next.heading')}`, '');
@@ -246,7 +248,7 @@ ${
     : `<p>${t('fixed.intro')}</p><table><thead><tr><th>${t('fixed.date')}</th><th>${t('fixed.change')}</th><th>${t('fixed.why')}</th></tr></thead><tbody>${fixRows}</tbody></table><p class="muted">${t('fixed.undoNote')}</p>`
 }
 
-${content.cspTestSince ? `<h2>${t('protection.heading')}</h2><p>${t('protection.csp', { date: text.date(content.cspTestSince) })}</p>` : ''}
+${content.cspTestSince ? `<h2>${t('protection.heading')}</h2><p>${t(content.cspEnforced ? 'protection.cspEnforced' : 'protection.csp', { date: text.date(content.cspTestSince) })}</p>` : ''}
 
 <h2>${t('next.heading')}</h2>
 ${content.openIssues.length === 0 ? `<p class="muted">${t('next.none')}</p>` : `<ol class="next">${nextItems}</ol>`}

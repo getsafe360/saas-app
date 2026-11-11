@@ -32,11 +32,15 @@ export interface ReportInput {
   openIssues: ReadonlyArray<ReportIssueInput>;
   /** A Content-Security-Policy is being tested in report-only mode. */
   cspTestSince: Date | null;
+  /** The CSP is switched on (not only tested) since cspTestSince. */
+  cspEnforced?: boolean;
 }
 
 export interface ReportFix {
   /** Finding the change addressed; drives the translated title and "why it matters". */
   findingId: string | null;
+  /** Fixer that made the change (the CSP test and switching it on explain differently). */
+  actionId?: string;
   /** English title recorded with the change, the fallback. */
   title: string;
   appliedAt: Date;
@@ -56,6 +60,7 @@ export interface ReportContent {
   fixes: ReportFix[];
   openIssues: ReportIssueInput[];
   cspTestSince: Date | null;
+  cspEnforced: boolean;
 }
 
 const SEVERITY_ORDER: Record<IssueSeverity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
@@ -72,6 +77,7 @@ export function buildReportContent(input: ReportInput): ReportContent {
     .flatMap((change) =>
       (change.findingIds.length > 0 ? change.findingIds : [null]).map((findingId) => ({
         findingId,
+        actionId: change.actionId,
         title: change.title,
         appliedAt: new Date(change.appliedAt),
         unverified: change.state === 'unverified',
@@ -97,6 +103,7 @@ export function buildReportContent(input: ReportInput): ReportContent {
     fixes,
     openIssues,
     cspTestSince: input.cspTestSince,
+    cspEnforced: input.cspEnforced ?? false,
   };
 }
 

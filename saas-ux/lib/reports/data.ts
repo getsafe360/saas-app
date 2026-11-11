@@ -148,5 +148,6 @@ export async function collectReportInput(
     changes: toAppliedChanges(runs, CHANGE_LIMIT),
     openIssues: [...wordpress.problems, ...scanIssueList],
     cspTestSince: cspState ? new Date(cspState.startedAt) : null,
+    cspEnforced: cspState?.mode === 'enforced',
   };
 }
