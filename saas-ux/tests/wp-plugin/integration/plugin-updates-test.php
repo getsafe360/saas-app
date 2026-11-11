@@ -4,11 +4,11 @@
 // Updates a demo plugin from local packages: a good update, an update that
 // crashes the site (restored automatically), and undo via the rollback.
 
-$fails = 0;
+// eval-file runs this file inside a function, so the counter must live in $GLOBALS.
+$GLOBALS['fails'] = 0;
 function check($ok, $label) {
-  global $fails;
   echo ($ok ? 'ok: ' : 'FAIL: '), $label, "\n";
-  if (!$ok) $fails++;
+  if (!$ok) $GLOBALS['fails']++;
 }
 
 $loopback = getenv('GS360_LOOPBACK');
@@ -171,4 +171,4 @@ try {
   @rmdir($work);
 }
 
-exit($fails ? 1 : 0);
+exit($GLOBALS['fails'] ? 1 : 0);

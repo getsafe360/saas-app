@@ -27,6 +27,7 @@ cp "$PLUGIN" wordpress/wp-content/plugins/getsafe360-connector/
 $WP plugin activate getsafe360-connector --quiet
 $WP eval-file "$HERE/audit-test.php"
 $WP eval-file "$HERE/actions-test.php"
+$WP eval-file "$HERE/seo-injection-test.php"
 
 # Plugin updates need the site to load itself for the health check: serve it locally.
 PORT="${LOOPBACK_PORT:-8089}"

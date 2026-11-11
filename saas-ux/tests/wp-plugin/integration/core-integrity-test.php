@@ -3,11 +3,11 @@
 // $GS360_LOOPBACK. Official checksums and file copies are served from the
 // pristine install, so this needs no access to wordpress.org.
 
-$fails = 0;
+// eval-file runs this file inside a function, so the counter must live in $GLOBALS.
+$GLOBALS['fails'] = 0;
 function check($ok, $label) {
-  global $fails;
   echo ($ok ? 'ok: ' : 'FAIL: '), $label, "\n";
-  if (!$ok) $fails++;
+  if (!$ok) $GLOBALS['fails']++;
 }
 
 $loopback = getenv('GS360_LOOPBACK');
@@ -153,4 +153,4 @@ try {
   $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '%getsafe360_core_sums_%'");
 }
 
-exit($fails ? 1 : 0);
+exit($GLOBALS['fails'] ? 1 : 0);

@@ -11,6 +11,8 @@ function update_option($k, $v, $a = null) { $GLOBALS['opts'][$k] = $v; return tr
 function sanitize_text_field($s) { return trim(strip_tags((string) $s)); }
 function is_ssl() { return $GLOBALS['ssl']; }
 function is_user_logged_in() { return $GLOBALS['logged_in']; }
+function wp_parse_url($url, $component = -1) { return parse_url($url, $component); }
+function untrailingslashit($s) { return rtrim($s, '/\\'); }
 require $argv[1];
 
 $c = new GetSafe360_Connector();

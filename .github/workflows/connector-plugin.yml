@@ -47,3 +47,18 @@ jobs:
         env:
           DB_HOST: 127.0.0.1
         run: saas-ux/tests/wp-plugin/integration/run.sh
+
+  # The checks WordPress.org runs on every submission and release.
+  plugin-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the release ZIP
+        run: |
+          saas-ux/public/wp-plugin/build.sh
+          mkdir -p build
+          unzip -q saas-ux/public/wp-plugin/getsafe360-connector.zip -d build
+      - uses: WordPress/plugin-check-action@v1
+        with:
+          build-dir: build/getsafe360-connector

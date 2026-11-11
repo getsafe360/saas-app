@@ -3,11 +3,11 @@
 // against a real WordPress install: each change, what the audit then reports,
 // and that the returned rollback restores the previous state.
 
-$fails = 0;
+// eval-file runs this file inside a function, so the counter must live in $GLOBALS.
+$GLOBALS['fails'] = 0;
 function check($ok, $label) {
-  global $fails;
   echo ($ok ? 'ok: ' : 'FAIL: '), $label, "\n";
-  if (!$ok) $fails++;
+  if (!$ok) $GLOBALS['fails']++;
 }
 
 update_option('getsafe360_connector', ['site_token' => 'integration-token']);
@@ -163,4 +163,4 @@ foreach (['securityDisableFileEditor', 'securityDefaultRole', 'securityConfigPer
   check(!empty($caps[$name]), "advertises $name");
 }
 
-exit($fails ? 1 : 0);
+exit($GLOBALS['fails'] ? 1 : 0);

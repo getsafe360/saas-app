@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { CURRENT_PLUGIN_VERSION } from '@/lib/wordpress/plugin-version';
 
+// Update channel for connector versions up to 1.10.0, which update from GetSafe 360.
+// 1.11.0 drops that updater: from then on WordPress.org delivers updates, so
+// this route only has to bring older installs to 1.11.0.
 // Bump CURRENT_PLUGIN_VERSION (lib/wordpress/plugin-version.ts) and set WP_PLUGIN_DOWNLOAD_URL env var with each release.
 // WP_PLUGIN_DOWNLOAD_URL should point to the publicly accessible plugin ZIP
 // (e.g. a Vercel Blob URL: https://xxxx.blob.vercel-storage.com/getsafe360-connector-v0.3.0.zip)
@@ -22,7 +25,7 @@ export async function GET() {
         {
             version: PLUGIN_VERSION,
             download_url: downloadUrl,
-            tested: '6.7',
+            tested: '7.1',
             requires: '5.0',
             requires_php: '7.2',
             icons: {
@@ -32,6 +35,7 @@ export async function GET() {
             description:
                 'Secure connector between your WordPress site and <strong>GetSafe 360 AI</strong> for automated security scanning, performance monitoring, and AI-powered repairs. <a href="https://www.getsafe360.ai/docs/wordpress-connector">View documentation</a>',
             changelog:
+                '<h4>1.11.0</h4><ul><li>Ready for the WordPress.org plugin directory: from this version on, updates come from WordPress.org</li><li>SEO markup in the page head is checked again on output: only meta tags, link tags and valid JSON-LD are printed</li><li>Translations load at the right time (no more notice on WordPress 6.7 and later)</li></ul>' +
                 '<h4>1.10.0</h4><ul><li>Content-Security-Policy support: GetSafe 360 can test a policy built from what your pages load in report-only mode, without blocking anything; reports go only to GetSafe 360</li><li>Every policy is checked (known rules only, valid sources, no header injection) before it is sent</li><li>Undo of a header change now restores only the headers that change touched</li></ul>' +
                 '<h4>1.9.0</h4><ul><li>Core file integrity: lists WordPress core files that differ from the official release and PHP files in wp-admin or wp-includes that do not belong to WordPress</li><li>For review in GetSafe 360, sends the changed lines of a core file (never wp-config.php, plugins, themes or uploads)</li><li>One-click restore of the official files (each checked against the official checksum) and quarantine of unexpected files, both with undo and automatic recovery if the site stops loading</li></ul>' +
                 '<h4>1.8.0</h4><ul><li>Update outdated plugins from GetSafe 360 with a restore point: one plugin at a time, the previous version saved first, and put back immediately if the site stops loading</li><li>Undo restores the plugin files from the restore point; restore points are kept for 14 days</li><li>Never updates itself through this route, skips premium plugins without a download link, and leaves multisite networks to the network admin</li></ul>' +
