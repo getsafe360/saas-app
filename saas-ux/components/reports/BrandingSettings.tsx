@@ -145,15 +145,15 @@ export function BrandingSettings({ allowed }: { allowed: boolean }) {
 
   const color = HEX.test(form.primaryColor) ? form.primaryColor : DEFAULT_PRIMARY_COLOR;
   const contact = [form.website.replace(/^https?:\/\//, "").replace(/\/$/, ""), form.email].filter(Boolean).join(" · ");
-  const input = "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50";
-  const inputStyle = { ...card, color: "var(--text-primary)" };
+  const input = "w-full rounded-lg border border-[var(--border-default)] px-3 py-2 text-sm transition-colors hover:border-blue-400/70 focus:outline-none focus:ring-2 focus:ring-blue-500/50";
+  const inputStyle = { background: "var(--header-bg)", color: "var(--text-primary)" };
   const label = "mb-1 block text-xs font-semibold";
   const hint = "mt-1 text-xs";
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div>
-        <Link href="/dashboard/settings" className="mb-3 inline-flex items-center gap-1.5 text-xs hover:underline" style={{ color: "var(--text-subtle)" }}>
+        <Link href="/dashboard/settings" className="mb-3 gs-link inline-flex items-center gap-1.5 text-xs" style={{ color: "var(--text-subtle)" }}>
           <ArrowLeft className="h-3.5 w-3.5" />
           {tNav("settings")}
         </Link>
@@ -171,7 +171,7 @@ export function BrandingSettings({ allowed }: { allowed: boolean }) {
             {t("upgradeTitle")}
           </h2>
           <p className="mt-2 max-w-2xl text-sm" style={{ color: "var(--text-subtle)" }}>{t("upgradeText")}</p>
-          <Link href="/pricing" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+          <Link href="/pricing" className="mt-4 inline-flex items-center gap-2 rounded-lg gs-btn gs-btn-primary px-4 py-2 text-sm font-semibold text-white ">
             {t("upgradeCta")}
           </Link>
         </section>
@@ -204,14 +204,13 @@ export function BrandingSettings({ allowed }: { allowed: boolean }) {
                 />
                 <label
                   htmlFor="brand-logo"
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm hover:bg-white/5"
-                  style={{ borderColor: "var(--border-default)", color: "var(--text-primary)" }}
+                  className="inline-flex cursor-pointer items-center gap-1.5 gs-btn gs-btn-secondary rounded-lg px-3 py-1.5 text-sm"
                 >
                   {busy === "upload" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageUp className="h-4 w-4" />}
                   {busy === "upload" ? t("uploading") : form.logoUrl ? t("replaceLogo") : t("uploadLogo")}
                 </label>
                 {form.logoUrl && (
-                  <button type="button" onClick={() => update({ logoUrl: null })} className="text-xs underline" style={{ color: "var(--text-subtle)" }}>
+                  <button type="button" onClick={() => update({ logoUrl: null })} className="gs-link text-xs underline" style={{ color: "var(--text-subtle)" }}>
                     {t("removeLogo")}
                   </button>
                 )}
@@ -222,7 +221,7 @@ export function BrandingSettings({ allowed }: { allowed: boolean }) {
             <div>
               <label htmlFor="brand-color" className={label} style={{ color: "var(--text-primary)" }}>{t("color")}</label>
               <div className="flex items-center gap-2">
-                <input id="brand-color" type="color" value={color} onChange={(e) => update({ primaryColor: e.target.value })} className="h-9 w-12 cursor-pointer rounded border bg-transparent" style={{ borderColor: "var(--border-default)" }} />
+                <input id="brand-color" type="color" value={color} onChange={(e) => update({ primaryColor: e.target.value })} className="h-9 w-12 cursor-pointer rounded border bg-transparent transition-transform hover:scale-105" style={{ borderColor: "var(--border-default)" }} />
                 <input aria-label={t("color")} value={form.primaryColor} maxLength={7} onChange={(e) => update({ primaryColor: e.target.value })} className={`${input} max-w-[8rem] font-mono`} style={inputStyle} />
               </div>
               <p className={hint} style={{ color: "var(--text-subtle)" }}>{t("colorHint")}</p>
@@ -251,7 +250,7 @@ export function BrandingSettings({ allowed }: { allowed: boolean }) {
                 type="button"
                 onClick={save}
                 disabled={busy !== null || !loaded}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-lg gs-btn gs-btn-primary px-4 py-2 text-sm font-semibold text-white "
               >
                 {busy === "save" && <Loader2 className="h-4 w-4 animate-spin" />}
                 {busy === "save" ? t("saving") : t("save")}
@@ -261,7 +260,7 @@ export function BrandingSettings({ allowed }: { allowed: boolean }) {
                   type="button"
                   onClick={remove}
                   disabled={busy !== null || !loaded}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/40 px-3 py-2 text-sm text-red-300 hover:bg-red-500/10 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 gs-btn gs-btn-danger rounded-lg px-3 py-2 text-sm"
                 >
                   <Trash2 className="h-4 w-4" />
                   {confirmRemove ? t("removeConfirm") : t("remove")}
@@ -271,7 +270,7 @@ export function BrandingSettings({ allowed }: { allowed: boolean }) {
             {loadFailed && (
               <p role="alert" className="flex flex-wrap items-center gap-2 rounded-md border border-amber-500/40 p-2 text-xs text-amber-300">
                 {t("errors.LOAD_FAILED")}
-                <button type="button" onClick={() => void load()} className="underline">{t("retry")}</button>
+                <button type="button" onClick={() => void load()} className="gs-link underline">{t("retry")}</button>
               </p>
             )}
             {status && <p role="status" className="text-xs text-emerald-300">{status}</p>}

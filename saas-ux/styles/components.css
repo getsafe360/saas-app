@@ -321,3 +321,176 @@ header {
     @apply flex w-full items-center gap-2 rounded-lg bg-slate-900/60 p-1 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40;
   }
 }
+
+/* =========================================================
+   Interactive states (buttons, links, selects)
+   One feel for every action: lift and glow on hover, press on click,
+   a visible ring for keyboard focus, nothing moves when disabled or
+   when the user prefers reduced motion.
+   ========================================================= */
+
+.gs-btn {
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease,
+    opacity 150ms ease;
+  cursor: pointer;
+}
+.gs-btn:focus-visible {
+  outline: 2px solid var(--color-primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+.gs-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+.gs-btn:not(:disabled):active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
+}
+.gs-btn:disabled,
+.gs-btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.gs-btn-primary {
+  background-color: #2563eb;
+  color: #fff;
+}
+.gs-btn-primary:not(:disabled):hover {
+  background-color: #3b82f6;
+  box-shadow: 0 6px 18px -4px rgb(37 99 235 / 0.55);
+}
+
+.gs-btn-secondary {
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  background-color: transparent;
+}
+.gs-btn-secondary:not(:disabled):hover {
+  border-color: var(--color-primary-400, #60a5fa);
+  background-color: rgb(96 165 250 / 0.08);
+  box-shadow: 0 4px 14px -6px rgb(96 165 250 / 0.45);
+}
+
+.gs-btn-danger {
+  border: 1px solid rgb(239 68 68 / 0.45);
+  color: #fca5a5;
+  background-color: transparent;
+}
+.gs-btn-danger:not(:disabled):hover {
+  border-color: rgb(239 68 68 / 0.8);
+  background-color: rgb(239 68 68 / 0.12);
+  box-shadow: 0 4px 14px -6px rgb(239 68 68 / 0.5);
+}
+
+.gs-btn-upgrade {
+  border: 1px solid rgb(245 158 11 / 0.35);
+  color: #fbbf24;
+  background-image: linear-gradient(90deg, rgb(245 158 11 / 0.18), rgb(249 115 22 / 0.18));
+}
+.gs-btn-upgrade:not(:disabled):hover {
+  border-color: rgb(245 158 11 / 0.7);
+  background-image: linear-gradient(90deg, rgb(245 158 11 / 0.3), rgb(249 115 22 / 0.3));
+  box-shadow: 0 6px 18px -6px rgb(245 158 11 / 0.55);
+}
+
+/* Small icon buttons (close, refresh): no lift, just a soft background. */
+.gs-icon-btn {
+  transition: background-color 150ms ease, color 150ms ease;
+  border-radius: 0.5rem;
+}
+.gs-icon-btn:hover {
+  background-color: rgb(148 163 184 / 0.15);
+  color: var(--text-primary);
+}
+.gs-icon-btn:focus-visible {
+  outline: 2px solid var(--color-primary-400, #60a5fa);
+  outline-offset: 2px;
+}
+
+.gs-link {
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: color 150ms ease, text-decoration-color 150ms ease;
+}
+.gs-link:hover {
+  color: var(--color-primary-400, #60a5fa);
+  text-decoration-color: currentColor;
+}
+.gs-link:focus-visible {
+  outline: 2px solid var(--color-primary-400, #60a5fa);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Rows in lists that hold an action (report history, applied changes). */
+.gs-row {
+  transition: background-color 150ms ease;
+  border-radius: 0.5rem;
+}
+.gs-row:hover {
+  background-color: rgb(148 163 184 / 0.07);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-btn,
+  .gs-btn:not(:disabled):hover,
+  .gs-btn:not(:disabled):active {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* WordPress-coloured actions (fix list on the WordPress page). */
+.gs-btn-wp {
+  background-color: var(--category-wordpress);
+  color: #fff;
+}
+.gs-btn-wp:not(:disabled):hover {
+  filter: brightness(1.12);
+  box-shadow: 0 6px 18px -6px oklch(from var(--category-wordpress) l c h / 0.7);
+}
+.gs-btn-wp-outline {
+  border: 1px solid var(--category-wordpress);
+  color: var(--text-primary);
+}
+.gs-btn-wp-outline:not(:disabled):hover {
+  background-color: oklch(from var(--category-wordpress) l c h / 0.14);
+  box-shadow: 0 4px 14px -6px oklch(from var(--category-wordpress) l c h / 0.6);
+}
+
+/* Themed select (components/ui/themed-select.tsx) */
+.gs-select {
+  background-color: var(--header-bg);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.gs-select:hover {
+  border-color: var(--color-primary-400, #60a5fa);
+}
+.gs-select:focus-visible,
+.gs-select[data-open] {
+  outline: none;
+  border-color: var(--color-primary-400, #60a5fa);
+  box-shadow: 0 0 0 3px rgb(96 165 250 / 0.25);
+}
+.gs-select-options {
+  background-color: var(--header-bg);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+.gs-select-option {
+  transition: background-color 100ms ease;
+}
+.gs-select-option[data-focus] {
+  background-color: rgb(96 165 250 / 0.14);
+}
+.gs-select-option[data-selected] {
+  font-weight: 600;
+}
