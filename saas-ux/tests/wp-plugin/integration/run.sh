@@ -31,7 +31,10 @@ $WP eval-file "$HERE/seo-injection-test.php"
 
 # Plugin updates need the site to load itself for the health check: serve it locally.
 PORT="${LOOPBACK_PORT:-8089}"
-PHP_CLI_SERVER_WORKERS=4 php -S "127.0.0.1:$PORT" -t "$WORK/wordpress" >/dev/null 2>&1 &
+# No opcache in the server: it runs in its own process, so the invalidation the
+# connector does after an update (in the wp-cli process) cannot reach it, and a
+# package unzipped with the same mtime would be served from the stale cache.
+PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=0 -d opcache.enable_cli=0 -S "127.0.0.1:$PORT" -t "$WORK/wordpress" >/dev/null 2>&1 &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null' EXIT
 for _ in $(seq 1 20); do curl -s --noproxy '*' -o /dev/null "http://127.0.0.1:$PORT/" && break; sleep 0.5; done
