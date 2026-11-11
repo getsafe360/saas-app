@@ -40,7 +40,8 @@
       },
       "protection": {
         "heading": "Proteção contínua",
-        "csp": "Desde {date}, uma Content-Security-Policy está em teste no modo apenas relatório: os navegadores informam o que ela bloquearia, sem afetar os visitantes."
+        "csp": "Desde {date}, uma Content-Security-Policy está em teste no modo apenas relatório: os navegadores informam o que ela bloquearia, sem afetar os visitantes.",
+        "cspEnforced": "Desde {date}, uma Content-Security-Policy está ativada: os navegadores bloqueiam scripts e conteúdos de servidores que o site não usa e informam o que bloqueiam."
       },
       "next": {
         "heading": "Próximos passos recomendados",
@@ -62,7 +63,7 @@
         "sec-nosniff": "Os navegadores não adivinham mais o tipo de arquivo, fechando um truque para executar scripts disfarçados.",
         "sec-referrer-policy": "Endereços completos das páginas, que podem conter dados privados, não são mais repassados a outros sites.",
         "sec-frame-options": "Outros sites não podem mais incorporar suas páginas de forma invisível para enganar visitantes e fazê-los clicar (clickjacking).",
-        "sec-csp": "Uma Content-Security-Policy está em teste: a defesa mais forte do navegador contra scripts injetados.",
+        "sec-csp": "Uma Content-Security-Policy agora informa aos navegadores quais servidores podem executar código no site: a defesa mais forte contra scripts injetados.",
         "wp-xmlrpc": "Fecha uma interface antiga que atacantes usam para testar senhas em massa.",
         "wp-user-enumeration": "Os nomes de usuário não são mais listados publicamente, então falta aos atacantes metade de um login.",
         "wp-file-editing": "Mesmo com uma senha de administrador roubada, ninguém consegue alterar o código do site pelo painel.",
@@ -74,7 +75,8 @@
         "wp-revisions": "Revisões antigas de páginas foram limpas, deixando o banco de dados menor e os backups mais rápidos.",
         "wp-outdated-plugins": "Os plugins foram atualizados com um ponto de restauração, fechando falhas de segurança e erros conhecidos.",
         "red-flag-core-modifications": "Arquivos de sistema do WordPress alterados foram substituídos por cópias oficiais verificadas.",
-        "red-flag-unexpected-core-files": "Arquivos desconhecidos nas pastas de sistema do WordPress foram movidos para quarentena, onde não podem ser executados."
+        "red-flag-unexpected-core-files": "Arquivos desconhecidos nas pastas de sistema do WordPress foram movidos para quarentena, onde não podem ser executados.",
+        "sec-csp-test": "Uma Content-Security-Policy foi testada no modo apenas relatório, para saber o que o site carrega antes de ativá-la."
       }
     },
     "nav": "Relatórios",

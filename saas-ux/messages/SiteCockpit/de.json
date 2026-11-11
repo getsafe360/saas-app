@@ -635,8 +635,34 @@
           "CONNECTOR_UNREACHABLE": "Das GetSafe-360-Plugin hat nicht geantwortet → Verbindung prüfen und erneut versuchen.",
           "CONNECTOR_FAILED": "Das Plugin hat die Richtlinie nicht übernommen → Erneut versuchen oder das Plugin aktualisieren.",
           "TEST_RUNNING": "Es läuft bereits ein Test → Ihn unter „Vorgenommene Änderungen“ rückgängig machen, bevor Sie einen neuen starten.",
-          "WORDPRESS_NOT_CONNECTED": "Die Website ist nicht verbunden → Das GetSafe-360-Plugin neu verbinden."
-        }
+          "WORDPRESS_NOT_CONNECTED": "Die Website ist nicht verbunden → Das GetSafe-360-Plugin neu verbinden.",
+          "NO_TEST": "Es läuft kein Test, der eingeschaltet werden könnte → Starten Sie zuerst einen Test.",
+          "INVALID_POLICY": "Die entstehende Richtlinie ist ungültig → Entfernen Sie den Haken bei der zuletzt hinzugefügten Quelle und versuchen Sie es erneut."
+        },
+        "switch": {
+          "title": "Richtlinie einschalten",
+          "early": "Der Test läuft seit {days, plural, =0 {weniger als einem Tag} one {# Tag} other {# Tagen}}. Wir empfehlen mindestens {recommended} Tage mit normalem Besucherverkehr, damit auch selten besuchte Seiten erfasst sind. Sie können trotzdem schon jetzt prüfen.",
+          "ready": "Der Test hat genug Besuche gesammelt. Claude prüft, was Browser gemeldet haben, und schlägt vor, was erlaubt werden sollte.",
+          "review": "Meldungen mit Claude prüfen",
+          "reviewing": "Claude prüft …",
+          "reviewAgain": "Erneut prüfen",
+          "aiUnavailable": "Claudes Prüfung ist gerade nicht verfügbar. Der Vorschlag erlaubt gewöhnliche Quellen und blockiert weiterhin solche, die den Schutz schwächen.",
+          "noCandidates": "Es wurde nichts gemeldet, was die getestete Richtlinie blockieren würde. Sie kann so eingeschaltet werden, wie sie getestet wurde.",
+          "decide": "Angehakte Quellen werden in die Richtlinie aufgenommen. Nicht angehakte werden blockiert.",
+          "count": "{count, plural, one {# Meldung} other {# Meldungen}}",
+          "allow": "erlauben",
+          "block": "blockieren",
+          "risky": "schwächt den Schutz",
+          "showPolicy": "Richtlinie anzeigen",
+          "warning": "Sobald sie eingeschaltet ist, blockieren Browser alles, was die Richtlinie nicht nennt. Meldungen kommen weiterhin an, und Sie können sie unter „Vorgenommene Änderungen“ rückgängig machen.",
+          "enforce": "Richtlinie einschalten",
+          "confirm": "Zum Einschalten erneut klicken"
+        },
+        "enforcedSince": "Richtlinie eingeschaltet seit {date} ({days, plural, =0 {heute} one {# Tag} other {# Tage}}).",
+        "notLive": "Das Plugin hat die Richtlinie eingeschaltet, die Startseite zeigt sie aber noch nicht. Möglicherweise liefert ein Seiten-Cache noch die alte Version aus; leeren Sie ihn in Ihrem Cache-Plugin.",
+        "blockedCount": "{count, plural, =0 {Bisher nichts blockiert} one {# Blockierung gemeldet} other {# Blockierungen gemeldet}}",
+        "noBlocks": "Browser haben nichts gemeldet, was die Richtlinie blockiert hat.",
+        "enforcedHint": "Jede Zeile ist etwas, das die Richtlinie für einen Besucher blockiert hat. Wenn auf Ihrer Website etwas nicht mehr funktioniert, machen Sie die Richtlinie unter „Vorgenommene Änderungen“ rückgängig: Der Test läuft dann weiter."
       },
       "preview": {
         "title": "Was die Verbindung auf {domain} behebt",

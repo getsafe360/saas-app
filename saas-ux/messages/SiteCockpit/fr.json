@@ -635,8 +635,34 @@
           "CONNECTOR_UNREACHABLE": "Le plugin GetSafe 360 n’a pas répondu → Vérifiez la connexion et réessayez.",
           "CONNECTOR_FAILED": "Le plugin n’a pas appliqué la politique → Réessayez ou mettez le plugin à jour.",
           "TEST_RUNNING": "Un test est déjà en cours → Annulez-le dans Modifications appliquées avant d’en lancer un nouveau.",
-          "WORDPRESS_NOT_CONNECTED": "Le site n’est pas connecté → Reconnectez le plugin GetSafe 360."
-        }
+          "WORDPRESS_NOT_CONNECTED": "Le site n’est pas connecté → Reconnectez le plugin GetSafe 360.",
+          "NO_TEST": "Aucun test en cours à activer → Lancez d’abord un test.",
+          "INVALID_POLICY": "La politique obtenue n’est pas valide → Décochez la dernière source ajoutée et réessayez."
+        },
+        "switch": {
+          "title": "Activer la politique",
+          "early": "Le test tourne depuis {days, plural, =0 {moins d’un jour} one {# jour} other {# jours}}. Nous recommandons au moins {recommended} jours de trafic normal pour couvrir aussi les pages peu visitées. Vous pouvez toutefois lancer l’analyse dès maintenant.",
+          "ready": "Le test a recueilli assez de trafic. Claude examine ce que les navigateurs ont signalé et propose ce qu’il faut autoriser.",
+          "review": "Analyser les rapports avec Claude",
+          "reviewing": "Claude analyse…",
+          "reviewAgain": "Analyser à nouveau",
+          "aiUnavailable": "L’analyse de Claude n’est pas disponible pour le moment. La proposition autorise les sources courantes et continue de bloquer celles qui affaiblissent la protection.",
+          "noCandidates": "Rien de ce que la politique testée aurait bloqué n’a été signalé. Elle peut être activée telle quelle.",
+          "decide": "Les sources cochées sont ajoutées à la politique. Les autres seront bloquées.",
+          "count": "{count, plural, one {# rapport} other {# rapports}}",
+          "allow": "autoriser",
+          "block": "bloquer",
+          "risky": "affaiblit la protection",
+          "showPolicy": "Afficher la politique",
+          "warning": "Une fois activée, les navigateurs bloquent tout ce que la politique ne mentionne pas. Les rapports continuent d’arriver et vous pouvez l’annuler dans Modifications appliquées.",
+          "enforce": "Activer la politique",
+          "confirm": "Cliquez à nouveau pour activer"
+        },
+        "enforcedSince": "Politique activée depuis le {date} ({days, plural, =0 {aujourd’hui} one {# jour} other {# jours}}).",
+        "notLive": "L’extension a activé la politique, mais la page d’accueil ne l’affiche pas encore. Un cache de pages sert peut-être encore l’ancienne version ; videz-le dans votre extension de cache.",
+        "blockedCount": "{count, plural, =0 {Rien de bloqué pour l’instant} one {# blocage signalé} other {# blocages signalés}}",
+        "noBlocks": "Les navigateurs n’ont signalé aucun blocage par la politique.",
+        "enforcedHint": "Chaque ligne est un élément que la politique a bloqué pour un visiteur. Si quelque chose ne fonctionne plus sur votre site, annulez la politique dans Modifications appliquées : le test reprend."
       },
       "preview": {
         "title": "Ce que la connexion corrige sur {domain}",

@@ -18,6 +18,12 @@ import { planRollback } from '@/lib/wordpress/rollback';
 import { connectorTimeoutFor } from '@/lib/wordpress/timeouts';
 import { clearTestState, saveTestState } from '@/lib/security/csp/reports';
 import { CSP_TEST_ACTION_ID } from '@/lib/security/csp/start';
+import { CSP_ENFORCE_ACTION_ID } from '@/lib/security/csp/proposal';
+
+// The CSP test and switching the policy on change the same headers: undo them
+// newest first, like runs of one fixer.
+const CSP_ACTIONS = [CSP_TEST_ACTION_ID, CSP_ENFORCE_ACTION_ID];
+const undoGroup = (actionId: string) => (CSP_ACTIONS.includes(actionId) ? 'csp' : actionId);
 
 type RollbackOutcome = { runId: string; status: 'rolled_back' | 'failed'; message: string };
 
@@ -92,7 +98,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
 
   // Every run of the same fixers on this site, to detect newer changes that
   // replaying an older snapshot would overwrite.
-  const fixerIds = [...new Set(runs.map((run) => run.actionId))];
+  const fixerIds = [...new Set(runs.flatMap((run) => (CSP_ACTIONS.includes(run.actionId) ? CSP_ACTIONS : [run.actionId])))];
   const siteRuns = fixerIds.length === 0
     ? []
     : await db
@@ -106,7 +112,10 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
         .from(wordpressActionRuns)
         .where(and(eq(wordpressActionRuns.siteId, siteId), inArray(wordpressActionRuns.actionId, fixerIds)));
 
-  const { planned, notReversible, blocked } = planRollback(runs, siteRuns);
+  const { planned, notReversible, blocked } = planRollback(
+    runs.map((run) => ({ ...run, actionId: undoGroup(run.actionId) })),
+    siteRuns.map((run) => ({ ...run, actionId: undoGroup(run.actionId) })),
+  );
   if (blocked.length > 0) {
     return NextResponse.json(
       {
@@ -161,7 +170,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
   const rolledBack = outcomes.filter((outcome) => outcome.status === 'rolled_back');
   // Undoing the CSP test ends it: drop its saved policy and reports.
   const rolledBackIds = new Set(rolledBack.map((outcome) => outcome.runId));
-  if (runs.some((run) => rolledBackIds.has(run.id) && run.actionId === CSP_TEST_ACTION_ID)) {
+  if (runs.some((run) => rolledBackIds.has(run.id) && CSP_ACTIONS.includes(run.actionId))) {
     // The connector restores the policy that was there before. If that was an
     // earlier test that is still applied, the test continues with that policy.
     await reconcileCspTest(siteId, rolledBackIds).catch(() => undefined);
@@ -233,11 +242,19 @@ export async function POST(request: NextRequest, props: { params: Promise<{ id: 
   });
 }
 
+/**
+ * After undoing a CSP step, the connector has restored the previous headers.
+ * The newest CSP step still in place decides what the panel shows: an enforced
+ * policy, a report-only test, or nothing.
+ */
 async function reconcileCspTest(siteId: string, rolledBackIds: ReadonlySet<string>): Promise<void> {
   const db = getDrizzle();
-  const earlier = await db
+  const steps = await db
     .select({
       id: wordpressActionRuns.id,
+      actionId: wordpressActionRuns.actionId,
+      status: wordpressActionRuns.status,
+      rollbackPayload: wordpressActionRuns.rollbackPayload,
       inputPayload: wordpressActionRuns.inputPayload,
       startedAt: wordpressActionRuns.startedAt,
     })
@@ -245,12 +262,13 @@ async function reconcileCspTest(siteId: string, rolledBackIds: ReadonlySet<strin
     .where(
       and(
         eq(wordpressActionRuns.siteId, siteId),
-        eq(wordpressActionRuns.actionId, CSP_TEST_ACTION_ID),
-        eq(wordpressActionRuns.status, 'applied'),
+        inArray(wordpressActionRuns.actionId, CSP_ACTIONS),
+        // A step the live check could not confirm (e.g. a page cache) was still applied by the connector.
+        inArray(wordpressActionRuns.status, ['applied', 'failed']),
       ),
     );
-  const active = earlier
-    .filter((run) => !rolledBackIds.has(run.id))
+  const active = steps
+    .filter((run) => !rolledBackIds.has(run.id) && run.rollbackPayload)
     .sort((a, b) => (b.startedAt?.getTime() ?? 0) - (a.startedAt?.getTime() ?? 0))[0];
   const policy = (active?.inputPayload as { policy?: unknown } | null)?.policy;
   if (!active || typeof policy !== 'string') {
@@ -258,7 +276,7 @@ async function reconcileCspTest(siteId: string, rolledBackIds: ReadonlySet<strin
     return;
   }
   await saveTestState(siteId, {
-    mode: 'report-only',
+    mode: active.actionId === CSP_ENFORCE_ACTION_ID ? 'enforced' : 'report-only',
     policy,
     startedAt: (active.startedAt ?? new Date()).toISOString(),
     runId: active.id,

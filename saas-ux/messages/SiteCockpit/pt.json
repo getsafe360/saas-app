@@ -635,8 +635,34 @@
           "CONNECTOR_UNREACHABLE": "O plugin GetSafe 360 não respondeu → Verifique a conexão e tente novamente.",
           "CONNECTOR_FAILED": "O plugin não aplicou a política → Tente novamente ou atualize o plugin.",
           "TEST_RUNNING": "Já há um teste em andamento → Desfaça-o em Alterações aplicadas antes de iniciar outro.",
-          "WORDPRESS_NOT_CONNECTED": "O site não está conectado → Reconecte o plugin GetSafe 360."
-        }
+          "WORDPRESS_NOT_CONNECTED": "O site não está conectado → Reconecte o plugin GetSafe 360.",
+          "NO_TEST": "Não há teste em andamento para ativar → Inicie um teste primeiro.",
+          "INVALID_POLICY": "A política resultante não é válida → Desmarque a última fonte adicionada e tente de novo."
+        },
+        "switch": {
+          "title": "Ativar a política",
+          "early": "O teste está em andamento há {days, plural, =0 {menos de um dia} one {# dia} other {# dias}}. Recomendamos pelo menos {recommended} dias de tráfego normal, para cobrir também as páginas pouco visitadas. Mesmo assim, você já pode revisar.",
+          "ready": "O teste já reuniu tráfego suficiente. O Claude analisa o que os navegadores informaram e sugere o que permitir.",
+          "review": "Revisar relatórios com o Claude",
+          "reviewing": "O Claude está revisando…",
+          "reviewAgain": "Revisar de novo",
+          "aiUnavailable": "A revisão do Claude não está disponível agora. A sugestão permite as fontes comuns e continua bloqueando as que enfraquecem a proteção.",
+          "noCandidates": "Não apareceu nada que a política testada bloquearia. Ela pode ser ativada como foi testada.",
+          "decide": "As fontes marcadas são adicionadas à política. As desmarcadas serão bloqueadas.",
+          "count": "{count, plural, one {# relatório} other {# relatórios}}",
+          "allow": "permitir",
+          "block": "bloquear",
+          "risky": "enfraquece a proteção",
+          "showPolicy": "Mostrar a política",
+          "warning": "Depois de ativada, os navegadores bloqueiam tudo o que a política não lista. Os relatórios continuam chegando e você pode desfazê-la em Alterações aplicadas.",
+          "enforce": "Ativar a política",
+          "confirm": "Clique de novo para ativar"
+        },
+        "enforcedSince": "Política ativada desde {date} ({days, plural, =0 {hoje} one {# dia} other {# dias}}).",
+        "notLive": "O plugin ativou a política, mas a página inicial ainda não a mostra. Um cache de páginas pode ainda estar servindo a versão antiga; limpe-o no seu plugin de cache.",
+        "blockedCount": "{count, plural, =0 {Nada bloqueado até agora} one {# bloqueio informado} other {# bloqueios informados}}",
+        "noBlocks": "Os navegadores não informaram nada bloqueado pela política.",
+        "enforcedHint": "Cada linha é algo que a política bloqueou para um visitante. Se algo no seu site parou de funcionar, desfaça a política em Alterações aplicadas: o teste continua."
       },
       "preview": {
         "title": "O que a conexão corrige em {domain}",

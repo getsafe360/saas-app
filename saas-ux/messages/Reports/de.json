@@ -40,7 +40,8 @@
       },
       "protection": {
         "heading": "Laufender Schutz",
-        "csp": "Seit {date} wird eine Content-Security-Policy im Nur-Bericht-Modus getestet: Browser melden, was sie blockieren würde, ohne Besucher zu beeinträchtigen."
+        "csp": "Seit {date} wird eine Content-Security-Policy im Nur-Bericht-Modus getestet: Browser melden, was sie blockieren würde, ohne Besucher zu beeinträchtigen.",
+        "cspEnforced": "Seit {date} ist eine Content-Security-Policy eingeschaltet: Browser blockieren Skripte und Inhalte von Servern, die die Website nicht nutzt, und melden, was sie blockieren."
       },
       "next": {
         "heading": "Empfohlene nächste Schritte",
@@ -62,7 +63,7 @@
         "sec-nosniff": "Browser raten keine Dateitypen mehr, was einen Trick zum Ausführen getarnter Skripte unterbindet.",
         "sec-referrer-policy": "Vollständige Seitenadressen, die private Angaben enthalten können, werden nicht mehr an andere Websites weitergegeben.",
         "sec-frame-options": "Fremde Websites können Ihre Seiten nicht mehr unsichtbar einbetten, um Besucher zu Klicks zu verleiten (Clickjacking).",
-        "sec-csp": "Eine Content-Security-Policy wird getestet: der stärkste Browserschutz gegen eingeschleuste Skripte.",
+        "sec-csp": "Eine Content-Security-Policy legt jetzt fest, welche Server auf der Website Code ausführen dürfen: der stärkste Browserschutz gegen eingeschleuste Skripte.",
         "wp-xmlrpc": "Schließt eine alte Schnittstelle, über die Angreifer massenhaft Passwörter ausprobieren.",
         "wp-user-enumeration": "Benutzernamen werden nicht mehr öffentlich aufgelistet, Angreifern fehlt damit die Hälfte eines Logins.",
         "wp-file-editing": "Selbst mit einem gestohlenen Admin-Passwort kann niemand den Code der Website im Dashboard ändern.",
@@ -74,7 +75,8 @@
         "wp-revisions": "Alte Seitenrevisionen wurden bereinigt; die Datenbank bleibt kleiner und Backups laufen schneller.",
         "wp-outdated-plugins": "Plugins wurden mit Wiederherstellungspunkt aktualisiert, bekannte Sicherheitslücken und Fehler sind geschlossen.",
         "red-flag-core-modifications": "Veränderte WordPress-Systemdateien wurden durch offizielle, geprüfte Originale ersetzt.",
-        "red-flag-unexpected-core-files": "Unbekannte Dateien in WordPress-Systemordnern wurden in Quarantäne verschoben, wo sie nicht ausgeführt werden können."
+        "red-flag-unexpected-core-files": "Unbekannte Dateien in WordPress-Systemordnern wurden in Quarantäne verschoben, wo sie nicht ausgeführt werden können.",
+        "sec-csp-test": "Eine Content-Security-Policy wurde im Nur-Bericht-Modus getestet, um vor dem Einschalten zu erfahren, was die Website lädt."
       }
     },
     "nav": "Berichte",
