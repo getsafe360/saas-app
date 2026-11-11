@@ -1,298 +1,83 @@
 // app/api/reports/branding/route.ts
-// White-label branding settings API (Agency plan only)
+//
+// White-label branding for client reports (Agency plan).
+// GET: the team's branding (or null). PUT: save it. DELETE: remove it.
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db/drizzle';
-import { teams, teamMembers, users, reportBranding } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { getUser } from '@/lib/db/queries';
-import { currentUser } from '@clerk/nextjs/server';
-import { canUseWhiteLabel, type PlanName } from '@/lib/plans/config';
+import { getDb } from '@/lib/db/drizzle';
+import { reportBranding } from '@/lib/db/schema';
 import type { BrandingConfig } from '@/lib/db/schema/reports/branding';
+import { findCurrentUserTeam } from '@/lib/auth/current';
+import { canUseWhiteLabel, isPlanName } from '@/lib/plans/config';
+import { rateLimit } from '@/lib/api/rate-limit';
+import { DEFAULT_PRIMARY_COLOR, parseBrandingInput } from '@/lib/reports/branding';
 
-/**
- * Get the app user ID from either local session or Clerk
- */
-async function getAppUserId(db: ReturnType<typeof getDb>): Promise<number | null> {
-  // 1) Try local session user
-  try {
-    const u = await getUser();
-    if (u?.id) return u.id;
-  } catch {
-    // ignore
-  }
+const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 
-  // 2) Try Clerk user → map to app user
-  const cu = await currentUser().catch(() => null);
-  if (!cu) return null;
-
-  const clerkId = cu.id;
-
-  // Find existing mapping
-  const [row] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.clerkUserId, clerkId))
-    .limit(1);
-
-  return row?.id ?? null;
+async function agencyTeam() {
+  const team = await findCurrentUserTeam();
+  if (!team) return { error: json({ success: false, error: 'UNAUTHORIZED' }, 401) } as const;
+  const plan = isPlanName(team.planName) ? team.planName : 'free';
+  return { team, allowed: canUseWhiteLabel(plan) } as const;
 }
 
-/**
- * GET /api/reports/branding
- *
- * Get current team's branding settings
- */
-export async function GET(request: NextRequest) {
-  try {
-    const db = getDb();
-
-    const userId = await getAppUserId(db);
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Get user's team and plan
-    const [membership] = await db
-      .select({
-        teamId: teamMembers.teamId,
-        planName: teams.planName,
-      })
-      .from(teamMembers)
-      .innerJoin(teams, eq(teams.id, teamMembers.teamId))
-      .where(eq(teamMembers.userId, userId))
-      .limit(1);
-
-    if (!membership) {
-      return NextResponse.json(
-        { success: false, error: 'Team not found' },
-        { status: 404 }
-      );
-    }
-
-    const planName = (membership.planName || 'free') as PlanName;
-
-    // Check if plan allows white-label
-    if (!canUseWhiteLabel(planName)) {
-      return NextResponse.json({
-        success: true,
-        branding: null,
-        upgradeRequired: true,
-        requiredPlan: 'agency',
-      });
-    }
-
-    // Get branding settings
-    const [branding] = await db
-      .select()
-      .from(reportBranding)
-      .where(eq(reportBranding.teamId, membership.teamId))
-      .limit(1);
-
-    return NextResponse.json({
-      success: true,
-      branding: branding || null,
-    });
-
-  } catch (error: any) {
-    console.error('[Branding] GET error:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
-  }
+function toView(row: typeof reportBranding.$inferSelect | undefined) {
+  if (!row) return null;
+  return {
+    companyName: row.companyName,
+    logoUrl: row.logoUrl,
+    primaryColor: row.config?.colors?.primary ?? DEFAULT_PRIMARY_COLOR,
+    website: row.config?.contact?.website ?? null,
+    email: row.config?.contact?.email ?? null,
+    footerText: row.config?.footerText ?? null,
+    updatedAt: row.updatedAt.toISOString(),
+  };
 }
 
-/**
- * PUT /api/reports/branding
- *
- * Create or update team's branding settings
- *
- * Body:
- * - companyName: string
- * - logoUrl?: string
- * - logoLightUrl?: string
- * - config: BrandingConfig
- */
+export async function GET() {
+  const access = await agencyTeam();
+  if ('error' in access) return access.error;
+  if (!access.allowed) return json({ success: true, allowed: false, branding: null });
+  const [row] = await getDb().select().from(reportBranding).where(eq(reportBranding.teamId, access.team.id)).limit(1);
+  return json({ success: true, allowed: true, branding: toView(row) });
+}
+
 export async function PUT(request: NextRequest) {
-  try {
-    const db = getDb();
+  const access = await agencyTeam();
+  if ('error' in access) return access.error;
+  if (!access.allowed) return json({ success: false, error: 'UPGRADE_REQUIRED' }, 403);
 
-    const userId = await getAppUserId(db);
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+  const limited = await rateLimit(`branding-save:${access.team.id}`, 30, 60 * 60 * 1000);
+  if (!limited.ok) return json({ success: false, error: 'RATE_LIMITED' }, 429);
 
-    // Get user's team and plan
-    const [membership] = await db
-      .select({
-        teamId: teamMembers.teamId,
-        planName: teams.planName,
-      })
-      .from(teamMembers)
-      .innerJoin(teams, eq(teams.id, teamMembers.teamId))
-      .where(eq(teamMembers.userId, userId))
-      .limit(1);
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const parsed = parseBrandingInput(body);
+  if (!parsed.ok) return json({ success: false, error: parsed.error }, 400);
+  const input = parsed.value;
 
-    if (!membership) {
-      return NextResponse.json(
-        { success: false, error: 'Team not found' },
-        { status: 404 }
-      );
-    }
+  const config: BrandingConfig = {
+    colors: { primary: input.primaryColor, secondary: input.primaryColor, accent: input.primaryColor, background: '#ffffff', text: '#1f2937' },
+    contact: { website: input.website ?? undefined, email: input.email ?? undefined },
+    footerText: input.footerText ?? undefined,
+    showPoweredBy: false,
+  };
+  const values = { companyName: input.companyName, logoUrl: input.logoUrl, logoLightUrl: null, config, updatedAt: new Date() };
 
-    const planName = (membership.planName || 'free') as PlanName;
-
-    // Check if plan allows white-label
-    if (!canUseWhiteLabel(planName)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'White-label branding requires Agency plan',
-          upgradeRequired: true,
-          requiredPlan: 'agency',
-        },
-        { status: 403 }
-      );
-    }
-
-    // Parse and validate body
-    const body = await request.json();
-
-    if (!body.companyName || typeof body.companyName !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'Company name is required' },
-        { status: 400 }
-      );
-    }
-
-    // Build config with defaults
-    const config: BrandingConfig = {
-      colors: {
-        primary: body.config?.colors?.primary || '#2563eb',
-        secondary: body.config?.colors?.secondary || '#1e40af',
-        accent: body.config?.colors?.accent || '#3b82f6',
-        background: body.config?.colors?.background || '#ffffff',
-        text: body.config?.colors?.text || '#1f2937',
-      },
-      contact: {
-        email: body.config?.contact?.email,
-        phone: body.config?.contact?.phone,
-        website: body.config?.contact?.website,
-        address: body.config?.contact?.address,
-      },
-      tagline: body.config?.tagline,
-      footerText: body.config?.footerText,
-      showPoweredBy: body.config?.showPoweredBy ?? true,
-    };
-
-    // Check if branding already exists
-    const [existing] = await db
-      .select({ id: reportBranding.id })
-      .from(reportBranding)
-      .where(eq(reportBranding.teamId, membership.teamId))
-      .limit(1);
-
-    let branding;
-
-    if (existing) {
-      // Update existing
-      [branding] = await db
-        .update(reportBranding)
-        .set({
-          companyName: body.companyName,
-          logoUrl: body.logoUrl || null,
-          logoLightUrl: body.logoLightUrl || null,
-          config,
-          updatedAt: new Date(),
-        })
-        .where(eq(reportBranding.id, existing.id))
-        .returning();
-    } else {
-      // Create new
-      [branding] = await db
-        .insert(reportBranding)
-        .values({
-          teamId: membership.teamId,
-          companyName: body.companyName,
-          logoUrl: body.logoUrl || null,
-          logoLightUrl: body.logoLightUrl || null,
-          config,
-        })
-        .returning();
-    }
-
-    return NextResponse.json({
-      success: true,
-      branding,
-    });
-
-  } catch (error: any) {
-    console.error('[Branding] PUT error:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
-  }
+  const [row] = await getDb()
+    .insert(reportBranding)
+    .values({ teamId: access.team.id, ...values })
+    .onConflictDoUpdate({ target: reportBranding.teamId, set: values })
+    .returning();
+  return json({ success: true, branding: toView(row) });
 }
 
-/**
- * DELETE /api/reports/branding
- *
- * Remove team's branding (revert to default GetSafe 360 branding)
- */
-export async function DELETE(request: NextRequest) {
-  try {
-    const db = getDb();
-
-    const userId = await getAppUserId(db);
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Get user's team
-    const [membership] = await db
-      .select({
-        teamId: teamMembers.teamId,
-      })
-      .from(teamMembers)
-      .where(eq(teamMembers.userId, userId))
-      .limit(1);
-
-    if (!membership) {
-      return NextResponse.json(
-        { success: false, error: 'Team not found' },
-        { status: 404 }
-      );
-    }
-
-    // Delete branding
-    await db
-      .delete(reportBranding)
-      .where(eq(reportBranding.teamId, membership.teamId));
-
-    return NextResponse.json({
-      success: true,
-      message: 'Branding removed successfully',
-    });
-
-  } catch (error: any) {
-    console.error('[Branding] DELETE error:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
-  }
+export async function DELETE() {
+  const access = await agencyTeam();
+  if ('error' in access) return access.error;
+  await getDb().delete(reportBranding).where(eq(reportBranding.teamId, access.team.id));
+  return json({ success: true, branding: null });
 }

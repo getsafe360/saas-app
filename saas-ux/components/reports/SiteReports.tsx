@@ -33,6 +33,7 @@ const card = { background: "var(--header-bg)", borderColor: "var(--border-defaul
 /** The site's Reports page: create a client report, preview it, download earlier ones. */
 export function SiteReports({ siteId, host, canReport, canWhiteLabel }: SiteReportsProps) {
   const t = useTranslations("Reports.page");
+  const tBranding = useTranslations("Reports.branding");
   const uiLocale = useLocale();
   const [format, setFormat] = useState<ReportFormat>("pdf");
   const [language, setLanguage] = useState<string>((REPORT_LOCALES as ReadonlyArray<string>).includes(uiLocale) ? uiLocale : "en");
@@ -217,7 +218,10 @@ export function SiteReports({ siteId, host, canReport, canWhiteLabel }: SiteRepo
                 <input type="checkbox" checked={whiteLabel} onChange={(event) => setWhiteLabel(event.target.checked)} className="mt-1" />
                 <span>
                   {t("whiteLabel")}
-                  <span className="block text-xs" style={{ color: "var(--text-subtle)" }}>{t("whiteLabelHint")}</span>
+                  <span className="block text-xs" style={{ color: "var(--text-subtle)" }}>
+                    {t("whiteLabelHint")}{" "}
+                    <Link href="/dashboard/settings/branding" className="underline">{tBranding("setUp")}</Link>
+                  </span>
                 </span>
               </label>
             )}

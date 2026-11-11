@@ -9,7 +9,13 @@ import { DEFAULT_BRAND, type ReportBrand } from './render';
 export interface BrandingRow {
   companyName: string | null;
   logoUrl: string | null;
-  config: { colors?: { primary?: string } } | null;
+  config: { colors?: { primary?: string }; contact?: { website?: string; email?: string }; footerText?: string } | null;
+}
+
+function contactLine(branding: BrandingRow | null): string | null {
+  const website = branding?.config?.contact?.website?.replace(/^https?:\/\//, '') ?? null;
+  const parts = [website, branding?.config?.contact?.email ?? null].filter((part): part is string => !!part);
+  return parts.length > 0 ? parts.join(' · ') : null;
 }
 
 export function resolveBrand(plan: PlanName, whiteLabel: boolean, branding: BrandingRow | null): ReportBrand {
@@ -20,5 +26,7 @@ export function resolveBrand(plan: PlanName, whiteLabel: boolean, branding: Bran
     logoUrl: branding?.logoUrl ?? null,
     primaryColor: branding?.config?.colors?.primary ?? DEFAULT_BRAND.primaryColor,
     poweredBy: false,
+    contact: contactLine(branding),
+    footerText: branding?.config?.footerText?.trim() || null,
   };
 }
