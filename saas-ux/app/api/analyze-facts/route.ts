@@ -482,8 +482,11 @@ async function persistLiveSnapshot(
 
   const snapshot = telemetry.snapshot;
   if (completeScan && enrichedFacts) {
-    const { score } = evaluateWordPressHealthFromApiData(enrichedFacts);
+    const { score, findings } = evaluateWordPressHealthFromApiData(enrichedFacts);
     snapshot.health = {
+      problems: findings
+        .filter((finding) => finding.status === 'fail' || finding.status === 'warn')
+        .map((finding) => ({ id: finding.id, severity: finding.severity })),
       overall: score.overall,
       coverage: Math.round(score.coverage * 1000) / 1000,
       categories: Object.fromEntries(

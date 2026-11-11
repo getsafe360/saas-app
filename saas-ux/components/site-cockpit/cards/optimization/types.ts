@@ -175,7 +175,7 @@ export interface OptimizationCardProps {
   editable?: boolean;
   siteId?: string;
   siteName?: string;
-  planName?: "free" | "pro" | "agency";
+  planName?: string;
   connection?: ConnectionInfo;
 }
 

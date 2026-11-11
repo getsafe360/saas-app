@@ -15,6 +15,7 @@ import {
   Accessibility,
   Check,
   FileText,
+  FileBarChart,
 } from "lucide-react";
 import { WordPressAIIcon } from "@/components/icons/WordPressAI";
 import { wordpressPagePath } from "@/lib/wordpress/connection-status";
@@ -106,11 +107,13 @@ export function SiteSelectorDropdown({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const tNav = useTranslations("DashboardNav");
+  const tReports = useTranslations("Reports");
 
   const currentSite = sites.find((s) => s.id === currentSiteId);
   const isWordPress = currentSite?.cms === "wordpress";
   const isConnected = (currentSite?.connectionStatus ?? currentSite?.status) === "connected";
   const onWordPressPage = pathname.includes("/wordpress-agent");
+  const onReportsPage = pathname.includes("/reports");
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -297,6 +300,21 @@ export function SiteSelectorDropdown({
               </Link>
             );
           })}
+          <Link
+            href={`/dashboard/sites/${currentSite.id}/reports`}
+            aria-current={onReportsPage ? "page" : undefined}
+            className={`cockpit-nav-item flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+              onReportsPage ? "cockpit-nav-item--active" : "hover:text-[var(--text-default)]"
+            }`}
+          >
+            <span
+              className="inline-flex items-center justify-center rounded-md p-1.5"
+              style={{ background: "oklch(from var(--color-primary-500) l c h / 0.15)" }}
+            >
+              <FileBarChart className="h-4 w-4" style={{ color: "var(--color-primary-400, #60a5fa)" }} />
+            </span>
+            <span className="text-sm">{tReports("nav")}</span>
+          </Link>
         </div>
       )}
     </div>

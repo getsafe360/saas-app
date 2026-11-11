@@ -1,0 +1,169 @@
+{
+  "Reports": {
+    "document": {
+      "title": "Website care report",
+      "period": "{from} – {to}",
+      "preparedBy": "Prepared by {company}",
+      "generatedOn": "Created on {date}",
+      "summary": {
+        "heading": "Summary",
+        "fixes": "{count, plural, =0 {No changes were needed in this period} one {# improvement made in this period} other {# improvements made in this period}}",
+        "score": "Overall score: {score}/100 ({grade})",
+        "health": "WordPress health: {now}/100",
+        "healthChange": "WordPress health: {before} → {now}/100",
+        "open": "{count, plural, =0 {No open issues} one {# recommendation for next steps} other {# recommendations for next steps}}"
+      },
+      "scores": {
+        "heading": "Scores",
+        "category": "Area",
+        "score": "Score",
+        "grade": "Grade",
+        "overall": "Overall",
+        "wordpress": "WordPress health"
+      },
+      "categories": {
+        "performance": "Performance",
+        "security": "Security",
+        "seo": "SEO",
+        "accessibility": "Accessibility",
+        "content": "Content"
+      },
+      "fixed": {
+        "heading": "What we fixed",
+        "intro": "Each change below was applied to the live site and checked afterwards.",
+        "none": "No changes were needed in this period.",
+        "date": "Date",
+        "change": "Issue fixed",
+        "why": "Why it matters",
+        "unverified": "applied; not yet confirmed on the live site",
+        "undoNote": "Every change is logged, and most can be undone with one click if needed."
+      },
+      "protection": {
+        "heading": "Ongoing protection",
+        "csp": "Since {date}, a Content-Security-Policy has been tested in report-only mode: browsers report what it would block, without affecting visitors."
+      },
+      "next": {
+        "heading": "Recommended next steps",
+        "none": "The latest checks found no open issues."
+      },
+      "severity": {
+        "critical": "Critical",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "footer": {
+        "method": "Scores come from automated checks of the public site and, where connected, the WordPress installation, as of {date}.",
+        "poweredBy": "Powered by GetSafe 360 AI"
+      },
+      "whyFallback": "Improves the security, speed or reliability of the site.",
+      "why": {
+        "sec-hsts": "Browsers now always use the encrypted connection, so visitors cannot be pushed onto an insecure one, for example on public Wi-Fi.",
+        "sec-nosniff": "Browsers no longer guess file types, which closes a trick for running disguised scripts.",
+        "sec-referrer-policy": "Full page addresses, which can contain private details, are no longer passed on to other websites.",
+        "sec-frame-options": "Other sites can no longer embed your pages invisibly to trick visitors into clicking (clickjacking).",
+        "sec-csp": "A Content-Security-Policy is being tested: the strongest browser defence against injected scripts.",
+        "wp-xmlrpc": "Closes an old interface that attackers use to guess passwords in bulk.",
+        "wp-user-enumeration": "Usernames are no longer listed publicly, so attackers have one less half of a login to guess.",
+        "wp-file-editing": "Even with a stolen admin password, nobody can change the site's code from the dashboard.",
+        "wp-core-auto-updates": "WordPress security releases now install automatically, usually within hours of release.",
+        "wp-open-admin-registration": "New sign-ups no longer receive administrator rights, closing a direct way to take over the site.",
+        "wp-config-permissions": "The file holding the database password can no longer be read by other accounts on the server.",
+        "wp-plugin-auto-updates": "Plugins now receive security fixes automatically instead of waiting for someone to click update.",
+        "wp-expired-transients": "Expired cached data was removed, keeping the database lean and the site responsive.",
+        "wp-revisions": "Old page revisions were cleaned up, keeping the database smaller and backups faster.",
+        "wp-outdated-plugins": "Plugins were updated with a restore point, closing known security holes and bugs.",
+        "red-flag-core-modifications": "Altered WordPress system files were replaced with official, verified copies.",
+        "red-flag-unexpected-core-files": "Unknown files in WordPress system folders were moved to quarantine, where they cannot run."
+      }
+    },
+    "nav": "Reports",
+    "card": {
+      "eyebrow": "Client reports",
+      "title": "Hand your client a report of what was fixed and why it matters, as PDF or Markdown.",
+      "howItWorks": "How it works",
+      "benefits": {
+        "billing": {
+          "title": "Justify billing",
+          "text": "Turn the work on the site into a documented deliverable."
+        },
+        "whiteLabel": {
+          "title": "White-label ready",
+          "text": "Agency plan: your logo and brand, no GetSafe 360 AI mention."
+        },
+        "languages": {
+          "title": "Six languages",
+          "text": "Create each report in your client's language."
+        }
+      },
+      "planFree": "Pro: 5 reports a month · Agency: unlimited + white-label",
+      "planPro": "5 reports a month included",
+      "planAgency": "Unlimited reports · white-label",
+      "upgrade": "Upgrade to Pro",
+      "open": "Create report"
+    },
+    "info": {
+      "title": "Why create reports?",
+      "lead": "The work on a site is valuable, but without documentation your client never sees it.",
+      "body": "A report lists what GetSafe 360 changed on the site, why each change matters, the current scores and what to do next. Hand it to a client, attach it to an invoice or keep it as a record.",
+      "includedTitle": "What's included",
+      "included": {
+        "fixes": "Every change made in the period, with why it matters",
+        "scores": "Overall and category scores",
+        "wordpress": "WordPress health before and after (if connected)",
+        "next": "Prioritised next steps",
+        "formats": "PDF or Markdown, in six languages"
+      },
+      "agencyTitle": "Agency plan adds",
+      "agency": {
+        "unlimited": "Unlimited reports",
+        "whiteLabel": "Your logo, company name and colour",
+        "noBranding": "No GetSafe 360 AI mention"
+      },
+      "close": "Close"
+    },
+    "page": {
+      "title": "Reports",
+      "description": "Client-ready reports for {host}: what was fixed, why it matters and what comes next.",
+      "back": "Back to the cockpit",
+      "createTitle": "New report",
+      "format": "Format",
+      "formats": {
+        "pdf": "PDF",
+        "markdown": "Markdown"
+      },
+      "language": "Report language",
+      "period": "Period",
+      "periods": {
+        "30": "Last 30 days",
+        "90": "Last 90 days",
+        "365": "Last 12 months"
+      },
+      "whiteLabel": "White-label: leave out GetSafe 360 AI",
+      "whiteLabelHint": "Uses your company name and logo when branding is set up.",
+      "preview": "Preview",
+      "previewHint": "Previews are free and don't count towards your monthly reports.",
+      "create": "Create report",
+      "creating": "Creating…",
+      "quota": "{used} of {limit} reports used this month",
+      "unlimited": "Unlimited reports",
+      "historyTitle": "Earlier reports",
+      "noHistory": "No reports yet.",
+      "download": "Download",
+      "status": {
+        "generating": "Creating…",
+        "failed": "Failed"
+      },
+      "created": "Report created: {name}",
+      "errors": {
+        "QUOTA_EXHAUSTED": "Monthly report limit reached → Upgrade to Agency for unlimited reports.",
+        "UPGRADE_REQUIRED": "Reports are part of the Pro plan → Upgrade to create reports.",
+        "RATE_LIMITED": "Too many requests → Wait a minute and try again.",
+        "GENERIC": "The report could not be created → Try again in a moment."
+      },
+      "upgradeTitle": "Reports are part of Pro",
+      "upgradeText": "Show your clients what was fixed and why it matters. Pro includes 5 reports a month; Agency adds unlimited white-label reports.",
+      "upgradeCta": "See plans"
+    }
+  }
+}

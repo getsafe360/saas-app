@@ -1,0 +1,169 @@
+{
+  "Reports": {
+    "document": {
+      "title": "Website-Pflegebericht",
+      "period": "{from} – {to}",
+      "preparedBy": "Erstellt von {company}",
+      "generatedOn": "Erstellt am {date}",
+      "summary": {
+        "heading": "Zusammenfassung",
+        "fixes": "{count, plural, =0 {In diesem Zeitraum waren keine Änderungen nötig} one {# Verbesserung in diesem Zeitraum} other {# Verbesserungen in diesem Zeitraum}}",
+        "score": "Gesamtbewertung: {score}/100 ({grade})",
+        "health": "WordPress-Zustand: {now}/100",
+        "healthChange": "WordPress-Zustand: {before} → {now}/100",
+        "open": "{count, plural, =0 {Keine offenen Punkte} one {# Empfehlung für die nächsten Schritte} other {# Empfehlungen für die nächsten Schritte}}"
+      },
+      "scores": {
+        "heading": "Bewertungen",
+        "category": "Bereich",
+        "score": "Punkte",
+        "grade": "Note",
+        "overall": "Gesamt",
+        "wordpress": "WordPress-Zustand"
+      },
+      "categories": {
+        "performance": "Leistung",
+        "security": "Sicherheit",
+        "seo": "SEO",
+        "accessibility": "Barrierefreiheit",
+        "content": "Inhalt"
+      },
+      "fixed": {
+        "heading": "Was wir behoben haben",
+        "intro": "Jede Änderung unten wurde auf der Live-Website vorgenommen und anschließend geprüft.",
+        "none": "In diesem Zeitraum waren keine Änderungen nötig.",
+        "date": "Datum",
+        "change": "Behobenes Problem",
+        "why": "Warum es wichtig ist",
+        "unverified": "angewendet; auf der Live-Website noch nicht bestätigt",
+        "undoNote": "Jede Änderung wird protokolliert, die meisten lassen sich bei Bedarf mit einem Klick rückgängig machen."
+      },
+      "protection": {
+        "heading": "Laufender Schutz",
+        "csp": "Seit {date} wird eine Content-Security-Policy im Nur-Bericht-Modus getestet: Browser melden, was sie blockieren würde, ohne Besucher zu beeinträchtigen."
+      },
+      "next": {
+        "heading": "Empfohlene nächste Schritte",
+        "none": "Die letzten Prüfungen haben keine offenen Punkte gefunden."
+      },
+      "severity": {
+        "critical": "Kritisch",
+        "high": "Hoch",
+        "medium": "Mittel",
+        "low": "Niedrig"
+      },
+      "footer": {
+        "method": "Die Bewertungen stammen aus automatischen Prüfungen der öffentlichen Website und, sofern verbunden, der WordPress-Installation, Stand {date}.",
+        "poweredBy": "Bereitgestellt von GetSafe 360 AI"
+      },
+      "whyFallback": "Verbessert Sicherheit, Geschwindigkeit oder Zuverlässigkeit der Website.",
+      "why": {
+        "sec-hsts": "Browser nutzen jetzt immer die verschlüsselte Verbindung, sodass Besucher nicht auf eine unsichere umgeleitet werden können, etwa in öffentlichen WLANs.",
+        "sec-nosniff": "Browser raten keine Dateitypen mehr, was einen Trick zum Ausführen getarnter Skripte unterbindet.",
+        "sec-referrer-policy": "Vollständige Seitenadressen, die private Angaben enthalten können, werden nicht mehr an andere Websites weitergegeben.",
+        "sec-frame-options": "Fremde Websites können Ihre Seiten nicht mehr unsichtbar einbetten, um Besucher zu Klicks zu verleiten (Clickjacking).",
+        "sec-csp": "Eine Content-Security-Policy wird getestet: der stärkste Browserschutz gegen eingeschleuste Skripte.",
+        "wp-xmlrpc": "Schließt eine alte Schnittstelle, über die Angreifer massenhaft Passwörter ausprobieren.",
+        "wp-user-enumeration": "Benutzernamen werden nicht mehr öffentlich aufgelistet, Angreifern fehlt damit die Hälfte eines Logins.",
+        "wp-file-editing": "Selbst mit einem gestohlenen Admin-Passwort kann niemand den Code der Website im Dashboard ändern.",
+        "wp-core-auto-updates": "WordPress-Sicherheitsupdates werden jetzt automatisch installiert, meist wenige Stunden nach Erscheinen.",
+        "wp-open-admin-registration": "Neue Registrierungen erhalten keine Administratorrechte mehr, ein direkter Weg zur Übernahme der Website ist geschlossen.",
+        "wp-config-permissions": "Die Datei mit dem Datenbankpasswort ist für andere Konten auf dem Server nicht mehr lesbar.",
+        "wp-plugin-auto-updates": "Plugins erhalten Sicherheitskorrekturen jetzt automatisch, statt auf einen Klick auf „Aktualisieren“ zu warten.",
+        "wp-expired-transients": "Abgelaufene Zwischenspeicher-Daten wurden entfernt; die Datenbank bleibt schlank und die Website reaktionsschnell.",
+        "wp-revisions": "Alte Seitenrevisionen wurden bereinigt; die Datenbank bleibt kleiner und Backups laufen schneller.",
+        "wp-outdated-plugins": "Plugins wurden mit Wiederherstellungspunkt aktualisiert, bekannte Sicherheitslücken und Fehler sind geschlossen.",
+        "red-flag-core-modifications": "Veränderte WordPress-Systemdateien wurden durch offizielle, geprüfte Originale ersetzt.",
+        "red-flag-unexpected-core-files": "Unbekannte Dateien in WordPress-Systemordnern wurden in Quarantäne verschoben, wo sie nicht ausgeführt werden können."
+      }
+    },
+    "nav": "Berichte",
+    "card": {
+      "eyebrow": "Kundenberichte",
+      "title": "Geben Sie Ihrem Kunden einen Bericht darüber, was behoben wurde und warum es wichtig ist – als PDF oder Markdown.",
+      "howItWorks": "So funktioniert es",
+      "benefits": {
+        "billing": {
+          "title": "Abrechnung begründen",
+          "text": "Machen Sie die Arbeit an der Website zu einem dokumentierten Ergebnis."
+        },
+        "whiteLabel": {
+          "title": "White-Label-fähig",
+          "text": "Agentur-Tarif: Ihr Logo und Ihre Marke, ohne Erwähnung von GetSafe 360 AI."
+        },
+        "languages": {
+          "title": "Sechs Sprachen",
+          "text": "Erstellen Sie jeden Bericht in der Sprache Ihres Kunden."
+        }
+      },
+      "planFree": "Pro: 5 Berichte pro Monat · Agentur: unbegrenzt + White-Label",
+      "planPro": "5 Berichte pro Monat inklusive",
+      "planAgency": "Unbegrenzte Berichte · White-Label",
+      "upgrade": "Auf Pro upgraden",
+      "open": "Bericht erstellen"
+    },
+    "info": {
+      "title": "Warum Berichte erstellen?",
+      "lead": "Die Arbeit an einer Website ist wertvoll – ohne Dokumentation sieht Ihr Kunde sie aber nie.",
+      "body": "Ein Bericht listet auf, was GetSafe 360 an der Website geändert hat, warum jede Änderung wichtig ist, die aktuellen Bewertungen und die nächsten Schritte. Geben Sie ihn an Kunden weiter, hängen Sie ihn an eine Rechnung oder bewahren Sie ihn als Nachweis auf.",
+      "includedTitle": "Enthalten",
+      "included": {
+        "fixes": "Jede Änderung im Zeitraum, mit Begründung",
+        "scores": "Gesamt- und Bereichsbewertungen",
+        "wordpress": "WordPress-Zustand vorher und nachher (wenn verbunden)",
+        "next": "Priorisierte nächste Schritte",
+        "formats": "PDF oder Markdown, in sechs Sprachen"
+      },
+      "agencyTitle": "Der Agentur-Tarif ergänzt",
+      "agency": {
+        "unlimited": "Unbegrenzte Berichte",
+        "whiteLabel": "Ihr Logo, Firmenname und Ihre Farbe",
+        "noBranding": "Keine Erwähnung von GetSafe 360 AI"
+      },
+      "close": "Schließen"
+    },
+    "page": {
+      "title": "Berichte",
+      "description": "Kundenfertige Berichte für {host}: was behoben wurde, warum es wichtig ist und was als Nächstes kommt.",
+      "back": "Zurück zum Cockpit",
+      "createTitle": "Neuer Bericht",
+      "format": "Format",
+      "formats": {
+        "pdf": "PDF",
+        "markdown": "Markdown"
+      },
+      "language": "Sprache des Berichts",
+      "period": "Zeitraum",
+      "periods": {
+        "30": "Letzte 30 Tage",
+        "90": "Letzte 90 Tage",
+        "365": "Letzte 12 Monate"
+      },
+      "whiteLabel": "White-Label: GetSafe 360 AI weglassen",
+      "whiteLabelHint": "Verwendet Ihren Firmennamen und Ihr Logo, sobald das Branding eingerichtet ist.",
+      "preview": "Vorschau",
+      "previewHint": "Vorschauen sind kostenlos und zählen nicht zu Ihren monatlichen Berichten.",
+      "create": "Bericht erstellen",
+      "creating": "Wird erstellt …",
+      "quota": "{used} von {limit} Berichten in diesem Monat genutzt",
+      "unlimited": "Unbegrenzte Berichte",
+      "historyTitle": "Frühere Berichte",
+      "noHistory": "Noch keine Berichte.",
+      "download": "Herunterladen",
+      "status": {
+        "generating": "Wird erstellt …",
+        "failed": "Fehlgeschlagen"
+      },
+      "created": "Bericht erstellt: {name}",
+      "errors": {
+        "QUOTA_EXHAUSTED": "Monatliches Berichtslimit erreicht → Für unbegrenzte Berichte auf den Agentur-Tarif upgraden.",
+        "UPGRADE_REQUIRED": "Berichte sind Teil des Pro-Tarifs → Upgraden, um Berichte zu erstellen.",
+        "RATE_LIMITED": "Zu viele Anfragen → Eine Minute warten und erneut versuchen.",
+        "GENERIC": "Der Bericht konnte nicht erstellt werden → Gleich noch einmal versuchen."
+      },
+      "upgradeTitle": "Berichte sind Teil von Pro",
+      "upgradeText": "Zeigen Sie Ihren Kunden, was behoben wurde und warum es wichtig ist. Pro enthält 5 Berichte pro Monat, der Agentur-Tarif unbegrenzte White-Label-Berichte.",
+      "upgradeCta": "Tarife ansehen"
+    }
+  }
+}

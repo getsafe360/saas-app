@@ -12,10 +12,10 @@ import { SavingsDisplay } from "./components/Summary/SavingsDisplay";
 import { BackupButton } from "./components/Backup/BackupButton";
 import { PerformanceChart } from "./components/Charts/PerformanceChart";
 import { PreFlightCheckModal } from "./components/PreFlight";
-import { GenerateReportButton } from "@/components/reports/GenerateReportButton";
+import { ReportLink } from "@/components/reports/ReportLink";
 import type { OptimizationCardProps, ConnectionInfo, BackupInfo } from "./types";
 
-export function OptimizationCard({ id, data, minimized, onToggleMinimize, editable, siteId, siteName, planName = "agency", connection }: OptimizationCardProps) {
+export function OptimizationCard({ id, data, minimized, onToggleMinimize, editable, siteId, siteName, planName = "free", connection }: OptimizationCardProps) {
   const t = useTranslations("SiteCockpit");
   const [showBackupSection, setShowBackupSection] = useState(false);
   const [showPreFlight, setShowPreFlight] = useState(false);
@@ -123,11 +123,7 @@ export function OptimizationCard({ id, data, minimized, onToggleMinimize, editab
               </h3>
               <p className="text-xs text-gray-400">{planName === "agency" ? t("common.enabled") : t("actions.download")}</p>
             </div>
-            <GenerateReportButton
-              siteId={siteId}
-              siteName={siteName || data?.domain || "Site"}
-              planName={planName}
-            />
+            <ReportLink siteId={siteId} planName={planName} />
           </div>
         </div>
       )}

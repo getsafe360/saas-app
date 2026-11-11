@@ -684,6 +684,7 @@ export function SiteCockpit({
                             }
                           : undefined,
                       }}
+                      planName={planName}
                     />
                   );
                 }
