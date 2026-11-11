@@ -49,7 +49,7 @@ export function WordPressTeaser({ siteId, connectionStatus, problemIds }: WordPr
       </div>
       <Link
         href={wordpressPagePath(siteId, true)}
-        className="inline-flex items-center justify-center gap-1.5 self-start rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 sm:self-center"
+        className="inline-flex items-center justify-center gap-1.5 self-start rounded-lg gs-btn gs-btn-primary px-4 py-2 text-sm font-semibold text-white  sm:self-center"
       >
         {broken ? t("brokenCta") : t("cta")}
         <ArrowRight className="h-4 w-4" />

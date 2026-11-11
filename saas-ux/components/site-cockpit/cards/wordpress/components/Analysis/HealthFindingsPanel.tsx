@@ -219,7 +219,7 @@ export function HealthFindingsPanel({
               aria-label={text.title(finding)}
               disabled={applying}
               onClick={() => toggle(finding.id)}
-              className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${checked ? "bg-[var(--category-wordpress)]" : "bg-neutral-600"}`}
+              className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 ${checked ? "bg-[var(--category-wordpress)]" : "bg-neutral-600"}`}
             >
               <span
                 className={`inline-block h-3 w-3 transform rounded-full bg-white transition ${checked ? "translate-x-5" : "translate-x-1"}`}
@@ -246,8 +246,7 @@ export function HealthFindingsPanel({
               {item.undoable && item.runId && !undone && onUndo && (
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-white disabled:opacity-60"
-                  style={{ borderColor: "var(--border-default)" }}
+                  className="gs-btn gs-btn-secondary inline-flex items-center gap-1 rounded px-2 py-0.5"
                   disabled={undoingRunIds.has(item.runId)}
                   onClick={() => handleUndo([item.runId as string])}
                 >
@@ -333,7 +332,7 @@ export function HealthFindingsPanel({
                 aria-label={t("safeMode")}
                 disabled={applying}
                 onClick={() => setSafeMode((prev) => !prev)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${safeMode ? "bg-emerald-500" : "bg-neutral-600"}`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 ${safeMode ? "bg-emerald-500" : "bg-neutral-600"}`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${safeMode ? "translate-x-6" : "translate-x-1"}`}
@@ -368,8 +367,7 @@ export function HealthFindingsPanel({
                 {undoableRunIds.length > 1 && onUndo && (
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs text-white disabled:opacity-60"
-                    style={{ borderColor: "var(--border-default)" }}
+                    className="gs-btn gs-btn-secondary inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs"
                     disabled={undoableRunIds.some((id) => undoingRunIds.has(id))}
                     onClick={() => handleUndo(undoableRunIds)}
                   >
@@ -380,8 +378,7 @@ export function HealthFindingsPanel({
                 {items && onRescan && (
                   <button
                     type="button"
-                    className="rounded-md border px-3 py-1.5 text-xs font-semibold text-white"
-                    style={{ borderColor: "var(--category-wordpress)" }}
+                    className="gs-btn gs-btn-wp-outline rounded-md px-3 py-1.5 text-xs font-semibold"
                     onClick={onRescan}
                   >
                     {t("rescan")}
@@ -390,8 +387,7 @@ export function HealthFindingsPanel({
                 {pending.length > 0 && onApply && (
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
-                    style={{ background: "var(--category-wordpress)" }}
+                    className="gs-btn gs-btn-wp inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold"
                     onClick={handleApply}
                     disabled={applying || toApply.length === 0}
                   >

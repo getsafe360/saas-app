@@ -124,8 +124,7 @@ export function AppliedChangesPanel({ siteId, refreshKey, onUndo, onUndone }: Ap
               ) : change.undoable ? (
                 <button
                   type="button"
-                  className="inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-xs text-white disabled:opacity-60"
-                  style={{ borderColor: "var(--border-default)" }}
+                  className="gs-btn gs-btn-secondary inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs"
                   disabled={undoing !== null}
                   onClick={() => undo(change.runId)}
                 >

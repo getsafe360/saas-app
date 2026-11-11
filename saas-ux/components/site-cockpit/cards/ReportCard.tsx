@@ -44,7 +44,7 @@ function ReportInfoModal({ onClose }: { onClose: () => void }) {
               {t("title")}
             </h2>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 transition-colors hover:opacity-70" style={{ color: "var(--text-subtle)" }} aria-label={t("close")}>
+          <button onClick={onClose} className="gs-icon-btn p-1.5" style={{ color: "var(--text-subtle)" }} aria-label={t("close")}>
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -116,7 +116,7 @@ export function ReportCard({ siteId, planName = "free" }: ReportCardProps) {
               <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{t("title")}</span>
               <button
                 onClick={() => setShowInfoModal(true)}
-                className="inline-flex shrink-0 items-center gap-1 text-xs transition-colors hover:opacity-70"
+                className="gs-link inline-flex shrink-0 items-center gap-1 text-xs"
                 style={{ color: "var(--text-primary)" }}
               >
                 <Info className="h-3.5 w-3.5" />

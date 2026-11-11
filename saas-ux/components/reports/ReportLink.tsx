@@ -24,7 +24,7 @@ export function ReportLink({ siteId, planName = "free" }: ReportLinkProps) {
     return (
       <Link
         href="/pricing"
-        className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-gradient-to-r from-amber-500/20 to-orange-500/20 px-4 py-2 text-sm font-medium text-amber-400 transition-all hover:from-amber-500/30 hover:to-orange-500/30"
+        className="inline-flex items-center gap-2 gs-btn gs-btn-upgrade rounded-lg px-4 py-2 text-sm font-medium"
       >
         <Crown className="h-4 w-4" />
         {t("upgrade")}
@@ -34,7 +34,7 @@ export function ReportLink({ siteId, planName = "free" }: ReportLinkProps) {
   return (
     <Link
       href={reportsPagePath(siteId)}
-      className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+      className="inline-flex items-center gap-2 rounded-lg gs-btn gs-btn-primary px-4 py-2 text-sm font-semibold text-white transition-colors "
     >
       <FileText className="h-4 w-4" />
       {t("open")}

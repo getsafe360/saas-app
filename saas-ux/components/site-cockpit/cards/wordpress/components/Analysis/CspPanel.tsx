@@ -128,7 +128,7 @@ export function CspPanel({ siteId, refreshKey = 0, onStarted }: CspPanelProps) {
               type="button"
               onClick={() => call("preview")}
               disabled={busy !== null}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-lg gs-btn gs-btn-primary px-3 py-1.5 text-xs font-semibold text-white "
             >
               {busy === "preview" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {busy === "preview" ? t("building") : t("build")}
@@ -165,7 +165,7 @@ export function CspPanel({ siteId, refreshKey = 0, onStarted }: CspPanelProps) {
             type="button"
             onClick={() => call("start")}
             disabled={busy !== null || !preview.connectorReady}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg gs-btn gs-btn-primary px-3 py-1.5 text-xs font-semibold text-white "
           >
             {busy === "start" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             {t("start")}
@@ -186,8 +186,7 @@ export function CspPanel({ siteId, refreshKey = 0, onStarted }: CspPanelProps) {
               type="button"
               onClick={refresh}
               disabled={busy !== null}
-              className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px]"
-              style={{ borderColor: "var(--border-default)", color: "var(--text-subtle)" }}
+              className="gs-btn gs-btn-secondary inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px]"
             >
               <RefreshCw className={`h-3 w-3 ${busy === "refresh" ? "animate-spin" : ""}`} />
               {t("refresh")}

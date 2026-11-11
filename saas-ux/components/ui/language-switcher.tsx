@@ -21,7 +21,7 @@ type LangOption = {
   flag: string;
 };
 
-const ALL_LANG: readonly LangOption[] = [
+export const ALL_LANG: readonly LangOption[] = [
   { code: "en", label: "English", flag: "/flags/us.svg" },
   { code: "de", label: "Deutsch", flag: "/flags/de.svg" },
   { code: "es", label: "Español", flag: "/flags/es.svg" },
@@ -30,7 +30,7 @@ const ALL_LANG: readonly LangOption[] = [
   { code: "pt", label: "Português", flag: "/flags/br.svg" },
 ];
 
-function FlagIcon({ src, alt }: { src: string; alt: string }) {
+export function FlagIcon({ src, alt }: { src: string; alt: string }) {
   return (
     <span className="relative block w-5 h-5 overflow-hidden rounded-sm">
       <Image

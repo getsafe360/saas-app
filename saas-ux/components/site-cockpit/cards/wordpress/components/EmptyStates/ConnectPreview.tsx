@@ -129,7 +129,7 @@ export function ConnectPreview({ domain, problemIds, pluginVersion }: ConnectPre
           <a
             href="/wp-plugin/getsafe360-connector.zip"
             download
-            className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 px-2 py-1 font-medium hover:bg-amber-500/10"
+            className="inline-flex items-center gap-1 gs-btn gs-btn-upgrade rounded-md px-2 py-1 font-medium"
           >
             <Download className="h-3 w-3" />
             {t("download", { version: CURRENT_PLUGIN_VERSION })}
@@ -144,7 +144,7 @@ export function ConnectPreview({ domain, problemIds, pluginVersion }: ConnectPre
       <button
         type="button"
         onClick={scrollToConnection}
-        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+        className="inline-flex items-center gap-1.5 rounded-lg gs-btn gs-btn-primary px-3 py-1.5 text-xs font-semibold text-white "
       >
         <ArrowUp className="h-3.5 w-3.5" />
         {t("cta")}

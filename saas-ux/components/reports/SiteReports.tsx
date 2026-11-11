@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Crown, Download, Eye, FileText, Loader2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/navigation";
+import { ThemedSelect } from "@/components/ui/themed-select";
+import { ALL_LANG, FlagIcon } from "@/components/ui/language-switcher";
 import { REPORT_LOCALES, REPORT_PERIODS, type ReportFormat } from "@/lib/reports/options";
 
 interface ReportRow {
@@ -110,15 +112,13 @@ export function SiteReports({ siteId, host, canReport, canWhiteLabel }: SiteRepo
   };
 
   const label = "mb-1.5 block text-xs font-semibold";
-  const select =
-    "w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50";
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div>
         <Link
           href={`/dashboard/sites/${siteId}/cockpit`}
-          className="mb-3 inline-flex items-center gap-1.5 text-xs hover:underline"
+          className="mb-3 gs-link inline-flex items-center gap-1.5 text-xs"
           style={{ color: "var(--text-subtle)" }}
         >
           <ArrowLeft className="h-3.5 w-3.5" />
@@ -144,7 +144,7 @@ export function SiteReports({ siteId, host, canReport, canWhiteLabel }: SiteRepo
           </p>
           <Link
             href="/pricing"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg gs-btn gs-btn-primary px-4 py-2 text-sm font-semibold text-white "
           >
             {t("upgradeCta")}
           </Link>
@@ -173,7 +173,7 @@ export function SiteReports({ siteId, host, canReport, canWhiteLabel }: SiteRepo
                       type="button"
                       aria-pressed={format === value}
                       onClick={() => setFormat(value)}
-                      className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${format === value ? "bg-blue-600 text-white" : ""}`}
+                      className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400 ${format === value ? "bg-blue-600 text-white" : "hover:bg-white/10 hover:text-[var(--text-primary)]"}`}
                       style={format === value ? undefined : { color: "var(--text-subtle)" }}
                     >
                       {t(`formats.${value}`)}
@@ -184,32 +184,27 @@ export function SiteReports({ siteId, host, canReport, canWhiteLabel }: SiteRepo
 
               <div>
                 <label htmlFor="report-language" className={label} style={{ color: "var(--text-primary)" }}>{t("language")}</label>
-                <select
+                <ThemedSelect
                   id="report-language"
+                  label={t("language")}
                   value={language}
-                  onChange={(event) => setLanguage(event.target.value)}
-                  className={select}
-                  style={{ ...card, color: "var(--text-primary)" }}
-                >
-                  {REPORT_LOCALES.map((code) => (
-                    <option key={code} value={code}>{languageName(code)}</option>
-                  ))}
-                </select>
+                  onChange={setLanguage}
+                  options={REPORT_LOCALES.map((code) => {
+                    const flag = ALL_LANG.find((lang) => lang.code === code)?.flag;
+                    return { value: code, label: languageName(code), icon: flag ? <FlagIcon src={flag} alt="" /> : undefined };
+                  })}
+                />
               </div>
 
               <div>
                 <label htmlFor="report-period" className={label} style={{ color: "var(--text-primary)" }}>{t("period")}</label>
-                <select
+                <ThemedSelect
                   id="report-period"
+                  label={t("period")}
                   value={periodDays}
-                  onChange={(event) => setPeriodDays(Number(event.target.value))}
-                  className={select}
-                  style={{ ...card, color: "var(--text-primary)" }}
-                >
-                  {REPORT_PERIODS.map((days) => (
-                    <option key={days} value={days}>{t(`periods.${days}`)}</option>
-                  ))}
-                </select>
+                  onChange={setPeriodDays}
+                  options={REPORT_PERIODS.map((days) => ({ value: days, label: t(`periods.${days}`) }))}
+                />
               </div>
             </div>
 
@@ -220,7 +215,7 @@ export function SiteReports({ siteId, host, canReport, canWhiteLabel }: SiteRepo
                   {t("whiteLabel")}
                   <span className="block text-xs" style={{ color: "var(--text-subtle)" }}>
                     {t("whiteLabelHint")}{" "}
-                    <Link href="/dashboard/settings/branding" className="underline">{tBranding("setUp")}</Link>
+                    <Link href="/dashboard/settings/branding" className="gs-link underline">{tBranding("setUp")}</Link>
                   </span>
                 </span>
               </label>
@@ -231,7 +226,7 @@ export function SiteReports({ siteId, host, canReport, canWhiteLabel }: SiteRepo
                 type="button"
                 onClick={create}
                 disabled={busy || exhausted}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-lg gs-btn gs-btn-primary px-4 py-2 text-sm font-semibold text-white "
               >
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                 {busy ? t("creating") : t("create")}
@@ -240,8 +235,7 @@ export function SiteReports({ siteId, host, canReport, canWhiteLabel }: SiteRepo
                 href={previewUrl}
                 target="_blank"
                 rel="noopener"
-                className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-white/5"
-                style={{ borderColor: "var(--border-default)", color: "var(--text-primary)" }}
+                className="inline-flex items-center gap-2 gs-btn gs-btn-secondary rounded-lg px-4 py-2 text-sm font-medium"
               >
                 <Eye className="h-4 w-4" />
                 {t("preview")}
@@ -268,7 +262,7 @@ export function SiteReports({ siteId, host, canReport, canWhiteLabel }: SiteRepo
             ) : (
               <ul className="divide-y" style={{ borderColor: "var(--border-default)" }}>
                 {reports.map((report) => (
-                  <li key={report.id} className="flex flex-wrap items-center gap-3 py-2.5" style={{ borderColor: "var(--border-default)" }}>
+                  <li key={report.id} className="gs-row flex flex-wrap items-center gap-3 px-2 py-2.5" style={{ borderColor: "var(--border-default)" }}>
                     <span
                       className="rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase"
                       style={{ borderColor: "var(--border-default)", color: "var(--text-subtle)" }}
@@ -292,8 +286,7 @@ export function SiteReports({ siteId, host, canReport, canWhiteLabel }: SiteRepo
                     {report.downloadUrl ? (
                       <a
                         href={report.downloadUrl}
-                        className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-white/5"
-                        style={{ borderColor: "var(--border-default)", color: "var(--text-primary)" }}
+                        className="inline-flex items-center gap-1.5 gs-btn gs-btn-secondary rounded-md px-2.5 py-1 text-xs font-medium"
                       >
                         <Download className="h-3.5 w-3.5" />
                         {t("download")}
