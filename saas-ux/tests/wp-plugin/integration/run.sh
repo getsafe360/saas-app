@@ -28,6 +28,7 @@ $WP plugin activate getsafe-360-ai --quiet
 $WP eval-file "$HERE/audit-test.php"
 $WP eval-file "$HERE/actions-test.php"
 $WP eval-file "$HERE/seo-injection-test.php"
+$WP eval-file "$HERE/geo-fixes-test.php"
 
 # Plugin updates need the site to load itself for the health check: serve it locally.
 PORT="${LOOPBACK_PORT:-8089}"

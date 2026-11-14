@@ -16,9 +16,16 @@ function getsafe360_uninstall_site() {
     'getsafe360_seo_injections',
     'getsafe360_security_headers',
     'getsafe360_restore_points',
+    'getsafe360_llms_txt',
+    'getsafe360_ai_crawler_rules',
+    'getsafe360_schema',
   ] as $option) {
     delete_option($option);
   }
+
+  // Titles and descriptions the connector kept itself (those in Yoast or Rank Math fields stay theirs).
+  delete_post_meta_by_key('_getsafe360_seo_title');
+  delete_post_meta_by_key('_getsafe360_seo_description');
 
   delete_transient('getsafe360_audit_scans');
 
