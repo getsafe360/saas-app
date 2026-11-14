@@ -3,7 +3,7 @@
 // Turns report content into Markdown or a printable HTML page (which the PDF
 // is made from). Pure: everything comes in through the arguments.
 
-import { REPORT_CATEGORIES, scoreGrade, type ReportContent, type ReportFix } from './content';
+import { REPORT_CATEGORIES, scoreGrade, type AiSearchReport, type ReportContent, type ReportFix, type ScoreTrend } from './content';
 import type { ReportText } from './text';
 
 export interface ReportBrand {
@@ -49,8 +49,32 @@ function summaryLines(content: ReportContent, text: ReportText): string[] {
         : text.t('summary.health', { now: health.now }),
     );
   }
+  const visibility = content.aiSearch?.visibility;
+  if (visibility) lines.push(text.t('summary.aiVisibility', { score: trendLabel(visibility.score) }));
   lines.push(text.t('summary.open', { count: content.openIssues.length }));
   return lines;
+}
+
+/** "62/100", or "48 → 62/100" when the period started elsewhere. */
+function trendLabel(trend: ScoreTrend): string {
+  if (trend.now === null) return '–';
+  return typeof trend.before === 'number' && trend.before !== trend.now ? `${trend.before} → ${trend.now}/100` : `${trend.now}/100`;
+}
+
+/** The score lines of the AI search section: GEO, SEO, AI visibility. */
+function aiSearchScores(ai: AiSearchReport, text: ReportText): Array<{ label: string; value: string }> {
+  const rows: Array<{ label: string; value: string }> = [];
+  if (ai.geo) rows.push({ label: text.t('aiSearch.geo'), value: trendLabel(ai.geo) });
+  if (ai.seo) rows.push({ label: text.t('aiSearch.seo'), value: trendLabel(ai.seo) });
+  if (ai.visibility) rows.push({ label: text.t('aiSearch.visibility'), value: trendLabel(ai.visibility.score) });
+  return rows;
+}
+
+function visibilitySummary(ai: AiSearchReport, text: ReportText): string | null {
+  const visibility = ai.visibility;
+  if (!visibility) return null;
+  const count = (outcome: string) => visibility.questions.filter((q) => q.outcome === outcome).length;
+  return text.t('aiSearch.visibilitySummary', { count: visibility.questions.length, cited: count('cited'), mentioned: count('mentioned') });
 }
 
 function periodLabel(content: ReportContent, text: ReportText): string {
@@ -85,6 +109,24 @@ export function renderMarkdown(content: ReportContent, text: ReportText, brand: 
     out.push(`| ${text.t(`categories.${category}`)} | ${score ?? '–'} | ${scoreGrade(score)} |`);
   }
   out.push('');
+
+  const ai = content.aiSearch;
+  if (ai) {
+    out.push(`## ${text.t('aiSearch.heading')}`, '', text.t('aiSearch.intro'), '');
+    for (const row of aiSearchScores(ai, text)) out.push(`- **${row.label}:** ${row.value}`);
+    out.push('');
+    const summary = visibilitySummary(ai, text);
+    if (ai.visibility && summary) {
+      out.push(summary, '');
+      out.push(`| ${text.t('aiSearch.question')} | ${text.t('aiSearch.result')} |`, '|---|---|');
+      for (const q of ai.visibility.questions) out.push(`| ${mdCell(q.question)} | ${text.t(`aiSearch.outcome.${q.outcome}`)} |`);
+      out.push('');
+      if (ai.visibility.competitors.length > 0) {
+        out.push(text.t('aiSearch.competitors', { sites: ai.visibility.competitors.map((c) => c.host).join(', ') }), '');
+      }
+      out.push(`_${text.t('aiSearch.method', { date: text.date(ai.visibility.checkedAt) })}_`, '');
+    }
+  }
 
   out.push(`## ${text.t('fixed.heading')}`, '');
   if (content.fixes.length === 0) {
@@ -169,6 +211,25 @@ export function renderHtml(content: ReportContent, text: ReportText, brand: Repo
 
   const health = content.wordpressHealth;
 
+  const ai = content.aiSearch;
+  const aiSummary = ai ? visibilitySummary(ai, text) : null;
+  const outcomeColor: Record<string, string> = { cited: '#059669', mentioned: '#d97706', found: '#dc2626', absent: '#dc2626' };
+  const aiSection = ai
+    ? `<h2>${t('aiSearch.heading')}</h2>
+<p class="muted">${t('aiSearch.intro')}</p>
+<table><tbody>${aiSearchScores(ai, text).map((row) => `<tr><td>${esc(row.label)}</td><td class="num">${esc(row.value)}</td></tr>`).join('')}</tbody></table>
+${
+  ai.visibility && aiSummary
+    ? `<p>${esc(aiSummary)}</p>
+<table><thead><tr><th>${t('aiSearch.question')}</th><th>${t('aiSearch.result')}</th></tr></thead><tbody>${ai.visibility.questions
+        .map((q) => `<tr><td>${esc(q.question)}</td><td style="color:${outcomeColor[q.outcome]};white-space:nowrap">${t(`aiSearch.outcome.${q.outcome}`)}</td></tr>`)
+        .join('')}</tbody></table>
+${ai.visibility.competitors.length > 0 ? `<p>${t('aiSearch.competitors', { sites: ai.visibility.competitors.map((c) => c.host).join(', ') })}</p>` : ''}
+<p class="muted">${t('aiSearch.method', { date: text.date(ai.visibility.checkedAt) })}</p>`
+    : ''
+}`
+    : '';
+
   return `<!DOCTYPE html>
 <html lang="${text.locale}">
 <head>
@@ -240,6 +301,8 @@ export function renderHtml(content: ReportContent, text: ReportText, brand: Repo
 
 <h2>${t('scores.heading')}</h2>
 <table><thead><tr><th>${t('scores.category')}</th><th class="num">${t('scores.score')}</th><th class="num">${t('scores.grade')}</th></tr></thead><tbody>${scoreRows}</tbody></table>
+
+${aiSection}
 
 <h2>${t('fixed.heading')}</h2>
 ${

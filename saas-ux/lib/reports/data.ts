@@ -15,7 +15,9 @@ import { readTestState } from '@/lib/security/csp/reports';
 import { toAppliedChanges } from '@/lib/wordpress/applied-changes';
 import { loadChangeRuns } from '@/lib/wordpress/change-runs';
 import type { WordPressSiteSnapshot } from '@/lib/wordpress/types';
-import type { ReportInput, ReportIssueInput, ReportPeriodDays, IssueSeverity } from './content';
+import { loadRuns } from '@/lib/ai-visibility/store';
+import { loadScoreHistory } from '@/lib/seo/store';
+import { buildAiSearchReport, type ReportInput, type ReportIssueInput, type ReportPeriodDays, type IssueSeverity } from './content';
 
 /** Enough history for a year of reports on a busy site. */
 const CHANGE_LIMIT = 500;
@@ -125,11 +127,13 @@ export async function collectReportInput(
     severity: asSeverity(issue.severity),
     title: issue.title,
   }));
-  const [runs, wordpress, cspState, scanIssueList] = await Promise.all([
+  const [runs, wordpress, cspState, scanIssueList, scoreHistory, visibilityRuns] = await Promise.all([
     loadChangeRuns(db, site.id, CHANGE_LIMIT),
     wordpressHealth(site.id, periodStart).catch(() => ({ health: null, problems: [] as ReportIssueInput[] })),
     readTestState(site.id).catch(() => null),
     scan ? scanIssues(site.id, topIssues) : Promise.resolve([] as ReportIssueInput[]),
+    loadScoreHistory(site.id).catch(() => []),
+    loadRuns(site.id).catch(() => []),
   ]);
 
   return {
@@ -149,5 +153,6 @@ export async function collectReportInput(
     openIssues: [...wordpress.problems, ...scanIssueList],
     cspTestSince: cspState ? new Date(cspState.startedAt) : null,
     cspEnforced: cspState?.mode === 'enforced',
+    aiSearch: buildAiSearchReport({ scoreHistory, visibilityRuns, periodStart }),
   };
 }

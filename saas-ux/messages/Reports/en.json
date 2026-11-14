@@ -11,7 +11,8 @@
         "score": "Overall score: {score}/100 ({grade})",
         "health": "WordPress health: {now}/100",
         "healthChange": "WordPress health: {before} → {now}/100",
-        "open": "{count, plural, =0 {No open issues} one {# recommendation for next steps} other {# recommendations for next steps}}"
+        "open": "{count, plural, =0 {No open issues} one {# recommendation for next steps} other {# recommendations for next steps}}",
+        "aiVisibility": "AI visibility: {score}"
       },
       "scores": {
         "heading": "Scores",
@@ -76,7 +77,29 @@
         "wp-outdated-plugins": "Plugins were updated with a restore point, closing known security holes and bugs.",
         "red-flag-core-modifications": "Altered WordPress system files were replaced with official, verified copies.",
         "red-flag-unexpected-core-files": "Unknown files in WordPress system folders were moved to quarantine, where they cannot run.",
-        "sec-csp-test": "A Content-Security-Policy was tested in report-only mode, to learn what the site loads before switching it on."
+        "sec-csp-test": "A Content-Security-Policy was tested in report-only mode, to learn what the site loads before switching it on.",
+        "geo-llms-txt": "AI assistants get a short, accurate overview of the site and its key pages to work from.",
+        "geo-ai-search-access": "AI search engines may now read the site, so they can find it and cite it in their answers.",
+        "geo-organization-schema": "Search and AI engines now know who runs the site: name, logo and profiles, which they show in results.",
+        "geo-website-schema": "Search engines now recognise the site's name and its search, which helps them present it correctly."
+      },
+      "aiSearch": {
+        "heading": "AI search & visibility",
+        "intro": "How well search engines and AI assistants such as Claude and ChatGPT can find, understand and recommend the site.",
+        "geo": "AI search readiness (GEO)",
+        "seo": "Search engine basics (SEO)",
+        "visibility": "AI visibility",
+        "visibilitySummary": "Asked {count, plural, one {# question} other {# questions}} potential customers would ask, Claude with web search cited the site in {cited} and named it without a link in {mentioned} of its answers.",
+        "question": "Customer question",
+        "result": "Result",
+        "outcome": {
+          "cited": "Cited as a source",
+          "mentioned": "Named, not linked",
+          "found": "Found, not used",
+          "absent": "Not in the answer"
+        },
+        "competitors": "Sites cited instead: {sites}",
+        "method": "AI visibility measured on {date} from Claude's answers with web search. Other AI assistants may answer differently, and answers change over time."
       }
     },
     "nav": "Reports",

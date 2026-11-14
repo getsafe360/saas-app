@@ -11,7 +11,8 @@
         "score": "Score global : {score}/100 ({grade})",
         "health": "Santé WordPress : {now}/100",
         "healthChange": "Santé WordPress : {before} → {now}/100",
-        "open": "{count, plural, =0 {Aucun point ouvert} one {# recommandation pour la suite} other {# recommandations pour la suite}}"
+        "open": "{count, plural, =0 {Aucun point ouvert} one {# recommandation pour la suite} other {# recommandations pour la suite}}",
+        "aiVisibility": "Visibilité dans l'IA : {score}"
       },
       "scores": {
         "heading": "Scores",
@@ -76,7 +77,29 @@
         "wp-outdated-plugins": "Les extensions ont été mises à jour avec un point de restauration, ce qui corrige des failles et bugs connus.",
         "red-flag-core-modifications": "Les fichiers système WordPress modifiés ont été remplacés par des copies officielles vérifiées.",
         "red-flag-unexpected-core-files": "Les fichiers inconnus dans les dossiers système de WordPress ont été placés en quarantaine, où ils ne peuvent pas s’exécuter.",
-        "sec-csp-test": "Une Content-Security-Policy a été testée en mode rapport seul, pour connaître ce que le site charge avant de l’activer."
+        "sec-csp-test": "Une Content-Security-Policy a été testée en mode rapport seul, pour connaître ce que le site charge avant de l’activer.",
+        "geo-llms-txt": "Les assistants IA disposent d'un aperçu court et exact du site et de ses pages principales.",
+        "geo-ai-search-access": "Les moteurs de recherche IA peuvent désormais lire le site, le trouver et le citer dans leurs réponses.",
+        "geo-organization-schema": "Les moteurs de recherche et services IA savent désormais qui est derrière le site : nom, logo et profils affichés dans les résultats.",
+        "geo-website-schema": "Les moteurs de recherche reconnaissent désormais le nom du site et sa recherche, ce qui les aide à le présenter correctement."
+      },
+      "aiSearch": {
+        "heading": "Recherche IA et visibilité",
+        "intro": "Dans quelle mesure les moteurs de recherche et les assistants IA comme Claude et ChatGPT peuvent trouver, comprendre et recommander le site.",
+        "geo": "Préparation à la recherche IA (GEO)",
+        "seo": "Bases pour les moteurs de recherche (SEO)",
+        "visibility": "Visibilité dans l'IA",
+        "visibilitySummary": "Sur {count, plural, one {# question} other {# questions}} que poseraient des clients potentiels, Claude avec recherche web a cité le site dans {cited} réponses et l'a nommé sans lien dans {mentioned}.",
+        "question": "Question client",
+        "result": "Résultat",
+        "outcome": {
+          "cited": "Cité comme source",
+          "mentioned": "Nommé, sans lien",
+          "found": "Trouvé, non utilisé",
+          "absent": "Absent de la réponse"
+        },
+        "competitors": "Sites cités à la place : {sites}",
+        "method": "Visibilité dans l'IA mesurée le {date} à partir des réponses de Claude avec recherche web. D'autres assistants IA peuvent répondre autrement, et les réponses évoluent avec le temps."
       }
     },
     "nav": "Rapports",
