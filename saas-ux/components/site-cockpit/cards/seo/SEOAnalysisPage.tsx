@@ -54,7 +54,7 @@ const SECTIONS: Record<SeoSection, { label: string; description: string; maxScor
   geo: { label: "GEO", description: "Generative Engine Optimization — visibility in Gemini, ChatGPT, Perplexity, Claude", maxScore: 30 },
   aeo: { label: "AEO", description: "Answer Engine Optimization — Q&A depth, conversational queries, voice-friendly content", maxScore: 25 },
   "author-seo": { label: "Author SEO", description: "Author identity markup, expertise verification, authority & trust signals", maxScore: 25 },
-  "ai-analytics": { label: "AI Analytics & Citations", description: "AI search impressions, answer share, citation frequency, attribution tracking", maxScore: 25 },
+  "ai-analytics": { label: "AI Analytics & Citations", description: "Not measured yet: whether AI answers mention and cite your site comes with AI visibility tracking", maxScore: 25 },
   "llms-txt": { label: "llms.txt", description: "LLM crawler permissions — presence, model-specific rules, attribution requirements", maxScore: 25 },
 };
 
@@ -232,7 +232,9 @@ function MasterScoreHero({ score, streaming }: { score: SeoMasterScore | null; s
             <div key={key} className="space-y-1">
               <div className="flex justify-between text-xs">
                 <span className="text-white/50">{label}</span>
-                {val !== null
+                {key === "aiAnalytics" && score
+                  ? <span className="text-white/40">not measured yet</span>
+                  : val !== null
                   ? <span className="text-white/80 font-medium">{val}/{max}</span>
                   : <span className="w-10 h-3 rounded bg-white/8 animate-pulse inline-block" />}
               </div>
@@ -282,12 +284,25 @@ function FindingCard({ finding, checked, onToggle }: { finding: SeoFinding; chec
           <div className="flex items-center gap-2 flex-wrap">
             <SeverityBadge severity={severity} passed={isPassed} />
             <ScorePips score={finding.score ?? 0} />
+            {finding.basis === "measured" && (
+              <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border border-emerald-400/30 text-emerald-300"
+                title="A measured check of your site, not an AI opinion">Measured</span>
+            )}
+            {finding.basis === "estimated" && (
+              <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border border-sky-400/30 text-sky-300"
+                title="Claude's judgement of the page text quoted below">AI estimate</span>
+            )}
           </div>
           <p className="text-sm font-semibold text-white leading-snug">{finding.title}</p>
         </div>
       </div>
 
       <p className="text-xs leading-relaxed text-white/55 pl-7">{finding.impact}</p>
+      {finding.automatedFix?.evidence && (
+        <p className="text-[11px] leading-relaxed text-white/40 pl-7 break-words">
+          Based on {finding.automatedFix.evidence}
+        </p>
+      )}
 
       {finding.automatedFix && !isPassed && (
         <div className="pl-7">
@@ -362,10 +377,12 @@ function SectionGroup({ section, findings, checkedIds, onToggle, loading }: {
         </div>
         <div className="h-px flex-1 bg-white/8" />
       </div>
-      {findings.length === 0 && loading ? (
+      {findings.length === 0 && loading && section !== "ai-analytics" ? (
         <div className="space-y-2">
           {[1, 2, 3].map(i => <div key={i} className="h-16 rounded-xl bg-white/4 animate-pulse" />)}
         </div>
+      ) : findings.length === 0 && section === "ai-analytics" ? (
+        <p className="text-xs text-white/40">{cfg.description}.</p>
       ) : (
         findings.map(f => (
           <FindingCard key={f.id} finding={f} checked={checkedIds.has(f.id)} onToggle={() => onToggle(f.id)} />

@@ -10,6 +10,7 @@ import { getDrizzle } from "@/lib/db/postgres";
 import { sites } from "@/lib/db/schema/sites/sites";
 import { users } from "@/lib/db/schema/auth/users";
 import { aiAnalysisJobs, aiRepairActions } from "@/lib/db/schema/ai/analysis";
+import { findingBasis } from "@/lib/seo/audit";
 import type { SeoFinding } from "@/lib/db/schema/ai/analysis";
 
 export const runtime = "nodejs";
@@ -72,6 +73,7 @@ export async function GET(
     impact: r.impact ?? "",
     automatedFix: r.automatedFix as SeoFinding["automatedFix"],
     passed: r.score != null && r.score >= 4 ? true : undefined,
+    basis: findingBasis(r.issueId ?? r.actionId ?? r.id),
   }));
 
   return new Response(
