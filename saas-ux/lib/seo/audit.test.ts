@@ -5,7 +5,7 @@ import { toCrawlPage, type SeoCrawl } from '@/lib/engine/seo/facts';
 import { parseSeoPage } from '@/lib/engine/seo/page';
 import { evaluateSeoGeo } from '@/lib/engine/seo/report';
 import type { SeoFinding } from '@/lib/db/schema/ai/analysis';
-import { acceptJudgement, buildAuditInput, computeMasterScore, crawledPathSet, findingBasis, measuredToSeoFindings } from './audit';
+import { acceptJudgement, buildAuditInput, computeMasterScore, crawledPageText, findingBasis, measuredToSeoFindings } from './audit';
 
 const crawl: SeoCrawl = {
   origin: 'https://example.com',
@@ -44,7 +44,7 @@ test('the AI sees measured results and page excerpts, nothing else', () => {
 });
 
 test('AI findings must cite a crawled page, stay in judgement sections and never shadow a measured id', () => {
-  const paths = crawledPathSet(crawl);
+  const paths = crawledPageText(crawl);
   const used = new Set<string>(['geo-llms-txt']);
   const base = { type: 'finding', id: 'clear-offer', section: 'ai-seo', title: 'Offer is clear', severity: 'low', score: 5, passed: true, impact: 'Good.', evidence: '/: "Family bakery since 1952"', automatedFix: { type: 'manual', description: 'None', effort: 'low' } };
 
@@ -55,6 +55,11 @@ test('AI findings must cite a crawled page, stay in judgement sections and never
 
   assert.equal(acceptJudgement({ ...base, evidence: '/pricing/: "x"' }, paths, used), null, 'a page that was not crawled');
   assert.equal(acceptJudgement({ ...base, evidence: undefined }, paths, used), null, 'no evidence');
+  assert.equal(acceptJudgement({ ...base, evidence: '/' }, paths, used), null, 'a path without a quote');
+  assert.equal(acceptJudgement({ ...base, evidence: '/: "Completely invented quote"' }, paths, used), null, 'a quote not on the page');
+  assert.equal(acceptJudgement({ ...base, evidence: '/about/: "Family bakery since 1952"' }, paths, used), null, 'a quote from another page');
+  assert.equal(acceptJudgement({ ...base, evidence: '/: "bakery"' }, paths, used), null, 'too short to prove anything');
+  assert.ok(acceptJudgement({ ...base, id: 'loose', evidence: '/: \u201cfamily  BAKERY since 1952 in\u2026\u201d' }, paths, used), 'case, spacing, curly quotes and an ellipsis are tolerated');
   assert.equal(acceptJudgement({ ...base, section: 'technical-seo' }, paths, used), null, 'measured-only section');
   assert.equal(acceptJudgement({ ...base, section: 'llms-txt' }, paths, used), null, 'measured-only section');
 

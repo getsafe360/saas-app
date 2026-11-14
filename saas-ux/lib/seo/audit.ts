@@ -161,18 +161,17 @@ const EFFORTS: ReadonlySet<string> = new Set(['low', 'medium', 'high']);
 
 /**
  * One line of model output as a finding, or null when it breaks the rules:
- * wrong section, no evidence on a crawled page, or an id that would shadow a
- * measured check. Strings are trimmed to sane lengths.
+ * wrong section, evidence that is not a real quote from a crawled page, or an
+ * id that would shadow a measured check. Strings are trimmed to sane lengths.
  */
-export function acceptJudgement(raw: unknown, crawledPaths: ReadonlySet<string>, usedIds: Set<string>): SeoFinding | null {
+export function acceptJudgement(raw: unknown, pages: ReadonlyMap<string, string>, usedIds: Set<string>): SeoFinding | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
   if (r.type !== 'finding') return null;
   const section = r.section as SeoSection;
   if (!(JUDGEMENT_SECTIONS as readonly string[]).includes(section)) return null;
   const evidence = typeof r.evidence === 'string' ? r.evidence.trim().slice(0, 200) : '';
-  const path = evidence.split(':')[0]?.trim();
-  if (!path || !crawledPaths.has(path)) return null;
+  if (!quoteIsOnPage(evidence, pages)) return null;
   if (typeof r.title !== 'string' || !r.title.trim()) return null;
 
   let id = (typeof r.id === 'string' ? r.id : 'finding').toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 60) || 'finding';
@@ -202,8 +201,36 @@ export function acceptJudgement(raw: unknown, crawledPaths: ReadonlySet<string>,
   };
 }
 
-export function crawledPathSet(crawl: SeoCrawl): Set<string> {
-  return new Set(crawl.pages.map((page) => pathOf(page.url)));
+const MIN_QUOTE_CHARS = 8;
+
+/** Lower-case, unify quotes and dashes, collapse whitespace: so a faithful quote matches the page text. */
+function normalizeText(text: string): string {
+  return text
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u201a\u2032]/g, "'")
+    .replace(/[\u201c\u201d\u201e\u2033]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** `<path>: "<quote>"` where the path was crawled and the quote occurs in what Claude was shown of that page. */
+export function quoteIsOnPage(evidence: string, pages: ReadonlyMap<string, string>): boolean {
+  const match = /^([^\s:"]+)\s*:\s*["\u201c\u201e](.+)["\u201d]$/s.exec(evidence);
+  if (!match) return false;
+  const text = pages.get(match[1]);
+  if (text === undefined) return false;
+  const quote = normalizeText(match[2]).replace(/^(\.\.\.|\u2026)\s*|\s*(\.\.\.|\u2026)$/g, '');
+  return quote.length >= MIN_QUOTE_CHARS && text.includes(quote);
+}
+
+/** Per crawled path, the normalised text Claude is shown for it: title, description, H1s and excerpt. */
+export function crawledPageText(crawl: SeoCrawl): Map<string, string> {
+  return new Map(crawl.pages.map((page) => [
+    pathOf(page.url),
+    normalizeText([page.title, page.description, ...page.h1.slice(0, 3), page.excerpt].filter(Boolean).join('\n')),
+  ]));
 }
 
 const SECTION_MAX: Record<SeoSection, number> = {

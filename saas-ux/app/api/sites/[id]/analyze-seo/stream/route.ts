@@ -38,7 +38,7 @@ import {
   buildJudgementPrompt,
   buildJudgementUserPrompt,
   computeMasterScore,
-  crawledPathSet,
+  crawledPageText,
   measuredToSeoFindings,
 } from "@/lib/seo/audit";
 import { getAvailableTokens } from "@/lib/fix/tokens";
@@ -117,8 +117,13 @@ export async function POST(
   }
 
   // The measured facts: the latest crawl when fresh, otherwise a new one (stored for the panel too).
+  // Crawls stored before page excerpts existed cannot ground the review, so they are redone too.
   let crawl: SeoCrawl | null = await loadCrawl(siteId).catch(() => null);
-  if (!crawl || Date.now() - Date.parse(crawl.checkedAt) > CRAWL_MAX_AGE_MS) {
+  if (
+    !crawl ||
+    Date.now() - Date.parse(crawl.checkedAt) > CRAWL_MAX_AGE_MS ||
+    crawl.pages.some((page) => typeof page.excerpt !== "string")
+  ) {
     try {
       crawl = await crawlSite(site.siteUrl, { validate: isPublicUrlResolved });
       if (crawl.pages.length > 0) await saveCrawl(siteId, crawl, evaluateSeoGeo(crawl).scores).catch(() => {});
@@ -131,7 +136,7 @@ export async function POST(
   }
   const measured = evaluateSeoGeo(crawl).findings;
   const auditInput = buildAuditInput(crawl, measured);
-  const crawledPaths = crawledPathSet(crawl);
+  const crawledPages = crawledPageText(crawl);
 
   // Resolve model for this tier
   const model = getSeoAnalysisModel(tier);
@@ -201,7 +206,7 @@ export async function POST(
           } catch {
             return; // partial or non-JSON line
           }
-          const finding = acceptJudgement(parsed, crawledPaths, usedIds);
+          const finding = acceptJudgement(parsed, crawledPages, usedIds);
           if (!finding) return;
           findings.push(finding);
           controller.enqueue(encoder.encode(JSON.stringify({ type: "finding", ...finding }) + "\n"));
