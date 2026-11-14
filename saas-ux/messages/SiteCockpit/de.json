@@ -958,6 +958,37 @@
         "secret": "Halten Sie diesen Schlüssel geheim – wie ein Passwort",
         "rotate": "Für einen neuen Schlüssel den Support kontaktieren"
       }
+    },
+    "seoGeo": {
+      "title": "Gemessene SEO- & GEO-Prüfungen",
+      "subtitle": "Was robots.txt, llms.txt, Ihre Sitemap und bis zu 10 Seiten Suchmaschinen und KI-Antwortmaschinen tatsächlich zeigen. Gemessen, nicht geschätzt.",
+      "run": "Prüfung starten",
+      "rerun": "Erneut prüfen",
+      "running": "Seiten werden geprüft…",
+      "loading": "Letzte Ergebnisse werden geladen…",
+      "empty": "Starten Sie die Prüfung, um zu sehen, was Suchmaschinen und KI-Antwortmaschinen auf Ihrer Website finden.",
+      "checked": "Geprüft am {date} · {count, plural, one {# Seite} other {# Seiten}}",
+      "pageErrors": "{count, plural, one {# Seite konnte nicht gelesen werden} other {# Seiten konnten nicht gelesen werden}}",
+      "geoTitle": "KI-Suche (GEO)",
+      "seoTitle": "Suchmaschinen (SEO)",
+      "delta": "{delta} seit der letzten Prüfung",
+      "found": "Gefunden:",
+      "allPassed": "Alle Prüfungen bestanden.",
+      "showPassed": "{count, plural, one {# bestandene Prüfung} other {# bestandene Prüfungen}} anzeigen",
+      "hidePassed": "Bestandene Prüfungen ausblenden",
+      "status": {
+        "pass": "Bestanden",
+        "warn": "Verbesserbar",
+        "fail": "Problem",
+        "unknown": "Nicht gemessen",
+        "na": "Nicht zutreffend"
+      },
+      "errors": {
+        "RATE_LIMITED": "Zu viele Prüfungen in der letzten Stunde → Später erneut versuchen.",
+        "SITE_UNREACHABLE": "Die Website war nicht erreichbar → Prüfen Sie, ob sie online ist, und versuchen Sie es erneut.",
+        "CRAWL_FAILED": "Die Prüfung konnte nicht abgeschlossen werden → Gleich noch einmal versuchen.",
+        "GENERIC": "Etwas ist schiefgelaufen → Erneut versuchen."
+      }
     }
   }
 }

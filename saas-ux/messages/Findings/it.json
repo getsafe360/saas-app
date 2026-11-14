@@ -11,7 +11,8 @@
       "noDescription": "La pagina non ha una meta description da misurare.",
       "pageNotRead": "Non è stato possibile leggere il contenuto della pagina.",
       "needsPlugin17": "Richiede il plugin GetSafe 360 1.7 o successivo.",
-      "needsPluginVersion": "Richiede il plugin GetSafe 360 {version} o successivo."
+      "needsPluginVersion": "Richiede il plugin GetSafe 360 {version} o successivo.",
+      "robotsNotRead": "Impossibile leggere robots.txt."
     },
     "wp-core-version": {
       "title": "Versione del core di WordPress",
@@ -461,6 +462,138 @@
       "ok": "La meta description è di {length} caratteri, nell’intervallo 120–160.",
       "outside": "La meta description è di {length} caratteri, fuori dall’intervallo 120–160.",
       "missing": "La pagina non ha una meta description."
+    },
+    "geo-ai-search-access": {
+      "title": "Crawler di ricerca IA",
+      "recommendation": "Consenti in robots.txt i crawler di ricerca di ChatGPT, Claude e Perplexity, così le risposte IA possono leggere e citare le tue pagine.",
+      "noRobots": "Non c'è un robots.txt, quindi i crawler di ricerca IA possono leggere il sito.",
+      "allowed": "robots.txt consente ai crawler di ricerca di ChatGPT, Claude e Perplexity di leggere il sito.",
+      "blocked": "robots.txt blocca {count, plural, one {# crawler di ricerca IA} other {# crawler di ricerca IA}} ({bots}), quindi quelle risposte IA non possono leggere né citare le tue pagine."
+    },
+    "geo-ai-training-access": {
+      "title": "Crawler di addestramento IA",
+      "recommendation": "Decidi se le aziende di IA possono usare i tuoi contenuti per l'addestramento e impostalo in robots.txt. Bloccare l'addestramento non impedisce alla ricerca IA di citarti.",
+      "allAllowed": "robots.txt consente i crawler che raccolgono contenuti per l'addestramento dell'IA.",
+      "someBlocked": "robots.txt blocca {count, plural, one {# crawler di addestramento IA} other {# crawler di addestramento IA}} ({bots}). I crawler di ricerca IA sono un'impostazione separata."
+    },
+    "geo-llms-txt": {
+      "title": "llms.txt",
+      "recommendation": "Pubblica /llms.txt: un breve riepilogo del sito in Markdown con link alle pagine più importanti. Costa poco; il suo effetto sulle risposte IA non è ancora dimostrato.",
+      "missing": "Il sito non ha /llms.txt.",
+      "invalid": "/llms.txt esiste ma non segue il formato (una riga \"# Titolo\" e link Markdown).",
+      "present": "/llms.txt è pubblicato con {links, plural, one {# link} other {# link}}."
+    },
+    "geo-organization-schema": {
+      "title": "Identità dell'azienda (schema Organization)",
+      "recommendation": "Pubblica dati strutturati Organization o LocalBusiness con nome, logo, indirizzo e contatti.",
+      "present": "Il sito descrive l'azienda come {type} nei dati strutturati.",
+      "missing": "Nessuna pagina descrive l'azienda come Organization o LocalBusiness, quindi motori di ricerca e risposte IA devono indovinare chi c'è dietro il sito."
+    },
+    "geo-website-schema": {
+      "title": "Schema WebSite",
+      "recommendation": "Pubblica nella homepage dati strutturati WebSite con nome e URL del sito.",
+      "present": "La homepage pubblica dati strutturati WebSite.",
+      "missing": "La homepage non pubblica dati WebSite, quindi il nome del sito può apparire in modo errato nei risultati di ricerca."
+    },
+    "geo-author-signals": {
+      "title": "Autore degli articoli",
+      "recommendation": "Indica l'autore di ogni articolo, nella pagina e nei dati strutturati, idealmente con una breve biografia.",
+      "noArticles": "Nessuna pagina controllata è contrassegnata come articolo.",
+      "present": "{count, plural, one {L'articolo indica} other {Tutti i # articoli indicano}} un autore.",
+      "missing": "{count} articoli su {total} non indicano un autore, il che indebolisce i segnali di fiducia cercati da risposte IA e motori di ricerca."
+    },
+    "geo-content-freshness": {
+      "title": "Aggiornamento dei contenuti",
+      "recommendation": "Mostra quando i contenuti sono stati aggiornati l'ultima volta (dateModified nei dati strutturati o article:modified_time) e tieni aggiornate le pagine principali.",
+      "noDates": "Nessuna pagina controllata indica quando è stata pubblicata o aggiornata.",
+      "stale": "La data più recente sulle pagine controllate risale a {days} giorni fa.",
+      "fresh": "La data più recente sulle pagine controllate risale a {days} giorni fa."
+    },
+    "geo-answer-structure": {
+      "title": "Contenuti pronti a rispondere",
+      "recommendation": "Rispondi alle domande dei clienti con titoli in forma di domanda e risposte brevi, o con FAQ contrassegnate come FAQPage.",
+      "faq": "{count, plural, one {# pagina ha} other {# pagine hanno}} dati strutturati FAQ.",
+      "questions": "{count, plural, one {# pagina usa} other {# pagine usano}} titoli in forma di domanda che le risposte IA possono citare.",
+      "none": "Nessuna pagina controllata ha titoli in forma di domanda o dati FAQ che le risposte IA possano citare."
+    },
+    "geo-thin-content": {
+      "title": "Pagine scarne",
+      "recommendation": "Dai alle pagine importanti abbastanza sostanza da rispondere alla domanda di un visitatore; unisci o amplia le pagine molto brevi.",
+      "onlyHome": "È stato possibile controllare solo la homepage.",
+      "thin": "{count} pagine interne su {total} hanno meno di {words} parole.",
+      "ok": "La maggior parte delle {total} pagine interne ha contenuti sostanziosi."
+    },
+    "seo-robots-txt": {
+      "title": "robots.txt",
+      "recommendation": "Pubblica un robots.txt che consenta i motori di ricerca e indichi la tua sitemap.",
+      "missing": "Il sito non ha robots.txt.",
+      "blocksSearch": "robots.txt blocca {bots} sull'intero sito, che quindi non può comparire nei risultati di ricerca.",
+      "ok": "robots.txt consente a Google e Bing di scansionare il sito."
+    },
+    "seo-xml-sitemap": {
+      "title": "Sitemap XML",
+      "recommendation": "Pubblica una sitemap XML e inviala in Google Search Console e Bing Webmaster Tools.",
+      "present": "La sitemap XML elenca {count, plural, one {# URL} other {# URL}}.",
+      "missing": "Non è stata trovata alcuna sitemap XML agli indirizzi abituali né in robots.txt."
+    },
+    "seo-sitemap-in-robots": {
+      "title": "Sitemap indicata in robots.txt",
+      "recommendation": "Aggiungi a robots.txt una riga \"Sitemap:\" con l'URL completo della sitemap.",
+      "noSitemap": "Non c'è una sitemap da indicare.",
+      "listed": "robots.txt indica la sitemap.",
+      "notListed": "robots.txt non indica la sitemap, quindi i crawler devono trovarla da soli."
+    },
+    "seo-schema-invalid": {
+      "title": "Dati strutturati non validi",
+      "recommendation": "Correggi i blocchi JSON-LD che non sono JSON valido; verificali con il Test dei risultati multimediali di Google.",
+      "invalid": "{count, plural, one {# pagina ha} other {# pagine hanno}} dati strutturati che non sono JSON valido, quindi i motori di ricerca li ignorano.",
+      "valid": "Tutti i dati strutturati delle pagine controllate sono JSON valido."
+    },
+    "seo-page-titles": {
+      "title": "Titoli delle pagine",
+      "recommendation": "Dai a ogni pagina un titolo proprio e descrittivo.",
+      "missing": "{count} pagine su {total} non hanno un titolo.",
+      "duplicate": "{count} pagine su {total} condividono il titolo con un'altra pagina.",
+      "ok": "Tutte le {total} pagine hanno un titolo proprio."
+    },
+    "seo-page-descriptions": {
+      "title": "Meta description",
+      "recommendation": "Scrivi per ogni pagina una meta description unica che la riassuma in una o due frasi.",
+      "missing": "{count} pagine su {total} non hanno una meta description.",
+      "duplicate": "{count} pagine su {total} condividono la meta description con un'altra pagina.",
+      "ok": "Tutte le {total} pagine hanno una meta description propria."
+    },
+    "seo-page-h1": {
+      "title": "Titoli principali (H1)",
+      "recommendation": "Dai a ogni pagina esattamente un H1 che dica di cosa tratta.",
+      "notOne": "{count} pagine su {total} non hanno esattamente un H1.",
+      "ok": "Tutte le {total} pagine hanno esattamente un H1."
+    },
+    "seo-page-canonicals": {
+      "title": "URL canonici",
+      "recommendation": "Aggiungi un link canonical a ogni pagina, così i motori di ricerca ne conoscono l'indirizzo preferito.",
+      "missing": "{count} pagine su {total} non hanno un link canonical.",
+      "ok": "Tutte le {total} pagine hanno un link canonical."
+    },
+    "seo-noindex-in-sitemap": {
+      "title": "Pagine nascoste nella sitemap",
+      "recommendation": "Rimuovi dalla sitemap le pagine con noindex, oppure rimuovi il noindex se devono essere trovate.",
+      "noSitemap": "Non c'è una sitemap con cui confrontare.",
+      "conflict": "{count, plural, one {# pagina è} other {# pagine sono}} nella sitemap ma {count, plural, one {contrassegnata} other {contrassegnate}} noindex, il che invia segnali contraddittori ai motori di ricerca.",
+      "ok": "Nessuna pagina controllata della sitemap è contrassegnata noindex."
+    },
+    "seo-social-tags": {
+      "title": "Tag di condivisione social",
+      "recommendation": "Aggiungi og:title e og:image (e idealmente og:description e twitter:card) a ogni pagina.",
+      "incomplete": "A {count} pagine su {total} manca il titolo o l'immagine Open Graph, quindi i link condivisi appaiono senza un'anteprima adeguata.",
+      "ok": "Tutte le {total} pagine hanno titolo e immagine Open Graph."
+    },
+    "seo-hreflang": {
+      "title": "Versioni linguistiche (hreflang)",
+      "recommendation": "Collega ogni versione linguistica con hreflang, incluso un x-default per i visitatori di altre lingue.",
+      "singleLanguage": "Nessuna pagina collega versioni linguistiche.",
+      "noDefault": "{count, plural, one {# pagina collega} other {# pagine collegano}} versioni linguistiche senza x-default.",
+      "ok": "{count, plural, one {# pagina collega} other {# pagine collegano}} le proprie versioni linguistiche, incluso x-default."
     }
   }
 }

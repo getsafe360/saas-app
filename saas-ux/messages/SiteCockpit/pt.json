@@ -958,6 +958,37 @@
         "secret": "Mantenha esta chave em segredo — como uma senha",
         "rotate": "Contate o suporte para renovar a sua chave"
       }
+    },
+    "seoGeo": {
+      "title": "Verificações de SEO e GEO medidas",
+      "subtitle": "O que o robots.txt, o llms.txt, seu sitemap e até 10 páginas realmente mostram aos buscadores e aos mecanismos de resposta com IA. Medido, não estimado.",
+      "run": "Iniciar verificação",
+      "rerun": "Verificar de novo",
+      "running": "Verificando páginas…",
+      "loading": "Carregando os últimos resultados…",
+      "empty": "Inicie a verificação para ver o que os buscadores e os mecanismos de resposta com IA encontram no seu site.",
+      "checked": "Verificado em {date} · {count, plural, one {# página} other {# páginas}}",
+      "pageErrors": "{count, plural, one {# página não pôde ser lida} other {# páginas não puderam ser lidas}}",
+      "geoTitle": "Busca com IA (GEO)",
+      "seoTitle": "Buscadores (SEO)",
+      "delta": "{delta} desde a última verificação",
+      "found": "Encontrado:",
+      "allPassed": "Todas as verificações foram aprovadas.",
+      "showPassed": "Mostrar {count, plural, one {# verificação aprovada} other {# verificações aprovadas}}",
+      "hidePassed": "Ocultar verificações aprovadas",
+      "status": {
+        "pass": "Aprovada",
+        "warn": "Vale melhorar",
+        "fail": "Problema",
+        "unknown": "Não medido",
+        "na": "Não se aplica"
+      },
+      "errors": {
+        "RATE_LIMITED": "Verificações demais na última hora → Tente mais tarde.",
+        "SITE_UNREACHABLE": "Não foi possível acessar o site → Confira se ele está no ar e tente de novo.",
+        "CRAWL_FAILED": "A verificação não pôde terminar → Tente de novo em instantes.",
+        "GENERIC": "Algo deu errado → Tente de novo."
+      }
     }
   }
 }

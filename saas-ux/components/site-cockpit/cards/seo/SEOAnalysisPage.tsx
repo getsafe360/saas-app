@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TokenUsageBar } from "@/components/ui/TokenUsageBar";
+import { SeoGeoChecks } from "./SeoGeoChecks";
 import { SEOFixerPanel } from "./SEOFixerPanel";
 import { AGENT_NAME } from "@/lib/ai/constants";
 import { AnalysisWaitingRotator } from "@/components/ui/AnalysisWaitingRotator";
@@ -707,6 +708,9 @@ export function SEOAnalysisPage({
 
       {/* ── Main content ── */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6 pb-32">
+
+        {/* Measured checks: facts first, the AI analysis below builds on them. */}
+        <SeoGeoChecks siteId={siteId} />
 
         {/* Start button — shown when initial load finished and no results exist */}
         {!loadingExisting && !hasStarted.current && !streaming && !done && !error && (

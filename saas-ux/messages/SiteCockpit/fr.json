@@ -958,6 +958,37 @@
         "secret": "Gardez cette clé secrète — comme un mot de passe",
         "rotate": "Contactez le support pour renouveler votre clé"
       }
+    },
+    "seoGeo": {
+      "title": "Contrôles SEO et GEO mesurés",
+      "subtitle": "Ce que robots.txt, llms.txt, votre sitemap et jusqu’à 10 pages montrent réellement aux moteurs de recherche et aux moteurs de réponse IA. Mesuré, pas estimé.",
+      "run": "Lancer les contrôles",
+      "rerun": "Contrôler à nouveau",
+      "running": "Contrôle des pages…",
+      "loading": "Chargement des derniers résultats…",
+      "empty": "Lancez les contrôles pour voir ce que les moteurs de recherche et les moteurs de réponse IA trouvent sur votre site.",
+      "checked": "Contrôlé le {date} · {count, plural, one {# page} other {# pages}}",
+      "pageErrors": "{count, plural, one {# page n’a pas pu être lue} other {# pages n’ont pas pu être lues}}",
+      "geoTitle": "Recherche IA (GEO)",
+      "seoTitle": "Moteurs de recherche (SEO)",
+      "delta": "{delta} depuis le dernier contrôle",
+      "found": "Trouvé :",
+      "allPassed": "Tous les contrôles sont réussis.",
+      "showPassed": "Afficher {count, plural, one {# contrôle réussi} other {# contrôles réussis}}",
+      "hidePassed": "Masquer les contrôles réussis",
+      "status": {
+        "pass": "Réussi",
+        "warn": "À améliorer",
+        "fail": "Problème",
+        "unknown": "Non mesuré",
+        "na": "Sans objet"
+      },
+      "errors": {
+        "RATE_LIMITED": "Trop de contrôles au cours de la dernière heure → Réessayez plus tard.",
+        "SITE_UNREACHABLE": "Le site est injoignable → Vérifiez qu’il est en ligne et réessayez.",
+        "CRAWL_FAILED": "Le contrôle n’a pas pu aboutir → Réessayez dans un instant.",
+        "GENERIC": "Une erreur s’est produite → Réessayez."
+      }
     }
   }
 }
