@@ -1,7 +1,9 @@
 // app/api/sites/[id]/analyze-seo/stream/route.ts
-// Streams a comprehensive SEO-GEO audit for a site using Claude Opus 4.8 (BSB)
-// or GPT-4o-mini (other tiers). Emits one JSON finding per chunk, finalised
-// with a master score summary. Persists the completed job to the DB.
+// Streams the SEO-GEO audit. Measured findings first: the deterministic checks
+// of the site crawl (robots.txt, AI crawlers, llms.txt, sitemap, up to 10
+// pages), which are final. Then the AI model judges only content quality,
+// E-E-A-T and answerability from the crawled page excerpts, and every AI
+// finding must cite a crawled page. Persists the completed job to the DB.
 
 import "server-only";
 import { NextRequest } from "next/server";
@@ -13,7 +15,7 @@ import { sites } from "@/lib/db/schema/sites/sites";
 import { users } from "@/lib/db/schema/auth/users";
 import { teams, teamMembers } from "@/lib/db/schema/auth/teams";
 import { aiAnalysisJobs, aiRepairActions } from "@/lib/db/schema/ai/analysis";
-import type { SeoFinding, SeoMasterScore, SeoSection, AutomatedFix } from "@/lib/db/schema/ai/analysis";
+import type { SeoFinding, AutomatedFix } from "@/lib/db/schema/ai/analysis";
 import {
   getUserTier,
   isBSBTier,
@@ -25,168 +27,27 @@ import {
   OPUS_THINKING_BUDGET,
   AGENT_NAME,
 } from "@/lib/ai/models";
-import { preScan } from "@/lib/analyzer/preScan";
 import { isPublicUrlResolved } from "@/lib/net/isPublicUrlResolved";
+import { evaluateSeoGeo } from "@/lib/engine/seo/report";
+import type { SeoCrawl } from "@/lib/engine/seo/facts";
+import { crawlSite } from "@/lib/seo/crawl";
+import { loadCrawl, saveCrawl } from "@/lib/seo/store";
+import {
+  acceptJudgement,
+  buildAuditInput,
+  buildJudgementPrompt,
+  buildJudgementUserPrompt,
+  computeMasterScore,
+  crawledPathSet,
+  measuredToSeoFindings,
+} from "@/lib/seo/audit";
 import { getAvailableTokens } from "@/lib/fix/tokens";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function sectionMaxScore(section: SeoSection): number {
-  const map: Record<SeoSection, number> = {
-    "technical-seo": 100,
-    "content-eeat": 25,
-    "ai-seo": 30,
-    geo: 30,
-    aeo: 25,
-    "author-seo": 25,
-    "ai-analytics": 25,
-    "llms-txt": 25,
-  };
-  return map[section] ?? 25;
-}
-
-/**
- * Normalise section raw scores into the 7-component AI Visibility score
- * and combine with the Traditional SEO score to produce a Master Score 0-100.
- */
-function computeMasterScore(
-  findings: SeoFinding[],
-  tokensUsed: number,
-  modelId: string,
-  provider: string,
-): SeoMasterScore {
-  const sectionScores: Record<SeoSection, { total: number; count: number }> = {
-    "technical-seo": { total: 0, count: 0 },
-    "content-eeat": { total: 0, count: 0 },
-    "ai-seo": { total: 0, count: 0 },
-    geo: { total: 0, count: 0 },
-    aeo: { total: 0, count: 0 },
-    "author-seo": { total: 0, count: 0 },
-    "ai-analytics": { total: 0, count: 0 },
-    "llms-txt": { total: 0, count: 0 },
-  };
-
-  for (const f of findings) {
-    const s = sectionScores[f.section];
-    if (s) {
-      s.total += f.score;
-      s.count++;
-    }
-  }
-
-  function avg(section: SeoSection): number {
-    const s = sectionScores[section];
-    if (!s || s.count === 0) return 0;
-    // Normalise: average finding score / 5 × section max score
-    return Math.round((s.total / s.count / 5) * sectionMaxScore(section));
-  }
-
-  const technicalSeo = avg("technical-seo");
-  const contentEeat = avg("content-eeat");
-  const aiSeo = avg("ai-seo");
-  const geo = avg("geo");
-  const aeo = avg("aeo");
-  const authorSeo = avg("author-seo");
-  const aiAnalytics = avg("ai-analytics");
-  const llmsTxt = avg("llms-txt");
-
-  // Traditional SEO: 75% technical foundations + 25% content & E-E-A-T (normalised to 0-100)
-  const traditionalSeo = Math.round(0.75 * technicalSeo + 0.25 * ((contentEeat / 25) * 100));
-
-  // AI Visibility: 6 components averaged and normalised to 0-100
-  const aiVisibility = Math.round(
-    ((aiSeo / 30 + geo / 30 + aeo / 25 + authorSeo / 25 + aiAnalytics / 25 + llmsTxt / 25) / 6) * 100,
-  );
-
-  // Master = 50% traditional SEO + 50% AI visibility
-  const master = Math.round(0.5 * traditionalSeo + 0.5 * aiVisibility);
-
-  return {
-    technicalSeo,
-    contentEeat,
-    aiSeo,
-    geo,
-    aeo,
-    authorSeo,
-    aiAnalytics,
-    aiCitation: aiAnalytics, // backward compat alias
-    llmsTxt,
-    master,
-    totalTokensUsed: tokensUsed,
-    modelId,
-    provider,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// SEO-GEO System Prompt
-// ---------------------------------------------------------------------------
-
-function buildSystemPrompt(agentName: string): string {
-  return `You are ${agentName}, an enterprise-grade SEO and AI Visibility analyst built into the GetSafe360 platform.
-
-Your task is to perform a comprehensive SEO-GEO audit of the provided website data. You must analyse all 8 sections and output findings as a stream of JSON objects — one JSON object per line, each on its own line (NDJSON format).
-
-## Output format — STRICT
-
-Each finding must be a single valid JSON object on ONE line:
-{"type":"finding","id":"<unique-slug>","section":"<section>","title":"<title>","severity":"<severity>","score":<0-5>,"impact":"<2-3 sentence impact>","automatedFix":{"type":"<code|config|content|manual>","description":"<what to do>","snippet":"<optional ready-to-paste code>","effort":"<low|medium|high>"}}
-
-After ALL findings, emit ONE final line:
-{"type":"complete","sectionsAnalysed":8,"totalFindings":<n>}
-
-## Section identifiers (use exactly these strings)
-- "technical-seo"  — Technical foundations: indexability, canonicals, HTTPS, sitemap, URL structure, on-page (title/meta/headings), internal links, mobile, Core Web Vitals
-- "content-eeat"   — Content quality, E-E-A-T signals, structured data (Organization, Breadcrumb, Article, Product, FAQ, HowTo, LocalBusiness)
-- "ai-seo"         — AI Search Optimization: AI-readable structure, summarizability, entity density, fact consistency, AI-friendly formatting, AI-safe canonicalization
-- "geo"            — Generative Engine Optimization: GEO schema coverage, topic authority, query coverage, answerability, freshness, multi-locale signals
-- "aeo"            — Answer Engine Optimization: Q&A coverage, answer depth, conversational query coverage, structured answers, voice-friendly content
-- "author-seo"     — Author SEO & E-E-A-T for AI: identity markup, experience signals, expertise verification, authority signals, trust signals
-- "ai-analytics"   — AI Search Analytics + AI Citation Rate: AI query impressions, answer share, traffic attribution, snippet presence, citation frequency/accuracy/diversity
-- "llms-txt"       — LLM Authorization: llms.txt presence, allowed/disallowed paths, model-specific permissions (OpenAI/Anthropic/Google/Perplexity), attribution requirements, update frequency
-
-## Severity scale
-- "critical" — Blocks AI/search visibility entirely; fix immediately
-- "high"     — Significant negative impact on rankings or AI citations
-- "medium"   — Moderate impact; important for competitive positioning
-- "low"      — Minor refinements; good to have
-
-## Score scale (per finding)
-- 0 = completely missing/broken
-- 1-2 = partial/poor implementation
-- 3 = acceptable baseline
-- 4 = good implementation
-- 5 = excellent / fully optimized
-
-## Passing checks
-When something is correctly implemented (score 4 or 5, no fix needed), add "passed":true to the finding JSON and keep severity "low".
-Example: {"type":"finding","id":"https-ok","section":"technical-seo","title":"HTTPS correctly implemented","severity":"low","score":5,"passed":true,"impact":"Secure HTTPS protects user data...","automatedFix":{"type":"manual","description":"No action required.","effort":"low"}}
-Passing findings are shown with a green ✓ badge in the UI and excluded from the repair queue.
-
-## Rules
-1. Generate 4-8 findings per section (32-64 findings total)
-2. Be specific — reference actual values from the site data provided
-3. Impact text must explain the BUSINESS consequence (rankings, AI citations, conversions)
-4. automatedFix.snippet must be ready-to-paste code when type is "code" (HTML, JSON-LD, etc.)
-5. Never emit anything except valid NDJSON lines — no prose, no markdown, no explanations outside the JSON
-6. Analyse ALL 8 sections even if data is sparse — use "low" severity and score 2-3 for unknowns
-7. For sparse/unknown data sections: emit 2-3 findings with score 2 rather than padding with invented details`;
-}
-
-function buildUserPrompt(siteData: Record<string, unknown>, userName?: string): string {
-  const greeting = userName ? `User: ${userName}` : "User: (anonymous)";
-  return `${greeting}
-
-## Site data for audit:
-${JSON.stringify(siteData, null, 2)}
-
-Perform the full 8-section SEO-GEO audit now. Emit findings as NDJSON.`;
-}
+/** A crawl younger than this is reused; the measured panel and the audit then agree. */
+const CRAWL_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 // ---------------------------------------------------------------------------
 // Route handler
@@ -255,14 +116,22 @@ export async function POST(
     }
   }
 
-  // Fetch live site data (lightweight HTML scan for the prompt)
-  let siteData: Record<string, unknown> = { url: site.siteUrl };
-  try {
-    const facts = await preScan(site.siteUrl, { validate: isPublicUrlResolved });
-    siteData = { url: site.siteUrl, ...facts };
-  } catch {
-    // Proceed with minimal data if preScan fails
+  // The measured facts: the latest crawl when fresh, otherwise a new one (stored for the panel too).
+  let crawl: SeoCrawl | null = await loadCrawl(siteId).catch(() => null);
+  if (!crawl || Date.now() - Date.parse(crawl.checkedAt) > CRAWL_MAX_AGE_MS) {
+    try {
+      crawl = await crawlSite(site.siteUrl, { validate: isPublicUrlResolved });
+      if (crawl.pages.length > 0) await saveCrawl(siteId, crawl, evaluateSeoGeo(crawl).scores).catch(() => {});
+    } catch {
+      crawl = null;
+    }
   }
+  if (!crawl || crawl.pages.length === 0) {
+    return new Response(JSON.stringify({ error: "SITE_UNREACHABLE" }), { status: 502 });
+  }
+  const measured = evaluateSeoGeo(crawl).findings;
+  const auditInput = buildAuditInput(crawl, measured);
+  const crawledPaths = crawledPathSet(crawl);
 
   // Resolve model for this tier
   const model = getSeoAnalysisModel(tier);
@@ -319,6 +188,25 @@ export async function POST(
       );
 
       try {
+        // Measured findings: final, shown at once.
+        for (const finding of measuredToSeoFindings(measured)) {
+          findings.push(finding);
+          controller.enqueue(encoder.encode(JSON.stringify({ type: "finding", ...finding }) + "\n"));
+        }
+        const usedIds = new Set(findings.map((f) => f.id));
+        const takeLine = (line: string) => {
+          let parsed: unknown;
+          try {
+            parsed = JSON.parse(line);
+          } catch {
+            return; // partial or non-JSON line
+          }
+          const finding = acceptJudgement(parsed, crawledPaths, usedIds);
+          if (!finding) return;
+          findings.push(finding);
+          controller.enqueue(encoder.encode(JSON.stringify({ type: "finding", ...finding }) + "\n"));
+        };
+
         const extraOptions = isBSBTier(tier)
           ? {
               experimental_providerMetadata: {
@@ -329,10 +217,10 @@ export async function POST(
 
         const result = streamText({
           model,
-          system: buildSystemPrompt(AGENT_NAME),
-          messages: [{ role: "user", content: buildUserPrompt(siteData, userName) }],
+          system: buildJudgementPrompt(AGENT_NAME),
+          messages: [{ role: "user", content: buildJudgementUserPrompt(auditInput, userName) }],
           temperature: 0.1,
-          maxOutputTokens: 16_000,
+          maxOutputTokens: 8_000,
           ...extraOptions,
         });
 
@@ -346,37 +234,12 @@ export async function POST(
 
           for (const line of lines) {
             const trimmed = line.trim();
-            if (!trimmed) continue;
-
-            try {
-              const parsed = JSON.parse(trimmed) as Record<string, unknown>;
-
-              if (parsed.type === "finding") {
-                const finding = parsed as unknown as SeoFinding;
-                findings.push(finding);
-                // Forward finding to client
-                controller.enqueue(encoder.encode(trimmed + "\n"));
-              } else if (parsed.type === "complete") {
-                // Will be handled after stream finishes
-              }
-            } catch {
-              // Partial JSON or non-JSON line — skip silently
-            }
+            if (trimmed) takeLine(trimmed);
           }
         }
 
         // Process any remaining buffer content
-        if (buffer.trim()) {
-          try {
-            const parsed = JSON.parse(buffer.trim()) as Record<string, unknown>;
-            if (parsed.type === "finding") {
-              findings.push(parsed as unknown as SeoFinding);
-              controller.enqueue(encoder.encode(buffer.trim() + "\n"));
-            }
-          } catch {
-            // ignore
-          }
-        }
+        if (buffer.trim()) takeLine(buffer.trim());
 
         // Collect token usage
         const usage = await result.usage;

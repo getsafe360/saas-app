@@ -96,6 +96,8 @@ export interface AutomatedFix {
   description: string;
   snippet?: string;
   effort: 'low' | 'medium' | 'high';
+  /** AI findings: the crawled page (path) and a short quote the judgement rests on. */
+  evidence?: string;
 }
 
 // Structured finding shape returned by the AI stream
@@ -110,6 +112,8 @@ export interface SeoFinding {
   tokensUsed?: number;
   /** True when this check passes — shown as ✓ Good, excluded from repair queue */
   passed?: boolean;
+  /** `measured`: a deterministic check of the crawl; `estimated`: Claude's judgement of the content. */
+  basis?: 'measured' | 'estimated';
 }
 
 // Section sub-scores for the master score gauge

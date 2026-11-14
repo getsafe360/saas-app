@@ -42,6 +42,8 @@ export interface SeoPageFacts {
   /** Some author signal: meta author, rel=author, or a schema author. */
   hasAuthor: boolean;
   wordCount: number;
+  /** Start of the main text, for the AI review of content quality (public page text only). */
+  excerpt: string;
   internalLinks: string[];
   images: number;
   imagesWithoutAlt: number;
@@ -49,6 +51,7 @@ export interface SeoPageFacts {
 
 const ARTICLE_TYPES = new Set(['Article', 'BlogPosting', 'NewsArticle', 'TechArticle', 'Report', 'ScholarlyArticle']);
 const MAX_LINKS = 300;
+const EXCERPT_CHARS = 1500;
 
 const text = (el: HTMLElement | null | undefined) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
 const metaContent = (root: HTMLElement, selector: string) => root.querySelector(selector)?.getAttribute('content')?.trim() ?? '';
@@ -165,7 +168,8 @@ export function parseSeoPage(html: string, pageUrl: string): SeoPageFacts {
   const body = root.querySelector('main') ?? root.querySelector('article') ?? root.querySelector('body') ?? root;
   const bodyClone = parse(body.toString());
   for (const el of bodyClone.querySelectorAll('script, style, noscript, nav, header, footer, svg')) el.remove();
-  const words = text(bodyClone).split(' ').filter((word) => /\p{L}/u.test(word));
+  const mainText = text(bodyClone);
+  const words = mainText.split(' ').filter((word) => /\p{L}/u.test(word));
 
   const canonicalHref = root.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null;
   let canonical: string | null = null;
@@ -205,6 +209,7 @@ export function parseSeoPage(html: string, pageUrl: string): SeoPageFacts {
       Boolean(root.querySelector('a[rel~="author"], link[rel~="author"]')) ||
       articles.some((article) => article.hasAuthor),
     wordCount: words.length,
+    excerpt: mainText.slice(0, EXCERPT_CHARS),
     internalLinks: [...links],
     images: images.length,
     imagesWithoutAlt: images.filter((img) => img.getAttribute('alt') === undefined).length,
