@@ -41,6 +41,7 @@ import {
   measuredToSeoFindings,
 } from "@/lib/seo/audit";
 import { getAvailableTokens } from "@/lib/fix/tokens";
+import { totalTokensOf } from "@/lib/ai/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -247,7 +248,7 @@ export async function POST(
 
         // Collect token usage
         const usage = await result.usage;
-        totalTokensUsed = (usage?.totalTokens ?? estimatedCost);
+        totalTokensUsed = totalTokensOf(usage) ?? estimatedCost;
 
         // Compute master score
         const masterScore = computeMasterScore(findings, totalTokensUsed, modelId, provider);

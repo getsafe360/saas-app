@@ -28,6 +28,7 @@ import { aiAnalysisJobs, aiRepairActions } from "@/lib/db/schema/ai/analysis";
 import type { AiRepairAction } from "@/lib/db/schema/ai/analysis";
 import { WordPressClient } from "@/lib/wordpress/client";
 import { categoriseSnippet, normaliseHeadSnippet } from "@/lib/optimization/fixes/snippetUtils";
+import { totalTokensOf } from "@/lib/ai/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -221,7 +222,7 @@ export async function POST(
 
             // AI SDK v5 beta may return inputTokens/outputTokens as detail objects;
             // totalTokens is always a plain integer — same pattern as analyze-seo stream.
-            const actionTokens = Number(usage?.totalTokens ?? 0);
+            const actionTokens = totalTokensOf(usage) ?? 0;
             totalTokensUsed += actionTokens;
 
             let elaborated: {
