@@ -15,12 +15,11 @@ import { findCurrentUserTeam, getDbUserFromClerk } from '@/lib/auth/current';
 import { publishEvent } from '@/lib/cockpit/event-bus';
 import { rateLimit, tooManyRequests } from '@/lib/api/rate-limit';
 import { planFixes } from '@/lib/fix/planner';
-import { getAvailableTokens } from '@/lib/fix/tokens';
+import { getAvailableTokens, TOKEN_RESERVE_LOCK } from '@/lib/fix/tokens';
 import type { ScanReport } from '@/lib/scan/types';
 import { logger } from '@/lib/logger';
 
 /** Namespace for the per-team advisory lock that serialises token reservation. */
-const FIX_RESERVE_LOCK = 4207;
 
 const log = logger('fix/start');
 
@@ -159,7 +158,7 @@ export async function POST(req: NextRequest) {
   // authoritative balance check and the hold insert run together inside a transaction that is
   // serialised per team (advisory lock): proposals can never reserve more than the balance.
   const reserved = await db.transaction(async (tx) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(${FIX_RESERVE_LOCK}::int, ${team.id}::int)`);
+    await tx.execute(sql`select pg_advisory_xact_lock(${TOKEN_RESERVE_LOCK}::int, ${team.id}::int)`);
     // Read through `tx`: a second pooled connection could starve the (small) pool when
     // several requests hold a transaction connection and each wait for another.
     const fresh = await getAvailableTokens(team.id, tx);

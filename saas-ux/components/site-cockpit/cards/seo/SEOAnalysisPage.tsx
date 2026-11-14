@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TokenUsageBar } from "@/components/ui/TokenUsageBar";
 import { SeoGeoChecks } from "./SeoGeoChecks";
+import { AiVisibilityPanel } from "./AiVisibilityPanel";
 import { SEOFixerPanel } from "./SEOFixerPanel";
 import { AGENT_NAME } from "@/lib/ai/constants";
 import { AnalysisWaitingRotator } from "@/components/ui/AnalysisWaitingRotator";
@@ -54,7 +55,7 @@ const SECTIONS: Record<SeoSection, { label: string; description: string; maxScor
   geo: { label: "GEO", description: "Generative Engine Optimization — visibility in Gemini, ChatGPT, Perplexity, Claude", maxScore: 30 },
   aeo: { label: "AEO", description: "Answer Engine Optimization — Q&A depth, conversational queries, voice-friendly content", maxScore: 25 },
   "author-seo": { label: "Author SEO", description: "Author identity markup, expertise verification, authority & trust signals", maxScore: 25 },
-  "ai-analytics": { label: "AI Analytics & Citations", description: "Not measured yet: whether AI answers mention and cite your site comes with AI visibility tracking", maxScore: 25 },
+  "ai-analytics": { label: "AI Analytics & Citations", description: "Measured separately: see AI visibility above, where Claude is asked your customers' questions", maxScore: 25 },
   "llms-txt": { label: "llms.txt", description: "LLM crawler permissions — presence, model-specific rules, attribution requirements", maxScore: 25 },
 };
 
@@ -728,6 +729,9 @@ export function SEOAnalysisPage({
 
         {/* Measured checks: facts first, the AI analysis below builds on them. */}
         <SeoGeoChecks siteId={siteId} canFix={connectionStatus === "connected" && cmsType?.toLowerCase() === "wordpress"} />
+
+        {/* AI visibility: does Claude, with web search, name and cite the site? Measured per question. */}
+        <AiVisibilityPanel siteId={siteId} />
 
         {/* Start button — shown when initial load finished and no results exist */}
         {!loadingExisting && !hasStarted.current && !streaming && !done && !error && (
