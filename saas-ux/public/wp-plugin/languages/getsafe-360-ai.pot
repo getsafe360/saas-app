@@ -147,6 +147,3 @@ msgstr ""
 
 msgid "Pairing code filled in from GetSafe 360 AI — just click Connect."
 msgstr ""
-
-msgid "GetSafe 360 AI replaces the older \"GetSafe360 Connector\" plugin. Please deactivate and delete \"GetSafe360 Connector\"; your connection and settings are kept."
-msgstr ""

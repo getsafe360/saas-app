@@ -16,19 +16,6 @@
 
 if (!defined('ABSPATH')) exit;
 
-/*
- * Until version 1.10 this plugin was "GetSafe360 Connector" in the folder
- * getsafe360-connector. Both use the same settings, so after the old one is
- * removed the site stays connected. Until then, say so on the plugins screen.
- */
-add_action('admin_notices', function () {
-  if (!current_user_can('activate_plugins') || !function_exists('is_plugin_active')) return;
-  if (!is_plugin_active('getsafe360-connector/getsafe360-connector.php')) return;
-  echo '<div class="notice notice-warning"><p>'
-    . esc_html__('GetSafe 360 AI replaces the older "GetSafe360 Connector" plugin. Please deactivate and delete "GetSafe360 Connector"; your connection and settings are kept.', 'getsafe-360-ai')
-    . '</p></div>';
-});
-
 class GetSafe360_AI {
   const VERSION = '1.11.0';
   const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';

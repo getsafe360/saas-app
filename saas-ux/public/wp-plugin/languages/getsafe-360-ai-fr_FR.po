@@ -145,6 +145,3 @@ msgstr "Réglages"
 
 msgid "Pairing code filled in from GetSafe 360 AI — just click Connect."
 msgstr "Code d'appairage rempli depuis GetSafe 360 AI — cliquez simplement sur Connecter."
-
-msgid "GetSafe 360 AI replaces the older \"GetSafe360 Connector\" plugin. Please deactivate and delete \"GetSafe360 Connector\"; your connection and settings are kept."
-msgstr "GetSafe 360 AI remplace l’ancienne extension « GetSafe360 Connector ». Veuillez désactiver puis supprimer « GetSafe360 Connector » ; la connexion et les réglages sont conservés."
