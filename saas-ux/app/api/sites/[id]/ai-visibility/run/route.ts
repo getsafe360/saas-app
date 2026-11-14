@@ -1,13 +1,10 @@
 // app/api/sites/[id]/ai-visibility/run/route.ts
 // POST: "Check now". Free plans: one trial run per team (no tokens). Paid plans:
-// draws tokens at what the run costs.
+// reserve the most the run may cost, then pay what it cost (never more).
 
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { sql, eq } from 'drizzle-orm';
-import { getDrizzle } from '@/lib/db/postgres';
-import { teams } from '@/lib/db/schema/auth/teams';
-import { getAvailableTokens } from '@/lib/fix/tokens';
+import { reserveTokens, settleTokens } from '@/lib/ai-visibility/billing';
 import { topCompetitors } from '@/lib/ai-visibility/analyze';
 import { hasVisibilityKey } from '@/lib/ai-visibility/claude';
 import { ESTIMATED_TOKENS_PER_QUESTION, QUESTION_LIMIT, WEEKLY_PLANS } from '@/lib/ai-visibility/config';
@@ -30,16 +27,21 @@ export async function POST(_req: Request, props: { params: Promise<{ id: string 
   if (!set || questions.length === 0) return NextResponse.json({ error: 'NO_QUESTIONS' }, { status: 400 });
 
   const paid = WEEKLY_PLANS.has(site.plan);
-  if (paid) {
-    if (site.teamId === null) return NextResponse.json({ error: 'INSUFFICIENT_TOKENS', tokensRemaining: 0 }, { status: 402 });
-    const { available } = await getAvailableTokens(site.teamId);
-    if (available < questions.length * ESTIMATED_TOKENS_PER_QUESTION) {
-      return NextResponse.json({ error: 'INSUFFICIENT_TOKENS', tokensRemaining: available }, { status: 402 });
-    }
-  }
-
+  if (paid && site.teamId === null) return NextResponse.json({ error: 'INSUFFICIENT_TOKENS', tokensRemaining: 0 }, { status: 402 });
   if (!(await acquireRunLock(siteId))) return NextResponse.json({ error: 'ALREADY_RUNNING' }, { status: 409 });
+
+  // Paid checks reserve their most expensive case before anything runs; settled below.
+  const reserved = paid ? questions.length * ESTIMATED_TOKENS_PER_QUESTION : 0;
+  let settled = !paid;
   try {
+    if (paid) {
+      const reservation = await reserveTokens(site.teamId!, reserved);
+      if (!reservation.ok) {
+        settled = true;
+        return NextResponse.json({ error: 'INSUFFICIENT_TOKENS', tokensRemaining: reservation.available }, { status: 402 });
+      }
+    }
+
     const crawl = await crawlFor(site);
     if (!crawl) return NextResponse.json({ error: 'SITE_UNREACHABLE' }, { status: 502 });
     if (!paid && (site.teamId === null || !(await claimTrial(site.teamId)))) {
@@ -53,17 +55,12 @@ export async function POST(_req: Request, props: { params: Promise<{ id: string 
       return NextResponse.json({ error: 'RUN_FAILED' }, { status: 502 });
     }
 
-    if (paid && site.teamId !== null && run.tokensUsed > 0) {
-      await getDrizzle()
-        .update(teams)
-        .set({
-          tokensUsedThisMonth: sql`${teams.tokensUsedThisMonth} + ${run.tokensUsed}`,
-          tokensRemaining: sql`GREATEST(0, ${teams.tokensRemaining} - ${run.tokensUsed})`,
-        })
-        .where(eq(teams.id, site.teamId));
-    }
-    return NextResponse.json({ run, competitors: topCompetitors(run), charged: paid ? run.tokensUsed : 0 });
+    const charged = paid ? await settleTokens(site.teamId!, reserved, run.tokensUsed) : 0;
+    settled = true;
+    return NextResponse.json({ run, competitors: topCompetitors(run), charged });
   } finally {
+    // Whatever ended the run early, the reservation goes back (the API calls made so far are on us).
+    if (!settled) await settleTokens(site.teamId!, reserved, 0).catch(() => undefined);
     await releaseRunLock(siteId);
   }
 }

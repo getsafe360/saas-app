@@ -14,7 +14,7 @@ import type { SeoCrawl } from '@/lib/engine/seo/facts';
 import { evaluateSeoGeo } from '@/lib/engine/seo/report';
 import { crawlSite } from '@/lib/seo/crawl';
 import { loadCrawl, saveCrawl } from '@/lib/seo/store';
-import { analyzeAnswer, visibilityScore } from './analyze';
+import { analyzeAnswer, failedResult, visibilityScore } from './analyze';
 import { askWithSearch, suggestQuestionsText } from './claude';
 import { chargeFor, QUESTION_LIMIT } from './config';
 import { brandTerms, buildSuggestPrompt, normalizeQuestions, parseSuggested } from './questions';
@@ -109,10 +109,7 @@ export async function runVisibility(params: {
       tokensUsed += chargeFor(usage);
       return analyzeAnswer({ question, blocks, siteHost, brands, searches: usage.searches });
     } catch {
-      return {
-        questionId: question.id, question: question.text, mentioned: false, cited: false, foundInSearch: false,
-        citedUrls: [], otherSources: [], excerpt: '', searches: 0, error: 'ANSWER_FAILED',
-      };
+      return failedResult(question);
     }
   });
   const run: VisibilityRun = {

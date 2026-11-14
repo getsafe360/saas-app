@@ -45,6 +45,25 @@ function sentenceAround(text: string, index: number): string {
   return sentence.length > EXCERPT_CHARS ? `${sentence.slice(0, EXCERPT_CHARS - 1).trimEnd()}…` : sentence;
 }
 
+/**
+ * True when the searches failed: an error result other than "too many searches" and no
+ * results at all. Such an answer measures the search outage, not the site.
+ */
+export function searchFailed(blocks: ReadonlyArray<AnswerBlock>): boolean {
+  let failed = false;
+  let succeeded = false;
+  for (const block of blocks) {
+    if (block.type !== 'web_search_tool_result') continue;
+    if (Array.isArray(block.content)) {
+      succeeded = true;
+      continue;
+    }
+    const content = block.content as { type?: unknown; error_code?: unknown } | null;
+    if (content?.type === 'web_search_tool_result_error' && content.error_code !== 'max_uses_exceeded') failed = true;
+  }
+  return failed && !succeeded;
+}
+
 export function analyzeAnswer(params: {
   question: TrackedQuestion;
   blocks: ReadonlyArray<AnswerBlock>;
@@ -53,6 +72,7 @@ export function analyzeAnswer(params: {
   searches: number;
 }): QuestionResult {
   const { question, blocks, siteHost, brands } = params;
+  if (searchFailed(blocks)) return failedResult(question);
   const text = blocks.filter((block) => block.type === 'text' && typeof block.text === 'string').map((block) => block.text).join('');
 
   const citedHosts = new Map<string, number>();
@@ -95,6 +115,14 @@ export function analyzeAnswer(params: {
       .map(([host, count]) => ({ host, count })),
     excerpt: text ? sentenceAround(text, Math.max(0, mentionAt)) : '',
     searches: params.searches,
+  };
+}
+
+/** A question with no usable answer: kept in the run, never scored. */
+export function failedResult(question: TrackedQuestion): QuestionResult {
+  return {
+    questionId: question.id, question: question.text, mentioned: false, cited: false, foundInSearch: false,
+    citedUrls: [], otherSources: [], excerpt: '', searches: 0, error: 'ANSWER_FAILED',
   };
 }
 

@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { toCrawlPage, type SeoCrawl } from '@/lib/engine/seo/facts';
 import { parseSeoPage } from '@/lib/engine/seo/page';
-import { analyzeAnswer, isSiteHost, topCompetitors, visibilityScore } from './analyze';
+import { analyzeAnswer, isSiteHost, searchFailed, topCompetitors, visibilityScore } from './analyze';
 import { brandTerms, buildSuggestPrompt, normalizeQuestions, parseSuggested, siteLanguage } from './questions';
 import type { QuestionResult } from './types';
 
@@ -67,6 +67,16 @@ test('answer analysis: no false mentions inside other words, found-but-not-cited
   assert.equal(result.cited, false);
   assert.equal(result.foundInSearch, true, 'a subdomain counts as the site');
   assert.equal(isSiteHost('evilbaeckerei-mueller.de', 'baeckerei-mueller.de'), false);
+});
+
+test('answer analysis: a failed search is a failed answer, too many searches is not', () => {
+  const outage = [
+    { type: 'web_search_tool_result', content: { type: 'web_search_tool_result_error', error_code: 'unavailable' } },
+    { type: 'text', text: 'I could not search right now.' },
+  ];
+  assert.equal(analyzeAnswer({ question, blocks: outage, siteHost: 'baeckerei-mueller.de', brands, searches: 1 }).error, 'ANSWER_FAILED');
+  assert.equal(searchFailed([{ type: 'web_search_tool_result', content: { type: 'web_search_tool_result_error', error_code: 'max_uses_exceeded' } }]), false);
+  assert.equal(searchFailed([...outage, { type: 'web_search_tool_result', content: [{ url: 'https://a.de/' }] }]), false, 'another search worked');
 });
 
 test('score and competitors across a run', () => {

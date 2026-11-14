@@ -16,6 +16,9 @@ import { getDb } from '@/lib/db/drizzle';
 import { fixJobs } from '@/lib/db/schema';
 import { teams } from '@/lib/db/schema/auth';
 
+/** Advisory lock key: serialises a team's token reservations (fix proposals, AI visibility checks). */
+export const TOKEN_RESERVE_LOCK = 4207;
+
 /** The pool or a transaction: both can run selects. Lets callers read inside their own tx. */
 type Executor = Pick<ReturnType<typeof getDb>, 'select'>;
 
