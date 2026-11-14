@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: GetSafe360 Connector
+ * Plugin Name: GetSafe 360 AI
  * Plugin URI: https://www.getsafe360.ai/docs/wordpress-connector
- * Description: Connects your site to GetSafe 360 AI: health, security and speed checks from inside WordPress, and safe one-click fixes with undo.
+ * Description: Website Intelligence Platform for WordPress: health, security, SEO, speed and accessibility checks, with safe one-click fixes you can undo.
  * Version: 1.11.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
@@ -10,13 +10,26 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Requires at least: 5.6
  * Requires PHP: 7.2
- * Text Domain: getsafe360-connector
+ * Text Domain: getsafe-360-ai
  * Domain Path: /languages
  */
 
 if (!defined('ABSPATH')) exit;
 
-class GetSafe360_Connector {
+/*
+ * Until version 1.10 this plugin was "GetSafe360 Connector" in the folder
+ * getsafe360-connector. Both use the same settings, so after the old one is
+ * removed the site stays connected. Until then, say so on the plugins screen.
+ */
+add_action('admin_notices', function () {
+  if (!current_user_can('activate_plugins') || !function_exists('is_plugin_active')) return;
+  if (!is_plugin_active('getsafe360-connector/getsafe360-connector.php')) return;
+  echo '<div class="notice notice-warning"><p>'
+    . esc_html__('GetSafe 360 AI replaces the older "GetSafe360 Connector" plugin. Please deactivate and delete "GetSafe360 Connector"; your connection and settings are kept.', 'getsafe-360-ai')
+    . '</p></div>';
+});
+
+class GetSafe360_AI {
   const VERSION = '1.11.0';
   const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';
   const OPTION = 'getsafe360_connector';
@@ -78,7 +91,7 @@ class GetSafe360_Connector {
    */
   public function load_textdomain() {
     // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- bundled translations until the language packs are complete.
-    load_plugin_textdomain('getsafe360-connector', false, dirname(plugin_basename(__FILE__)) . '/languages');
+    load_plugin_textdomain('getsafe-360-ai', false, dirname(plugin_basename(__FILE__)) . '/languages');
   }
 
   /** Base URL of the GetSafe 360 service, without a trailing slash. */
@@ -157,7 +170,7 @@ class GetSafe360_Connector {
     echo '</p>';
 
     if ($debug && (defined('WP_DEBUG') && WP_DEBUG)) {
-      echo '<details style="margin: 8px 0;"><summary>' . esc_html__('Debug Information', 'getsafe360-connector') . '</summary>';
+      echo '<details style="margin: 8px 0;"><summary>' . esc_html__('Debug Information', 'getsafe-360-ai') . '</summary>';
       echo '<pre style="white-space: pre-wrap; font-size: 11px; background:#f6f7f7; padding:8px; border:1px solid #ccd0d4; overflow:auto;">';
       echo esc_html(wp_json_encode($debug, JSON_PRETTY_PRINT));
       echo '</pre></details>';
@@ -187,7 +200,7 @@ class GetSafe360_Connector {
 
   /** Add "Settings" to the plugins list action links. */
   public function action_links($links) {
-    $settings_link = '<a href="' . esc_url(admin_url('admin.php?page=getsafe360')) . '">' . esc_html__('Settings', 'getsafe360-connector') . '</a>';
+    $settings_link = '<a href="' . esc_url(admin_url('admin.php?page=getsafe360')) . '">' . esc_html__('Settings', 'getsafe-360-ai') . '</a>';
     array_unshift($links, $settings_link);
     return $links;
   }
@@ -219,7 +232,7 @@ class GetSafe360_Connector {
     // Handle disconnect
     if (isset($_POST['disconnect']) && check_admin_referer('getsafe360_disconnect')) {
       delete_option(self::OPTION);
-      $this->render_notice('success', __('Disconnected', 'getsafe360-connector'), __('Your site is no longer linked to GetSafe 360. You can reconnect anytime.', 'getsafe360-connector'));
+      $this->render_notice('success', __('Disconnected', 'getsafe-360-ai'), __('Your site is no longer linked to GetSafe 360. You can reconnect anytime.', 'getsafe-360-ai'));
     }
 
     // Handle connect
@@ -256,14 +269,14 @@ class GetSafe360_Connector {
 
         // User-friendly error messages
         if (strpos($error_message, 'timed out') !== false) {
-          $user_message = __('Connection timed out. Please check your internet connection and try again.', 'getsafe360-connector');
+          $user_message = __('Connection timed out. Please check your internet connection and try again.', 'getsafe-360-ai');
         } else if (strpos($error_message, 'SSL') !== false) {
-          $user_message = __('SSL certificate verification failed. Your site may need updated SSL certificates.', 'getsafe360-connector');
+          $user_message = __('SSL certificate verification failed. Your site may need updated SSL certificates.', 'getsafe-360-ai');
         } else {
           $user_message = $error_message;
         }
 
-        $this->render_notice('error', __('Connection Failed', 'getsafe360-connector'), $user_message, array_merge($debug, ['wp_error' => $resp->get_error_data()]));
+        $this->render_notice('error', __('Connection Failed', 'getsafe-360-ai'), $user_message, array_merge($debug, ['wp_error' => $resp->get_error_data()]));
       } else {
         $code      = wp_remote_retrieve_response_code($resp);
         $body_raw  = wp_remote_retrieve_body($resp);
@@ -283,21 +296,21 @@ class GetSafe360_Connector {
             'plugin_version' => self::VERSION,
           ], false);
 
-          $this->render_notice('success', __('Successfully Connected!', 'getsafe360-connector'), __('Your WordPress site is now linked to GetSafe 360 AI. You can now run security scans and performance checks from your dashboard.', 'getsafe360-connector'), $debug);
+          $this->render_notice('success', __('Successfully Connected!', 'getsafe-360-ai'), __('Your WordPress site is now linked to GetSafe 360 AI. You can now run security scans and performance checks from your dashboard.', 'getsafe-360-ai'), $debug);
         } else {
           // User-friendly error messages based on server response
           $server_error = is_array($body_json) && isset($body_json['error']) ? $body_json['error'] : 'Handshake error';
 
           $user_message = '';
           if (strpos($server_error, 'invalid_or_expired') !== false || strpos($server_error, 'code_expired') !== false) {
-            $user_message = __('This pairing code has expired. Please generate a new code from your GetSafe 360 AI dashboard.', 'getsafe360-connector');
+            $user_message = __('This pairing code has expired. Please generate a new code from your GetSafe 360 AI dashboard.', 'getsafe-360-ai');
           } else if (strpos($server_error, 'already_used') !== false) {
-            $user_message = __('This pairing code has already been used. Please generate a new code from your GetSafe 360 AI dashboard.', 'getsafe360-connector');
+            $user_message = __('This pairing code has already been used. Please generate a new code from your GetSafe 360 AI dashboard.', 'getsafe-360-ai');
           } else {
             $user_message = $server_error;
           }
 
-          $this->render_notice('error', __('Connection Failed', 'getsafe360-connector'), $user_message, $debug);
+          $this->render_notice('error', __('Connection Failed', 'getsafe-360-ai'), $user_message, $debug);
         }
       }
     }
@@ -314,7 +327,7 @@ class GetSafe360_Connector {
       // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- see above.
       $prefill_code = preg_replace('/[^0-9]/', '', sanitize_text_field(wp_unslash($_GET['gs360_code'])));
       if (strlen($prefill_code) === 6) {
-        echo '<div class="getsafe360-deeplink-notice">✓ ' . esc_html__('Pairing code filled in from GetSafe 360 AI — just click Connect.', 'getsafe360-connector') . '</div>';
+        echo '<div class="getsafe360-deeplink-notice">✓ ' . esc_html__('Pairing code filled in from GetSafe 360 AI — just click Connect.', 'getsafe-360-ai') . '</div>';
       } else {
         $prefill_code = '';
       }
@@ -326,40 +339,40 @@ class GetSafe360_Connector {
             <path fill="#167dc4" fill-rule="evenodd" d="M 137.5 56.9 C 124.7 60.4 110.9 68.4 105.7 75.3 C 99.3 83.9 91.9 98.0 87.5 110.2 C 85.8 114.8 85.8 114.8 81.0 111.4 C 78.4 109.5 74.5 107.4 72.4 106.6 C 68.6 105.3 68.6 105.3 83.2 90.9 C 97.8 76.5 97.8 76.5 98.4 70 C 98.8 66.4 99.3 62.0 99.7 60.3 C 100.2 57 100.2 57 60.3 57 C 15.7 57 19.4 55.3 17.4 76.8 C 16.7 84.2 16.7 84.2 37.1 83.8 C 57.5 83.5 57.5 83.5 46 94.8 C 25.9 114.6 26.3 113.9 29.0 122.6 C 31.4 130 31.4 130 37.8 130 C 55.5 130 64.7 136.6 60.6 146.4 C 56.0 157.4 37.1 158.6 23.4 148.8 C 20.4 146.6 17.5 145.2 17.0 145.6 C 2.4 161.5 -1.1 168.8 3.8 173.0 C 27.3 193.2 69.4 187.8 86.0 162.5 C 87.8 159.7 87.8 159.7 89.3 163.1 C 101.0 190.6 145.5 192.4 168.6 166.4 C 170.8 163.9 170.8 163.9 173.3 168.3 C 185.8 189.5 221.0 191.5 241.3 172.2 C 267.3 147.3 273.3 80.7 251.1 63.1 C 221.8 39.9 182.7 60.4 170.5 105.3 C 168.9 111.1 168.9 111.1 165.2 107.9 C 156.3 100.0 139.6 97.0 128.3 101.3 C 123.1 103.2 123.1 103.0 127.5 97.0 C 135.7 85.8 149.8 81.4 163.9 85.6 C 166.8 86.4 169.4 86.9 169.7 86.6 C 171.2 85.1 181.0 61.4 180.6 60.3 C 178.8 55.8 149.8 53.5 137.5 56.9 M 282.9 57.1 C 277.8 61.1 269.2 61.6 262.8 58.3 C 259.3 56.6 259.3 57.4 262.6 61.2 C 268.2 68.0 274 84.1 274 93.2 C 274 102.0 279.5 90.0 284.6 70.1 C 288.3 55.9 287.9 53.2 282.9 57.1 M 214.3 85.9 C 202.3 93.2 194.8 143.7 204.2 153.7 C 216.0 166.3 230.2 143.6 231.7 109.5 C 232.7 87.5 226.2 78.7 214.3 85.9 M 120.3 126.5 C 108.8 131.5 117.9 156.0 131.3 156.0 C 136.0 156.0 144.9 147.8 145.2 143.2 C 146.2 128.5 134.2 120.4 120.3 126.5 M 173 196.1 C 87.6 276.5 4.5 276.3 21.6 195.8 C 23.1 188.8 19.8 193.9 17.0 202.8 C -15.1 306.3 90.4 308.5 195.8 206.6 C 207.8 194.9 207.6 195.5 200.0 194.7 C 194.9 194.1 188.6 192.4 182 189.7 C 181.0 189.3 177.9 191.5 173 196.1"/>
             <path fill="#cc3300" fill-rule="evenodd" d="M 266.6 26.0 C 257.5 28.9 253.4 43.0 259.8 49.8 C 270.2 61.1 287.0 55.4 287.0 40.6 C 287.0 29.8 277.1 22.7 266.6 26.0"/>
           </svg>
-          <?php esc_html_e('GetSafe 360 AI Connector', 'getsafe360-connector'); ?>
+          GetSafe 360 AI
         </h1>
         <p><?php
           /* translators: %s: plugin version number. */
-          printf(esc_html__('Version %s', 'getsafe360-connector'), esc_html(self::VERSION));
+          printf(esc_html__('Version %s', 'getsafe-360-ai'), esc_html(self::VERSION));
         ?></p>
 
         <?php if (!$is_connected): ?>
           <!-- NOT CONNECTED STATE -->
           <div class="getsafe360-card">
-            <h2><?php esc_html_e('Connect Your WordPress Site', 'getsafe360-connector'); ?></h2>
-            <p><?php esc_html_e('Link this WordPress site to your GetSafe 360 AI dashboard for automated security scanning, performance monitoring, and AI-powered site repairs.', 'getsafe360-connector'); ?></p>
+            <h2><?php esc_html_e('Connect Your WordPress Site', 'getsafe-360-ai'); ?></h2>
+            <p><?php esc_html_e('Link this WordPress site to your GetSafe 360 AI dashboard for automated security scanning, performance monitoring, and AI-powered site repairs.', 'getsafe-360-ai'); ?></p>
 
             <div class="getsafe360-help">
-              <strong><?php esc_html_e('How to connect:', 'getsafe360-connector'); ?></strong>
+              <strong><?php esc_html_e('How to connect:', 'getsafe-360-ai'); ?></strong>
               <ol style="margin: 8px 0 0 20px;">
                 <li><?php echo wp_kses(sprintf(
                   /* translators: %1$s and %2$s: opening and closing <strong> tags. */
-                  __('Log in to your %1$sGetSafe 360 AI dashboard%2$s', 'getsafe360-connector'),
+                  __('Log in to your %1$sGetSafe 360 AI dashboard%2$s', 'getsafe-360-ai'),
                   '<strong>', '</strong>'
                 ), self::INLINE_HTML); ?></li>
                 <li><?php echo wp_kses(sprintf(
                   /* translators: %1$s, %3$s: opening <strong> tags; %2$s, %4$s: closing tags. */
-                  __('Click %1$s"Add Site"%2$s or %3$s"Generate Pairing Code"%4$s', 'getsafe360-connector'),
+                  __('Click %1$s"Add Site"%2$s or %3$s"Generate Pairing Code"%4$s', 'getsafe-360-ai'),
                   '<strong>', '</strong>', '<strong>', '</strong>'
                 ), self::INLINE_HTML); ?></li>
                 <li><?php echo wp_kses(sprintf(
                   /* translators: %1$s and %2$s: opening and closing <strong> tags. */
-                  __('Copy the %1$s6-digit code%2$s', 'getsafe360-connector'),
+                  __('Copy the %1$s6-digit code%2$s', 'getsafe-360-ai'),
                   '<strong>', '</strong>'
                 ), self::INLINE_HTML); ?></li>
                 <li><?php echo wp_kses(sprintf(
                   /* translators: %1$s and %2$s: opening and closing <strong> tags. */
-                  __('Paste it below and click %1$s"Connect"%2$s', 'getsafe360-connector'),
+                  __('Paste it below and click %1$s"Connect"%2$s', 'getsafe-360-ai'),
                   '<strong>', '</strong>'
                 ), self::INLINE_HTML); ?></li>
               </ol>
@@ -367,7 +380,7 @@ class GetSafe360_Connector {
 
             <form method="post" style="margin-top: 20px;">
               <?php wp_nonce_field('getsafe360_connect'); ?>
-              <p><label for="pair_code"><strong><?php esc_html_e('Enter Pairing Code:', 'getsafe360-connector'); ?></strong></label></p>
+              <p><label for="pair_code"><strong><?php esc_html_e('Enter Pairing Code:', 'getsafe-360-ai'); ?></strong></label></p>
               <p>
                 <input
                   type="text"
@@ -386,7 +399,7 @@ class GetSafe360_Connector {
               <p>
                 <button type="submit" class="getsafe360-btn-primary">
                   <span class="dashicons dashicons-admin-links" style="margin-top: 4px;"></span>
-                  <?php esc_html_e('Connect to GetSafe 360 AI', 'getsafe360-connector'); ?>
+                  <?php esc_html_e('Connect to GetSafe 360 AI', 'getsafe-360-ai'); ?>
                 </button>
               </p>
             </form>
@@ -394,7 +407,7 @@ class GetSafe360_Connector {
             <p style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #ddd; color: #666; font-size: 13px;">
               <?php printf(
                 /* translators: %s: this site's URL. */
-                esc_html__('Note: The pairing code expires in 10 minutes. Make sure you generated the code for this exact site URL: %s', 'getsafe360-connector'),
+                esc_html__('Note: The pairing code expires in 10 minutes. Make sure you generated the code for this exact site URL: %s', 'getsafe-360-ai'),
                 '<code>' . esc_html(get_site_url()) . '</code>'
               ); ?>
             </p>
@@ -405,11 +418,11 @@ class GetSafe360_Connector {
           <div class="getsafe360-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
               <div>
-                <h2 style="margin: 0;"><?php esc_html_e('Connection Status', 'getsafe360-connector'); ?></h2>
+                <h2 style="margin: 0;"><?php esc_html_e('Connection Status', 'getsafe-360-ai'); ?></h2>
                 <p style="margin: 8px 0 0 0;">
                   <span class="getsafe360-status connected">
                     <span class="dashicons dashicons-yes-alt" style="margin-top: 2px;"></span>
-                    <?php esc_html_e('Connected', 'getsafe360-connector'); ?>
+                    <?php esc_html_e('Connected', 'getsafe-360-ai'); ?>
                   </span>
                 </p>
               </div>
@@ -418,26 +431,26 @@ class GetSafe360_Connector {
             <table class="form-table" role="presentation">
               <tbody>
                 <tr>
-                  <th scope="row"><?php esc_html_e('Site ID', 'getsafe360-connector'); ?></th>
+                  <th scope="row"><?php esc_html_e('Site ID', 'getsafe-360-ai'); ?></th>
                   <td><code><?php echo esc_html($opt['site_id']); ?></code></td>
                 </tr>
                 <tr>
-                  <th scope="row"><?php esc_html_e('Connected Since', 'getsafe360-connector'); ?></th>
+                  <th scope="row"><?php esc_html_e('Connected Since', 'getsafe-360-ai'); ?></th>
                   <td><?php
                     /* translators: PHP date format for "connected since" display. See https://www.php.net/date */
-                    echo esc_html(wp_date(__('F j, Y \a\t g:i a', 'getsafe360-connector'), $opt['connected_at']));
+                    echo esc_html(wp_date(__('F j, Y \a\t g:i a', 'getsafe-360-ai'), $opt['connected_at']));
                   ?></td>
                 </tr>
                 <tr>
-                  <th scope="row"><?php esc_html_e('WordPress Version', 'getsafe360-connector'); ?></th>
+                  <th scope="row"><?php esc_html_e('WordPress Version', 'getsafe-360-ai'); ?></th>
                   <td><?php echo esc_html(get_bloginfo('version')); ?></td>
                 </tr>
                 <tr>
-                  <th scope="row"><?php esc_html_e('Plugin Version', 'getsafe360-connector'); ?></th>
+                  <th scope="row"><?php esc_html_e('Plugin Version', 'getsafe-360-ai'); ?></th>
                   <td><?php echo esc_html(self::VERSION); ?></td>
                 </tr>
                 <tr>
-                  <th scope="row"><?php esc_html_e('Site URL', 'getsafe360-connector'); ?></th>
+                  <th scope="row"><?php esc_html_e('Site URL', 'getsafe-360-ai'); ?></th>
                   <td><code><?php echo esc_html(get_site_url()); ?></code></td>
                 </tr>
               </tbody>
@@ -450,17 +463,17 @@ class GetSafe360_Connector {
                 onclick="document.getElementById('disconnect-confirm').style.display='block'; this.style.display='none';"
               >
                 <span class="dashicons dashicons-dismiss" style="margin-top: 2px;"></span>
-                <?php esc_html_e('Disconnect Site', 'getsafe360-connector'); ?>
+                <?php esc_html_e('Disconnect Site', 'getsafe-360-ai'); ?>
               </button>
 
               <div id="disconnect-confirm" class="getsafe360-disconnect-confirm">
-                <p><strong>⚠️ <?php esc_html_e('Are you sure?', 'getsafe360-connector'); ?></strong></p>
-                <p><?php esc_html_e('Disconnecting will stop all automated scans and monitoring for this site. You can reconnect anytime using a new pairing code.', 'getsafe360-connector'); ?></p>
+                <p><strong>⚠️ <?php esc_html_e('Are you sure?', 'getsafe-360-ai'); ?></strong></p>
+                <p><?php esc_html_e('Disconnecting will stop all automated scans and monitoring for this site. You can reconnect anytime using a new pairing code.', 'getsafe-360-ai'); ?></p>
                 <form method="post" style="display: inline-block; margin-right: 8px;">
                   <?php wp_nonce_field('getsafe360_disconnect'); ?>
                   <input type="hidden" name="disconnect" value="1" />
                   <button type="submit" class="getsafe360-btn-danger">
-                    <?php esc_html_e('Yes, Disconnect', 'getsafe360-connector'); ?>
+                    <?php esc_html_e('Yes, Disconnect', 'getsafe-360-ai'); ?>
                   </button>
                 </form>
                 <button
@@ -468,33 +481,33 @@ class GetSafe360_Connector {
                   class="button"
                   onclick="document.getElementById('disconnect-confirm').style.display='none'; document.querySelector('.getsafe360-btn-danger').style.display='inline-block';"
                 >
-                  <?php esc_html_e('Cancel', 'getsafe360-connector'); ?>
+                  <?php esc_html_e('Cancel', 'getsafe-360-ai'); ?>
                 </button>
               </div>
             </div>
           </div>
 
           <div class="getsafe360-help" style="margin-top: 20px;">
-            <strong>✨ <?php esc_html_e("What's Next?", 'getsafe360-connector'); ?></strong>
+            <strong>✨ <?php esc_html_e("What's Next?", 'getsafe-360-ai'); ?></strong>
             <ul style="margin: 8px 0 0 20px;">
               <li><?php echo wp_kses(sprintf(
                 /* translators: %1$s and %2$s: opening and closing <strong> tags. */
-                __('Visit your %1$sGetSafe 360 AI dashboard%2$s to run security scans', 'getsafe360-connector'),
+                __('Visit your %1$sGetSafe 360 AI dashboard%2$s to run security scans', 'getsafe-360-ai'),
                 '<strong>', '</strong>'
               ), self::INLINE_HTML); ?></li>
               <li><?php echo wp_kses(sprintf(
                 /* translators: %1$s and %2$s: opening and closing <strong> tags. */
-                __('Enable %1$sAI-powered automatic repairs%2$s for common issues', 'getsafe360-connector'),
+                __('Enable %1$sAI-powered automatic repairs%2$s for common issues', 'getsafe-360-ai'),
                 '<strong>', '</strong>'
               ), self::INLINE_HTML); ?></li>
               <li><?php echo wp_kses(sprintf(
                 /* translators: %1$s and %2$s: opening and closing <strong> tags. */
-                __('Set up %1$sscheduled scans%2$s to monitor your site 24/7', 'getsafe360-connector'),
+                __('Set up %1$sscheduled scans%2$s to monitor your site 24/7', 'getsafe-360-ai'),
                 '<strong>', '</strong>'
               ), self::INLINE_HTML); ?></li>
               <li><?php echo wp_kses(sprintf(
                 /* translators: %1$s and %2$s: opening and closing <strong> tags. */
-                __('View detailed %1$sperformance reports%2$s and recommendations', 'getsafe360-connector'),
+                __('View detailed %1$sperformance reports%2$s and recommendations', 'getsafe-360-ai'),
                 '<strong>', '</strong>'
               ), self::INLINE_HTML); ?></li>
             </ul>
@@ -503,10 +516,10 @@ class GetSafe360_Connector {
 
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
           <p>
-            <strong><?php esc_html_e('Need Help?', 'getsafe360-connector'); ?></strong>
+            <strong><?php esc_html_e('Need Help?', 'getsafe-360-ai'); ?></strong>
             <?php echo wp_kses(sprintf(
               /* translators: %1$s and %2$s wrap the link to the documentation, %3$s and %4$s the link to support. */
-              __('Visit our %1$sdocumentation%2$s or %3$scontact support%4$s.', 'getsafe360-connector'),
+              __('Visit our %1$sdocumentation%2$s or %3$scontact support%4$s.', 'getsafe-360-ai'),
               '<a href="https://www.getsafe360.ai/docs/wordpress-connector" target="_blank" rel="noopener noreferrer">',
               '</a>',
               '<a href="https://www.getsafe360.ai/support" target="_blank" rel="noopener noreferrer">',
@@ -568,8 +581,8 @@ class GetSafe360_Connector {
       status_header(403);
       nocache_headers();
       wp_die(
-        esc_html__('Author enumeration blocked by GetSafe 360 AI.', 'getsafe360-connector'),
-        esc_html__('Forbidden', 'getsafe360-connector'),
+        esc_html__('Author enumeration blocked by GetSafe 360 AI.', 'getsafe-360-ai'),
+        esc_html__('Forbidden', 'getsafe-360-ai'),
         ['response' => 403]
       );
     }
@@ -2859,4 +2872,4 @@ class GetSafe360_Connector {
   }
 }
 
-new GetSafe360_Connector();
+new GetSafe360_AI();

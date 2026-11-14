@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useWordPressPairing } from "./wordpress/hooks/useWordPressPairing";
 import type { ConnectionStatus } from "./wordpress/types";
+import { PLUGIN_ZIP_PATH } from "@/lib/wordpress/plugin-version";
 
 // ─── Platform config ──────────────────────────────────────────────────────────
 
@@ -867,7 +868,7 @@ function WordPressSetup({ pairing }: { pairing: ReturnType<typeof useWordPressPa
             title: t("pairing.step1"),
             action: (
               <a
-                href="/wp-plugin/getsafe360-connector.zip"
+                href={PLUGIN_ZIP_PATH}
                 download
                 className={`${SECONDARY_BTN} text-xs px-3 py-1.5`}
               >

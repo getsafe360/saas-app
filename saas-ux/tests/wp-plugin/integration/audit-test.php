@@ -78,7 +78,7 @@ try {
     return $pre;
   };
   add_filter('pre_http_request', $count_calls, 5, 3);
-  $connector = $GLOBALS['getsafe360_connector_instance'] ?? new GetSafe360_Connector();
+  $connector = $GLOBALS['getsafe360_connector_instance'] ?? new GetSafe360_AI();
   $method = new ReflectionMethod($connector, 'audit_core_modified_files');
   $method->setAccessible(true);
   check($method->invoke($connector, microtime(true) - 1) === null && $calls === 0, 'skips checksums when the budget is spent');

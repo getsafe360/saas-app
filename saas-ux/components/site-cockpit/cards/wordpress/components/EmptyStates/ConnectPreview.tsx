@@ -4,7 +4,7 @@
 import { AlertTriangle, ArrowUp, Check, Download, FlaskConical, Search, Wand2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { connectPreview } from "@/lib/wordpress/connect-preview";
-import { CURRENT_PLUGIN_VERSION, isPluginOutdated } from "@/lib/wordpress/plugin-version";
+import { CURRENT_PLUGIN_VERSION, PLUGIN_ZIP_PATH, isPluginOutdated } from "@/lib/wordpress/plugin-version";
 
 interface ConnectPreviewProps {
   domain: string;
@@ -127,7 +127,7 @@ export function ConnectPreview({ domain, problemIds, pluginVersion }: ConnectPre
           <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
           <span className="flex-1">{t("pluginOutdated", { installed: pluginVersion!, latest: CURRENT_PLUGIN_VERSION })}</span>
           <a
-            href="/wp-plugin/getsafe360-connector.zip"
+            href={PLUGIN_ZIP_PATH}
             download
             className="inline-flex items-center gap-1 gs-btn gs-btn-upgrade rounded-md px-2 py-1 font-medium"
           >

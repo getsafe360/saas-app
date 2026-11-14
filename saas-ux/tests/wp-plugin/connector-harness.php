@@ -1,11 +1,11 @@
 <?php
-// Run: php tests/wp-plugin/connector-harness.php public/wp-plugin/getsafe360-connector.php
+// Run: php tests/wp-plugin/connector-harness.php public/wp-plugin/getsafe-360-ai.php
 // Stubs the few WordPress functions the connector touches and exercises
 // the security-headers action and the user-enumeration REST filter.
 define('ABSPATH', '/tmp/');
 $GLOBALS['opts'] = []; $GLOBALS['sent'] = []; $GLOBALS['ssl'] = true; $GLOBALS['logged_in'] = false;
 function add_action(...$a) {} function add_filter(...$a) {} function load_plugin_textdomain(...$a) {}
-function plugin_basename($f) { return 'getsafe360-connector/getsafe360-connector.php'; }
+function plugin_basename($f) { return 'getsafe-360-ai/getsafe-360-ai.php'; }
 function get_option($k, $d = false) { return $GLOBALS['opts'][$k] ?? $d; }
 function update_option($k, $v, $a = null) { $GLOBALS['opts'][$k] = $v; return true; }
 function sanitize_text_field($s) { return trim(strip_tags((string) $s)); }
@@ -15,7 +15,7 @@ function wp_parse_url($url, $component = -1) { return parse_url($url, $component
 function untrailingslashit($s) { return rtrim($s, '/\\'); }
 require $argv[1];
 
-$c = new GetSafe360_Connector();
+$c = new GetSafe360_AI();
 $r = new ReflectionClass($c);
 $apply = $r->getMethod('apply_security_headers_action'); $apply->setAccessible(true);
 $fails = 0;

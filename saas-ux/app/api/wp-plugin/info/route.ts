@@ -1,25 +1,16 @@
 import { NextResponse } from 'next/server';
-import { CURRENT_PLUGIN_VERSION } from '@/lib/wordpress/plugin-version';
 
-// Update channel for connector versions up to 1.10.0, which update from GetSafe 360.
-// 1.11.0 drops that updater: from then on WordPress.org delivers updates, so
-// this route only has to bring older installs to 1.11.0.
-// Bump CURRENT_PLUGIN_VERSION (lib/wordpress/plugin-version.ts) and set WP_PLUGIN_DOWNLOAD_URL env var with each release.
-// WP_PLUGIN_DOWNLOAD_URL should point to the publicly accessible plugin ZIP
-// (e.g. a Vercel Blob URL: https://xxxx.blob.vercel-storage.com/getsafe360-connector-v0.3.0.zip)
-const PLUGIN_VERSION = CURRENT_PLUGIN_VERSION;
+// Update channel of the old "GetSafe360 Connector" (folder getsafe360-connector),
+// versions up to 1.10.0, which updated itself from GetSafe 360.
+// From 1.11.0 the plugin is "GetSafe 360 AI" in the folder getsafe-360-ai and
+// updates come from WordPress.org. WordPress cannot move a plugin to a new
+// folder through an update, so this channel stays frozen at 1.10.0: old
+// installs are told they are current, and the dashboard asks their owners to
+// install the new plugin once (settings carry over).
+const PLUGIN_VERSION = '1.10.0';
 
 export async function GET() {
     const downloadUrl = process.env.WP_PLUGIN_DOWNLOAD_URL ?? '';
-
-    // Don't advertise an update if the ZIP URL hasn't been configured — WordPress
-    // would try to install an empty package URL and fail on every connected site.
-    if (!downloadUrl) {
-        return NextResponse.json(
-            { error: 'Plugin download URL not configured.' },
-            { status: 503 }
-        );
-    }
 
     return NextResponse.json(
         {

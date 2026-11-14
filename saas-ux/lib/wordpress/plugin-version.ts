@@ -6,6 +6,12 @@
 
 export const CURRENT_PLUGIN_VERSION = '1.11.0';
 
+/** Plugin slug on WordPress.org (folder and text domain). Was getsafe360-connector up to 1.10. */
+export const PLUGIN_SLUG = 'getsafe-360-ai';
+
+/** The plugin ZIP this app serves (built by public/wp-plugin/build.sh). */
+export const PLUGIN_ZIP_PATH = `/wp-plugin/${PLUGIN_SLUG}.zip`;
+
 /** True when `installed` is older than `latest` (plain x.y.z versions). */
 export function isPluginOutdated(installed: string, latest: string = CURRENT_PLUGIN_VERSION): boolean {
   const parse = (v: string) => v.split('.').map((part) => Number.parseInt(part, 10) || 0);

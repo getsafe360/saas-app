@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SignedIn, SignedOut, SignInButton, useAuth } from "@clerk/nextjs";
+import { PLUGIN_ZIP_PATH } from "@/lib/wordpress/plugin-version";
 
 type Status = "idle" | "checking" | "ready" | "waiting" | "error" | "connected";
 
@@ -167,7 +168,7 @@ export default function ConnectWordPress({
             {/* Download plugin link */}
             <a
               className="underline text-sm mt-3 inline-block"
-              href="/wp-plugin/getsafe360-connector.zip"
+              href={PLUGIN_ZIP_PATH}
             >
               Download the plugin
             </a>

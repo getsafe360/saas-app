@@ -8,7 +8,7 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN="$HERE/../../../public/wp-plugin/getsafe360-connector.php"
+PLUGIN_DIR="$HERE/../../../public/wp-plugin"
 WP_VERSION="${WP_VERSION:-7.1.4}"
 WORK="${WORK_DIR:-$(mktemp -d)}"
 
@@ -22,9 +22,9 @@ WP="php $WORK/wp-cli.phar --allow-root --path=$WORK/wordpress"
 $WP core is-installed 2>/dev/null || $WP core install --url=https://example.test --title=Test \
   --admin_user=admin --admin_password=integration --admin_email=admin@example.test --skip-email --quiet
 
-mkdir -p wordpress/wp-content/plugins/getsafe360-connector
-cp "$PLUGIN" wordpress/wp-content/plugins/getsafe360-connector/
-$WP plugin activate getsafe360-connector --quiet
+mkdir -p wordpress/wp-content/plugins/getsafe-360-ai
+cp "$PLUGIN_DIR/getsafe-360-ai.php" "$PLUGIN_DIR/uninstall.php" wordpress/wp-content/plugins/getsafe-360-ai/
+$WP plugin activate getsafe-360-ai --quiet
 $WP eval-file "$HERE/audit-test.php"
 $WP eval-file "$HERE/actions-test.php"
 $WP eval-file "$HERE/seo-injection-test.php"
@@ -40,3 +40,8 @@ trap 'kill $SERVER_PID 2>/dev/null' EXIT
 for _ in $(seq 1 20); do curl -s --noproxy '*' -o /dev/null "http://127.0.0.1:$PORT/" && break; sleep 0.5; done
 GS360_LOOPBACK="http://127.0.0.1:$PORT" $WP eval-file "$HERE/plugin-updates-test.php"
 GS360_LOOPBACK="http://127.0.0.1:$PORT" $WP eval-file "$HERE/core-integrity-test.php"
+
+# Deleting the plugin removes everything it stored.
+$WP plugin deactivate getsafe-360-ai --quiet
+$WP plugin uninstall getsafe-360-ai --quiet
+$WP eval-file "$HERE/uninstall-test.php"

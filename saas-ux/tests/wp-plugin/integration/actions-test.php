@@ -134,7 +134,7 @@ for ($i = 1; $i <= 620; $i++) {
   clean_post_cache($big);
   _wp_put_post_revision(get_post($big));
 }
-$connector = $GLOBALS['getsafe360_connector_instance'] ?? new GetSafe360_Connector();
+$connector = $GLOBALS['getsafe360_connector_instance'] ?? new GetSafe360_AI();
 $trim = new ReflectionMethod($connector, 'trim_revisions');
 $trim->setAccessible(true);
 $spent = $trim->invoke($connector, 5, microtime(true) - 1);
