@@ -75,10 +75,11 @@ test('page parser reads titles, schema, dates, author, links and words', () => {
 });
 
 function crawl(overrides: Partial<SeoCrawl> = {}): SeoCrawl {
-  const home = toCrawlPage(parseSeoPage(HTML, 'https://example.com/'), true);
+  const home = toCrawlPage(parseSeoPage(HTML, 'https://example.com/'), true, true);
   const inner = toCrawlPage(
     parseSeoPage('<html><head><title>Bäckerei Muster – Brot aus Berlin</title><meta name="robots" content="noindex"></head><body><h1>A</h1><h1>B</h1></body></html>', 'https://example.com/old/'),
     true,
+    false,
   );
   return {
     origin: 'https://example.com',
@@ -110,7 +111,7 @@ test('GEO rules: AI search access, training choice, llms.txt, schema, freshness'
   const stale = byId(crawl({ checkedAt: '2027-06-01T00:00:00.000Z' }));
   assert.equal(stale.get('geo-content-freshness')!.status, 'warn');
 
-  const custom = toCrawlPage(parseSeoPage('<html><head><script type="application/ld+json">{"@type":"TattooParlor","name":"Ink","telephone":"+49 30 1"}</script></head><body></body></html>', 'https://example.com/'), true);
+  const custom = toCrawlPage(parseSeoPage('<html><head><script type="application/ld+json">{"@type":"TattooParlor","name":"Ink","telephone":"+49 30 1"}</script></head><body></body></html>', 'https://example.com/'), true, true);
   assert.equal(byId(crawl({ pages: [custom] })).get('geo-organization-schema')!.status, 'pass', 'any type with business details counts');
 
   const llms = byId(crawl({ llms: { status: 'ok', text: '# Bäckerei Muster\n\n- [Menu](https://example.com/menu/)', contentType: 'text/plain' } }));
@@ -139,6 +140,18 @@ test('nothing observed means unknown, never a guess', () => {
   for (const id of ['geo-ai-search-access', 'geo-ai-training-access', 'seo-robots-txt', 'geo-organization-schema', 'seo-page-titles']) {
     assert.equal(f.get(id)!.status, 'unknown', id);
   }
+  // The homepage failed but an inner page was read: homepage checks stay unknown, the inner page still counts.
+  const inner = toCrawlPage(parseSeoPage('<html><head><script type="application/ld+json">{"@type":"WebSite"}</script></head><body><main>Kurz.</main></body></html>', 'https://example.com/kontakt/'), true, false);
+  const noHome = byId(crawl({ pages: [inner], pageErrors: 1 }));
+  assert.equal(noHome.get('geo-website-schema')!.status, 'unknown', 'an inner page is not judged as the homepage');
+  assert.equal(noHome.get('geo-thin-content')!.status, 'warn', 'the inner page still counts');
+
+  // A sitemap that timed out is not a missing sitemap.
+  const sitemapDown = byId(crawl({ sitemap: { status: 'error', url: null, urlCount: 0, listedInRobots: false, hasLastmod: false } }));
+  for (const id of ['seo-xml-sitemap', 'seo-sitemap-in-robots', 'seo-noindex-in-sitemap']) {
+    assert.equal(sitemapDown.get(id)!.status, 'unknown', id);
+  }
+
   const noRobots = byId(crawl({ robots: { status: 'missing', text: null, contentType: null } }));
   assert.equal(noRobots.get('geo-ai-search-access')!.status, 'pass');
   assert.equal(noRobots.get('seo-robots-txt')!.status, 'warn');

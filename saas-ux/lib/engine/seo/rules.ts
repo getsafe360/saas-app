@@ -99,8 +99,7 @@ export const SEO_GEO_RULES: ReadonlyArray<Rule<SeoCrawl>> = [
     severity: 'medium',
     source: 'external-probe',
     evaluate: ({ pages }) => {
-      const home = pages[0];
-      if (!home) return unknown(NO_PAGES);
+      if (pages.length === 0) return unknown(NO_PAGES);
       const found = pages.flatMap((page) => [
         ...page.schema.types.filter((type) => ORGANIZATION_TYPE.test(type)),
         ...page.schema.businessTypes,
@@ -116,7 +115,7 @@ export const SEO_GEO_RULES: ReadonlyArray<Rule<SeoCrawl>> = [
     severity: 'low',
     source: 'external-probe',
     evaluate: ({ pages }) => {
-      const home = pages[0];
+      const home = pages.find((page) => page.isHome);
       if (!home) return unknown(NO_PAGES);
       return home.schema.types.includes('WebSite') ? { status: 'pass', message: 'present' } : { status: 'warn', message: 'missing' };
     },
@@ -172,7 +171,7 @@ export const SEO_GEO_RULES: ReadonlyArray<Rule<SeoCrawl>> = [
     severity: 'low',
     source: 'external-probe',
     evaluate: ({ pages }) => {
-      const inner = pages.slice(1).filter((page) => !page.noindex);
+      const inner = pages.filter((page) => !page.isHome && !page.noindex);
       if (inner.length === 0) return pages.length === 0 ? unknown(NO_PAGES) : { status: 'not-applicable', message: 'onlyHome' };
       const thin = inner.filter((page) => page.wordCount < THIN_WORDS);
       // Contact and legal pages are short by nature; flag only when thin pages dominate.
@@ -203,10 +202,12 @@ export const SEO_GEO_RULES: ReadonlyArray<Rule<SeoCrawl>> = [
     category: 'seo',
     severity: 'medium',
     source: 'external-probe',
-    evaluate: ({ sitemap }) =>
-      sitemap.status === 'ok'
+    evaluate: ({ sitemap }) => {
+      if (sitemap.status === 'error') return unknown('common.notEvaluated');
+      return sitemap.status === 'ok'
         ? { status: 'pass', message: 'present', values: { count: sitemap.urlCount }, observed: sitemap.url ?? undefined }
-        : { status: 'fail', message: 'missing' },
+        : { status: 'fail', message: 'missing' };
+    },
   },
   {
     id: 'seo-sitemap-in-robots',
@@ -214,6 +215,7 @@ export const SEO_GEO_RULES: ReadonlyArray<Rule<SeoCrawl>> = [
     severity: 'low',
     source: 'external-probe',
     evaluate: ({ sitemap, robots }) => {
+      if (sitemap.status === 'error') return unknown('common.notEvaluated');
       if (sitemap.status !== 'ok') return { status: 'not-applicable', message: 'noSitemap' };
       if (robots.status === 'error') return unknown(NO_ROBOTS);
       return sitemap.listedInRobots ? { status: 'pass', message: 'listed' } : { status: 'warn', message: 'notListed' };
@@ -292,6 +294,7 @@ export const SEO_GEO_RULES: ReadonlyArray<Rule<SeoCrawl>> = [
     severity: 'high',
     source: 'external-probe',
     evaluate: ({ pages, sitemap }) => {
+      if (sitemap.status === 'error') return unknown('common.notEvaluated');
       if (sitemap.status !== 'ok') return { status: 'not-applicable', message: 'noSitemap' };
       if (pages.length === 0) return unknown(NO_PAGES);
       const conflicting = pages.filter((page) => page.inSitemap && page.noindex);

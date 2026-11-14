@@ -17,6 +17,8 @@ export type SeoCrawlPage = Omit<SeoPageFacts, 'internalLinks'> & {
   internalLinkCount: number;
   /** The page's URL is listed in the XML sitemap. */
   inSitemap: boolean;
+  /** The site's homepage (the URL the crawl started from). */
+  isHome: boolean;
 };
 
 export interface SeoCrawl {
@@ -25,20 +27,21 @@ export interface SeoCrawl {
   robots: SeoTextFile;
   llms: SeoTextFile;
   sitemap: {
-    status: 'ok' | 'missing';
+    /** `error`: not observed (timeout, server error, out of time). */
+    status: 'ok' | 'missing' | 'error';
     url: string | null;
     urlCount: number;
     /** robots.txt names a sitemap. */
     listedInRobots: boolean;
     hasLastmod: boolean;
   };
-  /** Crawled pages, the homepage first (when it could be read). */
+  /** Crawled pages; the homepage, when it could be read, is marked isHome. */
   pages: SeoCrawlPage[];
   /** Pages that were picked but could not be read. */
   pageErrors: number;
 }
 
-export function toCrawlPage(page: SeoPageFacts, inSitemap: boolean): SeoCrawlPage {
+export function toCrawlPage(page: SeoPageFacts, inSitemap: boolean, isHome: boolean): SeoCrawlPage {
   const { internalLinks, ...rest } = page;
-  return { ...rest, internalLinkCount: internalLinks.length, inSitemap };
+  return { ...rest, internalLinkCount: internalLinks.length, inSitemap, isHome };
 }

@@ -63,8 +63,12 @@ interface Fetched {
 async function get(url: string, max: number, validate?: UrlValidator, deadline = Infinity): Promise<Fetched | null> {
   const remaining = deadline - Date.now();
   if (remaining < 500) return null;
+  // One timer for the whole request, body included: fetchWithTimeout's own
+  // timer stops at the headers, and a site can stall the body after that.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), Math.min(FETCH_TIMEOUT_MS, remaining));
   try {
-    const res = await fetchFollowingSafely(url, { timeoutMs: Math.min(FETCH_TIMEOUT_MS, remaining), validate, headers: HEADERS });
+    const res = await fetchFollowingSafely(url, { timeoutMs: Math.min(FETCH_TIMEOUT_MS, remaining), validate, headers: HEADERS, signal: controller.signal });
     const contentType = (res.headers.get('content-type') ?? '').toLowerCase();
     const body = res.status >= 200 && res.status < 300 ? await readCapped(res, max) : '';
     if (!body) {
@@ -77,6 +81,8 @@ async function get(url: string, max: number, validate?: UrlValidator, deadline =
     return { status: res.status, url: res.url || url, contentType, body };
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -95,9 +101,16 @@ const locs = (xml: string) =>
   [...xml.matchAll(/<loc>\s*(?:<!\[CDATA\[)?\s*([^<\s\]]+)\s*(?:\]\]>)?\s*<\/loc>/gi)].map((m) => m[1].replace(/&amp;/g, '&'));
 
 async function readSitemap(candidates: string[], listedInRobots: boolean, validate: UrlValidator | undefined, deadline: number) {
+  // `missing` only when every address answered and none was a sitemap;
+  // a timeout or server error leaves it unobserved.
+  let unobserved = false;
   for (const candidate of candidates) {
     const fetched = await get(candidate, SITEMAP_BYTES, validate, deadline);
-    if (!fetched || fetched.status !== 200 || !/<(urlset|sitemapindex)\b/i.test(fetched.body)) continue;
+    if (!fetched || fetched.status >= 500 || fetched.status === 429) {
+      unobserved = true;
+      continue;
+    }
+    if (fetched.status !== 200 || !/<(urlset|sitemapindex)\b/i.test(fetched.body)) continue;
 
     let urls: string[] = [];
     let hasLastmod = /<lastmod>/i.test(fetched.body);
@@ -114,7 +127,7 @@ async function readSitemap(candidates: string[], listedInRobots: boolean, valida
     }
     return { status: 'ok' as const, url: fetched.url, urls, listedInRobots, hasLastmod };
   }
-  return { status: 'missing' as const, url: null, urls: [] as string[], listedInRobots, hasLastmod: false };
+  return { status: unobserved ? ('error' as const) : ('missing' as const), url: null, urls: [] as string[], listedInRobots, hasLastmod: false };
 }
 
 function pickPages(home: string, candidates: string[], limit: number): string[] {
@@ -171,7 +184,7 @@ export async function crawlSite(siteUrl: string, opts: { validate?: UrlValidator
   let pageErrors = 0;
   const homeOk = home && home.status === 200 && home.contentType.includes('html') && home.body;
   const homePage = homeOk ? parseSeoPage(home.body, homeUrl) : null;
-  if (homePage) pages.push(toCrawlPage(homePage, inSitemap(homeUrl)));
+  if (homePage) pages.push(toCrawlPage(homePage, inSitemap(homeUrl), true));
   else pageErrors += 1;
 
   const fromLinks = homePage?.internalLinks ?? [];
@@ -181,7 +194,7 @@ export async function crawlSite(siteUrl: string, opts: { validate?: UrlValidator
     batch.forEach((fetched, j) => {
       if (fetched && fetched.status === 200 && fetched.contentType.includes('html') && fetched.body) {
         const url = fetched.url || others[i + j];
-        pages.push(toCrawlPage(parseSeoPage(fetched.body, url), inSitemap(url)));
+        pages.push(toCrawlPage(parseSeoPage(fetched.body, url), inSitemap(url), false));
       } else {
         pageErrors += 1;
       }
