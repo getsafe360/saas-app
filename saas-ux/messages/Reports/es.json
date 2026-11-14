@@ -11,7 +11,8 @@
         "score": "Puntuación global: {score}/100 ({grade})",
         "health": "Estado de WordPress: {now}/100",
         "healthChange": "Estado de WordPress: {before} → {now}/100",
-        "open": "{count, plural, =0 {Sin problemas abiertos} one {# recomendación para los próximos pasos} other {# recomendaciones para los próximos pasos}}"
+        "open": "{count, plural, =0 {Sin problemas abiertos} one {# recomendación para los próximos pasos} other {# recomendaciones para los próximos pasos}}",
+        "aiVisibility": "Visibilidad en IA: {score}"
       },
       "scores": {
         "heading": "Puntuaciones",
@@ -76,7 +77,29 @@
         "wp-outdated-plugins": "Los plugins se actualizaron con un punto de restauración, cerrando fallos de seguridad y errores conocidos.",
         "red-flag-core-modifications": "Los archivos del sistema de WordPress alterados se sustituyeron por copias oficiales verificadas.",
         "red-flag-unexpected-core-files": "Los archivos desconocidos en carpetas del sistema de WordPress se movieron a cuarentena, donde no pueden ejecutarse.",
-        "sec-csp-test": "Se probó una Content-Security-Policy en modo solo informe para conocer qué carga el sitio antes de activarla."
+        "sec-csp-test": "Se probó una Content-Security-Policy en modo solo informe para conocer qué carga el sitio antes de activarla.",
+        "geo-llms-txt": "Los asistentes de IA reciben un resumen breve y preciso del sitio y de sus páginas principales.",
+        "geo-ai-search-access": "Los buscadores con IA ya pueden leer el sitio, así que pueden encontrarlo y citarlo en sus respuestas.",
+        "geo-organization-schema": "Los buscadores y servicios de IA ya saben quién está detrás del sitio: nombre, logotipo y perfiles que muestran en los resultados.",
+        "geo-website-schema": "Los buscadores reconocen ahora el nombre del sitio y su búsqueda, lo que les ayuda a presentarlo correctamente."
+      },
+      "aiSearch": {
+        "heading": "Búsqueda con IA y visibilidad",
+        "intro": "Qué tan bien los buscadores y asistentes de IA como Claude y ChatGPT pueden encontrar, entender y recomendar el sitio.",
+        "geo": "Preparación para la búsqueda con IA (GEO)",
+        "seo": "Fundamentos para buscadores (SEO)",
+        "visibility": "Visibilidad en IA",
+        "visibilitySummary": "Con {count, plural, one {# pregunta} other {# preguntas}} que harían posibles clientes, Claude con búsqueda web citó el sitio en {cited} respuestas y lo nombró sin enlace en {mentioned}.",
+        "question": "Pregunta del cliente",
+        "result": "Resultado",
+        "outcome": {
+          "cited": "Citado como fuente",
+          "mentioned": "Nombrado, sin enlace",
+          "found": "Encontrado, no usado",
+          "absent": "No aparece en la respuesta"
+        },
+        "competitors": "Sitios citados en su lugar: {sites}",
+        "method": "Visibilidad en IA medida el {date} a partir de las respuestas de Claude con búsqueda web. Otros asistentes de IA pueden responder distinto, y las respuestas cambian con el tiempo."
       }
     },
     "nav": "Informes",

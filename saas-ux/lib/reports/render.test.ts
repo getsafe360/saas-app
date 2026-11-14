@@ -6,8 +6,10 @@ import { IntlMessageFormat } from 'intl-messageformat';
 import { AUTOMATIC_FIXER_IDS } from '@/lib/engine/fixers/catalog';
 import { WORDPRESS_RULES } from '@/lib/engine/wordpress/rules';
 import { SECURITY_HEADER_RULES } from '@/lib/engine/security/headers';
+import { SEO_GEO_RULES } from '@/lib/engine/seo/rules';
+import type { VisibilityRun } from '@/lib/ai-visibility/types';
 import type { AppliedChange } from '@/lib/wordpress/applied-changes';
-import { buildReportContent, reportFilename } from './content';
+import { buildAiSearchReport, buildReportContent, periodTrend, reportFilename } from './content';
 import { DEFAULT_BRAND, renderHtml, renderMarkdown } from './render';
 import { resolveBrand } from './brand';
 import { REPORT_LOCALES, reportText } from './text';
@@ -106,7 +108,7 @@ test('white-label leaves GetSafe 360 out and escapes HTML', () => {
 });
 
 test('every automatic fix has a "why it matters" in every language, and all messages parse', () => {
-  const automatic = [...WORDPRESS_RULES, ...SECURITY_HEADER_RULES]
+  const automatic = [...WORDPRESS_RULES, ...SECURITY_HEADER_RULES, ...SEO_GEO_RULES]
     .filter((rule) => rule.fix && AUTOMATIC_FIXER_IDS.has(rule.fix.fixerId))
     .map((rule) => rule.id);
   const reference = load('Reports', 'en').Reports;
@@ -120,8 +122,10 @@ test('every automatic fix has a "why it matters" in every language, and all mess
       const message = key.split('.').reduce((node: any, part) => node[part], catalog);
       new IntlMessageFormat(message, locale).getAst();
     }
-    // Renders without missing-message errors in every language.
+    // Renders without missing-message errors in every language, with and without the AI search section.
     renderMarkdown(content, textFor(locale), DEFAULT_BRAND);
+    renderMarkdown(withAi, textFor(locale), DEFAULT_BRAND);
+    renderHtml(withAi, textFor(locale), DEFAULT_BRAND);
   }
 });
 
@@ -143,4 +147,48 @@ test('a CSP that is switched on is reported differently from the test', () => {
   assert.match(md, /tested in report-only mode, to learn what the site loads/);
   assert.match(md, /now tells browsers which servers may run code/);
   assert.match(md, /a Content-Security-Policy is switched on/);
+});
+
+const run = (checkedAt: string, score: number, results: VisibilityRun['results']): VisibilityRun => ({ checkedAt, score, trigger: 'weekly', tokensUsed: 0, results });
+const result = (question: string, cited: boolean, mentioned: boolean, otherSources: Array<{ host: string; count: number }> = [], error?: 'ANSWER_FAILED') => ({
+  questionId: question, question, cited, mentioned, foundInSearch: cited, citedUrls: [], otherSources, excerpt: '', searches: 2, ...(error ? { error } : {}),
+});
+const aiSearch = buildAiSearchReport({
+  periodStart: new Date('2026-10-12T10:00:00Z'),
+  scoreHistory: [
+    { checkedAt: '2026-11-10T00:00:00Z', geo: 74, seo: 88 },
+    { checkedAt: '2026-10-20T00:00:00Z', geo: 60, seo: 85 },
+    { checkedAt: '2026-10-01T00:00:00Z', geo: 41, seo: 80 },
+  ],
+  visibilityRuns: [
+    run('2026-11-09T00:00:00Z', 50, [
+      result('Beste Bäckerei in Mitte?', true, true, [{ host: 'tripadvisor.de', count: 1 }]),
+      result('Sauerteigbrot | Berlin?', false, true, [{ host: 'tripadvisor.de', count: 1 }, { host: 'tip-berlin.de', count: 1 }]),
+      result('Hochzeitstorte?', false, false, [], 'ANSWER_FAILED'),
+    ]),
+    run('2026-10-26T00:00:00Z', 25, []),
+  ],
+});
+const withAi = { ...content, aiSearch };
+
+test('AI search: the period starts from the last point before it, failed answers are left out', () => {
+  assert.deepEqual(aiSearch?.geo, { before: 41, now: 74 }, 'the check before the period is the baseline');
+  assert.deepEqual(aiSearch?.visibility?.score, { before: 25, now: 50 }, 'no run before the period: the oldest inside it');
+  assert.deepEqual(aiSearch?.visibility?.questions.map((q) => q.outcome), ['cited', 'mentioned']);
+  assert.deepEqual(aiSearch?.visibility?.competitors[0], { host: 'tripadvisor.de', questions: 2 });
+  assert.equal(periodTrend([{ checkedAt: '2026-11-01T00:00:00Z' }], new Date('2026-10-01T00:00:00Z'))?.before, null, 'one point: no change to show');
+  assert.equal(buildAiSearchReport({ periodStart: now, scoreHistory: [], visibilityRuns: [] }), null);
+});
+
+test('AI search section in the report, Markdown and PDF', () => {
+  const md = renderMarkdown(withAi, textFor('en'), DEFAULT_BRAND);
+  assert.match(md, /## AI search & visibility/);
+  assert.match(md, /- \*\*AI search readiness \(GEO\):\*\* 41 → 74\/100/);
+  assert.match(md, /- AI visibility: 25 → 50\/100/, 'in the summary too');
+  assert.match(md, /\| Sauerteigbrot \\\| Berlin\? \| Named, not linked \|/, 'pipes escaped in the table');
+  assert.match(md, /Sites cited instead: tripadvisor\.de, tip-berlin\.de/);
+  assert.ok(!renderMarkdown(content, textFor('en'), DEFAULT_BRAND).includes('AI search & visibility'), 'no data, no section');
+  const html = renderHtml(withAi, textFor('de'), DEFAULT_BRAND);
+  assert.match(html, /<h2>KI-Suche &amp; Sichtbarkeit<\/h2>/);
+  assert.match(html, /Als Quelle zitiert/);
 });

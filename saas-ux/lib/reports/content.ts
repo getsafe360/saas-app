@@ -4,6 +4,8 @@
 // what GetSafe 360 changed on the site in the period, and what is still open.
 // Pure, so the Markdown and PDF renderers and the tests share one source.
 
+import { topCompetitors } from '@/lib/ai-visibility/analyze';
+import type { VisibilityRun } from '@/lib/ai-visibility/types';
 import { getScoreGrade } from '@/lib/cockpit/transform-api-data';
 import type { AppliedChange } from '@/lib/wordpress/applied-changes';
 import type { ReportFormat, ReportPeriodDays } from './options';
@@ -21,6 +23,27 @@ export interface ReportIssueInput {
   title?: string;
 }
 
+/** A score at the start of the period and now. */
+export interface ScoreTrend {
+  before: number | null;
+  now: number | null;
+}
+
+export type VisibilityOutcome = 'cited' | 'mentioned' | 'found' | 'absent';
+
+/** AI search: the measured GEO/SEO checks and, when tracked, whether Claude names and cites the site. */
+export interface AiSearchReport {
+  checkedAt: Date | null;
+  geo: ScoreTrend | null;
+  seo: ScoreTrend | null;
+  visibility: {
+    checkedAt: Date;
+    score: ScoreTrend & { now: number };
+    questions: Array<{ question: string; outcome: VisibilityOutcome }>;
+    competitors: Array<{ host: string; questions: number }>;
+  } | null;
+}
+
 export interface ReportInput {
   site: { host: string; url: string };
   generatedAt: Date;
@@ -34,6 +57,7 @@ export interface ReportInput {
   cspTestSince: Date | null;
   /** The CSP is switched on (not only tested) since cspTestSince. */
   cspEnforced?: boolean;
+  aiSearch?: AiSearchReport | null;
 }
 
 export interface ReportFix {
@@ -61,6 +85,7 @@ export interface ReportContent {
   openIssues: ReportIssueInput[];
   cspTestSince: Date | null;
   cspEnforced: boolean;
+  aiSearch: AiSearchReport | null;
 }
 
 const SEVERITY_ORDER: Record<IssueSeverity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
@@ -104,6 +129,55 @@ export function buildReportContent(input: ReportInput): ReportContent {
     openIssues,
     cspTestSince: input.cspTestSince,
     cspEnforced: input.cspEnforced ?? false,
+    aiSearch: input.aiSearch && (input.aiSearch.geo || input.aiSearch.seo || input.aiSearch.visibility) ? input.aiSearch : null,
+  };
+}
+
+interface DatedPoint {
+  checkedAt: string;
+}
+
+/**
+ * The newest point and the one the period started from: the newest at or before its start, else the
+ * oldest inside it. History is newest first, as stored. Null when nothing was measured.
+ */
+export function periodTrend<T extends DatedPoint>(history: ReadonlyArray<T>, periodStart: Date): { now: T; before: T | null } | null {
+  const sorted = [...history].sort((a, b) => Date.parse(b.checkedAt) - Date.parse(a.checkedAt));
+  const now = sorted[0];
+  if (!now) return null;
+  const atStart = sorted.find((point) => Date.parse(point.checkedAt) <= periodStart.getTime());
+  const before = atStart ?? (sorted.length > 1 ? sorted[sorted.length - 1] : null);
+  return { now, before: before === now ? null : before };
+}
+
+/** The AI search section from the stored GEO/SEO score history and visibility runs. */
+export function buildAiSearchReport(params: {
+  scoreHistory: ReadonlyArray<{ checkedAt: string; geo: number | null; seo: number | null }>;
+  visibilityRuns: ReadonlyArray<VisibilityRun>;
+  periodStart: Date;
+}): AiSearchReport | null {
+  const scores = periodTrend(params.scoreHistory, params.periodStart);
+  const runs = periodTrend(params.visibilityRuns, params.periodStart);
+  if (!scores && !runs) return null;
+  const trend = (key: 'geo' | 'seo'): ScoreTrend | null =>
+    scores && scores.now[key] !== null ? { before: scores.before?.[key] ?? null, now: scores.now[key] } : null;
+  return {
+    checkedAt: scores ? new Date(scores.now.checkedAt) : null,
+    geo: trend('geo'),
+    seo: trend('seo'),
+    visibility: runs
+      ? {
+          checkedAt: new Date(runs.now.checkedAt),
+          score: { before: runs.before?.score ?? null, now: runs.now.score },
+          questions: runs.now.results
+            .filter((result) => !result.error)
+            .map((result) => ({
+              question: result.question,
+              outcome: result.cited ? 'cited' : result.mentioned ? 'mentioned' : result.foundInSearch ? 'found' : 'absent',
+            })),
+          competitors: topCompetitors(runs.now),
+        }
+      : null,
   };
 }
 

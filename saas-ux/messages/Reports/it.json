@@ -11,7 +11,8 @@
         "score": "Punteggio complessivo: {score}/100 ({grade})",
         "health": "Salute di WordPress: {now}/100",
         "healthChange": "Salute di WordPress: {before} → {now}/100",
-        "open": "{count, plural, =0 {Nessun punto aperto} one {# consiglio per i prossimi passi} other {# consigli per i prossimi passi}}"
+        "open": "{count, plural, =0 {Nessun punto aperto} one {# consiglio per i prossimi passi} other {# consigli per i prossimi passi}}",
+        "aiVisibility": "Visibilità nell'IA: {score}"
       },
       "scores": {
         "heading": "Punteggi",
@@ -76,7 +77,29 @@
         "wp-outdated-plugins": "I plugin sono stati aggiornati con un punto di ripristino, chiudendo falle di sicurezza e bug noti.",
         "red-flag-core-modifications": "I file di sistema di WordPress alterati sono stati sostituiti con copie ufficiali verificate.",
         "red-flag-unexpected-core-files": "I file sconosciuti nelle cartelle di sistema di WordPress sono stati spostati in quarantena, dove non possono essere eseguiti.",
-        "sec-csp-test": "Una Content-Security-Policy è stata testata in modalità solo report, per sapere cosa carica il sito prima di attivarla."
+        "sec-csp-test": "Una Content-Security-Policy è stata testata in modalità solo report, per sapere cosa carica il sito prima di attivarla.",
+        "geo-llms-txt": "Gli assistenti IA ricevono una panoramica breve e precisa del sito e delle sue pagine principali.",
+        "geo-ai-search-access": "I motori di ricerca IA ora possono leggere il sito, trovarlo e citarlo nelle loro risposte.",
+        "geo-organization-schema": "Motori di ricerca e servizi IA ora sanno chi c'è dietro il sito: nome, logo e profili mostrati nei risultati.",
+        "geo-website-schema": "I motori di ricerca ora riconoscono il nome del sito e la sua ricerca, il che li aiuta a presentarlo correttamente."
+      },
+      "aiSearch": {
+        "heading": "Ricerca IA e visibilità",
+        "intro": "Quanto bene motori di ricerca e assistenti IA come Claude e ChatGPT riescono a trovare, capire e consigliare il sito.",
+        "geo": "Preparazione alla ricerca IA (GEO)",
+        "seo": "Basi per i motori di ricerca (SEO)",
+        "visibility": "Visibilità nell'IA",
+        "visibilitySummary": "Su {count, plural, one {# domanda} other {# domande}} che farebbero potenziali clienti, Claude con ricerca web ha citato il sito in {cited} risposte e l'ha nominato senza link in {mentioned}.",
+        "question": "Domanda del cliente",
+        "result": "Risultato",
+        "outcome": {
+          "cited": "Citato come fonte",
+          "mentioned": "Nominato, senza link",
+          "found": "Trovato, non usato",
+          "absent": "Assente dalla risposta"
+        },
+        "competitors": "Siti citati al suo posto: {sites}",
+        "method": "Visibilità nell'IA misurata il {date} dalle risposte di Claude con ricerca web. Altri assistenti IA possono rispondere diversamente, e le risposte cambiano nel tempo."
       }
     },
     "nav": "Report",

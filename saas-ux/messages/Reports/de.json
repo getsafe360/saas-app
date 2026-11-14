@@ -11,7 +11,8 @@
         "score": "Gesamtbewertung: {score}/100 ({grade})",
         "health": "WordPress-Zustand: {now}/100",
         "healthChange": "WordPress-Zustand: {before} → {now}/100",
-        "open": "{count, plural, =0 {Keine offenen Punkte} one {# Empfehlung für die nächsten Schritte} other {# Empfehlungen für die nächsten Schritte}}"
+        "open": "{count, plural, =0 {Keine offenen Punkte} one {# Empfehlung für die nächsten Schritte} other {# Empfehlungen für die nächsten Schritte}}",
+        "aiVisibility": "KI-Sichtbarkeit: {score}"
       },
       "scores": {
         "heading": "Bewertungen",
@@ -76,7 +77,29 @@
         "wp-outdated-plugins": "Plugins wurden mit Wiederherstellungspunkt aktualisiert, bekannte Sicherheitslücken und Fehler sind geschlossen.",
         "red-flag-core-modifications": "Veränderte WordPress-Systemdateien wurden durch offizielle, geprüfte Originale ersetzt.",
         "red-flag-unexpected-core-files": "Unbekannte Dateien in WordPress-Systemordnern wurden in Quarantäne verschoben, wo sie nicht ausgeführt werden können.",
-        "sec-csp-test": "Eine Content-Security-Policy wurde im Nur-Bericht-Modus getestet, um vor dem Einschalten zu erfahren, was die Website lädt."
+        "sec-csp-test": "Eine Content-Security-Policy wurde im Nur-Bericht-Modus getestet, um vor dem Einschalten zu erfahren, was die Website lädt.",
+        "geo-llms-txt": "KI-Assistenten erhalten einen kurzen, genauen Überblick über die Website und ihre wichtigsten Seiten.",
+        "geo-ai-search-access": "KI-Suchmaschinen dürfen die Website jetzt lesen und können sie so finden und in ihren Antworten zitieren.",
+        "geo-organization-schema": "Such- und KI-Dienste wissen jetzt, wer hinter der Website steht: Name, Logo und Profile, die sie in Ergebnissen zeigen.",
+        "geo-website-schema": "Suchmaschinen erkennen jetzt den Namen der Website und ihre Suche und können sie so richtig darstellen."
+      },
+      "aiSearch": {
+        "heading": "KI-Suche & Sichtbarkeit",
+        "intro": "Wie gut Suchmaschinen und KI-Assistenten wie Claude und ChatGPT die Website finden, verstehen und empfehlen können.",
+        "geo": "Bereitschaft für KI-Suche (GEO)",
+        "seo": "Suchmaschinen-Grundlagen (SEO)",
+        "visibility": "KI-Sichtbarkeit",
+        "visibilitySummary": "Mit {count, plural, one {# Frage} other {# Fragen}}, die potenzielle Kunden stellen würden, zitierte Claude mit Websuche die Website in {cited} und nannte sie ohne Link in {mentioned} Antworten.",
+        "question": "Kundenfrage",
+        "result": "Ergebnis",
+        "outcome": {
+          "cited": "Als Quelle zitiert",
+          "mentioned": "Genannt, ohne Link",
+          "found": "Gefunden, nicht genutzt",
+          "absent": "Nicht in der Antwort"
+        },
+        "competitors": "Stattdessen zitierte Websites: {sites}",
+        "method": "KI-Sichtbarkeit gemessen am {date} anhand von Claudes Antworten mit Websuche. Andere KI-Assistenten können anders antworten, und Antworten ändern sich mit der Zeit."
       }
     },
     "nav": "Berichte",
