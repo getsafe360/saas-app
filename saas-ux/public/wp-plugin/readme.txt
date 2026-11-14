@@ -4,7 +4,7 @@ Tags: security, site health, seo, performance, accessibility
 Requires at least: 5.6
 Tested up to: 7.1
 Requires PHP: 7.2
-Stable tag: 1.11.0
+Stable tag: 1.12.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,6 +37,7 @@ It works alongside the plugins you already use, such as your SEO, caching or fir
 * Restore modified WordPress core files from the official release, checked against the official checksums
 * Remove expired transients and old post revisions (the newest five per post are kept)
 * Add missing SEO markup to the page head: meta description, canonical URL, social sharing tags, structured data
+* Prepare your site for AI search: serve an llms.txt file, choose which AI crawlers may read your site in robots.txt, add Organization and WebSite schema, and improve page titles and descriptions (written into Yoast SEO or Rank Math when you use one)
 
 Low-risk protections can be applied automatically if you allow it. Anything that touches content or the database waits for your click.
 
@@ -118,10 +119,17 @@ GetSafe 360 AI [Terms of Service](https://www.getsafe360.ai/terms) and [Privacy 
 
 == Changelog ==
 
+= 1.12.0 =
+* New: serve an llms.txt file for AI assistants, set per-crawler AI rules in the virtual robots.txt, add Organization and WebSite schema to the home page, and write page titles and descriptions. Every change can be undone.
+* Titles and descriptions go into Yoast SEO or Rank Math when one is active; schema is left to them so nothing is duplicated.
+
 = 1.11.0 =
 * First release on WordPress.org
 
 == Upgrade Notice ==
+
+= 1.12.0 =
+AI search fixes: llms.txt, AI crawler rules, home-page schema and page titles, all with undo.
 
 = 1.11.0 =
 First release on WordPress.org.

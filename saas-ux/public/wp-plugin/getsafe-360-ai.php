@@ -3,7 +3,7 @@
  * Plugin Name: GetSafe 360 AI
  * Plugin URI: https://www.getsafe360.ai/docs/wordpress-connector
  * Description: Website Intelligence Platform for WordPress: health, security, SEO, speed and accessibility checks, with safe one-click fixes you can undo.
- * Version: 1.11.0
+ * Version: 1.12.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPLv2 or later
@@ -17,7 +17,7 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_AI {
-  const VERSION = '1.11.0';
+  const VERSION = '1.12.0';
   const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';
   const OPTION = 'getsafe360_connector';
   const ACTION_STATE_OPTION = 'getsafe360_action_state';
@@ -63,6 +63,11 @@ class GetSafe360_AI {
     add_action('rest_api_init', [$this, 'routes']);
     add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     add_action('wp_head', [$this, 'output_seo_injections'], 5);
+    add_action('wp_head', [$this, 'output_meta_description'], 1);
+    add_action('wp_head', [$this, 'output_schema'], 6);
+    add_filter('pre_get_document_title', [$this, 'filter_document_title'], 20);
+    add_filter('robots_txt', [$this, 'filter_robots_txt'], 99, 2);
+    add_action('parse_request', [$this, 'serve_llms_txt'], 0);
     add_filter('xmlrpc_enabled', [$this, 'filter_xmlrpc_enabled']);
     add_filter('rest_endpoints', [$this, 'filter_rest_endpoints']);
     add_action('template_redirect', [$this, 'block_author_enumeration']);
@@ -2374,6 +2379,388 @@ class GetSafe360_AI {
     ];
   }
 
+  // ---------- 1.12 GEO fixes: llms.txt, AI crawler rules, schema gaps, SEO meta ----------
+
+  /** AI crawlers whose robots.txt rules the connector may set (same list the SaaS measures). */
+  const AI_CRAWLERS = [
+    'OAI-SearchBot', 'ChatGPT-User', 'GPTBot', 'Claude-SearchBot', 'Claude-User', 'ClaudeBot',
+    'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot-Extended', 'CCBot',
+    'Meta-ExternalAgent', 'Bytespider',
+  ];
+  const LLMS_TXT_OPTION = 'getsafe360_llms_txt';
+  const AI_CRAWLER_OPTION = 'getsafe360_ai_crawler_rules';
+  const SCHEMA_OPTION = 'getsafe360_schema';
+  const META_TITLE_KEY = '_getsafe360_seo_title';
+  const META_DESCRIPTION_KEY = '_getsafe360_seo_description';
+  const LLMS_TXT_MAX_BYTES = 65536;
+
+  /** The SEO plugin that owns titles, descriptions and site schema, if any. */
+  private function seo_plugin() {
+    if (defined('WPSEO_VERSION')) return 'yoast';
+    if (defined('RANK_MATH_VERSION') || class_exists('RankMath')) return 'rank-math';
+    if (defined('AIOSEO_VERSION')) return 'aioseo';
+    if (defined('SEOPRESS_VERSION')) return 'seopress';
+    return null;
+  }
+
+  /** llms.txt and robots.txt live at the domain root: only a root install can serve them. */
+  private function serves_domain_root() {
+    $path = wp_parse_url(home_url('/'), PHP_URL_PATH);
+    return $path === null || $path === '/';
+  }
+
+  /** Serves the stored llms.txt (a real file on disk wins: the web server answers before WordPress). */
+  public function serve_llms_txt() {
+    if (!isset($_SERVER['REQUEST_URI'])) return;
+    $path = wp_parse_url(esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])), PHP_URL_PATH);
+    if ($path !== '/llms.txt' || !$this->serves_domain_root()) return;
+    $content = get_option(self::LLMS_TXT_OPTION, '');
+    if (!is_string($content) || $content === '') return;
+    status_header(200);
+    header('Content-Type: text/plain; charset=utf-8');
+    header('X-Content-Type-Options: nosniff');
+    header('X-Robots-Tag: noindex');
+    // Plain text with nosniff: nothing in it is interpreted as markup.
+    echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- served as text/plain.
+    exit;
+  }
+
+  /** Markdown text safe to store: valid UTF-8, no control characters but tabs and newlines. */
+  private function clean_llms_txt($text) {
+    if (!is_string($text)) return '';
+    $text = wp_check_invalid_utf8(str_replace(["\r\n", "\r"], "\n", $text), true);
+    $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $text);
+    return trim($text) . "\n";
+  }
+
+  private function apply_llms_txt_action($action_id, $payload) {
+    $type = 'set_llms_txt';
+    $previous = get_option(self::LLMS_TXT_OPTION, '');
+    $previous = is_string($previous) && $previous !== '' ? $previous : null;
+    $state = function ($content) { return ['llmsTxt' => $content !== null]; };
+
+    if (!array_key_exists('content', $payload)) {
+      return $this->action_result($action_id, $type, 'failed', 'No llms.txt content given. Nothing was changed.', $state($previous));
+    }
+    if ($payload['content'] === null) {
+      delete_option(self::LLMS_TXT_OPTION);
+      return $this->action_result($action_id, $type, 'applied', 'llms.txt removed.', $state(null),
+        ['id' => $action_id . '-rollback', 'type' => $type, 'payload' => ['content' => $previous]]);
+    }
+    if (!$this->serves_domain_root()) {
+      return $this->action_result($action_id, $type, 'failed', 'WordPress runs in a subfolder, so it cannot answer at /llms.txt. Nothing was changed.', $state($previous));
+    }
+    if (file_exists(ABSPATH . 'llms.txt')) {
+      return $this->action_result($action_id, $type, 'failed', 'An llms.txt file already exists on the server and takes precedence. Nothing was changed.', $state($previous));
+    }
+    $content = $this->clean_llms_txt($payload['content']);
+    if (strpos($content, '# ') !== 0 || strlen($content) > self::LLMS_TXT_MAX_BYTES) {
+      return $this->action_result($action_id, $type, 'failed', 'llms.txt must start with a "# " title and stay under 64 KB. Nothing was changed.', $state($previous));
+    }
+    update_option(self::LLMS_TXT_OPTION, $content, false);
+    return $this->action_result($action_id, $type, 'applied', 'llms.txt is now served at /llms.txt.', $state($content),
+      ['id' => $action_id . '-rollback', 'type' => $type, 'payload' => ['content' => $previous]]);
+  }
+
+  /** The stored per-crawler rules: agent => 'allow' | 'block'. */
+  private function get_ai_crawler_rules() {
+    $rules = get_option(self::AI_CRAWLER_OPTION, []);
+    return is_array($rules) ? array_intersect_key($rules, array_flip(self::AI_CRAWLERS)) : [];
+  }
+
+  /** robots.txt as WordPress and other plugins write it, without the connector's rules. */
+  private function robots_without_ours() {
+    remove_filter('robots_txt', [$this, 'filter_robots_txt'], 99);
+    // The same start do_robots() gives other filters.
+    $public = (bool) get_option('blog_public');
+    $output = "User-agent: *\n"
+      . 'Disallow: ' . wp_parse_url(admin_url(), PHP_URL_PATH) . "\n"
+      . 'Allow: ' . wp_parse_url(admin_url('admin-ajax.php'), PHP_URL_PATH) . "\n";
+    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core's own robots.txt filter.
+    $output = (string) apply_filters('robots_txt', $output, $public);
+    add_filter('robots_txt', [$this, 'filter_robots_txt'], 99, 2);
+    return $output;
+  }
+
+  /** Agents (lower-case) that already have their own group in a robots.txt text. */
+  private function robots_agents($robots) {
+    preg_match_all('/^\s*user-agent\s*:\s*(\S+)/mi', $robots, $m);
+    return array_map('strtolower', $m[1]);
+  }
+
+  /** The `*` group's path rules, minus a blanket block, so an allowed AI crawler keeps the site's private paths. */
+  private function wildcard_path_rules($robots) {
+    $rules = [];
+    $agents = [];       // agents of the current group
+    $in_rules = false;  // a rule line ends the run of user-agent lines that opens a group
+    foreach (preg_split('/\r?\n/', $robots) as $line) {
+      $line = trim(preg_replace('/#.*/', '', $line));
+      if ($line === '') continue;
+      if (preg_match('/^user-agent\s*:\s*(\S+)/i', $line, $m)) {
+        if ($in_rules) {
+          $agents = [];
+          $in_rules = false;
+        }
+        $agents[] = $m[1];
+        continue;
+      }
+      if (preg_match('/^(allow|disallow)\s*:\s*(\S*)/i', $line, $m)) {
+        $in_rules = true;
+        if (!in_array('*', $agents, true)) continue;
+        $path = $m[2];
+        if (strtolower($m[1]) === 'disallow' && ($path === '/' || $path === '')) continue;
+        $rules[] = ucfirst(strtolower($m[1])) . ': ' . $path;
+      }
+    }
+    return array_values(array_unique($rules));
+  }
+
+  /** Appends the connector's AI crawler groups to the virtual robots.txt. */
+  public function filter_robots_txt($output, $public) {
+    if (!$public) return $output; // "Discourage search engines" stays absolute (WordPress passes a bool).
+    $rules = $this->get_ai_crawler_rules();
+    if (empty($rules)) return $output;
+    $existing = $this->robots_agents($output);
+    $path_rules = $this->wildcard_path_rules($output);
+    $groups = [];
+    foreach ($rules as $agent => $rule) {
+      if (in_array(strtolower($agent), $existing, true)) continue; // Never contradict a group someone else wrote.
+      $lines = $rule === 'block' ? ['Disallow: /'] : array_merge(['Allow: /'], $path_rules);
+      $groups[] = 'User-agent: ' . $agent . "\n" . implode("\n", $lines);
+    }
+    if (empty($groups)) return $output;
+    return rtrim($output) . "\n\n# GetSafe 360 AI: AI crawler rules\n" . implode("\n\n", $groups) . "\n";
+  }
+
+  private function apply_ai_crawler_rules_action($action_id, $payload) {
+    $type = 'set_ai_crawler_rules';
+    $previous = $this->get_ai_crawler_rules();
+    $requested = isset($payload['rules']) && is_array($payload['rules']) ? $payload['rules'] : [];
+    $state = function ($rules) { return ['aiCrawlerRules' => empty($rules) ? new \stdClass() : $rules]; };
+
+    if (empty($requested)) {
+      return $this->action_result($action_id, $type, 'failed', 'No crawler rules given. Nothing was changed.', $state($previous));
+    }
+    if (file_exists(ABSPATH . 'robots.txt')) {
+      return $this->action_result($action_id, $type, 'failed', 'A robots.txt file exists on the server, so WordPress does not write robots.txt. Edit that file instead. Nothing was changed.', $state($previous));
+    }
+    if (!$this->serves_domain_root()) {
+      return $this->action_result($action_id, $type, 'failed', 'WordPress runs in a subfolder, so its robots.txt is not the one crawlers read. Nothing was changed.', $state($previous));
+    }
+    if (!get_option('blog_public')) {
+      return $this->action_result($action_id, $type, 'failed', '"Discourage search engines" is on in Settings > Reading, so no crawler rules are added. Nothing was changed.', $state($previous));
+    }
+
+    $others = $this->robots_agents($this->robots_without_ours());
+    $next = $previous;
+    $restore = [];
+    $conflicts = [];
+    foreach ($requested as $agent => $rule) {
+      if (!in_array($agent, self::AI_CRAWLERS, true) || !in_array($rule, ['allow', 'block', null], true)) {
+        return $this->action_result($action_id, $type, 'failed', 'Unsupported crawler or rule: ' . sanitize_text_field((string) $agent) . '. Nothing was changed.', $state($previous));
+      }
+      if ($rule !== null && in_array(strtolower($agent), $others, true)) {
+        $conflicts[] = $agent;
+        continue;
+      }
+      $restore[$agent] = isset($previous[$agent]) ? $previous[$agent] : null;
+      if ($rule === null) {
+        unset($next[$agent]);
+      } else {
+        $next[$agent] = $rule;
+      }
+    }
+    if (empty($restore)) {
+      return $this->action_result($action_id, $type, 'skipped', 'robots.txt already has its own rules for ' . implode(', ', $conflicts) . '. Nothing was changed.', $state($previous));
+    }
+
+    update_option(self::AI_CRAWLER_OPTION, $next, false);
+    $message = sprintf('%d AI crawler rule(s) set in robots.txt.', count($restore));
+    if (!empty($conflicts)) {
+      $message .= ' Left alone, as robots.txt already has rules for them: ' . implode(', ', $conflicts) . '.';
+    }
+    return $this->action_result($action_id, $type, 'applied', $message, $state($next),
+      ['id' => $action_id . '-rollback', 'type' => $type, 'payload' => ['rules' => $restore]]);
+  }
+
+  /** Stored schema settings: which types to add and the organisation's profiles. */
+  private function get_schema_settings() {
+    $settings = get_option(self::SCHEMA_OPTION, []);
+    return is_array($settings) ? $settings : [];
+  }
+
+  /** The Organization and WebSite JSON-LD graph for the home page, from WordPress's own settings. */
+  private function schema_graph($settings) {
+    $home = home_url('/');
+    $graph = [];
+    $types = isset($settings['types']) && is_array($settings['types']) ? $settings['types'] : [];
+    if (in_array('Organization', $types, true)) {
+      $org = ['@type' => 'Organization', '@id' => $home . '#organization', 'name' => get_bloginfo('name'), 'url' => $home];
+      $logo_id = (int) get_theme_mod('custom_logo');
+      $logo = $logo_id ? wp_get_attachment_image_url($logo_id, 'full') : get_site_icon_url(512);
+      if ($logo) $org['logo'] = $logo;
+      if (!empty($settings['sameAs'])) $org['sameAs'] = array_values($settings['sameAs']);
+      $graph[] = $org;
+    }
+    if (in_array('WebSite', $types, true)) {
+      $site = ['@type' => 'WebSite', '@id' => $home . '#website', 'name' => get_bloginfo('name'), 'url' => $home];
+      $tagline = get_bloginfo('description');
+      if ($tagline) $site['description'] = $tagline;
+      if (in_array('Organization', $types, true)) $site['publisher'] = ['@id' => $home . '#organization'];
+      $site['potentialAction'] = [
+        '@type' => 'SearchAction',
+        'target' => ['@type' => 'EntryPoint', 'urlTemplate' => home_url('/?s={search_term_string}')],
+        'query-input' => 'required name=search_term_string',
+      ];
+      $graph[] = $site;
+    }
+    return $graph;
+  }
+
+  /** Home-page schema, only while no SEO plugin writes its own (it would be a duplicate). */
+  public function output_schema() {
+    if (!is_front_page() || $this->seo_plugin() !== null) return;
+    $graph = $this->schema_graph($this->get_schema_settings());
+    if (empty($graph)) return;
+    echo "\n<script type=\"application/ld+json\">"
+      . wp_json_encode(['@context' => 'https://schema.org', '@graph' => $graph], JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+      . "</script>\n";
+  }
+
+  private function apply_schema_action($action_id, $payload) {
+    $type = 'set_schema';
+    $previous = $this->get_schema_settings();
+    $state = function ($settings) { return ['schema' => empty($settings) ? new \stdClass() : $settings]; };
+    $rollback = ['id' => $action_id . '-rollback', 'type' => $type, 'payload' => empty($previous) ? ['types' => []] : $previous];
+
+    $types = isset($payload['types']) && is_array($payload['types']) ? array_values(array_unique($payload['types'])) : null;
+    if ($types === null || array_diff($types, ['Organization', 'WebSite'])) {
+      return $this->action_result($action_id, $type, 'failed', 'Only Organization and WebSite schema can be added. Nothing was changed.', $state($previous));
+    }
+    if (empty($types)) {
+      delete_option(self::SCHEMA_OPTION);
+      return $this->action_result($action_id, $type, 'applied', 'Home-page schema removed.', $state([]), $rollback);
+    }
+    $plugin = $this->seo_plugin();
+    if ($plugin !== null) {
+      return $this->action_result($action_id, $type, 'skipped', sprintf('%s already writes the site schema; set the organisation there to avoid duplicates. Nothing was changed.', $plugin), $state($previous));
+    }
+    $same_as = [];
+    foreach (isset($payload['sameAs']) && is_array($payload['sameAs']) ? array_slice($payload['sameAs'], 0, 10) : [] as $url) {
+      $url = esc_url_raw((string) $url, ['https']);
+      if ($url !== '') $same_as[] = $url;
+    }
+    $next = ['types' => $types, 'sameAs' => $same_as];
+    update_option(self::SCHEMA_OPTION, $next, false);
+    return $this->action_result($action_id, $type, 'applied', sprintf('%s schema added to the home page.', implode(' and ', $types)), $state($next), $rollback);
+  }
+
+  /** Where titles and descriptions are kept: the SEO plugin's own fields, or the connector's. */
+  private function meta_keys($plugin) {
+    if ($plugin === 'yoast') return ['title' => '_yoast_wpseo_title', 'description' => '_yoast_wpseo_metadesc'];
+    if ($plugin === 'rank-math') return ['title' => 'rank_math_title', 'description' => 'rank_math_description'];
+    if ($plugin === null) return ['title' => self::META_TITLE_KEY, 'description' => self::META_DESCRIPTION_KEY];
+    return null;
+  }
+
+  /** The published post or page behind a site path, or 0. */
+  private function post_for_path($path) {
+    if (!is_string($path) || $path === '' || $path[0] !== '/') return 0;
+    if ($path === '/') {
+      return get_option('show_on_front') === 'page' ? (int) get_option('page_on_front') : 0;
+    }
+    $id = url_to_postid(home_url($path));
+    if (!$id) {
+      // Plain permalinks: url_to_postid only knows ?p= addresses; look the slug path up instead.
+      $post = get_page_by_path(trim($path, '/'), OBJECT, ['page', 'post']);
+      $id = $post ? $post->ID : 0;
+    }
+    return $id && get_post_status($id) === 'publish' ? (int) $id : 0;
+  }
+
+  private function apply_seo_meta_action($action_id, $payload) {
+    $type = 'set_seo_meta';
+    $plugin = $this->seo_plugin();
+    $keys = $this->meta_keys($plugin);
+    if ($keys === null) {
+      return $this->action_result($action_id, $type, 'skipped', sprintf('Titles and descriptions are managed by %s, which the connector does not write to yet. Nothing was changed.', $plugin));
+    }
+    $post_id = isset($payload['postId']) ? absint($payload['postId']) : $this->post_for_path(isset($payload['path']) ? $payload['path'] : '');
+    if (!$post_id || !get_post($post_id)) {
+      $message = isset($payload['path']) && $payload['path'] === '/'
+        ? 'The home page lists the latest posts; set its title and description in the SEO settings. Nothing was changed.'
+        : 'No published page found for this address. Nothing was changed.';
+      return $this->action_result($action_id, $type, 'failed', $message);
+    }
+
+    $limits = ['title' => 120, 'description' => 320];
+    // An undo puts back what was there before, which the SEO plugin may have allowed to be longer.
+    $restoring = !empty($payload['restore']);
+    $values = [];
+    foreach ($limits as $field => $max) {
+      if (!array_key_exists($field, $payload)) continue;
+      if ($payload[$field] === null) {
+        $values[$field] = null;
+        continue;
+      }
+      if ($restoring) $max = 2000;
+      $value = sanitize_text_field((string) $payload[$field]);
+      if ($value === '' || mb_strlen($value) > $max) {
+        return $this->action_result($action_id, $type, 'failed', sprintf('The %s must be 1 to %d characters. Nothing was changed.', $field, $max));
+      }
+      $values[$field] = $value;
+    }
+    if (empty($values)) {
+      return $this->action_result($action_id, $type, 'failed', 'No title or description given. Nothing was changed.');
+    }
+
+    $restore = ['postId' => $post_id, 'restore' => true];
+    foreach ($values as $field => $value) {
+      $old = get_post_meta($post_id, $keys[$field], true);
+      $restore[$field] = $old === '' ? null : $old;
+      if ($value === null) {
+        delete_post_meta($post_id, $keys[$field]);
+      } else {
+        update_post_meta($post_id, $keys[$field], $value);
+      }
+    }
+    $where = $plugin === 'yoast' ? 'Yoast SEO' : ($plugin === 'rank-math' ? 'Rank Math' : 'the page');
+    return $this->action_result($action_id, $type, 'applied', sprintf('Updated %s of "%s" in %s.', implode(' and ', array_keys($values)), get_the_title($post_id), $where),
+      ['postId' => $post_id, 'seoPlugin' => $plugin],
+      ['id' => $action_id . '-rollback', 'type' => $type, 'payload' => $restore]);
+  }
+
+  /** The connector's own title, used only while no SEO plugin is active. */
+  public function filter_document_title($title) {
+    if ($this->seo_plugin() !== null || !is_singular()) return $title;
+    $own = get_post_meta(get_queried_object_id(), self::META_TITLE_KEY, true);
+    return is_string($own) && $own !== '' ? $own : $title;
+  }
+
+  /** The connector's own meta description, used only while no SEO plugin is active. */
+  public function output_meta_description() {
+    if ($this->seo_plugin() !== null || !is_singular()) return;
+    $own = get_post_meta(get_queried_object_id(), self::META_DESCRIPTION_KEY, true);
+    if (is_string($own) && $own !== '') {
+      echo '<meta name="description" content="' . esc_attr($own) . "\">\n";
+    }
+  }
+
+  /** What the SaaS needs to choose GEO fixes that fit this site. */
+  private function seo_environment() {
+    return [
+      'seoPlugin'      => $this->seo_plugin(),
+      'rootInstall'    => $this->serves_domain_root(),
+      'robotsFile'     => file_exists(ABSPATH . 'robots.txt'),
+      'llmsFile'       => file_exists(ABSPATH . 'llms.txt'),
+      'searchVisible'  => (bool) get_option('blog_public'),
+      'staticHomePage' => get_option('show_on_front') === 'page' && (int) get_option('page_on_front') > 0,
+      'llmsTxt'        => get_option(self::LLMS_TXT_OPTION, '') !== '',
+      'aiCrawlerRules' => empty($this->get_ai_crawler_rules()) ? new \stdClass() : $this->get_ai_crawler_rules(),
+      'schemaTypes'    => isset($this->get_schema_settings()['types']) ? $this->get_schema_settings()['types'] : [],
+    ];
+  }
+
   public function routes() {
     // Ping endpoint - check if plugin is installed
     register_rest_route('getsafe360/v1', '/ping', [
@@ -2648,6 +3035,7 @@ class GetSafe360_AI {
       'timestamp' => current_time('mysql'),
       'protections' => $this->get_action_state(),
       'securityHeaders' => $this->get_security_headers(),
+      'seo' => $this->seo_environment(),
     ];
   }
 
@@ -2681,6 +3069,10 @@ class GetSafe360_AI {
         'restore_core_files'      => 'apply_restore_core_files_action',
         'quarantine_core_files'   => 'apply_quarantine_core_files_action',
         'restore_core_backup'     => 'apply_restore_core_backup_action',
+        'set_llms_txt'            => 'apply_llms_txt_action',
+        'set_ai_crawler_rules'    => 'apply_ai_crawler_rules_action',
+        'set_schema'              => 'apply_schema_action',
+        'set_seo_meta'            => 'apply_seo_meta_action',
       ];
       if (isset($handlers[$action_type])) {
         $results[] = $this->{$handlers[$action_type]}($action_id, $action_payload);
@@ -2854,7 +3246,12 @@ class GetSafe360_AI {
         'pluginUpdates'        => true,
         'coreIntegrity'        => true,
         'securityCsp'          => true,
+        'llmsTxt'              => true,
+        'aiCrawlerRules'       => true,
+        'schemaGaps'           => true,
+        'seoMeta'              => true,
       ],
+      'seo'                => $this->seo_environment(),
     ];
   }
 }

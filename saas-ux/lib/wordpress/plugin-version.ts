@@ -4,7 +4,7 @@
 // server imports so browser components can compare against it.
 // plugin-version.test.ts checks it against the plugin file's header.
 
-export const CURRENT_PLUGIN_VERSION = '1.11.0';
+export const CURRENT_PLUGIN_VERSION = '1.12.0';
 
 /** Plugin slug on WordPress.org (folder and text domain). Was getsafe360-connector up to 1.10. */
 export const PLUGIN_SLUG = 'getsafe-360-ai';
