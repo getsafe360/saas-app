@@ -2491,15 +2491,22 @@ class GetSafe360_AI {
   /** The `*` group's path rules, minus a blanket block, so an allowed AI crawler keeps the site's private paths. */
   private function wildcard_path_rules($robots) {
     $rules = [];
-    $in_wildcard = false;
+    $agents = [];       // agents of the current group
+    $in_rules = false;  // a rule line ends the run of user-agent lines that opens a group
     foreach (preg_split('/\r?\n/', $robots) as $line) {
       $line = trim(preg_replace('/#.*/', '', $line));
       if ($line === '') continue;
       if (preg_match('/^user-agent\s*:\s*(\S+)/i', $line, $m)) {
-        $in_wildcard = $m[1] === '*';
+        if ($in_rules) {
+          $agents = [];
+          $in_rules = false;
+        }
+        $agents[] = $m[1];
         continue;
       }
-      if ($in_wildcard && preg_match('/^(allow|disallow)\s*:\s*(\S*)/i', $line, $m)) {
+      if (preg_match('/^(allow|disallow)\s*:\s*(\S*)/i', $line, $m)) {
+        $in_rules = true;
+        if (!in_array('*', $agents, true)) continue;
         $path = $m[2];
         if (strtolower($m[1]) === 'disallow' && ($path === '/' || $path === '')) continue;
         $rules[] = ucfirst(strtolower($m[1])) . ': ' . $path;
@@ -2687,6 +2694,8 @@ class GetSafe360_AI {
     }
 
     $limits = ['title' => 120, 'description' => 320];
+    // An undo puts back what was there before, which the SEO plugin may have allowed to be longer.
+    $restoring = !empty($payload['restore']);
     $values = [];
     foreach ($limits as $field => $max) {
       if (!array_key_exists($field, $payload)) continue;
@@ -2694,6 +2703,7 @@ class GetSafe360_AI {
         $values[$field] = null;
         continue;
       }
+      if ($restoring) $max = 2000;
       $value = sanitize_text_field((string) $payload[$field]);
       if ($value === '' || mb_strlen($value) > $max) {
         return $this->action_result($action_id, $type, 'failed', sprintf('The %s must be 1 to %d characters. Nothing was changed.', $field, $max));
@@ -2704,7 +2714,7 @@ class GetSafe360_AI {
       return $this->action_result($action_id, $type, 'failed', 'No title or description given. Nothing was changed.');
     }
 
-    $restore = ['postId' => $post_id];
+    $restore = ['postId' => $post_id, 'restore' => true];
     foreach ($values as $field => $value) {
       $old = get_post_meta($post_id, $keys[$field], true);
       $restore[$field] = $old === '' ? null : $old;

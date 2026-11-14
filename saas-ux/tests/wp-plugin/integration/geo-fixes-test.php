@@ -58,6 +58,12 @@ check(preg_match('/User-agent: GPTBot\nDisallow: \/\n/', $after) === 1, 'GPTBot 
 check(preg_match('/User-agent: OAI-SearchBot\nAllow: \/\nDisallow: \/wp-admin\/\nAllow: \/wp-admin\/admin-ajax.php/', $after) === 1, 'OAI-SearchBot allowed, private paths of * kept');
 check(run_action('set_ai_crawler_rules', ['rules' => ['EvilBot' => 'allow']])['status'] === 'failed', 'unknown crawlers refused');
 
+// A group shared by * and another agent still passes its private paths on.
+$grouped = function ($out) { return "User-agent: *\nUser-agent: Bingbot\nDisallow: /private/\n"; };
+add_filter('robots_txt', $grouped, 10);
+check(preg_match('/User-agent: OAI-SearchBot\nAllow: \/\nDisallow: \/private\//', robots()) === 1, 'private paths of a grouped * kept');
+remove_filter('robots_txt', $grouped, 10);
+
 // Another plugin already writes a ClaudeBot group: the connector leaves it alone.
 $other = function ($out) { return $out . "\nUser-agent: ClaudeBot\nDisallow: /private/\n"; };
 add_filter('robots_txt', $other, 10);
@@ -116,6 +122,10 @@ check(get_post_meta($page, '_yoast_wpseo_title', true) === 'New title' && get_po
 check(run_action('set_schema', ['types' => ['Organization']])['status'] === 'skipped', 'no schema next to Yoast');
 undo($yoast);
 check(get_post_meta($page, '_yoast_wpseo_title', true) === 'Old Yoast title', 'undo restores the previous Yoast title');
+$long = str_repeat('Long description. ', 25); // ~450 characters, more than a new one may have
+update_post_meta($page, '_yoast_wpseo_metadesc', trim($long));
+$short = run_action('set_seo_meta', ['postId' => $page, 'description' => 'Short.']);
+check(undo($short)['status'] === 'applied' && get_post_meta($page, '_yoast_wpseo_metadesc', true) === trim($long), 'undo restores a longer previous description');
 
 $capsReq = new WP_REST_Request('GET', '/getsafe360/v1/capabilities');
 $capsReq->set_header('X-API-Key', $key);
