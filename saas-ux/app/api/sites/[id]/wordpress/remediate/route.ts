@@ -12,6 +12,7 @@ import { createWordPressClient } from '@/lib/wordpress/client';
 import { createWordPressActionPlan, type RemediationFindingInput } from '@/lib/wordpress/plan';
 import { executeWordPressActionPlan } from '@/lib/wordpress/actions';
 import { toRemediationItems } from '@/lib/wordpress/remediation-result';
+import { loadCrawl } from '@/lib/seo/store';
 import type {
   WordPressCapabilitySummary,
   WordPressDetailedVerificationResult,
@@ -162,6 +163,9 @@ export async function POST(
   ]);
 
   const capabilities = normalizeCapabilities(capabilitiesResponse.capabilities ?? {});
+  // GEO fixes build their change from the latest crawl (llms.txt, robots.txt) and the site's SEO setup.
+  const needsCrawl = allowedFindings.some((finding) => (finding.actionId ?? finding.id).startsWith('geo-'));
+  const crawl = needsCrawl ? await loadCrawl(siteId).catch(() => null) : null;
   const plan = createWordPressActionPlan({
     siteId,
     source: 'system',
@@ -171,6 +175,7 @@ export async function POST(
       builder: inferBuilderFromPull(pull),
     },
     capabilities,
+    context: { crawl, seo: pull.seo ?? null },
   });
 
   const actionResults = await executeWordPressActionPlan({

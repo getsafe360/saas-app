@@ -988,6 +988,21 @@
         "SITE_UNREACHABLE": "Die Website war nicht erreichbar → Prüfen Sie, ob sie online ist, und versuchen Sie es erneut.",
         "CRAWL_FAILED": "Die Prüfung konnte nicht abgeschlossen werden → Gleich noch einmal versuchen.",
         "GENERIC": "Etwas ist schiefgelaufen → Erneut versuchen."
+      },
+      "fix": {
+        "button": "Beheben",
+        "applying": "Wird auf deiner Website behoben…",
+        "undoing": "Wird rückgängig gemacht…",
+        "undo": "Rückgängig",
+        "undone": "Rückgängig gemacht. Deine Website ist wieder wie vorher.",
+        "recheck": "Prüfe erneut, um die Bewertung zu aktualisieren.",
+        "verified": "Behoben und auf deiner Website bestätigt.",
+        "verification_failed": "Angewendet, aber deine Website zeigt es noch nicht → Ein Seiten-Cache oder CDN liefert evtl. noch die alte Version; leere ihn und prüfe erneut.",
+        "connector_failed": "Deine Website hat die Änderung nicht übernommen: {message}",
+        "connector_update": "Diese Behebung braucht das Plugin GetSafe 360 AI ab Version 1.12 → Aktualisiere das Plugin in WordPress.",
+        "safe_mode": "Vom Sicherheitsmodus zurückgehalten → Prüfe die Änderung und wende sie selbst an.",
+        "not_automatic": "Auf dieser Website nicht automatisch behebbar → Folge der Empfehlung oben.",
+        "error": "Die Behebung konnte nicht laufen → Versuche es gleich noch einmal."
       }
     }
   }

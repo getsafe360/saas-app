@@ -5,6 +5,7 @@ import type {
   WordPressConnectorActionRequest,
   WordPressConnectorActionResult,
   WordPressConnectorProtectionState,
+  WordPressSeoEnvironment,
 } from '@/lib/wordpress/types';
 
 /** Latest published version of the GetSafe360 Connector plugin. */
@@ -123,6 +124,8 @@ export interface WordPressPullResponse {
   protections?: WordPressConnectorProtectionState;
   /** Security headers configured by the connector (≥1.5). */
   securityHeaders?: Record<string, string>;
+  /** SEO plugin, root install, robots/llms files and the connector's GEO settings (≥1.12). */
+  seo?: WordPressSeoEnvironment;
 }
 
 /**

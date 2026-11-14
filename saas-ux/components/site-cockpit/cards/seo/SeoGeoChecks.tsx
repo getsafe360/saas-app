@@ -2,11 +2,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, CircleHelp, Loader2, MinusCircle, RefreshCw, Search, Sparkles, XCircle } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { AlertTriangle, CheckCircle2, CircleHelp, Loader2, MinusCircle, RefreshCw, Search, Sparkles, Undo2, Wand2, XCircle } from "lucide-react";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { CheckStatus, Finding } from "@/lib/engine/contracts";
 import type { SeoGeoReport } from "@/lib/engine/seo/report";
 import { isGeoFinding } from "@/lib/engine/seo/rules";
+import { fixModeFor } from "@/lib/engine/fixers/catalog";
+import type { RemediationItem } from "@/lib/wordpress/remediation-result";
 
 interface ScorePoint {
   checkedAt: string;
@@ -16,6 +18,16 @@ interface ScorePoint {
 
 const ORDER: Record<CheckStatus, number> = { fail: 0, warn: 1, unknown: 2, pass: 3, "not-applicable": 4 };
 const ERRORS = new Set(["RATE_LIMITED", "SITE_UNREACHABLE", "CRAWL_FAILED"]);
+const FIX_REASONS = new Set(["verified", "verification_failed", "connector_failed", "connector_update", "safe_mode", "not_automatic", "error"]);
+
+/** The fix run of one finding, as the row shows it. */
+interface FixState {
+  phase: "running" | "done" | "undoing" | "undone";
+  reason?: RemediationItem["reason"];
+  message?: string;
+  runId?: string | null;
+  undoable?: boolean;
+}
 
 function StatusIcon({ status }: { status: CheckStatus }) {
   const cls = "mt-0.5 h-4 w-4 flex-shrink-0";
@@ -37,8 +49,10 @@ function scoreColor(score: number | null) {
  * Measured SEO and GEO checks: what robots.txt, llms.txt, the sitemap and up to
  * ten pages actually show. No AI involved; unknown inputs are shown as unknown.
  */
-export function SeoGeoChecks({ siteId }: { siteId: string }) {
+export function SeoGeoChecks({ siteId, canFix = false }: { siteId: string; canFix?: boolean }) {
   const t = useTranslations("SiteCockpit.seoGeo");
+  const locale = useLocale();
+  const [fixes, setFixes] = useState<Record<string, FixState>>({});
   const tFindings = useTranslations("Findings");
   const format = useFormatter();
   const [report, setReport] = useState<SeoGeoReport | null>(null);
@@ -95,6 +109,108 @@ export function SeoGeoChecks({ siteId }: { siteId: string }) {
     } finally {
       setRunning(false);
     }
+  };
+
+  const fixable = (finding: Finding) =>
+    canFix &&
+    (finding.status === "fail" || finding.status === "warn") &&
+    fixModeFor(finding.fix?.fixerId, finding.fix?.automation) === "automatic";
+
+  /** One click fixes every open finding that shares the fixer (Organization + WebSite schema are one change). */
+  const applyFix = async (finding: Finding) => {
+    const fixerId = finding.fix!.fixerId;
+    const group = (report?.findings ?? []).filter((f) => f.fix?.fixerId === fixerId && fixable(f));
+    const ids = group.map((f) => f.id);
+    const mark = (state: FixState) => setFixes((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, state])) }));
+    mark({ phase: "running" });
+    try {
+      const response = await fetch(`/api/sites/${siteId}/wordpress/remediate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          locale,
+          findings: group.map((f) => ({
+            id: f.id, actionId: fixerId, title: f.title, severity: f.severity, category: "seo", automationLevel: "auto", safetyLevel: "safe",
+          })),
+        }),
+      });
+      const body = await response.json().catch(() => null);
+      const item: RemediationItem | undefined = Array.isArray(body?.items) ? body.items[0] : undefined;
+      if (!response.ok || !item) {
+        mark({ phase: "done", reason: "error" });
+        return;
+      }
+      mark({
+        phase: "done",
+        reason: FIX_REASONS.has(item.reason) ? item.reason : "error",
+        message: item.message,
+        runId: item.runId,
+        undoable: item.undoable,
+      });
+    } catch {
+      mark({ phase: "done", reason: "error" });
+    }
+  };
+
+  const undoFix = async (finding: Finding) => {
+    const state = fixes[finding.id];
+    if (!state?.runId) return;
+    const ids = Object.entries(fixes).filter(([, s]) => s.runId === state.runId).map(([id]) => id);
+    const mark = (next: FixState) => setFixes((prev) => ({ ...prev, ...Object.fromEntries(ids.map((id) => [id, next])) }));
+    mark({ ...state, phase: "undoing" });
+    try {
+      const response = await fetch(`/api/sites/${siteId}/wordpress/rollback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actionRunIds: [state.runId] }),
+      });
+      const body = await response.json().catch(() => null);
+      mark(response.ok && body?.success ? { phase: "undone" } : { ...state, phase: "done", reason: "error", message: undefined });
+    } catch {
+      mark({ ...state, phase: "done" });
+    }
+  };
+
+  const fixLine = (finding: Finding) => {
+    const state = fixes[finding.id];
+    if (!state) {
+      return (
+        <button
+          type="button"
+          onClick={() => applyFix(finding)}
+          className="gs-btn gs-btn-primary mt-2 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold"
+        >
+          <Wand2 className="h-3.5 w-3.5" />
+          {t("fix.button")}
+        </button>
+      );
+    }
+    if (state.phase === "running" || state.phase === "undoing") {
+      return (
+        <p className="mt-2 inline-flex items-center gap-1.5 text-xs" style={{ color: "var(--text-subtle)" }}>
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          {t(state.phase === "running" ? "fix.applying" : "fix.undoing")}
+        </p>
+      );
+    }
+    if (state.phase === "undone") {
+      return <p className="mt-2 text-xs" style={{ color: "var(--text-subtle)" }}>{t("fix.undone")}</p>;
+    }
+    const ok = state.reason === "verified" || state.reason === "verification_failed";
+    return (
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+        <span className={ok ? (state.reason === "verified" ? "text-emerald-400" : "text-amber-400") : "text-red-300"}>
+          {t(`fix.${state.reason ?? "error"}`, { message: state.message ?? "" })}
+        </span>
+        {state.undoable && state.runId && (
+          <button type="button" onClick={() => undoFix(finding)} className="gs-link inline-flex items-center gap-1" style={{ color: "var(--text-subtle)" }}>
+            <Undo2 className="h-3 w-3" />
+            {t("fix.undo")}
+          </button>
+        )}
+        {ok && <span style={{ color: "var(--text-subtle)" }}>{t("fix.recheck")}</span>}
+      </div>
+    );
   };
 
   const groups = useMemo(() => {
@@ -156,6 +272,7 @@ export function SeoGeoChecks({ siteId }: { siteId: string }) {
               → {text(finding.messages?.recommendation, finding.recommendation)}
             </p>
           )}
+          {fixable(finding) && fixLine(finding)}
         </div>
       </li>
     );

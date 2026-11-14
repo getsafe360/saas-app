@@ -21,6 +21,7 @@ import {
   pluginAutoUpdatesFixer,
   revisionsFixer,
 } from './wordpress/site-maintenance';
+import { aiSearchAccessFixer, llmsTxtFixer, siteSchemaFixer } from './wordpress/geo';
 
 const FIXERS: ReadonlyArray<ConnectorFixer> = [
   blockUserEnumerationFixer,
@@ -39,6 +40,10 @@ const FIXERS: ReadonlyArray<ConnectorFixer> = [
   // Connector 1.9
   restoreCoreFilesFixer,
   quarantineCoreFilesFixer,
+  // Connector 1.12
+  llmsTxtFixer,
+  aiSearchAccessFixer,
+  siteSchemaFixer,
 ];
 
 const BY_ID = new Map(FIXERS.map((fixer) => [fixer.id, fixer]));

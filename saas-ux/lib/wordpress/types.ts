@@ -118,6 +118,10 @@ export type WordPressActionType =
   | 'restore_core_files'
   | 'quarantine_core_files'
   | 'restore_core_backup'
+  | 'set_llms_txt'
+  | 'set_ai_crawler_rules'
+  | 'set_schema'
+  | 'set_seo_meta'
   | 'flush_cache'
   | 'verify_render';
 
@@ -224,6 +228,47 @@ export interface WordPressCoreBackupPayload {
   restorePoint: string;
 }
 
+/** Connector 1.12: the llms.txt served at the site root; null removes it. */
+export interface WordPressLlmsTxtPayload {
+  content: string | null;
+}
+
+/** Connector 1.12: per AI crawler rules in the virtual robots.txt; null removes the connector's rule. */
+export interface WordPressAiCrawlerRulesPayload {
+  rules: Record<string, 'allow' | 'block' | null>;
+}
+
+/** Connector 1.12: home-page schema; an empty `types` list removes it. */
+export interface WordPressSchemaPayload {
+  types: Array<'Organization' | 'WebSite'>;
+  sameAs?: string[];
+}
+
+/**
+ * Connector 1.12: a page's title and description, written into Yoast or Rank
+ * Math when active. null removes a value; `restore` (undo) lifts the length limits.
+ */
+export interface WordPressSeoMetaPayload {
+  postId?: number;
+  path?: string;
+  title?: string | null;
+  description?: string | null;
+  restore?: boolean;
+}
+
+/** What /pull and /capabilities report about SEO (connector 1.12). */
+export interface WordPressSeoEnvironment {
+  seoPlugin: 'yoast' | 'rank-math' | 'aioseo' | 'seopress' | null;
+  rootInstall: boolean;
+  robotsFile: boolean;
+  llmsFile: boolean;
+  searchVisible: boolean;
+  staticHomePage: boolean;
+  llmsTxt: boolean;
+  aiCrawlerRules: Record<string, 'allow' | 'block'>;
+  schemaTypes: string[];
+}
+
 export type WordPressConnectorActionRequest =
   | { id: string; type: 'update_connector_setting'; payload: WordPressConnectorSettingPayload }
   | { id: string; type: 'set_security_headers'; payload: WordPressSecurityHeadersPayload }
@@ -235,7 +280,11 @@ export type WordPressConnectorActionRequest =
   | { id: string; type: 'restore_plugins'; payload: WordPressRestorePluginsPayload }
   | { id: string; type: 'restore_core_files'; payload: WordPressCoreFilesPayload }
   | { id: string; type: 'quarantine_core_files'; payload: WordPressCoreFilesPayload }
-  | { id: string; type: 'restore_core_backup'; payload: WordPressCoreBackupPayload };
+  | { id: string; type: 'restore_core_backup'; payload: WordPressCoreBackupPayload }
+  | { id: string; type: 'set_llms_txt'; payload: WordPressLlmsTxtPayload }
+  | { id: string; type: 'set_ai_crawler_rules'; payload: WordPressAiCrawlerRulesPayload }
+  | { id: string; type: 'set_schema'; payload: WordPressSchemaPayload }
+  | { id: string; type: 'set_seo_meta'; payload: WordPressSeoMetaPayload };
 
 export interface WordPressConnectorActionResult {
   id: string;

@@ -24,6 +24,10 @@ export const AUTOMATIC_FIXER_IDS: ReadonlySet<string> = new Set([
   // Connector 1.9
   'wordpress-restore-core-files',
   'wordpress-quarantine-core-files',
+  // Connector 1.12
+  'geo-llms-txt',
+  'geo-ai-search-access',
+  'geo-site-schema',
 ]);
 
 /**
