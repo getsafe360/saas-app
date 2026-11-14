@@ -6,28 +6,42 @@
 
 if (!defined('WP_UNINSTALL_PLUGIN')) exit;
 
-foreach ([
-  'getsafe360_connector',        // site ID and key from pairing
-  'getsafe360_action_state',
-  'getsafe360_fix_log',
-  'getsafe360_seo_injections',
-  'getsafe360_security_headers',
-  'getsafe360_restore_points',
-] as $getsafe360_option) {
-  delete_option($getsafe360_option);
+/** Removes this plugin's options and transients from the current site. */
+function getsafe360_uninstall_site() {
+  global $wpdb;
+  foreach ([
+    'getsafe360_connector',        // site ID and key from pairing
+    'getsafe360_action_state',
+    'getsafe360_fix_log',
+    'getsafe360_seo_injections',
+    'getsafe360_security_headers',
+    'getsafe360_restore_points',
+  ] as $option) {
+    delete_option($option);
+  }
+
+  delete_transient('getsafe360_audit_scans');
+
+  // Cached official checksums, one transient per WordPress version and locale.
+  // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-off cleanup of this plugin's own transients.
+  $names = $wpdb->get_col($wpdb->prepare(
+    "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+    $wpdb->esc_like('_transient_getsafe360_core_sums_') . '%'
+  ));
+  foreach ($names as $name) {
+    delete_transient(substr($name, strlen('_transient_')));
+  }
 }
 
-delete_transient('getsafe360_audit_scans');
-
-// Cached official checksums, one transient per WordPress version and locale.
-global $wpdb;
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-off cleanup of this plugin's own transients.
-$getsafe360_transients = $wpdb->get_col($wpdb->prepare(
-  "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
-  $wpdb->esc_like('_transient_getsafe360_core_sums_') . '%'
-));
-foreach ($getsafe360_transients as $getsafe360_name) {
-  delete_transient(substr($getsafe360_name, strlen('_transient_')));
+// On a network every site may have been connected on its own.
+if (is_multisite()) {
+  foreach (get_sites(['fields' => 'ids', 'number' => 0]) as $getsafe360_blog_id) {
+    switch_to_blog($getsafe360_blog_id);
+    getsafe360_uninstall_site();
+    restore_current_blog();
+  }
+} else {
+  getsafe360_uninstall_site();
 }
 
 // Restore points of plugin updates and core file repairs (the folder is only ours).
