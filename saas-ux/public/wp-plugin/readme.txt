@@ -1,5 +1,5 @@
 === GetSafe 360 AI ===
-Contributors: WPORG_USERNAME
+Contributors: miamifrank
 Tags: security, site health, seo, performance, accessibility
 Requires at least: 5.6
 Tested up to: 7.1
@@ -110,6 +110,15 @@ This plugin connects your site to GetSafe 360 AI (https://www.getsafe360.ai), a 
 **WordPress.org:** to restore a modified core file, the plugin downloads the official copy from https://core.svn.wordpress.org and checks it against the official checksum. Plugin updates use the standard WordPress update system.
 
 GetSafe 360 AI [Terms of Service](https://www.getsafe360.ai/terms) and [Privacy Policy](https://www.getsafe360.ai/privacy).
+
+== Screenshots ==
+
+1. Every finding explained in plain words, with its effect on the score. Pick the fixes and apply them in one click.
+2. Every change is logged and can be undone with one click.
+3. Content-Security-Policy builder: AI explains each source your pages load, you decide what is allowed.
+4. Website care reports in six languages, ready to send to a client as PDF or Markdown (paid plans).
+5. Connect your site with a 6-digit pairing code, or open the page from your dashboard with the code already filled in.
+6. Connection status inside WordPress.
 
 == Changelog ==
 
