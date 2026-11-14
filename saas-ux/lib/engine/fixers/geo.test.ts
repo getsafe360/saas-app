@@ -9,6 +9,7 @@ import { createWordPressActionPlan } from '@/lib/wordpress/plan';
 import { parseRollbackRequest } from '@/lib/wordpress/rollback';
 import type { WordPressCapabilitySummary, WordPressSeoEnvironment } from '@/lib/wordpress/types';
 import { AUTOMATIC_FIXER_IDS, fixModeFor } from './catalog';
+import { AI_CRAWLERS } from '@/lib/engine/seo/robots';
 import { aiSearchAccessFixer, llmsTxtFixer, siteSchemaFixer } from './wordpress/geo';
 
 const page = (html: string, url: string, inSitemap: boolean, isHome: boolean) => toCrawlPage(parseSeoPage(html, url), inSitemap, isHome);
@@ -38,7 +39,10 @@ const caps = (raw: Record<string, boolean>): WordPressCapabilitySummary => ({
 });
 
 const OPEN = 'User-agent: *\nDisallow: /wp-admin/\n';
-const BLOCKS_AI = 'User-agent: *\nDisallow: /wp-admin/\n\nUser-agent: OAI-SearchBot\nUser-agent: PerplexityBot\nDisallow: /\n';
+// Everyone but Google and Bing is kept out by the `*` group, which the connector can add groups next to.
+const BLOCKS_AI = 'User-agent: *\nDisallow: /\n\nUser-agent: Googlebot\nUser-agent: Bingbot\nAllow: /\n';
+// Another plugin wrote its own groups for these crawlers: theirs, not the connector's.
+const OTHERS_BLOCK_AI = 'User-agent: *\nDisallow: /wp-admin/\n\nUser-agent: OAI-SearchBot\nUser-agent: PerplexityBot\nDisallow: /\n';
 
 test('llms.txt: site name, summary, indexable pages with their own titles', () => {
   const text = buildLlmsTxt(crawl(OPEN))!;
@@ -65,7 +69,11 @@ test('llms.txt fixer plans only where the site can serve it', () => {
 test('AI search access: allows the blocked search crawlers only, never against a site that blocks search', () => {
   const findings = [{ id: 'geo-ai-search-access', actionId: 'geo-ai-search-access' }];
   const plan = aiSearchAccessFixer.plan(findings, { crawl: crawl(BLOCKS_AI), seo: seo() });
-  assert.deepEqual(plan?.payload.rules, { 'OAI-SearchBot': 'allow', PerplexityBot: 'allow' });
+  const searchBots = AI_CRAWLERS.filter((bot) => bot.purpose === 'search').map((bot) => bot.agent);
+  assert.deepEqual(Object.keys(plan?.payload.rules as object).sort(), [...searchBots].sort(), 'search crawlers only, no training crawlers');
+  assert.equal(aiSearchAccessFixer.plan(findings, { crawl: crawl(OTHERS_BLOCK_AI), seo: seo() }), null, 'groups another plugin wrote stay guided');
+  const own = aiSearchAccessFixer.plan(findings, { crawl: crawl(OTHERS_BLOCK_AI), seo: seo({ aiCrawlerRules: { 'OAI-SearchBot': 'block' } }) });
+  assert.deepEqual(own?.payload.rules, { 'OAI-SearchBot': 'allow' }, 'the connector may change its own block');
   assert.equal(aiSearchAccessFixer.plan(findings, { crawl: crawl('User-agent: *\nDisallow: /\n'), seo: seo() }), null, 'Google blocked too: a decision');
   assert.equal(aiSearchAccessFixer.plan(findings, { crawl: crawl(BLOCKS_AI), seo: seo({ robotsFile: true }) }), null, 'physical robots.txt');
   assert.equal(aiSearchAccessFixer.plan(findings, { crawl: crawl(BLOCKS_AI), seo: seo({ searchVisible: false }) }), null, 'discouraged');
@@ -86,6 +94,8 @@ test('site schema: one action for both findings, none next to an SEO plugin', ()
   ];
   assert.deepEqual(siteSchemaFixer.plan(findings, { seo: seo() })?.payload.types, ['Organization', 'WebSite']);
   assert.equal(siteSchemaFixer.plan(findings, { seo: seo({ seoPlugin: 'yoast' }) }), null);
+  const onlyOrg = siteSchemaFixer.plan([findings[0]], { seo: seo({ schemaTypes: ['WebSite'] }) });
+  assert.deepEqual(onlyOrg?.payload.types, ['Organization', 'WebSite'], 'types the connector already adds are kept');
 });
 
 test('measured findings route to the GEO fixers and plan through the connector', () => {

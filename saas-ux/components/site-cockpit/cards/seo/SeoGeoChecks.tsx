@@ -272,14 +272,15 @@ export function SeoGeoChecks({ siteId, canFix = false }: { siteId: string; canFi
               → {text(finding.messages?.recommendation, finding.recommendation)}
             </p>
           )}
-          {fixable(finding) && fixLine(finding)}
+          {/* A run stays visible after a re-check passes, so it can still be undone. */}
+          {(fixable(finding) || fixes[finding.id]) && fixLine(finding)}
         </div>
       </li>
     );
   };
 
   const section = (title: string, icon: React.ReactNode, findings: Finding[]) => {
-    const visible = showPassed ? findings : findings.filter((f) => f.status !== "pass" && f.status !== "not-applicable");
+    const visible = showPassed ? findings : findings.filter((f) => (f.status !== "pass" && f.status !== "not-applicable") || fixes[f.id]);
     const hidden = findings.length - visible.length;
     return (
       <section className="rounded-xl border p-4" style={{ borderColor: "var(--border-default)", background: "var(--header-bg)" }}>

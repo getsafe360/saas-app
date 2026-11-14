@@ -98,10 +98,24 @@ export const llmsTxtFixer: ConnectorFixer = {
   },
 };
 
-/** AI search crawlers the robots.txt the crawl saw keeps out. */
-function blockedSearchCrawlers(robotsText: string): string[] {
+/** Agents (lower-case) named in their own `User-agent` line. */
+function namedAgents(robotsText: string): Set<string> {
+  return new Set([...robotsText.matchAll(/^\s*user-agent\s*:\s*(\S+)/gim)].map((m) => m[1].toLowerCase()));
+}
+
+/**
+ * AI search crawlers the robots.txt the crawl saw keeps out, and the connector can let in: a group
+ * someone else wrote for the crawler is theirs (the connector leaves it alone), only its own rules and
+ * the `*` group can be changed.
+ */
+function blockedSearchCrawlers(robotsText: string, ownRules: Readonly<Record<string, unknown>>): string[] {
   const robots = parseRobots(robotsText);
-  return AI_CRAWLERS.filter((bot) => bot.purpose === 'search' && !isAllowed(robots, bot.agent)).map((bot) => bot.agent);
+  const named = namedAgents(robotsText);
+  return AI_CRAWLERS.filter((bot) =>
+    bot.purpose === 'search' &&
+    !isAllowed(robots, bot.agent) &&
+    (!named.has(bot.agent.toLowerCase()) || bot.agent in ownRules),
+  ).map((bot) => bot.agent);
 }
 
 export const aiSearchAccessFixer: ConnectorFixer = {
@@ -117,7 +131,7 @@ export const aiSearchAccessFixer: ConnectorFixer = {
     // A site that also keeps Google and Bing out means it: that is a decision, not an oversight.
     const parsed = parseRobots(robots.text);
     if (SEARCH_CRAWLERS.some((agent) => !isAllowed(parsed, agent))) return null;
-    const blocked = blockedSearchCrawlers(robots.text);
+    const blocked = blockedSearchCrawlers(robots.text, seo?.aiCrawlerRules ?? {});
     if (blocked.length === 0) return null;
 
     const rules = Object.fromEntries(blocked.map((agent) => [agent, 'allow' as const]));
@@ -176,10 +190,13 @@ export const siteSchemaFixer: ConnectorFixer = {
   executor: 'wp-connector',
 
   plan(findings, context) {
-    const types = [...new Set(findings.map((finding) => SCHEMA_TYPE_BY_FINDING[finding.id]).filter(Boolean))];
+    const missing = [...new Set(findings.map((finding) => SCHEMA_TYPE_BY_FINDING[finding.id]).filter(Boolean))];
     const seo = context?.seo;
     // Yoast, Rank Math & co. write this graph themselves; a second one would duplicate it.
-    if (types.length === 0 || (seo && seo.seoPlugin !== null)) return null;
+    if (missing.length === 0 || (seo && seo.seoPlugin !== null)) return null;
+    // The connector replaces its stored list: keep the types it already adds.
+    const kept = (seo?.schemaTypes ?? []).filter((type): type is 'Organization' | 'WebSite' => type === 'Organization' || type === 'WebSite');
+    const types = (['Organization', 'WebSite'] as const).filter((type) => missing.includes(type) || kept.includes(type));
     return {
       type: 'set_schema',
       title: `Add ${types.join(' and ')} schema`,
