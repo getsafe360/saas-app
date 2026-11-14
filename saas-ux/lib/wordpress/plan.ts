@@ -1,5 +1,5 @@
 import { getFixer } from '@/lib/engine/fixers/registry';
-import type { FixerActionTemplate } from '@/lib/engine/fixers/types';
+import type { FixerActionTemplate, FixerPlanContext } from '@/lib/engine/fixers/types';
 import type {
   WordPressActionPlan,
   WordPressActionRisk,
@@ -30,6 +30,10 @@ const CAPABILITY_LABELS: Record<string, string> = {
   databaseCleanup: 'clean up the database (connector 1.7 or newer)',
   pluginUpdates: 'update plugins with a restore point (connector 1.8 or newer)',
   coreIntegrity: 'restore and quarantine core files (connector 1.9 or newer)',
+  llmsTxt: 'serve llms.txt (connector 1.12 or newer)',
+  aiCrawlerRules: 'set AI crawler rules in robots.txt (connector 1.12 or newer)',
+  schemaGaps: 'add home-page schema (connector 1.12 or newer)',
+  seoMeta: 'write page titles and descriptions (connector 1.12 or newer)',
 };
 
 function makeActionId(finding: RemediationFindingInput): string {
@@ -117,7 +121,8 @@ function buildAction(
  */
 function planActions(
   findings: RemediationFindingInput[],
-  capabilities: WordPressCapabilitySummary
+  capabilities: WordPressCapabilitySummary,
+  context?: FixerPlanContext
 ): WordPressPlannedAction[] {
   const groups = new Map<string, RemediationFindingInput[]>();
   for (const finding of findings) {
@@ -127,7 +132,7 @@ function planActions(
 
   const actions: WordPressPlannedAction[] = [];
   for (const [actionId, group] of groups) {
-    const template = getFixer(actionId)?.plan(group) ?? null;
+    const template = getFixer(actionId)?.plan(group, context) ?? null;
     if (template) {
       actions.push(buildAction(actionId, group, template, capabilities));
     } else {
@@ -144,8 +149,10 @@ export function createWordPressActionPlan(params: {
   findings: RemediationFindingInput[];
   snapshot?: Pick<WordPressSiteSnapshot, 'builder'> | null;
   capabilities: WordPressCapabilitySummary;
+  /** Crawl and SEO setup, for fixers that build their change from the site (GEO). */
+  context?: FixerPlanContext;
 }): WordPressActionPlan {
-  const actions = planActions(params.findings, params.capabilities);
+  const actions = planActions(params.findings, params.capabilities, params.context);
 
   return {
     siteId: params.siteId,

@@ -4,6 +4,7 @@
 // request the connector returned (`rollbackPayload`); undo replays those,
 // newest first, so stacked changes unwind back to the original state.
 
+import { AI_CRAWLERS } from '@/lib/engine/seo/robots';
 import { CONNECTOR_SETTING_KEYS, type WordPressConnectorActionRequest } from '@/lib/wordpress/types';
 
 export interface RollbackCandidate {
@@ -21,6 +22,11 @@ export interface PlannedRollback {
 
 const SETTING_KEYS: ReadonlySet<string> = new Set(CONNECTOR_SETTING_KEYS);
 const PLUGIN_FILE = /^[A-Za-z0-9._/-]+\.php$/;
+const AI_AGENTS: ReadonlySet<string> = new Set(AI_CRAWLERS.map((bot) => bot.agent));
+const LLMS_TXT_MAX = 65_536;
+
+const optionalText = (value: unknown, max: number): value is string | null =>
+  value === null || (typeof value === 'string' && value.length <= max);
 
 /** Accept only the inverse shapes the connector produces. */
 export function parseRollbackRequest(raw: unknown): WordPressConnectorActionRequest | null {
@@ -74,6 +80,43 @@ export function parseRollbackRequest(raw: unknown): WordPressConnectorActionRequ
     if (!Array.isArray(ids) || ids.length === 0) return null;
     if (!ids.every((id) => typeof id === 'string' && /^[a-f0-9]{32}$/.test(id))) return null;
     return { id: value.id, type: 'restore_plugins', payload: { restorePoints: ids as string[] } };
+  }
+
+  if (value.type === 'set_llms_txt') {
+    if (!optionalText(payload.content, LLMS_TXT_MAX)) return null;
+    return { id: value.id, type: 'set_llms_txt', payload: { content: payload.content } };
+  }
+
+  if (value.type === 'set_ai_crawler_rules') {
+    const rules = payload.rules;
+    if (!rules || typeof rules !== 'object' || Array.isArray(rules)) return null;
+    const clean: Record<string, 'allow' | 'block' | null> = {};
+    for (const [agent, rule] of Object.entries(rules as Record<string, unknown>)) {
+      if (!AI_AGENTS.has(agent) || (rule !== 'allow' && rule !== 'block' && rule !== null)) return null;
+      clean[agent] = rule;
+    }
+    if (Object.keys(clean).length === 0) return null;
+    return { id: value.id, type: 'set_ai_crawler_rules', payload: { rules: clean } };
+  }
+
+  if (value.type === 'set_schema') {
+    const types = payload.types;
+    if (!Array.isArray(types) || !types.every((type) => type === 'Organization' || type === 'WebSite')) return null;
+    const sameAs = Array.isArray(payload.sameAs) ? payload.sameAs : [];
+    if (!sameAs.every((url) => typeof url === 'string' && url.startsWith('https://'))) return null;
+    return { id: value.id, type: 'set_schema', payload: { types: types as Array<'Organization' | 'WebSite'>, sameAs: sameAs as string[] } };
+  }
+
+  if (value.type === 'set_seo_meta') {
+    if (typeof payload.postId !== 'number' || !Number.isInteger(payload.postId) || payload.postId <= 0) return null;
+    const meta: { postId: number; restore: true; title?: string | null; description?: string | null } = { postId: payload.postId, restore: true };
+    for (const field of ['title', 'description'] as const) {
+      if (!(field in payload)) continue;
+      if (!optionalText(payload[field], 2000)) return null;
+      meta[field] = payload[field] as string | null;
+    }
+    if (!('title' in meta) && !('description' in meta)) return null;
+    return { id: value.id, type: 'set_seo_meta', payload: meta };
   }
 
   if (value.type === 'set_plugin_auto_updates') {

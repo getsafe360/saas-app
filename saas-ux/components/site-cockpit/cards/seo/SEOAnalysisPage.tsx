@@ -727,7 +727,7 @@ export function SEOAnalysisPage({
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6 pb-32">
 
         {/* Measured checks: facts first, the AI analysis below builds on them. */}
-        <SeoGeoChecks siteId={siteId} />
+        <SeoGeoChecks siteId={siteId} canFix={connectionStatus === "connected" && cmsType?.toLowerCase() === "wordpress"} />
 
         {/* Start button — shown when initial load finished and no results exist */}
         {!loadingExisting && !hasStarted.current && !streaming && !done && !error && (

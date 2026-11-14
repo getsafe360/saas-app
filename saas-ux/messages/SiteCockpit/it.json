@@ -988,6 +988,21 @@
         "SITE_UNREACHABLE": "Il sito non è raggiungibile → Verifica che sia online e riprova.",
         "CRAWL_FAILED": "Il controllo non è stato completato → Riprova tra un momento.",
         "GENERIC": "Qualcosa è andato storto → Riprova."
+      },
+      "fix": {
+        "button": "Correggi",
+        "applying": "Correzione sul tuo sito…",
+        "undoing": "Annullamento…",
+        "undo": "Annulla",
+        "undone": "Annullato. Il tuo sito è tornato com’era.",
+        "recheck": "Controlla di nuovo per aggiornare il punteggio.",
+        "verified": "Corretto e confermato sul tuo sito.",
+        "verification_failed": "Applicato, ma il tuo sito non lo mostra ancora → Una cache di pagina o una CDN potrebbe servire la versione precedente; svuotala e controlla di nuovo.",
+        "connector_failed": "Il tuo sito non ha applicato questa modifica: {message}",
+        "connector_update": "Questa correzione richiede il plugin GetSafe 360 AI 1.12 o successivo → Aggiorna il plugin in WordPress.",
+        "safe_mode": "Trattenuto dalla modalità sicura → Verifica la modifica e applicala tu.",
+        "not_automatic": "Non correggibile automaticamente su questo sito → Segui la raccomandazione sopra.",
+        "error": "Impossibile eseguire la correzione → Riprova tra poco."
       }
     }
   }

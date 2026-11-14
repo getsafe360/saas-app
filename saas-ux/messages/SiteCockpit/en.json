@@ -988,6 +988,21 @@
         "SITE_UNREACHABLE": "The site could not be reached → Check that it is online and try again.",
         "CRAWL_FAILED": "The check could not finish → Try again in a moment.",
         "GENERIC": "Something went wrong → Try again."
+      },
+      "fix": {
+        "button": "Fix",
+        "applying": "Fixing on your site…",
+        "undoing": "Undoing…",
+        "undo": "Undo",
+        "undone": "Undone. Your site is back as it was.",
+        "recheck": "Check again to update the score.",
+        "verified": "Fixed and confirmed on your site.",
+        "verification_failed": "Applied, but your site does not show it yet → A page cache or CDN may still serve the old version; purge it and check again.",
+        "connector_failed": "Your site did not make this change: {message}",
+        "connector_update": "This fix needs GetSafe 360 AI plugin 1.12 or newer → Update the plugin in WordPress.",
+        "safe_mode": "Held back by Safe Mode → Review the change and apply it yourself.",
+        "not_automatic": "This cannot be fixed automatically on this site → Follow the recommendation above.",
+        "error": "The fix could not run → Try again in a moment."
       }
     }
   }

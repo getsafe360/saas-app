@@ -5,12 +5,14 @@
 // Findings point at fixers through `FixRef.fixerId` (sent by the UI as the
 // finding's `actionId`), so adding a fix never touches the planner/runner.
 
+import type { SeoCrawl } from '@/lib/engine/seo/facts';
 import type {
   WordPressActionRisk,
   WordPressActionType,
   WordPressConnectorActionRequest,
   WordPressDetailedVerificationResult,
   WordPressPlannedAction,
+  WordPressSeoEnvironment,
   WordPressVerificationKind,
 } from '@/lib/wordpress/types';
 
@@ -44,6 +46,12 @@ export interface FixerActionTemplate {
   payload: Record<string, unknown>;
 }
 
+/** What a fixer may need beyond the findings: the latest crawl and the site's SEO setup. */
+export interface FixerPlanContext {
+  crawl?: SeoCrawl | null;
+  seo?: WordPressSeoEnvironment | null;
+}
+
 export interface FixerVerifyContext {
   siteUrl: string;
   tokenHash: string;
@@ -56,7 +64,7 @@ export interface ConnectorFixer {
   id: string;
   executor: 'wp-connector';
   /** Build one action for every selected finding this fixer handles. */
-  plan(findings: ReadonlyArray<FixerFindingInput>): FixerActionTemplate | null;
+  plan(findings: ReadonlyArray<FixerFindingInput>, context?: FixerPlanContext): FixerActionTemplate | null;
   toConnectorRequest(action: WordPressPlannedAction): WordPressConnectorActionRequest | null;
   verify(context: FixerVerifyContext): Promise<WordPressDetailedVerificationResult>;
 }

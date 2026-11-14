@@ -49,6 +49,7 @@ export const SEO_GEO_RULES: ReadonlyArray<Rule<SeoCrawl>> = [
   {
     id: 'geo-ai-search-access',
     category: 'seo',
+    fix: { fixerId: 'geo-ai-search-access', automation: 'auto', risk: 'low', reversible: true, requiresCapabilities: ['aiCrawlerRules'] },
     severity: 'high',
     source: 'external-probe',
     evaluate: (crawl) => {
@@ -80,6 +81,7 @@ export const SEO_GEO_RULES: ReadonlyArray<Rule<SeoCrawl>> = [
   {
     id: 'geo-llms-txt',
     category: 'seo',
+    fix: { fixerId: 'geo-llms-txt', automation: 'auto', risk: 'low', reversible: true, requiresCapabilities: ['llmsTxt'] },
     severity: 'low',
     source: 'external-probe',
     evaluate: ({ llms }) => {
@@ -96,6 +98,7 @@ export const SEO_GEO_RULES: ReadonlyArray<Rule<SeoCrawl>> = [
   {
     id: 'geo-organization-schema',
     category: 'seo',
+    fix: { fixerId: 'geo-site-schema', automation: 'auto', risk: 'low', reversible: true, requiresCapabilities: ['schemaGaps'] },
     severity: 'medium',
     source: 'external-probe',
     evaluate: ({ pages }) => {
@@ -112,6 +115,7 @@ export const SEO_GEO_RULES: ReadonlyArray<Rule<SeoCrawl>> = [
   {
     id: 'geo-website-schema',
     category: 'seo',
+    fix: { fixerId: 'geo-site-schema', automation: 'auto', risk: 'low', reversible: true, requiresCapabilities: ['schemaGaps'] },
     severity: 'low',
     source: 'external-probe',
     evaluate: ({ pages }) => {
