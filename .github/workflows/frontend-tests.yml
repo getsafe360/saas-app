@@ -40,5 +40,5 @@ jobs:
         run: pnpm test
       - name: Connector plugin checks
         run: |
-          php -l public/wp-plugin/getsafe360-connector.php
-          php tests/wp-plugin/connector-harness.php public/wp-plugin/getsafe360-connector.php
+          php -l public/wp-plugin/getsafe-360-ai.php
+          php tests/wp-plugin/connector-harness.php public/wp-plugin/getsafe-360-ai.php

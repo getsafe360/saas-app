@@ -8,6 +8,7 @@ import {
   Check,
   AlertCircle,
 } from "lucide-react";
+import { PLUGIN_ZIP_PATH } from "@/lib/wordpress/plugin-version";
 
 interface PairingModalProps {
   pairCode: string | null;
@@ -99,7 +100,7 @@ export function PairingModal({
         <div className="text-xs text-gray-500 mb-3">Need help?</div>
         <div className="flex gap-3">
           <a
-            href="/wp-plugin/getsafe360-connector.zip"
+            href={PLUGIN_ZIP_PATH}
             download
             className="text-sm text-blue-400 hover:text-blue-300 underline"
           >

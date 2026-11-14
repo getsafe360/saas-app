@@ -6,6 +6,7 @@ import { X, RefreshCw, Copy, Check, Download } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { WordPressAIIcon } from "@/components/icons/WordPressAI";
 import type { ConnectionState, UseWordPressPairingReturn } from "../../types";
+import { PLUGIN_ZIP_PATH } from "@/lib/wordpress/plugin-version";
 
 interface ReconnectionModalProps {
   connectionState: ConnectionState;
@@ -98,7 +99,7 @@ export function ReconnectionModal({
                 1.{" "}
                 {t.rich("guideSteps.step1", {
                   link: (chunks) => (
-                    <a href="/wp-plugin/getsafe360-connector.zip" className="text-blue-300 underline underline-offset-4">
+                    <a href={PLUGIN_ZIP_PATH} className="text-blue-300 underline underline-offset-4">
                       {chunks}
                     </a>
                   ),
@@ -142,7 +143,7 @@ export function ReconnectionModal({
               </div>
               <div className="flex items-center gap-2">
                 <a
-                  href="/wp-plugin/getsafe360-connector.zip"
+                  href={PLUGIN_ZIP_PATH}
                   className="inline-flex items-center gap-2 rounded-md border border-slate-700 px-3 py-2 text-xs text-slate-200 hover:bg-slate-800"
                 >
                   <Download className="h-3.5 w-3.5" /> {t("download")}

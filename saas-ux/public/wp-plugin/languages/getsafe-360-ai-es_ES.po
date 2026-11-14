@@ -9,7 +9,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Domain: getsafe360-connector\n"
+"X-Domain: getsafe-360-ai\n"
 
 msgid "Debug Information"
 msgstr "Información de depuración"
@@ -145,3 +145,6 @@ msgstr "Ajustes"
 
 msgid "Pairing code filled in from GetSafe 360 AI — just click Connect."
 msgstr "Código de emparejamiento completado desde GetSafe 360 AI — solo haz clic en Conectar."
+
+msgid "GetSafe 360 AI replaces the older \"GetSafe360 Connector\" plugin. Please deactivate and delete \"GetSafe360 Connector\"; your connection and settings are kept."
+msgstr "GetSafe 360 AI sustituye al antiguo plugin «GetSafe360 Connector». Desactiva y elimina «GetSafe360 Connector»; la conexión y los ajustes se conservan."

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Build the GetSafe 360 AI Connector plugin ZIP.
+# Build the GetSafe 360 AI plugin ZIP.
 #
 # The ZIP must contain a single top-level directory named after the plugin
 # slug:
 #
-#   getsafe360-connector/
-#   ├── getsafe360-connector.php
+#   getsafe-360-ai/
+#   ├── getsafe-360-ai.php
+#   ├── uninstall.php
 #   ├── readme.txt
 #   └── languages/…
 #
@@ -14,7 +15,7 @@
 # Two things went wrong with the previously committed ZIP:
 #
 #   1. It was built on Windows and stored paths with backslashes
-#      ("languages\getsafe360-connector-de_DE.mo"). WordPress unzips those as
+#      ("languages\getsafe-360-ai-de_DE.mo"). WordPress unzips those as
 #      files whose *name* contains a backslash rather than as a directory, so
 #      every translation silently failed to load.
 #   2. It had no top-level plugin directory — the PHP file and the language
@@ -37,7 +38,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-SLUG="getsafe360-connector"
+SLUG="getsafe-360-ai"
 ZIP_NAME="$SLUG.zip"
 TAG="${2:-}"
 
@@ -48,7 +49,7 @@ STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 
 mkdir -p "$STAGE/$SLUG"
-cp "$SLUG.php" readme.txt "$STAGE/$SLUG/"
+cp "$SLUG.php" uninstall.php readme.txt "$STAGE/$SLUG/"
 if [[ -d languages ]]; then
   mkdir -p "$STAGE/$SLUG/languages"
   cp languages/*.mo languages/*.po languages/*.pot "$STAGE/$SLUG/languages/" 2>/dev/null || true

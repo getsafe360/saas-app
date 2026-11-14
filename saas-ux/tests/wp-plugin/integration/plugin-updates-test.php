@@ -148,7 +148,7 @@ try {
   check(installed_version($file) === '1.0', 'the valid restore point was still applied');
 
   // ---------- guards ----------
-  $self = run_action($key, 'update_plugins', ['plugins' => ['getsafe360-connector/getsafe360-connector.php']]);
+  $self = run_action($key, 'update_plugins', ['plugins' => ['getsafe-360-ai/getsafe-360-ai.php']]);
   check($self['status'] === 'skipped', 'never updates the connector itself');
   check(run_action($key, 'restore_plugins', ['restorePoints' => ['../../wp-config']], 'x')['status'] === 'failed', 'rejects malformed restore point ids');
   check(run_action($key, 'restore_plugins', ['restorePoints' => [str_repeat('a', 32)]], 'x')['status'] === 'failed', 'rejects unknown restore points');

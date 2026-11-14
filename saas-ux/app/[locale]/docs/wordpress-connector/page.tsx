@@ -2,19 +2,20 @@
 // English only until full i18n at MVP launch.
 import type { Metadata } from "next";
 import { Link } from "@/navigation";
+import { PLUGIN_ZIP_PATH } from "@/lib/wordpress/plugin-version";
 
 export const metadata: Metadata = {
-  title: "WordPress Connector",
+  title: "GetSafe 360 AI for WordPress",
   description:
-    "Install the GetSafe 360 AI Connector plugin, pair your WordPress site with a 6-digit code, and start AI-powered optimizations.",
+    "Install the GetSafe 360 AI plugin, pair your WordPress site with a 6-digit code, and start AI-powered optimizations.",
 };
 
 export default function WordPressConnectorDocsPage() {
   return (
     <article className="prose prose-slate dark:prose-invert max-w-none">
-      <h1>WordPress Connector</h1>
+      <h1>GetSafe 360 AI for WordPress</h1>
       <p className="lead">
-        The <strong>GetSafe 360 AI Connector</strong> plugin is the bridge between your
+        The <strong>GetSafe 360 AI</strong> plugin (formerly GetSafe360 Connector) is the bridge between your
         WordPress site and the GetSafe 360 AI platform. Once connected, the platform can
         diagnose internal WordPress details and safely apply AI-assisted fixes — things
         that aren't possible with external-only analysis.
@@ -89,8 +90,8 @@ export default function WordPressConnectorDocsPage() {
       <ol>
         <li>
           <strong>Download the plugin</strong> — get{" "}
-          <a href="/wp-plugin/getsafe360-connector.zip" download>
-            getsafe360-connector.zip
+          <a href={PLUGIN_ZIP_PATH} download>
+            {PLUGIN_ZIP_PATH.split("/").pop()}
           </a>{" "}
           (≈ 30 KB).
         </li>

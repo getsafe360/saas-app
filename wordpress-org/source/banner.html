@@ -1,0 +1,44 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Geist;src:url(geist.woff2) format('woff2');font-weight:100 900}
+*{box-sizing:border-box;margin:0}
+:root{--brand:oklch(63.39% 0.14 235.39);--brand-300:oklch(87.39% 0.12 236.09);--brand-400:oklch(79.79% 0.16 235.77);--ok:oklch(0.75 0.17 163.28);--warn:oklch(0.78 0.17 83.66)}
+body{width:1544px;height:500px;overflow:hidden;font-family:Geist,Inter,sans-serif;color:#fff;
+ background:radial-gradient(900px 520px at 1180px 250px, oklch(45% 0.12 236 / .55), transparent 70%), #08131d}
+.wrap{display:flex;align-items:center;justify-content:space-between;height:100%;padding:0 96px}
+.left{max-width:720px}
+.brand{display:flex;align-items:center;gap:22px}
+.brand .logo{width:104px;height:104px;border-radius:24px;background:#fff;display:grid;place-items:center}
+.brand .logo img{width:84px}
+h1{font-size:66px;font-weight:700;letter-spacing:-1.5px;line-height:1}
+.tag{margin-top:26px;font-size:34px;font-weight:500;color:var(--brand-300);letter-spacing:-.3px}
+.chips{display:flex;gap:10px;margin-top:30px;flex-wrap:wrap}
+.chip{border:1.5px solid oklch(80% 0.1 236 / .45);color:#dbeafe;border-radius:999px;padding:8px 18px;font-size:20px;font-weight:500}
+.foot{margin-top:28px;font-size:21px;color:#9fb3c8}
+.card{width:540px;background:#0f1f2e;border:1px solid oklch(70% 0.08 236 / .35);border-radius:22px;padding:28px 30px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.top{display:flex;align-items:center;gap:22px;padding-bottom:22px;border-bottom:1px solid #1f3346}
+.ring{width:96px;height:96px;border-radius:50%;background:conic-gradient(var(--ok) 0 92%, #20374b 92% 100%);display:grid;place-items:center}
+.ring span{width:76px;height:76px;border-radius:50%;background:#0f1f2e;display:grid;place-items:center;font-size:34px;font-weight:700}
+.score .t{font-size:22px;font-weight:600}.score .d{margin-top:6px;font-size:18px;color:var(--ok);font-weight:600}
+.row{display:flex;align-items:center;gap:14px;padding:13px 0;font-size:19px;border-bottom:1px solid #182b3c}
+.row:last-child{border-bottom:0;padding-bottom:0}
+.dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:700;flex:none}
+.done{background:oklch(0.75 0.17 163.28 / .18);color:var(--ok)}
+.test{background:oklch(0.78 0.17 83.66 / .18);color:var(--warn)}
+.row .n{flex:1;color:#e6eef6}
+.undo{font-size:15px;color:var(--brand-400);border:1px solid oklch(79% 0.16 236 / .45);border-radius:8px;padding:4px 10px}
+.badge{font-size:15px;color:var(--warn)}
+</style></head><body><div class="wrap">
+<div class="left">
+ <div class="brand"><div class="logo"><img src="360.svg"></div><h1>GetSafe 360 AI</h1></div>
+ <div class="tag">Website intelligence for WordPress</div>
+ <div class="chips"><span class="chip">Health</span><span class="chip">Security</span><span class="chip">SEO</span><span class="chip">Speed</span><span class="chip">Accessibility</span></div>
+ <div class="foot">Explained in plain words · One-click fixes · Undo for every change</div>
+</div>
+<div class="card">
+ <div class="top"><div class="ring"><span>92</span></div><div class="score"><div class="t">Site score</div><div class="d">+18 after 4 fixes</div></div></div>
+ <div class="row"><span class="dot done">✓</span><span class="n">Security headers added</span><span class="undo">Undo</span></div>
+ <div class="row"><span class="dot done">✓</span><span class="n">XML-RPC and user enumeration blocked</span><span class="undo">Undo</span></div>
+ <div class="row"><span class="dot done">✓</span><span class="n">Structured data added</span><span class="undo">Undo</span></div>
+ <div class="row"><span class="dot test">●</span><span class="n">Content-Security-Policy</span><span class="badge">Testing</span></div>
+</div>
+</div></body></html>

@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: \n"
-"X-Domain: getsafe360-connector\n"
+"X-Domain: getsafe-360-ai\n"
 
 msgid "Debug Information"
 msgstr ""
@@ -146,4 +146,7 @@ msgid "Settings"
 msgstr ""
 
 msgid "Pairing code filled in from GetSafe 360 AI — just click Connect."
+msgstr ""
+
+msgid "GetSafe 360 AI replaces the older \"GetSafe360 Connector\" plugin. Please deactivate and delete \"GetSafe360 Connector\"; your connection and settings are kept."
 msgstr ""

@@ -40,9 +40,9 @@ jobs:
           extensions: mysqli
           tools: none
       - name: Lint
-        run: php -l saas-ux/public/wp-plugin/getsafe360-connector.php
+        run: php -l saas-ux/public/wp-plugin/getsafe-360-ai.php
       - name: Unit harness
-        run: php saas-ux/tests/wp-plugin/connector-harness.php saas-ux/public/wp-plugin/getsafe360-connector.php
+        run: php saas-ux/tests/wp-plugin/connector-harness.php saas-ux/public/wp-plugin/getsafe-360-ai.php
       - name: Real WordPress integration
         env:
           DB_HOST: 127.0.0.1
@@ -58,7 +58,7 @@ jobs:
         run: |
           saas-ux/public/wp-plugin/build.sh
           mkdir -p build
-          unzip -q saas-ux/public/wp-plugin/getsafe360-connector.zip -d build
+          unzip -q saas-ux/public/wp-plugin/getsafe-360-ai.zip -d build
       - uses: WordPress/plugin-check-action@v1
         with:
-          build-dir: build/getsafe360-connector
+          build-dir: build/getsafe-360-ai
