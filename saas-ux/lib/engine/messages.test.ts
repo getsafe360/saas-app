@@ -10,6 +10,7 @@ import { EMAIL_DNS_RULES } from './security/email-dns';
 import { SECURITY_HEADER_RULES } from './security/headers';
 import { WORDPRESS_RULES } from './wordpress/rules';
 import { PAGE_RULES } from './page/rules';
+import { SEO_GEO_RULES } from './seo/rules';
 
 const LOCALES = ['en', 'de', 'es', 'fr', 'it', 'pt'] as const;
 const root = path.resolve(__dirname, '../..');
@@ -23,7 +24,7 @@ const catalogs = Object.fromEntries(
   ]),
 ) as Record<(typeof LOCALES)[number], Catalog>;
 
-const ALL_RULES = [...WORDPRESS_RULES, ...SECURITY_HEADER_RULES, ...EMAIL_DNS_RULES, ...PAGE_RULES];
+const ALL_RULES = [...WORDPRESS_RULES, ...SECURITY_HEADER_RULES, ...EMAIL_DNS_RULES, ...PAGE_RULES, ...SEO_GEO_RULES];
 
 /** Argument names in an ICU message, including nested plural/select branches. */
 function argumentsOf(message: string, locale: string): string[] {
@@ -79,6 +80,7 @@ test('every message a rule can emit exists in the catalog', () => {
     'lib/engine/security/headers.ts',
     'lib/engine/security/email-dns.ts',
     'lib/engine/page/rules.ts',
+    'lib/engine/seo/rules.ts',
   ];
   const ruleIds = new Set(ALL_RULES.map((rule) => rule.id));
   const used = new Set<string>();
@@ -103,6 +105,8 @@ test('every message a rule can emit exists in the catalog', () => {
         ...(block.includes('NOT_WORDPRESS') ? ['common.notWordPress'] : []),
         ...(block.includes('NO_TITLE') ? ['common.noTitle'] : []),
         ...(block.includes('NO_DESCRIPTION') ? ['common.noDescription'] : []),
+        ...(block.includes('unknown(NO_PAGES)') ? ['common.pageNotRead'] : []),
+        ...(block.includes('unknown(NO_ROBOTS)') ? ['common.robotsNotRead'] : []),
       ];
       for (const key of keys) {
         const full = messageKey(id, key);

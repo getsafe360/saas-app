@@ -11,7 +11,8 @@
       "noDescription": "Die Seite hat keine Meta-Beschreibung, die gemessen werden kann.",
       "pageNotRead": "Der Seiteninhalt konnte nicht gelesen werden.",
       "needsPlugin17": "Erfordert das GetSafe 360 Plugin 1.7 oder neuer.",
-      "needsPluginVersion": "Erfordert das GetSafe 360 Plugin {version} oder neuer."
+      "needsPluginVersion": "Erfordert das GetSafe 360 Plugin {version} oder neuer.",
+      "robotsNotRead": "robots.txt konnte nicht gelesen werden."
     },
     "wp-core-version": {
       "title": "WordPress-Core-Version",
@@ -461,6 +462,138 @@
       "ok": "Die Meta-Beschreibung hat {length} Zeichen und liegt im Bereich von 120–160.",
       "outside": "Die Meta-Beschreibung hat {length} Zeichen und liegt außerhalb des Bereichs von 120–160.",
       "missing": "Die Seite hat keine Meta-Beschreibung."
+    },
+    "geo-ai-search-access": {
+      "title": "KI-Such-Crawler",
+      "recommendation": "Erlauben Sie in robots.txt die Such-Crawler von ChatGPT, Claude und Perplexity, damit KI-Antworten Ihre Seiten lesen und zitieren können.",
+      "noRobots": "Es gibt keine robots.txt, KI-Such-Crawler dürfen die Website also lesen.",
+      "allowed": "robots.txt erlaubt den Such-Crawlern von ChatGPT, Claude und Perplexity, die Website zu lesen.",
+      "blocked": "robots.txt sperrt {count, plural, one {# KI-Such-Crawler} other {# KI-Such-Crawler}} ({bots}), daher können diese KI-Antworten Ihre Seiten weder lesen noch zitieren."
+    },
+    "geo-ai-training-access": {
+      "title": "KI-Trainings-Crawler",
+      "recommendation": "Entscheiden Sie, ob KI-Firmen Ihre Inhalte zum Training nutzen dürfen, und legen Sie das in robots.txt fest. Ein Trainings-Verbot hindert KI-Suchen nicht daran, Sie zu zitieren.",
+      "allAllowed": "robots.txt erlaubt die Crawler, die Inhalte für das KI-Training sammeln.",
+      "someBlocked": "robots.txt sperrt {count, plural, one {# KI-Trainings-Crawler} other {# KI-Trainings-Crawler}} ({bots}). KI-Such-Crawler sind eine eigene Einstellung."
+    },
+    "geo-llms-txt": {
+      "title": "llms.txt",
+      "recommendation": "Veröffentlichen Sie /llms.txt: eine kurze Markdown-Zusammenfassung der Website mit Links zu den wichtigsten Seiten. Der Aufwand ist gering; die Wirkung auf KI-Antworten ist noch nicht belegt.",
+      "missing": "Die Website hat keine /llms.txt.",
+      "invalid": "/llms.txt existiert, folgt aber nicht dem Format (eine Zeile \"# Titel\" und Markdown-Links).",
+      "present": "/llms.txt ist mit {links, plural, one {# Link} other {# Links}} veröffentlicht."
+    },
+    "geo-organization-schema": {
+      "title": "Unternehmensidentität (Organization-Schema)",
+      "recommendation": "Veröffentlichen Sie strukturierte Daten vom Typ Organization oder LocalBusiness mit Name, Logo, Adresse und Kontaktdaten.",
+      "present": "Die Website beschreibt das Unternehmen in strukturierten Daten als {type}.",
+      "missing": "Keine Seite beschreibt das Unternehmen als Organization oder LocalBusiness, daher müssen Suchmaschinen und KI-Antworten raten, wer hinter der Website steht."
+    },
+    "geo-website-schema": {
+      "title": "WebSite-Schema",
+      "recommendation": "Veröffentlichen Sie auf der Startseite strukturierte Daten vom Typ WebSite mit Name und URL der Website.",
+      "present": "Die Startseite veröffentlicht strukturierte Daten vom Typ WebSite.",
+      "missing": "Die Startseite veröffentlicht keine WebSite-Daten, daher kann der Name der Website in Suchergebnissen falsch erscheinen."
+    },
+    "geo-author-signals": {
+      "title": "Autorenangaben bei Artikeln",
+      "recommendation": "Nennen Sie bei jedem Artikel den Autor, auf der Seite und in den strukturierten Daten, am besten mit einer kurzen Vorstellung.",
+      "noArticles": "Keine geprüfte Seite ist als Artikel ausgezeichnet.",
+      "present": "{count, plural, one {Der Artikel nennt} other {Alle # Artikel nennen}} einen Autor.",
+      "missing": "{count} von {total} Artikeln nennen keinen Autor; das schwächt die Vertrauenssignale, auf die KI-Antworten und Suchmaschinen achten."
+    },
+    "geo-content-freshness": {
+      "title": "Aktualität der Inhalte",
+      "recommendation": "Zeigen Sie, wann Inhalte zuletzt aktualisiert wurden (dateModified in strukturierten Daten oder article:modified_time), und halten Sie wichtige Seiten aktuell.",
+      "noDates": "Keine geprüfte Seite gibt an, wann sie veröffentlicht oder aktualisiert wurde.",
+      "stale": "Das jüngste Datum auf den geprüften Seiten ist {days} Tage alt.",
+      "fresh": "Das jüngste Datum auf den geprüften Seiten ist {days} Tage alt."
+    },
+    "geo-answer-structure": {
+      "title": "Antwortfähige Inhalte",
+      "recommendation": "Beantworten Sie die Fragen Ihrer Kunden mit klaren Fragen als Überschrift und kurzen Antworten oder mit einem als FAQPage ausgezeichneten FAQ.",
+      "faq": "{count, plural, one {# Seite hat} other {# Seiten haben}} strukturierte FAQ-Daten.",
+      "questions": "{count, plural, one {# Seite nutzt} other {# Seiten nutzen}} Fragen als Überschriften, die KI-Antworten zitieren können.",
+      "none": "Keine geprüfte Seite hat Fragen als Überschriften oder strukturierte FAQ-Daten, die KI-Antworten zitieren können."
+    },
+    "geo-thin-content": {
+      "title": "Dünne Seiten",
+      "recommendation": "Geben Sie wichtigen Seiten genug Substanz, um die Frage eines Besuchers zu beantworten; sehr kurze Seiten zusammenführen oder ausbauen.",
+      "onlyHome": "Nur die Startseite konnte geprüft werden.",
+      "thin": "{count} von {total} Unterseiten haben weniger als {words} Wörter.",
+      "ok": "Die meisten der {total} Unterseiten haben substanziellen Inhalt."
+    },
+    "seo-robots-txt": {
+      "title": "robots.txt",
+      "recommendation": "Veröffentlichen Sie eine robots.txt, die Suchmaschinen erlaubt und Ihre Sitemap nennt.",
+      "missing": "Die Website hat keine robots.txt.",
+      "blocksSearch": "robots.txt sperrt {bots} für die ganze Website, daher kann sie nicht in Suchergebnissen erscheinen.",
+      "ok": "robots.txt erlaubt Google und Bing, die Website zu crawlen."
+    },
+    "seo-xml-sitemap": {
+      "title": "XML-Sitemap",
+      "recommendation": "Veröffentlichen Sie eine XML-Sitemap und reichen Sie sie in der Google Search Console und den Bing Webmaster Tools ein.",
+      "present": "Die XML-Sitemap listet {count, plural, one {# URL} other {# URLs}}.",
+      "missing": "Weder an den üblichen Adressen noch in robots.txt wurde eine XML-Sitemap gefunden."
+    },
+    "seo-sitemap-in-robots": {
+      "title": "Sitemap in robots.txt genannt",
+      "recommendation": "Fügen Sie robots.txt eine Zeile \"Sitemap:\" mit der vollständigen URL der Sitemap hinzu.",
+      "noSitemap": "Es gibt keine Sitemap, die genannt werden könnte.",
+      "listed": "robots.txt nennt die Sitemap.",
+      "notListed": "robots.txt nennt die Sitemap nicht, Crawler müssen sie also selbst finden."
+    },
+    "seo-schema-invalid": {
+      "title": "Fehlerhafte strukturierte Daten",
+      "recommendation": "Korrigieren Sie die JSON-LD-Blöcke, die kein gültiges JSON sind; prüfen Sie sie mit dem Test für Rich-Suchergebnisse von Google.",
+      "invalid": "{count, plural, one {# Seite hat} other {# Seiten haben}} strukturierte Daten, die kein gültiges JSON sind, daher ignorieren Suchmaschinen sie.",
+      "valid": "Alle strukturierten Daten auf den geprüften Seiten sind gültiges JSON."
+    },
+    "seo-page-titles": {
+      "title": "Seitentitel",
+      "recommendation": "Geben Sie jeder Seite einen eigenen, aussagekräftigen Titel.",
+      "missing": "{count} von {total} Seiten haben keinen Titel.",
+      "duplicate": "{count} von {total} Seiten teilen sich einen Titel mit einer anderen Seite.",
+      "ok": "Alle {total} Seiten haben einen eigenen Titel."
+    },
+    "seo-page-descriptions": {
+      "title": "Meta-Beschreibungen",
+      "recommendation": "Schreiben Sie für jede Seite eine eigene Meta-Beschreibung, die sie in ein bis zwei Sätzen zusammenfasst.",
+      "missing": "{count} von {total} Seiten haben keine Meta-Beschreibung.",
+      "duplicate": "{count} von {total} Seiten teilen sich eine Meta-Beschreibung mit einer anderen Seite.",
+      "ok": "Alle {total} Seiten haben eine eigene Meta-Beschreibung."
+    },
+    "seo-page-h1": {
+      "title": "Hauptüberschriften (H1)",
+      "recommendation": "Geben Sie jeder Seite genau eine H1, die sagt, worum es auf der Seite geht.",
+      "notOne": "{count} von {total} Seiten haben nicht genau eine H1.",
+      "ok": "Alle {total} Seiten haben genau eine H1."
+    },
+    "seo-page-canonicals": {
+      "title": "Kanonische URLs",
+      "recommendation": "Fügen Sie jeder Seite einen Canonical-Link hinzu, damit Suchmaschinen ihre bevorzugte Adresse kennen.",
+      "missing": "{count} von {total} Seiten haben keinen Canonical-Link.",
+      "ok": "Alle {total} Seiten haben einen Canonical-Link."
+    },
+    "seo-noindex-in-sitemap": {
+      "title": "Verborgene Seiten in der Sitemap",
+      "recommendation": "Entfernen Sie Seiten mit noindex aus der Sitemap oder entfernen Sie noindex, wenn sie gefunden werden sollen.",
+      "noSitemap": "Es gibt keine Sitemap zum Vergleich.",
+      "conflict": "{count, plural, one {# Seite steht} other {# Seiten stehen}} in der Sitemap, {count, plural, one {ist} other {sind}} aber als noindex markiert; das sendet Suchmaschinen widersprüchliche Signale.",
+      "ok": "Keine geprüfte Seite aus der Sitemap ist als noindex markiert."
+    },
+    "seo-social-tags": {
+      "title": "Social-Sharing-Tags",
+      "recommendation": "Fügen Sie jeder Seite og:title und og:image hinzu (am besten auch og:description und twitter:card).",
+      "incomplete": "{count} von {total} Seiten fehlt ein Open-Graph-Titel oder -Bild, daher erscheinen geteilte Links ohne passende Vorschau.",
+      "ok": "Alle {total} Seiten haben einen Open-Graph-Titel und ein Bild."
+    },
+    "seo-hreflang": {
+      "title": "Sprachversionen (hreflang)",
+      "recommendation": "Verknüpfen Sie jede Sprachversion per hreflang, einschließlich x-default für Besucher in anderen Sprachen.",
+      "singleLanguage": "Keine Seite verknüpft Sprachversionen.",
+      "noDefault": "{count, plural, one {# Seite verknüpft} other {# Seiten verknüpfen}} Sprachversionen ohne x-default.",
+      "ok": "{count, plural, one {# Seite verknüpft} other {# Seiten verknüpfen}} ihre Sprachversionen einschließlich x-default."
     }
   }
 }

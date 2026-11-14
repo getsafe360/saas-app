@@ -958,6 +958,37 @@
         "secret": "Mantén esta clave en secreto, como una contraseña",
         "rotate": "Contacta con soporte para renovar tu clave"
       }
+    },
+    "seoGeo": {
+      "title": "Comprobaciones SEO y GEO medidas",
+      "subtitle": "Lo que robots.txt, llms.txt, tu sitemap y hasta 10 páginas muestran realmente a los buscadores y a los motores de respuesta con IA. Medido, no estimado.",
+      "run": "Iniciar comprobación",
+      "rerun": "Comprobar de nuevo",
+      "running": "Comprobando páginas…",
+      "loading": "Cargando los últimos resultados…",
+      "empty": "Inicia la comprobación para ver lo que los buscadores y los motores de respuesta con IA encuentran en tu sitio.",
+      "checked": "Comprobado el {date} · {count, plural, one {# página} other {# páginas}}",
+      "pageErrors": "{count, plural, one {No se pudo leer # página} other {No se pudieron leer # páginas}}",
+      "geoTitle": "Búsqueda con IA (GEO)",
+      "seoTitle": "Buscadores (SEO)",
+      "delta": "{delta} desde la última comprobación",
+      "found": "Encontrado:",
+      "allPassed": "Todas las comprobaciones se superaron.",
+      "showPassed": "Mostrar {count, plural, one {# comprobación superada} other {# comprobaciones superadas}}",
+      "hidePassed": "Ocultar comprobaciones superadas",
+      "status": {
+        "pass": "Superada",
+        "warn": "Conviene mejorar",
+        "fail": "Problema",
+        "unknown": "No medido",
+        "na": "No aplica"
+      },
+      "errors": {
+        "RATE_LIMITED": "Demasiadas comprobaciones en la última hora → Inténtalo más tarde.",
+        "SITE_UNREACHABLE": "No se pudo acceder al sitio → Comprueba que esté en línea e inténtalo de nuevo.",
+        "CRAWL_FAILED": "La comprobación no pudo terminar → Inténtalo de nuevo en un momento.",
+        "GENERIC": "Algo salió mal → Inténtalo de nuevo."
+      }
     }
   }
 }

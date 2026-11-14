@@ -11,7 +11,8 @@
       "noDescription": "La página no tiene meta descripción que medir.",
       "pageNotRead": "No se pudo leer el contenido de la página.",
       "needsPlugin17": "Requiere el plugin GetSafe 360 1.7 o posterior.",
-      "needsPluginVersion": "Requiere el plugin GetSafe 360 {version} o posterior."
+      "needsPluginVersion": "Requiere el plugin GetSafe 360 {version} o posterior.",
+      "robotsNotRead": "No se pudo leer robots.txt."
     },
     "wp-core-version": {
       "title": "Versión del núcleo de WordPress",
@@ -461,6 +462,138 @@
       "ok": "La meta descripción tiene {length} caracteres, dentro del rango de 120–160.",
       "outside": "La meta descripción tiene {length} caracteres, fuera del rango de 120–160.",
       "missing": "La página no tiene meta descripción."
+    },
+    "geo-ai-search-access": {
+      "title": "Rastreadores de búsqueda con IA",
+      "recommendation": "Permite en robots.txt los rastreadores de búsqueda de ChatGPT, Claude y Perplexity para que las respuestas de IA puedan leer y citar tus páginas.",
+      "noRobots": "No hay robots.txt, así que los rastreadores de búsqueda con IA pueden leer el sitio.",
+      "allowed": "robots.txt permite que los rastreadores de búsqueda de ChatGPT, Claude y Perplexity lean el sitio.",
+      "blocked": "robots.txt bloquea {count, plural, one {# rastreador de búsqueda con IA} other {# rastreadores de búsqueda con IA}} ({bots}), así que esas respuestas de IA no pueden leer ni citar tus páginas."
+    },
+    "geo-ai-training-access": {
+      "title": "Rastreadores de entrenamiento de IA",
+      "recommendation": "Decide si las empresas de IA pueden usar tu contenido para entrenar y configúralo en robots.txt. Bloquear el entrenamiento no impide que la búsqueda con IA te cite.",
+      "allAllowed": "robots.txt permite los rastreadores que recopilan contenido para entrenar IA.",
+      "someBlocked": "robots.txt bloquea {count, plural, one {# rastreador de entrenamiento de IA} other {# rastreadores de entrenamiento de IA}} ({bots}). Los rastreadores de búsqueda con IA son un ajuste aparte."
+    },
+    "geo-llms-txt": {
+      "title": "llms.txt",
+      "recommendation": "Publica /llms.txt: un resumen breve del sitio en Markdown con enlaces a sus páginas más importantes. Cuesta poco; su efecto en las respuestas de IA aún no está demostrado.",
+      "missing": "El sitio no tiene /llms.txt.",
+      "invalid": "/llms.txt existe pero no sigue el formato (una línea \"# Título\" y enlaces Markdown).",
+      "present": "/llms.txt está publicado con {links, plural, one {# enlace} other {# enlaces}}."
+    },
+    "geo-organization-schema": {
+      "title": "Identidad del negocio (schema Organization)",
+      "recommendation": "Publica datos estructurados Organization o LocalBusiness con nombre, logotipo, dirección y datos de contacto.",
+      "present": "El sitio describe el negocio como {type} en datos estructurados.",
+      "missing": "Ninguna página describe el negocio como Organization o LocalBusiness, así que los buscadores y las respuestas de IA tienen que adivinar quién está detrás del sitio."
+    },
+    "geo-website-schema": {
+      "title": "Schema WebSite",
+      "recommendation": "Publica en la página de inicio datos estructurados WebSite con el nombre y la URL del sitio.",
+      "present": "La página de inicio publica datos estructurados WebSite.",
+      "missing": "La página de inicio no publica datos WebSite, así que el nombre del sitio puede aparecer mal en los resultados de búsqueda."
+    },
+    "geo-author-signals": {
+      "title": "Autoría de los artículos",
+      "recommendation": "Indica el autor en cada artículo, en la página y en sus datos estructurados, idealmente con una breve biografía.",
+      "noArticles": "Ninguna página revisada está marcada como artículo.",
+      "present": "{count, plural, one {El artículo indica} other {Los # artículos indican}} un autor.",
+      "missing": "{count} de {total} artículos no indican autor, lo que debilita las señales de confianza que buscan las respuestas de IA y los buscadores."
+    },
+    "geo-content-freshness": {
+      "title": "Actualidad del contenido",
+      "recommendation": "Muestra cuándo se actualizó el contenido por última vez (dateModified en los datos estructurados o article:modified_time) y mantén al día las páginas clave.",
+      "noDates": "Ninguna página revisada indica cuándo se publicó o actualizó.",
+      "stale": "La fecha más reciente de las páginas revisadas tiene {days} días.",
+      "fresh": "La fecha más reciente de las páginas revisadas tiene {days} días."
+    },
+    "geo-answer-structure": {
+      "title": "Contenido listo para responder",
+      "recommendation": "Responde a las preguntas de tus clientes con títulos en forma de pregunta y respuestas breves, o con unas FAQ marcadas como FAQPage.",
+      "faq": "{count, plural, one {# página tiene} other {# páginas tienen}} datos estructurados de FAQ.",
+      "questions": "{count, plural, one {# página usa} other {# páginas usan}} títulos en forma de pregunta que las respuestas de IA pueden citar.",
+      "none": "Ninguna página revisada tiene títulos en forma de pregunta ni datos de FAQ que las respuestas de IA puedan citar."
+    },
+    "geo-thin-content": {
+      "title": "Páginas escasas",
+      "recommendation": "Da a las páginas importantes contenido suficiente para responder a la pregunta del visitante; une o amplía las páginas muy cortas.",
+      "onlyHome": "Solo se pudo revisar la página de inicio.",
+      "thin": "{count} de {total} páginas internas tienen menos de {words} palabras.",
+      "ok": "La mayoría de las {total} páginas internas tienen contenido sustancial."
+    },
+    "seo-robots-txt": {
+      "title": "robots.txt",
+      "recommendation": "Publica un robots.txt que permita los buscadores e indique tu sitemap.",
+      "missing": "El sitio no tiene robots.txt.",
+      "blocksSearch": "robots.txt bloquea {bots} en todo el sitio, así que no puede aparecer en los resultados de búsqueda.",
+      "ok": "robots.txt permite que Google y Bing rastreen el sitio."
+    },
+    "seo-xml-sitemap": {
+      "title": "Sitemap XML",
+      "recommendation": "Publica un sitemap XML y envíalo en Google Search Console y Bing Webmaster Tools.",
+      "present": "El sitemap XML incluye {count, plural, one {# URL} other {# URL}}.",
+      "missing": "No se encontró ningún sitemap XML en las direcciones habituales ni en robots.txt."
+    },
+    "seo-sitemap-in-robots": {
+      "title": "Sitemap indicado en robots.txt",
+      "recommendation": "Añade a robots.txt una línea \"Sitemap:\" con la URL completa del sitemap.",
+      "noSitemap": "No hay sitemap que indicar.",
+      "listed": "robots.txt indica el sitemap.",
+      "notListed": "robots.txt no indica el sitemap, así que los rastreadores tienen que encontrarlo por su cuenta."
+    },
+    "seo-schema-invalid": {
+      "title": "Datos estructurados rotos",
+      "recommendation": "Corrige los bloques JSON-LD que no son JSON válido; compruébalos con la prueba de resultados enriquecidos de Google.",
+      "invalid": "{count, plural, one {# página tiene} other {# páginas tienen}} datos estructurados que no son JSON válido, así que los buscadores los ignoran.",
+      "valid": "Todos los datos estructurados de las páginas revisadas son JSON válido."
+    },
+    "seo-page-titles": {
+      "title": "Títulos de página",
+      "recommendation": "Da a cada página su propio título descriptivo.",
+      "missing": "{count} de {total} páginas no tienen título.",
+      "duplicate": "{count} de {total} páginas comparten título con otra página.",
+      "ok": "Las {total} páginas tienen su propio título."
+    },
+    "seo-page-descriptions": {
+      "title": "Metadescripciones",
+      "recommendation": "Escribe para cada página una metadescripción propia que la resuma en una o dos frases.",
+      "missing": "{count} de {total} páginas no tienen metadescripción.",
+      "duplicate": "{count} de {total} páginas comparten metadescripción con otra página.",
+      "ok": "Las {total} páginas tienen su propia metadescripción."
+    },
+    "seo-page-h1": {
+      "title": "Encabezados principales (H1)",
+      "recommendation": "Da a cada página exactamente un H1 que diga de qué trata.",
+      "notOne": "{count} de {total} páginas no tienen exactamente un H1.",
+      "ok": "Las {total} páginas tienen exactamente un H1."
+    },
+    "seo-page-canonicals": {
+      "title": "URL canónicas",
+      "recommendation": "Añade un enlace canónico a cada página para que los buscadores conozcan su dirección preferida.",
+      "missing": "{count} de {total} páginas no tienen enlace canónico.",
+      "ok": "Las {total} páginas tienen enlace canónico."
+    },
+    "seo-noindex-in-sitemap": {
+      "title": "Páginas ocultas en el sitemap",
+      "recommendation": "Quita del sitemap las páginas marcadas como noindex, o quita el noindex si deben encontrarse.",
+      "noSitemap": "No hay sitemap con el que comparar.",
+      "conflict": "{count, plural, one {# página figura} other {# páginas figuran}} en el sitemap pero {count, plural, one {está marcada} other {están marcadas}} como noindex, lo que envía señales contradictorias a los buscadores.",
+      "ok": "Ninguna página revisada del sitemap está marcada como noindex."
+    },
+    "seo-social-tags": {
+      "title": "Etiquetas para compartir en redes",
+      "recommendation": "Añade og:title y og:image (e idealmente og:description y twitter:card) a cada página.",
+      "incomplete": "A {count} de {total} páginas les falta el título o la imagen Open Graph, así que los enlaces compartidos aparecen sin una vista previa adecuada.",
+      "ok": "Las {total} páginas tienen título e imagen Open Graph."
+    },
+    "seo-hreflang": {
+      "title": "Versiones de idioma (hreflang)",
+      "recommendation": "Enlaza cada versión de idioma con hreflang, incluido un x-default para visitantes de otros idiomas.",
+      "singleLanguage": "Ninguna página enlaza versiones de idioma.",
+      "noDefault": "{count, plural, one {# página enlaza} other {# páginas enlazan}} versiones de idioma sin x-default.",
+      "ok": "{count, plural, one {# página enlaza} other {# páginas enlazan}} sus versiones de idioma, incluido x-default."
     }
   }
 }

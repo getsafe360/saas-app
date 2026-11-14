@@ -958,6 +958,37 @@
         "secret": "Keep this key secret — treat it like a password",
         "rotate": "Contact support to rotate your key"
       }
+    },
+    "seoGeo": {
+      "title": "Measured SEO & GEO checks",
+      "subtitle": "What robots.txt, llms.txt, your sitemap and up to 10 pages actually show to search engines and AI answer engines. Measured, not estimated.",
+      "run": "Run checks",
+      "rerun": "Check again",
+      "running": "Checking pages…",
+      "loading": "Loading the last results…",
+      "empty": "Run the checks to see what search engines and AI answer engines find on your site.",
+      "checked": "Checked {date} · {count, plural, one {# page} other {# pages}}",
+      "pageErrors": "{count, plural, one {# page could not be read} other {# pages could not be read}}",
+      "geoTitle": "AI search (GEO)",
+      "seoTitle": "Search engines (SEO)",
+      "delta": "{delta} since the last check",
+      "found": "Found:",
+      "allPassed": "Every check passed.",
+      "showPassed": "Show {count, plural, one {# passed check} other {# passed checks}}",
+      "hidePassed": "Hide passed checks",
+      "status": {
+        "pass": "Passed",
+        "warn": "Worth fixing",
+        "fail": "Problem",
+        "unknown": "Not measured",
+        "na": "Not applicable"
+      },
+      "errors": {
+        "RATE_LIMITED": "Too many checks in the last hour → Try again later.",
+        "SITE_UNREACHABLE": "The site could not be reached → Check that it is online and try again.",
+        "CRAWL_FAILED": "The check could not finish → Try again in a moment.",
+        "GENERIC": "Something went wrong → Try again."
+      }
     }
   }
 }

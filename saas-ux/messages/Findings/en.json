@@ -11,7 +11,8 @@
       "noDescription": "The page has no meta description to measure.",
       "pageNotRead": "The page content could not be read.",
       "needsPlugin17": "Needs the GetSafe 360 plugin 1.7 or newer.",
-      "needsPluginVersion": "Needs the GetSafe 360 plugin {version} or newer."
+      "needsPluginVersion": "Needs the GetSafe 360 plugin {version} or newer.",
+      "robotsNotRead": "robots.txt could not be read."
     },
     "wp-core-version": {
       "title": "WordPress core version",
@@ -461,6 +462,138 @@
       "ok": "The meta description is {length} characters, within the 120–160 range.",
       "outside": "The meta description is {length} characters, outside the 120–160 range.",
       "missing": "The page has no meta description."
+    },
+    "geo-ai-search-access": {
+      "title": "AI search crawlers",
+      "recommendation": "Allow the search crawlers of ChatGPT, Claude and Perplexity in robots.txt so AI answers can read and cite your pages.",
+      "noRobots": "There is no robots.txt, so AI search crawlers may read the site.",
+      "allowed": "robots.txt lets the search crawlers of ChatGPT, Claude and Perplexity read the site.",
+      "blocked": "robots.txt blocks {count, plural, one {# AI search crawler} other {# AI search crawlers}} ({bots}), so those AI answers cannot read or cite your pages."
+    },
+    "geo-ai-training-access": {
+      "title": "AI training crawlers",
+      "recommendation": "Decide whether AI companies may use your content for training, and set that in robots.txt. Blocking training does not stop AI search from citing you.",
+      "allAllowed": "robots.txt allows the crawlers that collect content for AI training.",
+      "someBlocked": "robots.txt blocks {count, plural, one {# AI training crawler} other {# AI training crawlers}} ({bots}). AI search crawlers are a separate setting."
+    },
+    "geo-llms-txt": {
+      "title": "llms.txt",
+      "recommendation": "Publish /llms.txt: a short Markdown summary of the site with links to its most important pages. It is cheap to add; its effect on AI answers is not proven yet.",
+      "missing": "The site has no /llms.txt.",
+      "invalid": "/llms.txt exists but does not follow the format (a \"# Title\" line and Markdown links).",
+      "present": "/llms.txt is published with {links, plural, one {# link} other {# links}}."
+    },
+    "geo-organization-schema": {
+      "title": "Business identity (Organization schema)",
+      "recommendation": "Publish Organization or LocalBusiness structured data with name, logo, address and contact details.",
+      "present": "The site describes the business as {type} in structured data.",
+      "missing": "No page describes the business as an Organization or LocalBusiness, so search engines and AI answers have to guess who is behind the site."
+    },
+    "geo-website-schema": {
+      "title": "WebSite schema",
+      "recommendation": "Publish WebSite structured data on the homepage with the site name and URL.",
+      "present": "The homepage publishes WebSite structured data.",
+      "missing": "The homepage publishes no WebSite structured data, so the site name may be shown wrongly in search results."
+    },
+    "geo-author-signals": {
+      "title": "Author information on articles",
+      "recommendation": "Name the author on every article, in the page and in its structured data, ideally with a short bio.",
+      "noArticles": "No crawled page is marked up as an article.",
+      "present": "All {count, plural, one {# article names} other {# articles name}} an author.",
+      "missing": "{count} of {total} articles name no author, which weakens the trust signals AI answers and search engines look for."
+    },
+    "geo-content-freshness": {
+      "title": "Content freshness",
+      "recommendation": "Show when content was last updated (dateModified in structured data or article:modified_time) and keep key pages current.",
+      "noDates": "No crawled page states when it was published or updated.",
+      "stale": "The newest date on the crawled pages is {days} days old.",
+      "fresh": "The newest date on the crawled pages is {days} days old."
+    },
+    "geo-answer-structure": {
+      "title": "Answer-ready content",
+      "recommendation": "Answer the questions your customers ask in clear question headings with short answers, or an FAQ marked up as FAQPage.",
+      "faq": "{count, plural, one {# page has} other {# pages have}} FAQ structured data.",
+      "questions": "{count, plural, one {# page uses} other {# pages use}} question headings that AI answers can quote.",
+      "none": "No crawled page has question headings or FAQ structured data that AI answers can quote."
+    },
+    "geo-thin-content": {
+      "title": "Thin pages",
+      "recommendation": "Give important pages enough substance to answer a visitor's question; merge or expand very short pages.",
+      "onlyHome": "Only the homepage could be checked.",
+      "thin": "{count} of {total} inner pages have fewer than {words} words.",
+      "ok": "Most of the {total} inner pages have substantial content."
+    },
+    "seo-robots-txt": {
+      "title": "robots.txt",
+      "recommendation": "Publish a robots.txt that allows search engines and names your sitemap.",
+      "missing": "The site has no robots.txt.",
+      "blocksSearch": "robots.txt blocks {bots} from the whole site, so it cannot appear in search results.",
+      "ok": "robots.txt allows Google and Bing to crawl the site."
+    },
+    "seo-xml-sitemap": {
+      "title": "XML sitemap",
+      "recommendation": "Publish an XML sitemap and submit it in Google Search Console and Bing Webmaster Tools.",
+      "present": "The XML sitemap lists {count, plural, one {# URL} other {# URLs}}.",
+      "missing": "No XML sitemap was found at the usual addresses or in robots.txt."
+    },
+    "seo-sitemap-in-robots": {
+      "title": "Sitemap named in robots.txt",
+      "recommendation": "Add a \"Sitemap:\" line with the sitemap's full URL to robots.txt.",
+      "noSitemap": "There is no sitemap to name.",
+      "listed": "robots.txt names the sitemap.",
+      "notListed": "robots.txt does not name the sitemap, so crawlers have to find it themselves."
+    },
+    "seo-schema-invalid": {
+      "title": "Broken structured data",
+      "recommendation": "Fix the JSON-LD blocks that are not valid JSON; check them with Google's Rich Results Test.",
+      "invalid": "{count, plural, one {# page has} other {# pages have}} structured data that is not valid JSON, so search engines ignore it.",
+      "valid": "All structured data on the crawled pages is valid JSON."
+    },
+    "seo-page-titles": {
+      "title": "Page titles",
+      "recommendation": "Give every page its own descriptive title.",
+      "missing": "{count} of {total} pages have no title.",
+      "duplicate": "{count} of {total} pages share a title with another page.",
+      "ok": "All {total} pages have their own title."
+    },
+    "seo-page-descriptions": {
+      "title": "Meta descriptions",
+      "recommendation": "Write a unique meta description for every page that summarises it in one or two sentences.",
+      "missing": "{count} of {total} pages have no meta description.",
+      "duplicate": "{count} of {total} pages share a meta description with another page.",
+      "ok": "All {total} pages have their own meta description."
+    },
+    "seo-page-h1": {
+      "title": "Main headings (H1)",
+      "recommendation": "Give every page exactly one H1 that says what the page is about.",
+      "notOne": "{count} of {total} pages do not have exactly one H1.",
+      "ok": "All {total} pages have exactly one H1."
+    },
+    "seo-page-canonicals": {
+      "title": "Canonical URLs",
+      "recommendation": "Add a canonical link to every page so search engines know its preferred address.",
+      "missing": "{count} of {total} pages have no canonical link.",
+      "ok": "All {total} pages have a canonical link."
+    },
+    "seo-noindex-in-sitemap": {
+      "title": "Hidden pages listed in the sitemap",
+      "recommendation": "Remove pages marked noindex from the sitemap, or remove the noindex if they should be found.",
+      "noSitemap": "There is no sitemap to compare with.",
+      "conflict": "{count, plural, one {# page is} other {# pages are}} listed in the sitemap but marked noindex, which sends search engines mixed signals.",
+      "ok": "No crawled page listed in the sitemap is marked noindex."
+    },
+    "seo-social-tags": {
+      "title": "Social sharing tags",
+      "recommendation": "Add og:title and og:image (and ideally og:description and twitter:card) to every page.",
+      "incomplete": "{count} of {total} pages lack an Open Graph title or image, so shared links show without a proper preview.",
+      "ok": "All {total} pages have an Open Graph title and image."
+    },
+    "seo-hreflang": {
+      "title": "Language versions (hreflang)",
+      "recommendation": "Link every language version with hreflang, including an x-default for visitors in other languages.",
+      "singleLanguage": "No page links language versions.",
+      "noDefault": "{count, plural, one {# page links} other {# pages link}} language versions without an x-default.",
+      "ok": "{count, plural, one {# page links} other {# pages link}} its language versions, including x-default."
     }
   }
 }
