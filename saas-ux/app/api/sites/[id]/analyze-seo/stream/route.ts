@@ -19,11 +19,10 @@ import type { SeoFinding, AutomatedFix } from "@/lib/db/schema/ai/analysis";
 import {
   getUserTier,
   isBSBTier,
-  usesClaudeModel,
   getSeoAnalysisModel,
+  getSeoAnalysisModelId,
   getModelLabel,
   ANALYSIS_TOKEN_COST,
-  OPUS_MODEL_ID,
   OPUS_THINKING_BUDGET,
   AGENT_NAME,
 } from "@/lib/ai/models";
@@ -42,6 +41,7 @@ import {
   measuredToSeoFindings,
 } from "@/lib/seo/audit";
 import { getAvailableTokens } from "@/lib/fix/tokens";
+import { totalTokensOf } from "@/lib/ai/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -140,8 +140,8 @@ export async function POST(
 
   // Resolve model for this tier
   const model = getSeoAnalysisModel(tier);
-  const modelId = usesClaudeModel(tier) ? OPUS_MODEL_ID : (process.env.MODEL ?? "gpt-4o");
-  const provider = usesClaudeModel(tier) ? "anthropic" : "openai";
+  const modelId = getSeoAnalysisModelId(tier);
+  const provider = "anthropic";
 
   // Create DB job record (status: running)
   const [analysisJob] = await db
@@ -248,7 +248,7 @@ export async function POST(
 
         // Collect token usage
         const usage = await result.usage;
-        totalTokensUsed = (usage?.totalTokens ?? estimatedCost);
+        totalTokensUsed = totalTokensOf(usage) ?? estimatedCost;
 
         // Compute master score
         const masterScore = computeMasterScore(findings, totalTokensUsed, modelId, provider);

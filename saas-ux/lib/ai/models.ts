@@ -4,7 +4,6 @@
 import "server-only";
 
 import { anthropic } from "@ai-sdk/anthropic";
-import { openai } from "@ai-sdk/openai";
 import type { LanguageModel } from "ai";
 import { auth } from "@clerk/nextjs/server";
 import { getDrizzle } from "@/lib/db/postgres";
@@ -14,14 +13,14 @@ import { eq } from "drizzle-orm";
 import type { PlanName } from "@/lib/plans/config";
 import {
   OPUS_MODEL_ID,
+  STANDARD_MODEL_ID,
   OPUS_THINKING_BUDGET,
-  ANALYSIS_TOKEN_COST,
 } from "./constants";
 
 export type AITier = PlanName;
 
 // Re-export constants so existing imports from "@/lib/ai/models" keep working
-export { AGENT_NAME, OPUS_MODEL_ID, OPUS_THINKING_BUDGET, ANALYSIS_TOKEN_COST } from "./constants";
+export { AGENT_NAME, OPUS_MODEL_ID, STANDARD_MODEL_ID, OPUS_THINKING_BUDGET, ANALYSIS_TOKEN_COST } from "./constants";
 
 /**
  * Resolve the calling user's plan tier from Clerk session → DB.
@@ -61,12 +60,14 @@ export function usesClaudeModel(tier: AITier): boolean {
   return tier === "business" || tier === "agent" || tier === "agency";
 }
 
+/** Every tier's SEO audit runs on Claude: Opus for agent/agency/business, Sonnet for free/pro. */
+export function getSeoAnalysisModelId(tier: AITier): string {
+  return usesClaudeModel(tier) ? OPUS_MODEL_ID : STANDARD_MODEL_ID;
+}
+
 export function getSeoAnalysisModel(tier: AITier): LanguageModel {
   // Cast needed: @ai-sdk/anthropic@3.x returns LanguageModelV3 but ai@5 beta types declare LanguageModelV2
-  if (usesClaudeModel(tier)) {
-    return anthropic(OPUS_MODEL_ID) as unknown as LanguageModel;
-  }
-  return openai(process.env.MODEL ?? "gpt-4o") as unknown as LanguageModel;
+  return anthropic(getSeoAnalysisModelId(tier)) as unknown as LanguageModel;
 }
 
 export function getSeoProviderOptions(tier: AITier) {
@@ -81,5 +82,5 @@ export function getSeoProviderOptions(tier: AITier) {
 }
 
 export function getModelLabel(tier: AITier): string {
-  return usesClaudeModel(tier) ? `Claude Opus 4.8` : "GetSafe360 AI";
+  return usesClaudeModel(tier) ? "Claude Opus 4.8" : "Claude Sonnet 5.5";
 }

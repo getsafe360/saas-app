@@ -3,6 +3,8 @@
 
 export const AGENT_NAME = "Sparky";
 export const OPUS_MODEL_ID = "claude-opus-4-8";
+/** Free and pro tiers: Claude Sonnet, cheaper than Opus and strong at content judgement. */
+export const STANDARD_MODEL_ID = "claude-sonnet-5-5";
 export const OPUS_THINKING_BUDGET = 10_000;
 
 export const ANALYSIS_TOKEN_COST = {
