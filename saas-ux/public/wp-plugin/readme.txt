@@ -93,10 +93,6 @@ Most fixes do not. Plugin updates and core file restores need WordPress to be ab
 
 Connecting stores a site key in your database. GetSafe 360 AI sends a hash of that key with every request to the plugin's REST endpoints (under /wp-json/getsafe360/v1/); requests without it are refused. Only the /ping endpoint, which returns the plugin version and the site address, is public.
 
-= I used the "GetSafe360 Connector" plugin before. =
-
-This plugin replaces it. Deactivate and delete "GetSafe360 Connector" after installing this one; your connection and settings are kept.
-
 == External services ==
 
 This plugin connects your site to GetSafe 360 AI (https://www.getsafe360.ai), a service run by GetSafe 360 AI. It does not contact any server until you connect it.
@@ -123,29 +119,9 @@ GetSafe 360 AI [Terms of Service](https://www.getsafe360.ai/terms) and [Privacy 
 == Changelog ==
 
 = 1.11.0 =
-* New name: GetSafe 360 AI (formerly GetSafe360 Connector)
-* Ready for the WordPress.org plugin directory: updates now come from WordPress.org
-* Deleting the plugin removes everything it stored
-* SEO markup in the page head is checked again on output: only meta tags, link tags and valid JSON-LD are printed
-* Translations load at the right time (no more notice on WordPress 6.7 and later)
-* Security hardening of admin form input and output
-
-= 1.10.0 =
-* Content-Security-Policy support: test a policy built from what your pages load in report-only mode, without blocking anything
-* Every policy is checked (known rules only, valid sources, no header injection) before it is sent
-* Undo of a header change now restores only the headers that change touched
-
-= 1.9.0 =
-* Core file integrity: lists WordPress core files that differ from the official release and PHP files in wp-admin or wp-includes that do not belong to WordPress
-* One-click restore of the official files and quarantine of unexpected files, both with undo and automatic recovery if the site stops loading
-
-= 1.8.0 =
-* Update outdated plugins with a restore point; put back immediately if the site stops loading
-
-= 1.7.0 =
-* New one-click fixes: file editor lock, Subscriber as default role, private wp-config.php, automatic security releases and plugin auto-updates, cleanup of expired transients and old revisions
+* First release on WordPress.org
 
 == Upgrade Notice ==
 
 = 1.11.0 =
-New name: GetSafe 360 AI. Future updates come from WordPress.org.
+First release on WordPress.org.

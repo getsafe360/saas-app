@@ -15,7 +15,7 @@ export default function WordPressConnectorDocsPage() {
     <article className="prose prose-slate dark:prose-invert max-w-none">
       <h1>GetSafe 360 AI for WordPress</h1>
       <p className="lead">
-        The <strong>GetSafe 360 AI</strong> plugin (formerly GetSafe360 Connector) is the bridge between your
+        The <strong>GetSafe 360 AI</strong> plugin is the bridge between your
         WordPress site and the GetSafe 360 AI platform. Once connected, the platform can
         diagnose internal WordPress details and safely apply AI-assisted fixes — things
         that aren't possible with external-only analysis.
