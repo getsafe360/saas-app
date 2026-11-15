@@ -7,6 +7,7 @@ import { AUTOMATIC_FIXER_IDS } from '@/lib/engine/fixers/catalog';
 import { WORDPRESS_RULES } from '@/lib/engine/wordpress/rules';
 import { SECURITY_HEADER_RULES } from '@/lib/engine/security/headers';
 import { SEO_GEO_RULES } from '@/lib/engine/seo/rules';
+import { PAGE_SCAN_RULES } from '@/lib/engine/page/rules';
 import type { VisibilityRun } from '@/lib/ai-visibility/types';
 import type { AppliedChange } from '@/lib/wordpress/applied-changes';
 import { buildAiSearchReport, buildReportContent, periodTrend, reportFilename } from './content';
@@ -108,7 +109,7 @@ test('white-label leaves GetSafe 360 out and escapes HTML', () => {
 });
 
 test('every automatic fix has a "why it matters" in every language, and all messages parse', () => {
-  const automatic = [...WORDPRESS_RULES, ...SECURITY_HEADER_RULES, ...SEO_GEO_RULES]
+  const automatic = [...WORDPRESS_RULES, ...SECURITY_HEADER_RULES, ...SEO_GEO_RULES, ...PAGE_SCAN_RULES]
     .filter((rule) => rule.fix && AUTOMATIC_FIXER_IDS.has(rule.fix.fixerId))
     .map((rule) => rule.id);
   const reference = load('Reports', 'en').Reports;

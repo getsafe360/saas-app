@@ -18,6 +18,8 @@ export type ScanIssue = {
   suggestion: string;
   /** True only when the connector can actually perform this fix today. */
   fixAvailable: boolean;
+  /** Set when a connector fixer applies it in one step (verified, undoable, no tokens). */
+  fixerId?: string;
   estTokens: number;
   /** Raw value that triggered the rule, shown to the user as proof. */
   evidence?: string;

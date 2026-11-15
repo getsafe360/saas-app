@@ -19,6 +19,8 @@ function getsafe360_uninstall_site() {
     'getsafe360_llms_txt',
     'getsafe360_ai_crawler_rules',
     'getsafe360_schema',
+    'getsafe360_social_tags',
+    'getsafe360_heading_fix',
   ] as $option) {
     delete_option($option);
   }

@@ -69,6 +69,20 @@ export async function verifyFix(input: VerifyFixInput): Promise<VerifyFixResult>
       };
     }
 
+    // Connector actions: check their effect on the page itself.
+    if (fixPlan.verifyCheck === 'social-tags') {
+      const found = /<meta\b[^>]*property\s*=\s*["']og:title["']/i.test(html);
+      return found
+        ? { passed: true, httpStatus, snippetFound: true, pageHtml: html }
+        : { passed: false, httpStatus, snippetFound: false, reason: 'og:title is not on the page yet; a page cache may still serve the old page.' };
+    }
+    if (fixPlan.verifyCheck === 'single-h1') {
+      const count = (html.match(/<h1[\s>]/gi) ?? []).length;
+      return count <= 1
+        ? { passed: true, httpStatus, snippetFound: true, pageHtml: html }
+        : { passed: false, httpStatus, snippetFound: false, reason: `The page still has ${count} H1 headings; a page cache may still serve the old page.` };
+    }
+
     // Check if the snippet we injected is present in the HTML
     const snippet = fixPlan.connectorFix.snippet;
     let snippetFound = false;

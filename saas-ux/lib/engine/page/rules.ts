@@ -117,6 +117,7 @@ export const PAGE_SEO_RULES: ReadonlyArray<Rule<PageFacts>> = [
     category: 'seo',
     severity: 'low',
     source: 'external-probe',
+    fix: { fixerId: 'seo-social-tags', automation: 'auto', risk: 'low', reversible: true, requiresCapabilities: ['socialTags'] },
     evaluate: ({ meta }) => {
       if (!meta) return unknown('common.pageNotRead');
       if (meta.hasOgTitle && meta.hasOgImage) return { status: 'pass', message: 'present' };
@@ -138,6 +139,7 @@ export const PAGE_SEO_RULES: ReadonlyArray<Rule<PageFacts>> = [
     category: 'seo',
     severity: 'low',
     source: 'external-probe',
+    fix: { fixerId: 'seo-single-h1', automation: 'auto', risk: 'low', reversible: true, requiresCapabilities: ['headingFix'] },
     evaluate: ({ dom }) => {
       if (!dom) return unknown('common.pageNotRead');
       return dom.h1Count > 1

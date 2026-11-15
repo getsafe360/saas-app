@@ -114,7 +114,7 @@ export function IssueCard({
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-slate-600 dark:text-slate-300">
-            {fixAvailable
+            {fixAvailable && estTokens > 0
               ? <>Estimated tokens:&nbsp;<span className="font-medium">~{estTokens.toLocaleString()}</span></>
               : <span className="opacity-70">No token cost</span>}
           </span>

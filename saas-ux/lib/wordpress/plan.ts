@@ -34,6 +34,8 @@ const CAPABILITY_LABELS: Record<string, string> = {
   aiCrawlerRules: 'set AI crawler rules in robots.txt (connector 1.12 or newer)',
   schemaGaps: 'add home-page schema (connector 1.12 or newer)',
   seoMeta: 'write page titles and descriptions (connector 1.12 or newer)',
+  socialTags: 'add social sharing tags per page (connector 1.13 or newer)',
+  headingFix: 'keep one H1 per page (connector 1.13 or newer)',
 };
 
 function makeActionId(finding: RemediationFindingInput): string {

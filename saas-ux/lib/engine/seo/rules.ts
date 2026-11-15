@@ -312,6 +312,7 @@ export const SEO_GEO_RULES: ReadonlyArray<Rule<SeoCrawl>> = [
     category: 'seo',
     severity: 'low',
     source: 'external-probe',
+    fix: { fixerId: 'seo-social-tags', automation: 'auto', risk: 'low', reversible: true, requiresCapabilities: ['socialTags'] },
     evaluate: ({ pages }) => {
       if (pages.length === 0) return unknown(NO_PAGES);
       const incomplete = pages.filter((page) => !page.og.title || !page.og.image);

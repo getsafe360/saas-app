@@ -122,6 +122,8 @@ export type WordPressActionType =
   | 'set_ai_crawler_rules'
   | 'set_schema'
   | 'set_seo_meta'
+  | 'set_social_tags'
+  | 'set_heading_fix'
   | 'flush_cache'
   | 'verify_render';
 
@@ -239,6 +241,23 @@ export interface WordPressAiCrawlerRulesPayload {
 }
 
 /** Connector 1.12: home-page schema; an empty `types` list removes it. */
+/** Connector 1.13: every page gets the Open Graph / Twitter tags it lacks, from its own data. */
+export interface WordPressSocialTagsPayload {
+  enabled: boolean;
+}
+
+/** Computed CSS of a heading, as a browser reports it (connector 1.13 keeps only known, safe values). */
+export type HeadingStyle = Partial<Record<
+  'font-size' | 'font-weight' | 'line-height' | 'letter-spacing' | 'text-transform' | 'font-family' | 'margin-top' | 'margin-bottom',
+  string
+>>;
+
+/** Connector 1.13: later H1s on a page are shown as H2s that keep the measured look. */
+export interface WordPressHeadingFixPayload {
+  enabled: boolean;
+  style?: HeadingStyle;
+}
+
 export interface WordPressSchemaPayload {
   types: Array<'Organization' | 'WebSite'>;
   sameAs?: string[];
@@ -267,6 +286,11 @@ export interface WordPressSeoEnvironment {
   llmsTxt: boolean;
   aiCrawlerRules: Record<string, 'allow' | 'block'>;
   schemaTypes: string[];
+  /** Connector 1.13. */
+  socialTags?: boolean;
+  /** A featured image, logo or site icon exists for share previews (1.13). */
+  socialImage?: boolean;
+  headingFix?: boolean;
 }
 
 export type WordPressConnectorActionRequest =
@@ -284,6 +308,8 @@ export type WordPressConnectorActionRequest =
   | { id: string; type: 'set_llms_txt'; payload: WordPressLlmsTxtPayload }
   | { id: string; type: 'set_ai_crawler_rules'; payload: WordPressAiCrawlerRulesPayload }
   | { id: string; type: 'set_schema'; payload: WordPressSchemaPayload }
+  | { id: string; type: 'set_social_tags'; payload: WordPressSocialTagsPayload }
+  | { id: string; type: 'set_heading_fix'; payload: WordPressHeadingFixPayload }
   | { id: string; type: 'set_seo_meta'; payload: WordPressSeoMetaPayload };
 
 export interface WordPressConnectorActionResult {

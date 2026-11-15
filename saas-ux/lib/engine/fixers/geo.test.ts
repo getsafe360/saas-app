@@ -101,16 +101,16 @@ test('site schema: one action for both findings, none next to an SEO plugin', ()
 test('measured findings route to the GEO fixers and plan through the connector', () => {
   const site = crawl(BLOCKS_AI);
   const findings = evaluateSeoGeo(site).findings.filter((f) => f.fix && (f.status === 'fail' || f.status === 'warn'));
-  assert.deepEqual(findings.map((f) => f.fix!.fixerId).sort(), ['geo-ai-search-access', 'geo-llms-txt', 'geo-site-schema', 'geo-site-schema']);
+  assert.deepEqual(findings.map((f) => f.fix!.fixerId).sort(), ['geo-ai-search-access', 'geo-llms-txt', 'geo-site-schema', 'geo-site-schema', 'seo-social-tags']);
   assert.ok(findings.every((f) => fixModeFor(f.fix!.fixerId, f.fix!.automation) === 'automatic' && AUTOMATIC_FIXER_IDS.has(f.fix!.fixerId)));
 
   const plan = createWordPressActionPlan({
     siteId: 's',
     findings: findings.map((f) => ({ id: f.id, actionId: f.fix!.fixerId, title: f.title })),
-    capabilities: caps({ llmsTxt: true, aiCrawlerRules: true, schemaGaps: true }),
+    capabilities: caps({ llmsTxt: true, aiCrawlerRules: true, schemaGaps: true, socialTags: true }),
     context: { crawl: site, seo: seo() },
   });
-  assert.deepEqual(plan.actions.map((a) => a.type).sort(), ['set_ai_crawler_rules', 'set_llms_txt', 'set_schema']);
+  assert.deepEqual(plan.actions.map((a) => a.type).sort(), ['set_ai_crawler_rules', 'set_llms_txt', 'set_schema', 'set_social_tags']);
   assert.ok(plan.actions.every((a) => a.autoApplyEligible));
 
   // An older connector: planned, but blocked with a reason instead of a silent guided review.

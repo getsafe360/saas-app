@@ -22,6 +22,7 @@ import {
   revisionsFixer,
 } from './wordpress/site-maintenance';
 import { aiSearchAccessFixer, llmsTxtFixer, siteSchemaFixer } from './wordpress/geo';
+import { singleH1Fixer, socialTagsFixer } from './wordpress/seo-page';
 
 const FIXERS: ReadonlyArray<ConnectorFixer> = [
   blockUserEnumerationFixer,
@@ -44,6 +45,8 @@ const FIXERS: ReadonlyArray<ConnectorFixer> = [
   llmsTxtFixer,
   aiSearchAccessFixer,
   siteSchemaFixer,
+  socialTagsFixer,
+  singleH1Fixer,
 ];
 
 const BY_ID = new Map(FIXERS.map((fixer) => [fixer.id, fixer]));

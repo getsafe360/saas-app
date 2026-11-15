@@ -28,6 +28,9 @@ export const AUTOMATIC_FIXER_IDS: ReadonlySet<string> = new Set([
   'geo-llms-txt',
   'geo-ai-search-access',
   'geo-site-schema',
+  // Connector 1.13
+  'seo-social-tags',
+  'seo-single-h1',
 ]);
 
 /**
