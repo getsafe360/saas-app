@@ -7,7 +7,6 @@
 
 import type { SeoCrawl } from '@/lib/engine/seo/facts';
 import type {
-  HeadingStyle,
   WordPressActionRisk,
   WordPressActionType,
   WordPressConnectorActionRequest,
@@ -51,8 +50,8 @@ export interface FixerActionTemplate {
 export interface FixerPlanContext {
   crawl?: SeoCrawl | null;
   seo?: WordPressSeoEnvironment | null;
-  /** The look of the home page's second H1, measured in a browser (single-H1 fix). */
-  headingStyle?: HeadingStyle | null;
+  /** The theme's H1 CSS rewritten for the demoted headings, read in a browser (single-H1 fix). */
+  headingCss?: { css: string; themeRules: number } | null;
 }
 
 export interface FixerVerifyContext {

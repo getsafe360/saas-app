@@ -5,7 +5,7 @@
 // newest first, so stacked changes unwind back to the original state.
 
 import { AI_CRAWLERS } from '@/lib/engine/seo/robots';
-import { CONNECTOR_SETTING_KEYS, type HeadingStyle, type WordPressConnectorActionRequest } from '@/lib/wordpress/types';
+import { CONNECTOR_SETTING_KEYS, type WordPressConnectorActionRequest } from '@/lib/wordpress/types';
 
 export interface RollbackCandidate {
   id: string;
@@ -114,9 +114,9 @@ export function parseRollbackRequest(raw: unknown): WordPressConnectorActionRequ
 
   if (value.type === 'set_heading_fix') {
     if (typeof payload.enabled !== 'boolean') return null;
-    const style = cleanHeadingStyle(payload.style);
-    if (style === null) return null;
-    return { id: value.id, type: 'set_heading_fix', payload: { enabled: payload.enabled, style } };
+    const css = cleanHeadingCss(payload.css);
+    if (css === null) return null;
+    return { id: value.id, type: 'set_heading_fix', payload: { enabled: payload.enabled, css } };
   }
 
   if (value.type === 'set_seo_meta') {
@@ -203,26 +203,17 @@ export function planRollback(
   };
 }
 
-const HEADING_STYLE_PATTERNS: Record<keyof HeadingStyle, RegExp> = {
-  'font-size': /^\d{1,3}(\.\d{1,3})?px$/,
-  'font-weight': /^(normal|bold|[1-9]00)$/,
-  'line-height': /^(normal|\d{1,3}(\.\d{1,3})?px)$/,
-  'letter-spacing': /^(normal|-?\d{1,2}(\.\d{1,3})?px)$/,
-  'text-transform': /^(none|uppercase|lowercase|capitalize)$/,
-  'font-family': /^[A-Za-z0-9 ,"'-]{1,200}$/,
-  'margin-top': /^-?\d{1,3}(\.\d{1,3})?px$/,
-  'margin-bottom': /^-?\d{1,3}(\.\d{1,3})?px$/,
-};
+export const HEADING_CSS_MAX = 16_000;
 
-/** Only the computed-style values the connector accepts, the same rules it applies; null for anything else. */
-export function cleanHeadingStyle(value: unknown): HeadingStyle | null {
-  if (value === undefined || value === null) return {};
-  if (typeof value !== 'object' || Array.isArray(value)) return null;
-  const style: HeadingStyle = {};
-  for (const [property, raw] of Object.entries(value as Record<string, unknown>)) {
-    const pattern = HEADING_STYLE_PATTERNS[property as keyof HeadingStyle];
-    if (!pattern) continue;
-    if (typeof raw === 'string' && pattern.test(raw.trim())) style[property as keyof HeadingStyle] = raw.trim();
-  }
-  return style;
+/**
+ * CSS for the demoted headings, the same rules the connector applies: plain text without "<"
+ * (it cannot close the style element), no @import, no expression(), no javascript:, capped in
+ * size, and only rules for `h2.gs360-h1`. Null when it breaks any of these.
+ */
+export function cleanHeadingCss(value: unknown): string | null {
+  if (value === undefined || value === null || value === '') return '';
+  if (typeof value !== 'string' || value.length > HEADING_CSS_MAX) return null;
+  if (/[<\\]|@import|expression\s*\(|javascript:|behavior\s*:|-moz-binding/i.test(value)) return null;
+  if (!value.includes('h2.gs360-h1')) return null;
+  return value;
 }

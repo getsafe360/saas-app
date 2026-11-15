@@ -69,18 +69,22 @@ check(strpos(head_for($page), 'og:title') === false && !get_option('getsafe360_s
 // --- Single H1 ---
 $plugin = connector();
 check($plugin !== null, 'connector instance found');
-$style = ['font-size' => '44px', 'font-weight' => '800', 'line-height' => '52.8px', 'font-family' => '"Open Sans", sans-serif', 'color' => 'red', 'margin-top' => 'expression(alert(1))'];
-$h1 = run_action('set_heading_fix', ['enabled' => true, 'style' => $style]);
+$css = 'h2.gs360-h1{font-size:2em}h2.gs360-h1{font-size:44px;font-weight:800}@media (max-width: 600px){h2.gs360-h1{font-size:28px}}';
+foreach (['h2.gs360-h1{}</style><script>alert(1)</script>', '@import url(https://evil.example/x.css);h2.gs360-h1{}', 'body{display:none}'] as $bad) {
+  run_action('set_heading_fix', ['enabled' => true, 'css' => $bad]);
+  check(get_option('getsafe360_heading_fix')['css'] === '', 'unsafe CSS is dropped: ' . substr($bad, 0, 30));
+}
+delete_option('getsafe360_heading_fix');
+$h1 = run_action('set_heading_fix', ['enabled' => true, 'css' => $css]);
 check($h1['status'] === 'applied', 'heading fix switched on');
-$stored = get_option('getsafe360_heading_fix');
-check(array_keys($stored['style']) === ['font-size', 'font-weight', 'line-height', 'font-family'], 'only safe, known style values are kept');
+check(get_option('getsafe360_heading_fix')['css'] === $css, "the theme's rules, media queries included, are kept");
 
-$html = '<html><head><title>x</title></head><body><h1 class="site-title">KFZ-Zulassungsdienst in Berlin-Steglitz</h1><div><h1>KFZ-Zulassungsdienst</h1></div><H1 id="a">Fahrzeug-Ankauf</H1></body></html>';
+$html = '<html><head><title>x</title></head><body><h1 class="site-title">KFZ-Zulassungsdienst in Berlin-Steglitz</h1><div><h1>KFZ-Zulassungsdienst</h1></div><H1 id="a">Fahrzeug-Ankauf</H1><script>const t = "<h1>Dynamic</h1>";</script><!-- <h1>old</h1> --></body></html>';
 $out = $plugin->demote_extra_h1($html);
-check(substr_count(strtolower($out), '<h1') === 1, 'one H1 left');
+check(substr_count(strtolower($out), '<h1') === 3, 'one real H1 left; the script and the comment keep theirs');
+check(strpos($out, '<script>const t = "<h1>Dynamic</h1>";</script>') !== false && strpos($out, '<!-- <h1>old</h1> -->') !== false, 'script and comment contents untouched');
 check(strpos($out, '<h2 class="gs360-h1">KFZ-Zulassungsdienst</h2>') !== false && strpos($out, '<h2 id="a" class="gs360-h1">Fahrzeug-Ankauf</h2>') !== false, 'later H1s are H2s with the class');
-check(strpos($out, '<style id="gs360-h1">h2.gs360-h1{font-size:44px;font-weight:800;line-height:52.8px;font-family:"Open Sans", sans-serif;}</style></head>') !== false, 'the measured look goes into the head');
-check(strpos($out, 'expression') === false && strpos($out, 'color') === false, 'nothing else reaches the CSS');
+check(strpos($out, '<style id="gs360-h1">' . $css . '</style></head>') !== false, "the theme's H1 rules go into the head");
 check($plugin->demote_extra_h1('<h1>Only one</h1>') === '<h1>Only one</h1>', 'a single H1 is left alone');
 
 undo($h1);

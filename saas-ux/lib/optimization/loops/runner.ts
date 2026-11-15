@@ -25,7 +25,7 @@ import { applyFix } from '../fixes/applyFix';
 import { verifyFix } from '../fixes/verifyFix';
 import { rollbackFix } from '../fixes/rollbackFix';
 import { rescoreCategory } from './rescoring';
-import { measureExtraH1Style } from '@/lib/seo/heading-style';
+import { collectH1Css } from '@/lib/seo/heading-style';
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
@@ -223,12 +223,12 @@ export async function runCategoryLoop(input: RunLoopInput): Promise<{ stopReason
     await incrementIteration(loopId, iteration);
     await setLoopStatus(loopId, 'planning_fix');
 
-    // The single-H1 fix keeps the demoted headings' look: measure it first. Kept look → low risk;
-    // without it the layout may change, so it waits for the user's approval.
+    // The single-H1 fix keeps the demoted headings' look with the theme's own H1 rules: read them
+    // first. Rules copied → low risk; without them the layout may change, so it waits for approval.
     if (fixPlan.measureHeadingStyle && fixPlan.connectorAction) {
-      const style = await measureExtraH1Style(siteUrl).catch(() => null);
-      fixPlan.connectorAction.payload = { ...fixPlan.connectorAction.payload, style: style ?? {} };
-      fixPlan.risk = style ? 'low' : 'medium';
+      const collected = await collectH1Css(siteUrl).catch(() => null);
+      fixPlan.connectorAction.payload = { ...fixPlan.connectorAction.payload, css: collected?.css ?? '' };
+      fixPlan.risk = collected && collected.themeRules > 0 ? 'low' : 'medium';
     }
 
     // Safety check

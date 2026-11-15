@@ -25,18 +25,23 @@ test('social tags: planned for either finding, free and low-risk, verified on th
   assert.equal(missing.success, false);
 });
 
-test('single H1: keeps the look when measured, otherwise waits for the user; verified by counting H1s', async () => {
+const THEME_CSS = 'h2.gs360-h1{font-size:2em}h2.gs360-h1{font-size:clamp(2rem,4vw,3rem)}@media (max-width: 600px){.entry-content h2.gs360-h1{font-size:1.75rem}}';
+
+test("single H1: keeps the look with the theme's own H1 rules, otherwise waits for the user; verified by counting H1s", async () => {
   assert.equal(singleH1Fixer.plan([{ id: 'seo-og-missing' }]), null);
-  const kept = singleH1Fixer.plan([{ id: 'seo-h1-multiple' }], { headingStyle: { 'font-size': '44px', 'font-weight': '700' } })!;
+  const kept = singleH1Fixer.plan([{ id: 'seo-h1-multiple' }], { headingCss: { css: THEME_CSS, themeRules: 2 } })!;
   assert.equal(kept.risk, 'low');
   assert.equal(kept.requiresApproval, false);
-  assert.deepEqual(kept.payload, { enabled: true, style: { 'font-size': '44px', 'font-weight': '700' } });
-  const unmeasured = singleH1Fixer.plan([{ id: 'seo-h1-multiple' }], { headingStyle: null })!;
-  assert.equal(unmeasured.risk, 'medium');
-  assert.equal(unmeasured.requiresApproval, true);
+  assert.deepEqual(kept.payload, { enabled: true, css: THEME_CSS });
+  for (const headingCss of [null, { css: 'h2.gs360-h1{font-size:2em}', themeRules: 0 }]) {
+    const unread = singleH1Fixer.plan([{ id: 'seo-h1-multiple' }], { headingCss })!;
+    assert.equal(unread.risk, 'medium', 'no theme rules: the look may change');
+    assert.equal(unread.requiresApproval, true);
+  }
 
-  const request = singleH1Fixer.toConnectorRequest(planned({ ...kept, payload: { enabled: true, style: { 'font-size': '44px', color: 'red', 'font-family': 'x;}body{display:none' } } }));
-  assert.deepEqual(request?.payload, { enabled: true, style: { 'font-size': '44px' } }, 'only safe computed values reach the connector');
+  assert.equal(singleH1Fixer.toConnectorRequest(planned({ ...kept, payload: { enabled: true, css: 'h2.gs360-h1{}</style><script>alert(1)</script>' } })), null, 'cannot close the style element');
+  assert.equal(singleH1Fixer.toConnectorRequest(planned({ ...kept, payload: { enabled: true, css: '@import url(https://evil.example/x.css);h2.gs360-h1{}' } })), null);
+  assert.deepEqual(singleH1Fixer.toConnectorRequest(planned(kept))?.payload, { enabled: true, css: THEME_CSS });
 
   const one = await singleH1Fixer.verify({ siteUrl: 'https://a.de/', tokenHash: 'x', action: planned(kept), fetchImpl: (async () => new Response('<html><body><h1>A</h1><h2 class="gs360-h1">B</h2></body></html>')) as never });
   assert.equal(one.success, true);
@@ -48,8 +53,6 @@ test('both are automatic fixes, and their undo requests parse strictly', () => {
   assert.ok(AUTOMATIC_FIXER_IDS.has('seo-social-tags') && AUTOMATIC_FIXER_IDS.has('seo-single-h1'));
   assert.deepEqual(parseRollbackRequest({ id: 'r', type: 'set_social_tags', payload: { enabled: false } })?.payload, { enabled: false });
   assert.equal(parseRollbackRequest({ id: 'r', type: 'set_social_tags', payload: { enabled: 'no' } }), null);
-  assert.deepEqual(
-    parseRollbackRequest({ id: 'r', type: 'set_heading_fix', payload: { enabled: false, style: { 'font-size': '40px', 'margin-top': 'url(x)' } } })?.payload,
-    { enabled: false, style: { 'font-size': '40px' } },
-  );
+  assert.deepEqual(parseRollbackRequest({ id: 'r', type: 'set_heading_fix', payload: { enabled: false, css: '' } })?.payload, { enabled: false, css: '' });
+  assert.equal(parseRollbackRequest({ id: 'r', type: 'set_heading_fix', payload: { enabled: true, css: 'body{display:none}' } }), null, 'only rules for the demoted headings');
 });

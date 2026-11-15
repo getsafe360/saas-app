@@ -2386,17 +2386,7 @@ class GetSafe360_AI {
 
   const SOCIAL_TAGS_OPTION = 'getsafe360_social_tags';
   const HEADING_FIX_OPTION = 'getsafe360_heading_fix';
-  /** Computed styles of a demoted heading the connector may reproduce, with what each value may look like. */
-  const HEADING_STYLE_RULES = [
-    'font-size'      => '/^\d{1,3}(\.\d{1,3})?px$/',
-    'font-weight'    => '/^(normal|bold|[1-9]00)$/',
-    'line-height'    => '/^(normal|\d{1,3}(\.\d{1,3})?px)$/',
-    'letter-spacing' => '/^(normal|-?\d{1,2}(\.\d{1,3})?px)$/',
-    'text-transform' => '/^(none|uppercase|lowercase|capitalize)$/',
-    'font-family'    => '/^[A-Za-z0-9 ,"\'\-]{1,200}$/',
-    'margin-top'     => '/^-?\d{1,3}(\.\d{1,3})?px$/',
-    'margin-bottom'  => '/^-?\d{1,3}(\.\d{1,3})?px$/',
-  ];
+  const HEADING_CSS_MAX = 16000;
 
   /** Front-end HTML pages only: never admin, REST, AJAX, feeds or previews of other formats. */
   private function is_front_html_request() {
@@ -2517,15 +2507,15 @@ class GetSafe360_AI {
     return is_array($value) ? $value : [];
   }
 
-  /** Only the declarations whose values look like what a browser computes. */
-  private function clean_heading_style($style) {
-    $clean = [];
-    foreach (is_array($style) ? $style : [] as $property => $value) {
-      if (!isset(self::HEADING_STYLE_RULES[$property]) || !is_string($value)) continue;
-      $value = trim($value);
-      if (preg_match(self::HEADING_STYLE_RULES[$property], $value)) $clean[$property] = $value;
-    }
-    return $clean;
+  /**
+   * The theme's H1 rules rewritten for the demoted headings, as the platform read them in a browser.
+   * Kept only when it cannot leave the style element or load anything: no "<" or backslash, no
+   * @import, expression(), javascript:, behavior or -moz-binding, under 16 KB, and about h2.gs360-h1.
+   */
+  private function clean_heading_css($css) {
+    if (!is_string($css) || $css === '' || strlen($css) > self::HEADING_CSS_MAX) return '';
+    if (preg_match('/[<\\\\]|@import|expression\s*\(|javascript:|behavior\s*:|-moz-binding/i', $css)) return '';
+    return strpos($css, 'h2.gs360-h1') !== false ? $css : '';
   }
 
   public function start_heading_buffer() {
@@ -2546,7 +2536,7 @@ class GetSafe360_AI {
     }
     if (!is_string($html) || stripos($html, '<h1') === false) return $html;
     $demoted = 0;
-    $out = preg_replace_callback('/<h1(\s[^>]*)?>(.*?)<\/h1\s*>/is', function ($m) use (&$demoted) {
+    $demote = function ($m) use (&$demoted) {
       $this->h1_seen++;
       if ($this->h1_seen === 1) return $m[0];
       $demoted++;
@@ -2557,14 +2547,21 @@ class GetSafe360_AI {
         $attrs .= ' class="gs360-h1"';
       }
       return '<h2' . $attrs . '>' . $m[2] . '</h2>';
-    }, $html);
-    if (!is_string($out) || $demoted === 0) return $html;
-    $style = $this->clean_heading_style(isset($this->get_heading_fix()['style']) ? $this->get_heading_fix()['style'] : []);
-    if ($style && !$this->h1_style_printed) {
+    };
+    // Only real markup: scripts, styles, textareas, templates and comments keep their text as written.
+    $parts = preg_split('/(<script\b.*?<\/script\s*>|<style\b.*?<\/style\s*>|<textarea\b.*?<\/textarea\s*>|<template\b.*?<\/template\s*>|<!--.*?-->)/is', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+    if (!is_array($parts)) return $html;
+    foreach ($parts as $i => $part) {
+      if ($i % 2 === 1) continue;
+      $replaced = preg_replace_callback('/<h1(\s[^>]*)?>(.*?)<\/h1\s*>/is', $demote, $part);
+      if (is_string($replaced)) $parts[$i] = $replaced;
+    }
+    $out = implode('', $parts);
+    if ($demoted === 0) return $html;
+    $fix = $this->get_heading_fix();
+    $css = $this->clean_heading_css(isset($fix['css']) ? $fix['css'] : '');
+    if ($css !== '' && !$this->h1_style_printed) {
       $this->h1_style_printed = true;
-      $css = 'h2.gs360-h1{';
-      foreach ($style as $property => $value) $css .= $property . ':' . $value . ';';
-      $css .= '}';
       $tag = '<style id="gs360-h1">' . $css . '</style>';
       $out = stripos($out, '</head>') !== false ? preg_replace('/<\/head>/i', $tag . '</head>', $out, 1) : $tag . $out;
     }
@@ -2574,7 +2571,7 @@ class GetSafe360_AI {
   private function apply_heading_fix_action($action_id, $payload) {
     $type = 'set_heading_fix';
     $previous = $this->get_heading_fix();
-    $rollback = ['id' => $action_id . '-rollback', 'type' => $type, 'payload' => ['enabled' => !empty($previous['enabled']), 'style' => isset($previous['style']) ? $previous['style'] : new \stdClass()]];
+    $rollback = ['id' => $action_id . '-rollback', 'type' => $type, 'payload' => ['enabled' => !empty($previous['enabled']), 'css' => isset($previous['css']) ? $previous['css'] : '']];
     if (!isset($payload['enabled']) || !is_bool($payload['enabled'])) {
       return $this->action_result($action_id, $type, 'failed', 'Say whether extra H1 headings should be turned into H2s. Nothing was changed.', ['headingFix' => !empty($previous['enabled'])]);
     }
@@ -2582,10 +2579,10 @@ class GetSafe360_AI {
       delete_option(self::HEADING_FIX_OPTION);
       return $this->action_result($action_id, $type, 'applied', 'Headings are shown as written again.', ['headingFix' => false], $rollback);
     }
-    $style = $this->clean_heading_style(isset($payload['style']) ? $payload['style'] : []);
-    update_option(self::HEADING_FIX_OPTION, ['enabled' => true, 'style' => $style], true);
-    $message = 'Each page now keeps its first H1; later H1 headings are shown as H2s' . ($style ? ' with the same look.' : '. They may look smaller: undo if the layout changed.');
-    return $this->action_result($action_id, $type, 'applied', $message, ['headingFix' => true, 'headingStyle' => !empty($style)], $rollback);
+    $css = $this->clean_heading_css(isset($payload['css']) ? $payload['css'] : '');
+    update_option(self::HEADING_FIX_OPTION, ['enabled' => true, 'css' => $css], true);
+    $message = 'Each page now keeps its first H1; later H1 headings are shown as H2s' . ($css !== '' ? " with the theme's H1 styles." : '. They may look smaller: undo if the layout changed.');
+    return $this->action_result($action_id, $type, 'applied', $message, ['headingFix' => true, 'headingCss' => $css !== ''], $rollback);
   }
 
   // ---------- 1.12 GEO fixes: llms.txt, AI crawler rules, schema gaps, SEO meta ----------

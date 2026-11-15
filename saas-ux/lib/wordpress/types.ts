@@ -246,16 +246,10 @@ export interface WordPressSocialTagsPayload {
   enabled: boolean;
 }
 
-/** Computed CSS of a heading, as a browser reports it (connector 1.13 keeps only known, safe values). */
-export type HeadingStyle = Partial<Record<
-  'font-size' | 'font-weight' | 'line-height' | 'letter-spacing' | 'text-transform' | 'font-family' | 'margin-top' | 'margin-bottom',
-  string
->>;
-
-/** Connector 1.13: later H1s on a page are shown as H2s that keep the measured look. */
+/** Connector 1.13: later H1s on a page are shown as H2s; `css` is the theme's H1 rules rewritten for them. */
 export interface WordPressHeadingFixPayload {
   enabled: boolean;
-  style?: HeadingStyle;
+  css?: string;
 }
 
 export interface WordPressSchemaPayload {

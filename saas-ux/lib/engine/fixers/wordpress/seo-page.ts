@@ -6,12 +6,12 @@
 //  - social tags: every page gets the Open Graph / Twitter tags it lacks, from
 //    its own title, description, address and image; tags already there stay.
 //  - single H1: each page keeps its first H1 and shows later ones as H2s with
-//    the look the browser measured for them. The database is not touched.
+//    the theme's own H1 CSS rewritten for them (media queries included). The database is not touched.
 // Each action returns its inverse, so both can be undone.
 
 import { parseSeoPage } from '@/lib/engine/seo/page';
-import type { HeadingStyle, WordPressHeadingFixPayload } from '@/lib/wordpress/types';
-import { cleanHeadingStyle } from '@/lib/wordpress/rollback';
+import type { WordPressHeadingFixPayload } from '@/lib/wordpress/types';
+import { cleanHeadingCss } from '@/lib/wordpress/rollback';
 import { type ConnectorFixer, type FixerVerifyContext, type VerificationCheck, verificationResult } from '../types';
 
 const USER_AGENT = 'GetSafe360-WordPressVerifier/1.0';
@@ -90,14 +90,15 @@ export const singleH1Fixer: ConnectorFixer = {
 
   plan(findings, context) {
     if (!findings.some((finding) => MULTIPLE_H1_FINDINGS.has(finding.id))) return null;
-    const style: HeadingStyle = context?.headingStyle ?? {};
-    const keepsLook = Boolean(style['font-size']);
+    const css = context?.headingCss?.css ?? '';
+    // The look is kept when the theme's own H1 rules were copied; without them it may change.
+    const keepsLook = Boolean(css) && (context?.headingCss?.themeRules ?? 0) > 0;
     return {
       type: 'set_heading_fix',
       title: 'Keep one H1 per page',
       description: keepsLook
-        ? 'Each page keeps its first H1; later H1 headings are shown as H2s with the same size and weight as before, so the layout does not change. The content in WordPress is not edited. Undo shows them as H1 again.'
-        : 'Each page keeps its first H1; later H1 headings are shown as H2s. Their look could not be measured, so they may appear smaller: check the page and undo if needed. The content in WordPress is not edited.',
+        ? "Each page keeps its first H1; later H1 headings are shown as H2s that use your theme's own H1 styles, on every screen size, so the layout does not change. The content in WordPress is not edited. Undo shows them as H1 again."
+        : "Each page keeps its first H1; later H1 headings are shown as H2s. Your theme's H1 styles could not be read, so they may look different: check the page and undo if needed. The content in WordPress is not edited.",
       // Without the measured look the layout may change, so it needs the user's click.
       risk: keepsLook ? 'low' : 'medium',
       autoApplyEligible: keepsLook,
@@ -108,14 +109,14 @@ export const singleH1Fixer: ConnectorFixer = {
         expectation: 'The home page has one H1.',
         assertions: ['h1 count = 1'],
       },
-      payload: { enabled: true, style },
+      payload: { enabled: true, css },
     };
   },
 
   toConnectorRequest(action) {
-    const style = cleanHeadingStyle(action.payload.style);
-    if (style === null) return null;
-    const payload: WordPressHeadingFixPayload = { enabled: action.payload.enabled !== false, style };
+    const css = cleanHeadingCss(action.payload.css);
+    if (css === null) return null;
+    const payload: WordPressHeadingFixPayload = { enabled: action.payload.enabled !== false, css };
     return { id: action.id, type: 'set_heading_fix', payload };
   },
 
