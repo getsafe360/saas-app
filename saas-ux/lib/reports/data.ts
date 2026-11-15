@@ -17,6 +17,7 @@ import { loadChangeRuns } from '@/lib/wordpress/change-runs';
 import type { WordPressSiteSnapshot } from '@/lib/wordpress/types';
 import { loadRuns } from '@/lib/ai-visibility/store';
 import { evaluateSeoGeo } from '@/lib/engine/seo/report';
+import { isPublicUrlResolved } from '@/lib/net/isPublicUrlResolved';
 import { crawlSite } from '@/lib/seo/crawl';
 import { loadScoreHistory, saveCrawl } from '@/lib/seo/store';
 import { buildAiSearchReport, type ReportInput, type ReportIssueInput, type ReportPeriodDays, type IssueSeverity } from './content';
@@ -121,7 +122,8 @@ async function freshScoreHistory(site: ReportSite, generatedAt: Date) {
   const history = await loadScoreHistory(site.id);
   const newest = history[0];
   if (newest && generatedAt.getTime() - Date.parse(newest.checkedAt) < GEO_CHECK_MAX_AGE_MS) return history;
-  const crawl = await crawlSite(site.siteUrl).catch(() => null);
+  // DNS-checked on every hop, like the other crawls: a public-looking host may resolve to a private address.
+  const crawl = await crawlSite(site.siteUrl, { validate: isPublicUrlResolved }).catch(() => null);
   if (!crawl || crawl.pages.length === 0) return history;
   await saveCrawl(site.id, crawl, evaluateSeoGeo(crawl).scores);
   return loadScoreHistory(site.id);

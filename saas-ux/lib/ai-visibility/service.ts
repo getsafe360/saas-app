@@ -12,6 +12,7 @@ import { teamMembers, teams } from '@/lib/db/schema/auth/teams';
 import { isPlanName, type PlanName } from '@/lib/plans/config';
 import type { SeoCrawl } from '@/lib/engine/seo/facts';
 import { evaluateSeoGeo } from '@/lib/engine/seo/report';
+import { isPublicUrlResolved } from '@/lib/net/isPublicUrlResolved';
 import { crawlSite } from '@/lib/seo/crawl';
 import { loadCrawl, saveCrawl } from '@/lib/seo/store';
 import { analyzeAnswer, failedResult, visibilityScore } from './analyze';
@@ -68,7 +69,8 @@ export async function siteById(siteId: string): Promise<SiteContext | null> {
 export async function crawlFor(site: SiteContext): Promise<SeoCrawl | null> {
   const cached = await loadCrawl(site.siteId).catch(() => null);
   if (cached && Date.now() - Date.parse(cached.checkedAt) < CRAWL_MAX_AGE_MS) return cached;
-  const crawl = await crawlSite(site.siteUrl).catch(() => null);
+  // DNS-checked on every hop, like the other crawls: a public-looking host may resolve to a private address.
+  const crawl = await crawlSite(site.siteUrl, { validate: isPublicUrlResolved }).catch(() => null);
   if (!crawl || crawl.pages.length === 0) return cached;
   const { scores } = evaluateSeoGeo(crawl);
   await saveCrawl(site.siteId, crawl, scores).catch(() => undefined);
