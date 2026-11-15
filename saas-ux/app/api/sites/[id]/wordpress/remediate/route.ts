@@ -13,6 +13,8 @@ import { createWordPressActionPlan, type RemediationFindingInput } from '@/lib/w
 import { executeWordPressActionPlan } from '@/lib/wordpress/actions';
 import { toRemediationItems } from '@/lib/wordpress/remediation-result';
 import { loadCrawl } from '@/lib/seo/store';
+import { collectH1Css } from '@/lib/seo/heading-style';
+import { SINGLE_H1_FIXER_ID } from '@/lib/engine/fixers/wordpress/seo-page';
 import type {
   WordPressCapabilitySummary,
   WordPressDetailedVerificationResult,
@@ -165,7 +167,12 @@ export async function POST(
   const capabilities = normalizeCapabilities(capabilitiesResponse.capabilities ?? {});
   // GEO fixes build their change from the latest crawl (llms.txt, robots.txt) and the site's SEO setup.
   const needsCrawl = allowedFindings.some((finding) => (finding.actionId ?? finding.id).startsWith('geo-'));
-  const crawl = needsCrawl ? await loadCrawl(siteId).catch(() => null) : null;
+  // The single-H1 fix keeps the look of the headings it demotes: measure it in a browser first.
+  const needsHeadingStyle = allowedFindings.some((finding) => (finding.actionId ?? finding.id) === SINGLE_H1_FIXER_ID);
+  const [crawl, headingCss] = await Promise.all([
+    needsCrawl ? loadCrawl(siteId).catch(() => null) : Promise.resolve(null),
+    needsHeadingStyle ? collectH1Css(site.siteUrl).catch(() => null) : Promise.resolve(null),
+  ]);
   const plan = createWordPressActionPlan({
     siteId,
     source: 'system',
@@ -175,7 +182,7 @@ export async function POST(
       builder: inferBuilderFromPull(pull),
     },
     capabilities,
-    context: { crawl, seo: pull.seo ?? null },
+    context: { crawl, seo: pull.seo ?? null, headingCss },
   });
 
   const actionResults = await executeWordPressActionPlan({

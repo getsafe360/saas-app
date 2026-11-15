@@ -32,6 +32,17 @@ export async function rollbackFix(input: RollbackFixInput): Promise<RollbackFixR
     };
   }
 
+  if (rollback.action === 'connector_action') {
+    try {
+      const client = createWordPressClient({ siteUrl, tokenHash: siteToken });
+      const response = await client.applyActions([rollback.request]);
+      const ok = response.results?.[0]?.status === 'applied';
+      return { success: ok, method: 'connector', message: ok ? 'The change was undone.' : (response.results?.[0]?.message ?? 'The connector did not undo the change.') };
+    } catch (err: any) {
+      return { success: false, method: 'connector', message: err?.message ?? 'Could not reach the connector to undo the change.' };
+    }
+  }
+
   if (rollback.action === 'delete_fix') {
     // Attempt connector rollback — will fail gracefully if endpoint missing
     try {

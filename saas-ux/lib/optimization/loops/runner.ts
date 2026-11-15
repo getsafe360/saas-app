@@ -16,7 +16,8 @@ import {
   scanJobs,
 } from '@/lib/db/schema';
 import type { LoopStatus, LoopStopReason, OptimizationMode } from '@/lib/db/schema';
-import type { RunLoopInput, SiteSnapshot } from './types';
+import type { FixPlan, RunLoopInput, SiteSnapshot } from './types';
+import { wordpressActionRuns } from '@/lib/db/schema/wordpress/agent';
 import { getCategoryScore } from './scoring';
 import { selectNextSeoIssue } from './categories/seoLoop';
 import { evaluateFixSafety } from '../fixes/fixPolicies';
@@ -24,6 +25,7 @@ import { applyFix } from '../fixes/applyFix';
 import { verifyFix } from '../fixes/verifyFix';
 import { rollbackFix } from '../fixes/rollbackFix';
 import { rescoreCategory } from './rescoring';
+import { collectH1Css } from '@/lib/seo/heading-style';
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
@@ -127,6 +129,34 @@ async function recordAppliedFix(params: {
   });
 }
 
+/** Fixer ids of the loop's connector actions, as the remediation flow names them. */
+const FIXER_BY_ACTION: Record<string, string> = {
+  set_social_tags: 'seo-social-tags',
+  set_heading_fix: 'seo-single-h1',
+};
+
+async function recordConnectorRun(siteId: string, fixPlan: FixPlan, verified: boolean) {
+  const action = fixPlan.connectorAction;
+  if (!action) return;
+  const rollback = fixPlan.rollbackPayload?.action === 'connector_action' ? fixPlan.rollbackPayload.request : null;
+  await getDb().insert(wordpressActionRuns).values({
+    siteId,
+    actionId: FIXER_BY_ACTION[action.type] ?? fixPlan.fixId,
+    actionType: action.type,
+    title: fixPlan.title,
+    status: 'applied',
+    risk: fixPlan.risk ?? 'low',
+    autoApplied: true,
+    requiresApproval: false,
+    inputPayload: { planAction: { type: action.type, payload: { ...action.payload, sourceFindingIds: [fixPlan.issueId] } }, findingId: fixPlan.issueId, source: 'optimization-loop' },
+    resultPayload: { message: fixPlan.summary },
+    rollbackPayload: rollback,
+    verificationOk: verified,
+    startedAt: new Date(),
+    completedAt: new Date(),
+  });
+}
+
 async function incrementIteration(loopId: string, n: number) {
   const db = getDb();
   await db
@@ -192,6 +222,14 @@ export async function runCategoryLoop(input: RunLoopInput): Promise<{ stopReason
     iteration++;
     await incrementIteration(loopId, iteration);
     await setLoopStatus(loopId, 'planning_fix');
+
+    // The single-H1 fix keeps the demoted headings' look with the theme's own H1 rules: read them
+    // first. Rules copied → low risk; without them the layout may change, so it waits for approval.
+    if (fixPlan.measureHeadingStyle && fixPlan.connectorAction) {
+      const collected = await collectH1Css(siteUrl).catch(() => null);
+      fixPlan.connectorAction.payload = { ...fixPlan.connectorAction.payload, css: collected?.css ?? '' };
+      fixPlan.risk = collected && collected.themeRules > 0 ? 'low' : 'medium';
+    }
 
     // Safety check
     const safety = evaluateFixSafety(fixPlan, mode);
@@ -305,6 +343,12 @@ export async function runCategoryLoop(input: RunLoopInput): Promise<{ stopReason
       connectorResponse: applyResult.connectorResponse,
       rollbackPayload: fixPlan.rollbackPayload,
     });
+
+    // Connector actions are also logged where Applied changes and client reports read them,
+    // so the user can undo them from the dashboard like any other fix.
+    if (fixPlan.fixType === 'connector_action') {
+      await recordConnectorRun(siteId, fixPlan, verification.passed).catch(() => undefined);
+    }
 
     // Regression guard (only when Tier 2 produced a real score)
     if (tier2Score !== null && tier2Score < currentScore && input.stopOnRegression) {

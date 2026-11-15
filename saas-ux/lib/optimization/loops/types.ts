@@ -2,6 +2,7 @@
 // Core types for the optimization loop system
 
 import type { LoopStatus, LoopStopReason, OptimizationMode, IterationStatus } from '@/lib/db/schema';
+import type { WordPressConnectorActionRequest } from '@/lib/wordpress/types';
 
 // ── Fix types allowed in MVP ──────────────────────────────────────────────────
 
@@ -10,7 +11,8 @@ export type FixType =
   | 'json_ld'        // <script type="application/ld+json"> via wp_head
   | 'meta_tag'       // Specific meta tag (subset of head_snippet)
   | 'link_tag'       // Specific link tag (subset of head_snippet)
-  | 'manual_instruction'; // No auto-apply; human must act
+  | 'manual_instruction' // No auto-apply; human must act
+  | 'connector_action';  // A connector /actions change (1.13+), undone by the inverse it returns
 
 // ── Risk levels ───────────────────────────────────────────────────────────────
 
@@ -42,11 +44,18 @@ export interface FixPlan {
     summary: string;
     snippet?: string;
   };
+  /** Overrides the policy's risk by fix id (connector actions know their own risk). */
+  risk?: RiskLevel;
+  /** For fixType connector_action: the action sent to the connector's /actions gateway. */
+  connectorAction?: { type: 'set_social_tags' | 'set_heading_fix'; payload: Record<string, unknown> };
+  /** Measure the look of the page's second H1 before applying (single-H1 fix). */
+  measureHeadingStyle?: boolean;
+  /** What verification checks on the live page for a connector action. */
+  verifyCheck?: 'social-tags' | 'single-h1';
   // For rollback: what to do to reverse this fix
-  rollbackPayload?: {
-    action: 'delete_fix';
-    fixId: string;
-  };
+  rollbackPayload?:
+    | { action: 'delete_fix'; fixId: string }
+    | { action: 'connector_action'; request: WordPressConnectorActionRequest };
 }
 
 // ── Scan snapshot ─────────────────────────────────────────────────────────────

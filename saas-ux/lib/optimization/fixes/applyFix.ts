@@ -3,6 +3,7 @@
 
 import { createWordPressClient } from '@/lib/wordpress/client';
 import type { FixPlan } from '../loops/types';
+import type { WordPressConnectorActionRequest } from '@/lib/wordpress/types';
 
 export interface ApplyFixInput {
   siteUrl: string;
@@ -24,6 +25,23 @@ export async function applyFix(input: ApplyFixInput): Promise<ApplyFixResult> {
       success: false,
       error: 'Manual fix — no automated application possible.',
     };
+  }
+
+  if (fixPlan.fixType === 'connector_action' && fixPlan.connectorAction) {
+    try {
+      const client = createWordPressClient({ siteUrl, tokenHash: siteToken });
+      const request = { id: fixPlan.connectorFix.id, ...fixPlan.connectorAction } as unknown as WordPressConnectorActionRequest;
+      const response = await client.applyActions([request]);
+      const result = response.results?.[0];
+      if (!result || result.status !== 'applied') {
+        return { success: false, connectorResponse: response, error: result?.message ?? 'The connector did not apply the change.' };
+      }
+      // The connector returns the exact inverse; that is how this fix is undone.
+      if (result.rollback) fixPlan.rollbackPayload = { action: 'connector_action', request: result.rollback };
+      return { success: true, connectorResponse: response };
+    } catch (err: any) {
+      return { success: false, error: err?.message ?? 'Unknown error applying fix.' };
+    }
   }
 
   try {

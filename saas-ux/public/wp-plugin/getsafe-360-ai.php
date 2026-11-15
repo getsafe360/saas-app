@@ -3,7 +3,7 @@
  * Plugin Name: GetSafe 360 AI
  * Plugin URI: https://www.getsafe360.ai/docs/wordpress-connector
  * Description: Website Intelligence Platform for WordPress: health, security, SEO, speed and accessibility checks, with safe one-click fixes you can undo.
- * Version: 1.12.0
+ * Version: 1.13.0
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPLv2 or later
@@ -17,7 +17,7 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_AI {
-  const VERSION = '1.12.0';
+  const VERSION = '1.13.0';
   const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';
   const OPTION = 'getsafe360_connector';
   const ACTION_STATE_OPTION = 'getsafe360_action_state';
@@ -68,6 +68,9 @@ class GetSafe360_AI {
     add_filter('pre_get_document_title', [$this, 'filter_document_title'], 20);
     add_filter('robots_txt', [$this, 'filter_robots_txt'], 99, 2);
     add_action('parse_request', [$this, 'serve_llms_txt'], 0);
+    add_action('wp_head', [$this, 'start_head_buffer'], PHP_INT_MIN);
+    add_action('wp_head', [$this, 'end_head_buffer'], PHP_INT_MAX);
+    add_action('template_redirect', [$this, 'start_heading_buffer'], 0);
     add_filter('xmlrpc_enabled', [$this, 'filter_xmlrpc_enabled']);
     add_filter('rest_endpoints', [$this, 'filter_rest_endpoints']);
     add_action('template_redirect', [$this, 'block_author_enumeration']);
@@ -2379,6 +2382,209 @@ class GetSafe360_AI {
     ];
   }
 
+  // ---------- 1.13 social sharing tags and a single H1 per page ----------
+
+  const SOCIAL_TAGS_OPTION = 'getsafe360_social_tags';
+  const HEADING_FIX_OPTION = 'getsafe360_heading_fix';
+  const HEADING_CSS_MAX = 16000;
+
+  /** Front-end HTML pages only: never admin, REST, AJAX, feeds or previews of other formats. */
+  private function is_front_html_request() {
+    if (is_admin() || wp_doing_ajax() || wp_is_json_request() || is_feed() || is_robots() || is_trackback()) return false;
+    if (defined('REST_REQUEST') && REST_REQUEST) return false;
+    return true;
+  }
+
+  public function start_head_buffer() {
+    if (!get_option(self::SOCIAL_TAGS_OPTION) || !$this->is_front_html_request()) return;
+    $this->head_buffer_level = ob_get_level();
+    ob_start();
+  }
+
+  /** Prints wp_head as written by WordPress, the theme and other plugins, then the social tags it lacks. */
+  public function end_head_buffer() {
+    if ($this->head_buffer_level === null) return;
+    $head = ob_get_level() > $this->head_buffer_level ? ob_get_clean() : '';
+    $this->head_buffer_level = null;
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_head output of WordPress and other plugins, unchanged.
+    echo $head;
+    $missing = $this->missing_social_tags((string) $head);
+    if ($missing) echo "<!-- GetSafe 360 AI: social sharing tags -->\n" . $missing; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from esc_attr/esc_url values.
+  }
+
+  private $head_buffer_level = null;
+
+  /** Content of a <meta> in the head, by its property or name. */
+  private function head_meta($head, $key) {
+    $key = preg_quote($key, '/');
+    if (preg_match('/<meta\b[^>]*(?:property|name)\s*=\s*["\']' . $key . '["\'][^>]*>/i', $head, $tag)
+      && preg_match('/\bcontent\s*=\s*(["\'])(.*?)\1/is', $tag[0], $content)) {
+      return html_entity_decode($content[2], ENT_QUOTES, 'UTF-8');
+    }
+    return null;
+  }
+
+  /** The image a share preview should show: the post's featured image, else the logo, else the site icon. */
+  private function social_image() {
+    if (is_singular() && has_post_thumbnail(get_queried_object_id())) {
+      $url = get_the_post_thumbnail_url(get_queried_object_id(), 'large');
+      if ($url) return $url;
+    }
+    $logo = (int) get_theme_mod('custom_logo');
+    if ($logo) {
+      $url = wp_get_attachment_image_url($logo, 'full');
+      if ($url) return $url;
+    }
+    $icon = get_site_icon_url(512);
+    return $icon ? $icon : null;
+  }
+
+  /** The page's own address: the canonical WordPress or a plugin printed, else this page. */
+  private function social_url($head) {
+    if (preg_match('/<link\b[^>]*rel\s*=\s*["\']canonical["\'][^>]*href\s*=\s*["\']([^"\']+)/i', $head, $m)) return html_entity_decode($m[1], ENT_QUOTES, 'UTF-8');
+    if (is_singular()) {
+      $url = wp_get_canonical_url(get_queried_object_id());
+      if ($url) return $url;
+    }
+    if (is_front_page()) return home_url('/');
+    $path = isset($_SERVER['REQUEST_URI']) ? wp_parse_url(esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])), PHP_URL_PATH) : '/';
+    return home_url($path ? $path : '/');
+  }
+
+  private function social_description($head) {
+    $description = $this->head_meta($head, 'description');
+    if (!$description && is_singular()) {
+      $post = get_post(get_queried_object_id());
+      if ($post) $description = $post->post_excerpt ? $post->post_excerpt : wp_trim_words(wp_strip_all_tags(str_replace('<', ' <', strip_shortcodes($post->post_content))), 30, '…');
+    }
+    if (!$description) $description = get_bloginfo('description');
+    $description = trim(preg_replace('/\s+/', ' ', wp_strip_all_tags((string) $description)));
+    return $description !== '' ? mb_substr($description, 0, 300) : null;
+  }
+
+  /** The Open Graph and Twitter tags this page lacks, each from this page's own data. */
+  private function missing_social_tags($head) {
+    $tags = [];
+    $add = function ($attr, $key, $value, $is_url = false) use (&$tags, $head) {
+      if ($value === null || $value === '' || $this->head_meta($head, $key) !== null) return;
+      $tags[] = sprintf('<meta %s="%s" content="%s">', $attr, esc_attr($key), $is_url ? esc_url($value) : esc_attr($value));
+    };
+    $title = trim(wp_strip_all_tags(html_entity_decode(wp_get_document_title(), ENT_QUOTES, 'UTF-8')));
+    $image = $this->social_image();
+    $add('property', 'og:title', $title);
+    $add('property', 'og:description', $this->social_description($head));
+    $add('property', 'og:url', $this->social_url($head), true);
+    $add('property', 'og:type', is_singular('post') ? 'article' : 'website');
+    $add('property', 'og:site_name', get_bloginfo('name'));
+    $add('property', 'og:locale', get_locale());
+    $add('property', 'og:image', $image, true);
+    $add('name', 'twitter:card', $image ? 'summary_large_image' : 'summary');
+    return $tags ? implode("\n", $tags) . "\n" : '';
+  }
+
+  private function apply_social_tags_action($action_id, $payload) {
+    $type = 'set_social_tags';
+    $previous = (bool) get_option(self::SOCIAL_TAGS_OPTION);
+    if (!isset($payload['enabled']) || !is_bool($payload['enabled'])) {
+      return $this->action_result($action_id, $type, 'failed', 'Say whether social sharing tags should be on. Nothing was changed.', ['socialTags' => $previous]);
+    }
+    $enabled = $payload['enabled'];
+    if ($enabled) {
+      update_option(self::SOCIAL_TAGS_OPTION, 1, true);
+    } else {
+      delete_option(self::SOCIAL_TAGS_OPTION);
+    }
+    $message = $enabled
+      ? ($this->social_image() ? 'Every page now carries the social sharing tags it was missing, from its own title, description and image.' : 'Every page now carries the social sharing tags it was missing. Add a site logo or icon (or featured images) so shares show a picture.')
+      : 'Social sharing tags from the connector are off.';
+    return $this->action_result($action_id, $type, 'applied', $message, ['socialTags' => $enabled, 'socialImage' => (bool) $this->social_image()],
+      ['id' => $action_id . '-rollback', 'type' => $type, 'payload' => ['enabled' => $previous]]);
+  }
+
+  /** Stored heading fix: on/off and the measured look of the headings it demotes. */
+  private function get_heading_fix() {
+    $value = get_option(self::HEADING_FIX_OPTION, []);
+    return is_array($value) ? $value : [];
+  }
+
+  /**
+   * The theme's H1 rules rewritten for the demoted headings, as the platform read them in a browser.
+   * Kept only when it cannot leave the style element or load anything: no "<" or backslash, no
+   * @import, expression(), javascript:, behavior or -moz-binding, under 16 KB, and about h2.gs360-h1.
+   */
+  private function clean_heading_css($css) {
+    if (!is_string($css) || $css === '' || strlen($css) > self::HEADING_CSS_MAX) return '';
+    if (preg_match('/[<\\\\]|@import|expression\s*\(|javascript:|behavior\s*:|-moz-binding/i', $css)) return '';
+    return strpos($css, 'h2.gs360-h1') !== false ? $css : '';
+  }
+
+  public function start_heading_buffer() {
+    $fix = $this->get_heading_fix();
+    if (empty($fix['enabled']) || !$this->is_front_html_request()) return;
+    ob_start([$this, 'demote_extra_h1']);
+  }
+
+  /** H1s seen so far in this response (the buffer can be flushed in parts). */
+  private $h1_seen = 0;
+  private $h1_style_printed = false;
+
+  /** Keeps the page's first H1 and turns later ones into H2s that keep the look measured for them. */
+  public function demote_extra_h1($html, $phase = PHP_OUTPUT_HANDLER_START | PHP_OUTPUT_HANDLER_FINAL) {
+    if ($phase & PHP_OUTPUT_HANDLER_START) {
+      $this->h1_seen = 0;
+      $this->h1_style_printed = false;
+    }
+    if (!is_string($html) || stripos($html, '<h1') === false) return $html;
+    $demoted = 0;
+    $demote = function ($m) use (&$demoted) {
+      $this->h1_seen++;
+      if ($this->h1_seen === 1) return $m[0];
+      $demoted++;
+      $attrs = isset($m[1]) ? $m[1] : '';
+      if (preg_match('/\bclass\s*=\s*(["\'])(.*?)\1/is', $attrs)) {
+        $attrs = preg_replace('/\bclass\s*=\s*(["\'])(.*?)\1/is', 'class=$1$2 gs360-h1$1', $attrs, 1);
+      } else {
+        $attrs .= ' class="gs360-h1"';
+      }
+      return '<h2' . $attrs . '>' . $m[2] . '</h2>';
+    };
+    // Only real markup: scripts, styles, textareas, templates and comments keep their text as written.
+    $parts = preg_split('/(<script\b.*?<\/script\s*>|<style\b.*?<\/style\s*>|<textarea\b.*?<\/textarea\s*>|<template\b.*?<\/template\s*>|<!--.*?-->)/is', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+    if (!is_array($parts)) return $html;
+    foreach ($parts as $i => $part) {
+      if ($i % 2 === 1) continue;
+      $replaced = preg_replace_callback('/<h1(\s[^>]*)?>(.*?)<\/h1\s*>/is', $demote, $part);
+      if (is_string($replaced)) $parts[$i] = $replaced;
+    }
+    $out = implode('', $parts);
+    if ($demoted === 0) return $html;
+    $fix = $this->get_heading_fix();
+    $css = $this->clean_heading_css(isset($fix['css']) ? $fix['css'] : '');
+    if ($css !== '' && !$this->h1_style_printed) {
+      $this->h1_style_printed = true;
+      $tag = '<style id="gs360-h1">' . $css . '</style>';
+      $out = stripos($out, '</head>') !== false ? preg_replace('/<\/head>/i', $tag . '</head>', $out, 1) : $tag . $out;
+    }
+    return $out;
+  }
+
+  private function apply_heading_fix_action($action_id, $payload) {
+    $type = 'set_heading_fix';
+    $previous = $this->get_heading_fix();
+    $rollback = ['id' => $action_id . '-rollback', 'type' => $type, 'payload' => ['enabled' => !empty($previous['enabled']), 'css' => isset($previous['css']) ? $previous['css'] : '']];
+    if (!isset($payload['enabled']) || !is_bool($payload['enabled'])) {
+      return $this->action_result($action_id, $type, 'failed', 'Say whether extra H1 headings should be turned into H2s. Nothing was changed.', ['headingFix' => !empty($previous['enabled'])]);
+    }
+    if (!$payload['enabled']) {
+      delete_option(self::HEADING_FIX_OPTION);
+      return $this->action_result($action_id, $type, 'applied', 'Headings are shown as written again.', ['headingFix' => false], $rollback);
+    }
+    $css = $this->clean_heading_css(isset($payload['css']) ? $payload['css'] : '');
+    update_option(self::HEADING_FIX_OPTION, ['enabled' => true, 'css' => $css], true);
+    $message = 'Each page now keeps its first H1; later H1 headings are shown as H2s' . ($css !== '' ? " with the theme's H1 styles." : '. They may look smaller: undo if the layout changed.');
+    return $this->action_result($action_id, $type, 'applied', $message, ['headingFix' => true, 'headingCss' => $css !== ''], $rollback);
+  }
+
   // ---------- 1.12 GEO fixes: llms.txt, AI crawler rules, schema gaps, SEO meta ----------
 
   /** AI crawlers whose robots.txt rules the connector may set (same list the SaaS measures). */
@@ -2758,6 +2964,9 @@ class GetSafe360_AI {
       'llmsTxt'        => get_option(self::LLMS_TXT_OPTION, '') !== '',
       'aiCrawlerRules' => empty($this->get_ai_crawler_rules()) ? new \stdClass() : $this->get_ai_crawler_rules(),
       'schemaTypes'    => isset($this->get_schema_settings()['types']) ? $this->get_schema_settings()['types'] : [],
+      'socialTags'     => (bool) get_option(self::SOCIAL_TAGS_OPTION),
+      'socialImage'    => (bool) $this->social_image(),
+      'headingFix'     => !empty($this->get_heading_fix()['enabled']),
     ];
   }
 
@@ -3073,6 +3282,8 @@ class GetSafe360_AI {
         'set_ai_crawler_rules'    => 'apply_ai_crawler_rules_action',
         'set_schema'              => 'apply_schema_action',
         'set_seo_meta'            => 'apply_seo_meta_action',
+        'set_social_tags'         => 'apply_social_tags_action',
+        'set_heading_fix'         => 'apply_heading_fix_action',
       ];
       if (isset($handlers[$action_type])) {
         $results[] = $this->{$handlers[$action_type]}($action_id, $action_payload);
@@ -3250,6 +3461,8 @@ class GetSafe360_AI {
         'aiCrawlerRules'       => true,
         'schemaGaps'           => true,
         'seoMeta'              => true,
+        'socialTags'           => true,
+        'headingFix'           => true,
       ],
       'seo'                => $this->seo_environment(),
     ];

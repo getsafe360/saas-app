@@ -81,7 +81,10 @@
         "geo-llms-txt": "AI assistants get a short, accurate overview of the site and its key pages to work from.",
         "geo-ai-search-access": "AI search engines may now read the site, so they can find it and cite it in their answers.",
         "geo-organization-schema": "Search and AI engines now know who runs the site: name, logo and profiles, which they show in results.",
-        "geo-website-schema": "Search engines now recognise the site's name and its search, which helps them present it correctly."
+        "geo-website-schema": "Search engines now recognise the site's name and its search, which helps them present it correctly.",
+        "seo-social-tags": "Links to the site shared on social media and in messaging apps now show the page's own title, description and image.",
+        "seo-og-missing": "Links to the site shared on social media and in messaging apps now show the page's own title, description and image.",
+        "seo-h1-multiple": "Each page now states its main topic in a single H1, a clearer signal for search engines; the headings look the same."
       },
       "aiSearch": {
         "heading": "AI search & visibility",

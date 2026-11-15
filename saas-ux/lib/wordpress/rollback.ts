@@ -107,6 +107,18 @@ export function parseRollbackRequest(raw: unknown): WordPressConnectorActionRequ
     return { id: value.id, type: 'set_schema', payload: { types: types as Array<'Organization' | 'WebSite'>, sameAs: sameAs as string[] } };
   }
 
+  if (value.type === 'set_social_tags') {
+    if (typeof payload.enabled !== 'boolean') return null;
+    return { id: value.id, type: 'set_social_tags', payload: { enabled: payload.enabled } };
+  }
+
+  if (value.type === 'set_heading_fix') {
+    if (typeof payload.enabled !== 'boolean') return null;
+    const css = cleanHeadingCss(payload.css);
+    if (css === null) return null;
+    return { id: value.id, type: 'set_heading_fix', payload: { enabled: payload.enabled, css } };
+  }
+
   if (value.type === 'set_seo_meta') {
     if (typeof payload.postId !== 'number' || !Number.isInteger(payload.postId) || payload.postId <= 0) return null;
     const meta: { postId: number; restore: true; title?: string | null; description?: string | null } = { postId: payload.postId, restore: true };
@@ -189,4 +201,19 @@ export function planRollback(
     notReversible,
     blocked,
   };
+}
+
+export const HEADING_CSS_MAX = 16_000;
+
+/**
+ * CSS for the demoted headings, the same rules the connector applies: plain text without "<"
+ * (it cannot close the style element), no @import, no expression(), no javascript:, capped in
+ * size, and only rules for `h2.gs360-h1`. Null when it breaks any of these.
+ */
+export function cleanHeadingCss(value: unknown): string | null {
+  if (value === undefined || value === null || value === '') return '';
+  if (typeof value !== 'string' || value.length > HEADING_CSS_MAX) return null;
+  if (/[<\\]|@import|expression\s*\(|javascript:|behavior\s*:|-moz-binding/i.test(value)) return null;
+  if (!value.includes('h2.gs360-h1')) return null;
+  return value;
 }

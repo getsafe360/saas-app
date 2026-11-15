@@ -5,6 +5,7 @@
 // emails keep working) and a rule score per scan category.
 
 import type { Finding } from '../contracts';
+import { AUTOMATIC_FIXER_IDS } from '../fixers/catalog';
 import { evaluateRules } from '../rules';
 import { scoreCategory } from '../scoring';
 import type { CategoryScores, ScanCategory, ScanIssue } from '@/lib/scan/types';
@@ -22,6 +23,8 @@ const FIXABLE: Readonly<Record<string, { estTokens: number }>> = {
 
 export function toScanIssue(finding: Finding): ScanIssue {
   const fix = FIXABLE[finding.id];
+  // Rule-based connector fixes: applied, verified and undone through the remediation flow, free.
+  const fixerId = finding.fix?.fixerId && AUTOMATIC_FIXER_IDS.has(finding.fix.fixerId) ? finding.fix.fixerId : undefined;
   return {
     id: finding.id,
     category: finding.category as ScanCategory,
@@ -30,7 +33,8 @@ export function toScanIssue(finding: Finding): ScanIssue {
     severity: finding.severity === 'critical' ? 'high' : finding.severity,
     description: finding.summary,
     suggestion: finding.recommendation,
-    fixAvailable: Boolean(fix),
+    fixAvailable: Boolean(fix || fixerId),
+    ...(fixerId ? { fixerId } : {}),
     estTokens: fix?.estTokens ?? 0,
     evidence: finding.evidence?.observed,
   };

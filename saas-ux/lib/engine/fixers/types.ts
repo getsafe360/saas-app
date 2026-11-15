@@ -50,6 +50,8 @@ export interface FixerActionTemplate {
 export interface FixerPlanContext {
   crawl?: SeoCrawl | null;
   seo?: WordPressSeoEnvironment | null;
+  /** The theme's H1 CSS rewritten for the demoted headings, read in a browser (single-H1 fix). */
+  headingCss?: { css: string; themeRules: number } | null;
 }
 
 export interface FixerVerifyContext {

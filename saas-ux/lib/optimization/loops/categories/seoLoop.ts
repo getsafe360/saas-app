@@ -21,6 +21,41 @@ interface SeoIssue {
 
 // Ordered by priority (highest-impact first)
 const SEO_ISSUES: SeoIssue[] = [
+  {
+    id: 'seo-og-missing',
+    title: 'Incomplete social sharing tags',
+    severity: 'low',
+    // A scan report lists only failures, so an open finding is reliable even without page facts.
+    detect: (s) => hasOpenFinding(s, 'seo-og-missing'),
+    buildFix: () => connectorFixPlan({
+      issueId: 'seo-og-missing',
+      issueTitle: 'Incomplete social sharing tags',
+      issueSeverity: 'low',
+      title: 'Add social sharing tags to every page',
+      summary: 'Each page gets the Open Graph and Twitter tags it is missing, from its own title, description and image.',
+      action: { type: 'set_social_tags', payload: { enabled: true } },
+      risk: 'low',
+      verifyCheck: 'social-tags',
+    }),
+  },
+  {
+    id: 'seo-h1-multiple',
+    title: 'Multiple H1 headings',
+    severity: 'low',
+    detect: (s) => hasOpenFinding(s, 'seo-h1-multiple'),
+    // Risk is decided once the look is measured (runner): low when kept, otherwise it waits for approval.
+    buildFix: () => connectorFixPlan({
+      issueId: 'seo-h1-multiple',
+      issueTitle: 'Multiple H1 headings',
+      issueSeverity: 'low',
+      title: 'Keep one H1 per page',
+      summary: 'Later H1 headings are shown as H2s with the same look; the content is not edited.',
+      action: { type: 'set_heading_fix', payload: { enabled: true } },
+      risk: 'medium',
+      verifyCheck: 'single-h1',
+      measureHeadingStyle: true,
+    }),
+  },
   // Page-specific tags (meta description, canonical, Open Graph, Twitter) are deliberately not
   // here: the connector prints every stored snippet on every page, so one written from the home
   // page would claim every page is the home page (a site-wide canonical can drop pages from the
@@ -116,13 +151,13 @@ export function selectNextSeoIssue(
   snapshot: SiteSnapshot,
   attemptedIssueIds: string[],
 ): { issue: SeoIssue; fixPlan: FixPlan } | null {
-  // Never guess at missing tags: with unverified facts an empty object looks like "nothing present".
-  if (snapshot.seoFactsVerified === false) return null;
-
   const attempted = new Set(attemptedIssueIds);
 
   for (const issue of SEO_ISSUES) {
     if (attempted.has(issue.id)) continue;
+    // Never guess at missing tags from facts: with unverified facts an empty object looks like
+    // "nothing present". Connector fixes detect from open findings, which are reliable either way.
+    if (snapshot.seoFactsVerified === false && !CONNECTOR_ISSUE_IDS.has(issue.id)) continue;
     if (!issue.detect(snapshot)) continue;
 
     const fixPlan = issue.buildFix(snapshot);
@@ -187,6 +222,41 @@ export function extractSeoFacts(
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+const CONNECTOR_ISSUE_IDS = new Set(['seo-og-missing', 'seo-h1-multiple']);
+
+function hasOpenFinding(snapshot: SiteSnapshot, id: string): boolean {
+  return (snapshot.findings ?? []).some((finding) => finding.id === id && finding.passed !== true);
+}
+
+/** A loop fix carried out by a connector action (1.13+); its rollback is the inverse the connector returns. */
+function connectorFixPlan(params: {
+  issueId: string;
+  issueTitle: string;
+  issueSeverity: string;
+  title: string;
+  summary: string;
+  action: NonNullable<FixPlan['connectorAction']>;
+  risk: NonNullable<FixPlan['risk']>;
+  verifyCheck: NonNullable<FixPlan['verifyCheck']>;
+  measureHeadingStyle?: boolean;
+}): FixPlan {
+  const connectorId = `${params.issueId}-${randomUUID().slice(0, 8)}`;
+  return {
+    fixId: params.issueId,
+    fixType: 'connector_action',
+    title: params.title,
+    summary: params.summary,
+    issueId: params.issueId,
+    issueTitle: params.issueTitle,
+    issueSeverity: params.issueSeverity,
+    connectorFix: { id: connectorId, fixType: 'config', title: params.title, section: 'seo', summary: params.summary },
+    connectorAction: params.action,
+    risk: params.risk,
+    verifyCheck: params.verifyCheck,
+    ...(params.measureHeadingStyle ? { measureHeadingStyle: true } : {}),
+  };
+}
 
 function escapeAttr(s: string): string {
   return s

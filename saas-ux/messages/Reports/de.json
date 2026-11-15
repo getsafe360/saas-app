@@ -81,7 +81,10 @@
         "geo-llms-txt": "KI-Assistenten erhalten einen kurzen, genauen Überblick über die Website und ihre wichtigsten Seiten.",
         "geo-ai-search-access": "KI-Suchmaschinen dürfen die Website jetzt lesen und können sie so finden und in ihren Antworten zitieren.",
         "geo-organization-schema": "Such- und KI-Dienste wissen jetzt, wer hinter der Website steht: Name, Logo und Profile, die sie in Ergebnissen zeigen.",
-        "geo-website-schema": "Suchmaschinen erkennen jetzt den Namen der Website und ihre Suche und können sie so richtig darstellen."
+        "geo-website-schema": "Suchmaschinen erkennen jetzt den Namen der Website und ihre Suche und können sie so richtig darstellen.",
+        "seo-social-tags": "Links zur Website in sozialen Netzwerken und Messengern zeigen jetzt Titel, Beschreibung und Bild der jeweiligen Seite.",
+        "seo-og-missing": "Links zur Website in sozialen Netzwerken und Messengern zeigen jetzt Titel, Beschreibung und Bild der jeweiligen Seite.",
+        "seo-h1-multiple": "Jede Seite nennt ihr Hauptthema jetzt in einer einzigen H1, ein klareres Signal für Suchmaschinen; die Überschriften sehen gleich aus."
       },
       "aiSearch": {
         "heading": "KI-Suche & Sichtbarkeit",

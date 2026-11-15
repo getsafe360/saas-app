@@ -81,7 +81,10 @@
         "geo-llms-txt": "Gli assistenti IA ricevono una panoramica breve e precisa del sito e delle sue pagine principali.",
         "geo-ai-search-access": "I motori di ricerca IA ora possono leggere il sito, trovarlo e citarlo nelle loro risposte.",
         "geo-organization-schema": "Motori di ricerca e servizi IA ora sanno chi c'è dietro il sito: nome, logo e profili mostrati nei risultati.",
-        "geo-website-schema": "I motori di ricerca ora riconoscono il nome del sito e la sua ricerca, il che li aiuta a presentarlo correttamente."
+        "geo-website-schema": "I motori di ricerca ora riconoscono il nome del sito e la sua ricerca, il che li aiuta a presentarlo correttamente.",
+        "seo-social-tags": "I link al sito condivisi sui social e nelle app di messaggistica mostrano ora titolo, descrizione e immagine di ogni pagina.",
+        "seo-og-missing": "I link al sito condivisi sui social e nelle app di messaggistica mostrano ora titolo, descrizione e immagine di ogni pagina.",
+        "seo-h1-multiple": "Ogni pagina indica ora il suo tema principale in un solo H1, un segnale più chiaro per i motori di ricerca; i titoli restano uguali."
       },
       "aiSearch": {
         "heading": "Ricerca IA e visibilità",

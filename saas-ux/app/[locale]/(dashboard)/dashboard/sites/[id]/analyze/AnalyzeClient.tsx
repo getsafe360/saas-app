@@ -34,6 +34,8 @@ type Issue = {
   description: string;
   suggestion: string;
   fixAvailable: boolean;
+  /** One-step connector fix (no proposal, no tokens, undoable). */
+  fixerId?: string;
   estTokens: number;
   evidence?: string;
 };
@@ -221,8 +223,74 @@ export default function AnalyzeClient() {
   // ── Fix flow ──────────────────────────────────────────────────────────────
   // Step 1 prepares a proposal (no site changes, no charge). Step 2 applies it.
 
+  // One-step connector fixes: applied, checked on the live site and undoable, without tokens.
+  const [connectorRuns, setConnectorRuns] = useState<Record<string, { runId: string | null; message: string; verified: boolean }>>({});
+
+  async function applyConnectorFix(issue: Issue) {
+    if (!siteId || !issue.fixerId) return;
+    setFixError((s) => ({ ...s, [issue.id]: "" }));
+    setFixing((s) => ({ ...s, [issue.id]: "applying" }));
+    try {
+      const r = await fetch(`/api/sites/${siteId}/wordpress/remediate`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          locale,
+          findings: [{ id: issue.id, actionId: issue.fixerId, title: issue.title, severity: issue.severity, category: issue.category, automationLevel: "auto", safetyLevel: "safe" }],
+        }),
+      });
+      const j = await r.json().catch(() => null);
+      const item = Array.isArray(j?.items) ? j.items[0] : undefined;
+      if (!r.ok || !item || (item.reason !== "verified" && item.reason !== "verification_failed")) {
+        setFixing((s) => ({ ...s, [issue.id]: "failed" }));
+        setFixError((s) => ({
+          ...s,
+          [issue.id]:
+            item?.reason === "connector_update"
+              ? "This fix needs the GetSafe 360 AI plugin 1.13 or newer → Update the plugin, then try again."
+              : item?.message || "We could not apply this change → Try again.",
+        }));
+        return;
+      }
+      setConnectorRuns((s) => ({ ...s, [issue.id]: { runId: item.runId, message: item.message, verified: item.reason === "verified" } }));
+      setFixing((s) => ({ ...s, [issue.id]: "applied" }));
+    } catch {
+      setFixing((s) => ({ ...s, [issue.id]: "failed" }));
+      setFixError((s) => ({ ...s, [issue.id]: "We could not reach the server → Check your connection and try again." }));
+    }
+  }
+
+  async function undoConnectorFix(issue: Issue) {
+    const run = connectorRuns[issue.id];
+    if (!siteId || !run?.runId) return;
+    setFixing((s) => ({ ...s, [issue.id]: "applying" }));
+    try {
+      const r = await fetch(`/api/sites/${siteId}/wordpress/rollback`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ actionRunIds: [run.runId] }),
+      });
+      const j = await r.json().catch(() => null);
+      if (r.ok && j?.success) {
+        setConnectorRuns((s) => {
+          const next = { ...s };
+          delete next[issue.id];
+          return next;
+        });
+        setFixing((s) => ({ ...s, [issue.id]: "idle" }));
+      } else {
+        setFixing((s) => ({ ...s, [issue.id]: "applied" }));
+        setFixError((s) => ({ ...s, [issue.id]: "Undo failed → Try again." }));
+      }
+    } catch {
+      setFixing((s) => ({ ...s, [issue.id]: "applied" }));
+      setFixError((s) => ({ ...s, [issue.id]: "We could not reach the server → Try again." }));
+    }
+  }
+
   async function prepareFix(issue: Issue) {
     if (!siteId) return;
+    if (issue.fixerId) return applyConnectorFix(issue);
     setFixError((s) => ({ ...s, [issue.id]: "" }));
     setFixing((s) => ({ ...s, [issue.id]: "working" }));
 
@@ -354,6 +422,21 @@ export default function AnalyzeClient() {
     return (
       <div key={i.id} className="space-y-2">
         <IssueCard {...i} onFix={() => prepareFix(i)} fixState={state} />
+
+        {connectorRuns[i.id] && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2 text-sm text-emerald-900 dark:text-emerald-200">
+            <span>
+              {connectorRuns[i.id].verified
+                ? "Applied and confirmed on the live site."
+                : "Applied. The live site does not show it yet, a page cache may still serve the old page."}
+            </span>
+            {connectorRuns[i.id].runId && (
+              <button type="button" onClick={() => undoConnectorFix(i)} disabled={state === "applying"} className="underline font-medium disabled:opacity-50">
+                Undo
+              </button>
+            )}
+          </div>
+        )}
 
         {fixError[i.id] && state !== "review" && (
           <div className="rounded-lg border border-rose-300 bg-rose-50 dark:bg-rose-950/30 px-3 py-2 text-sm text-rose-800 dark:text-rose-200">

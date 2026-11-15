@@ -33,6 +33,7 @@ function classifyRisk(fixPlan: FixPlan): RiskLevel {
   const id = fixPlan.fixId;
 
   if (HIGH_RISK_PREFIXES.some((p) => id.startsWith(p))) return 'high';
+  if (fixPlan.risk) return fixPlan.risk;
   if (fixPlan.fixType === 'manual_instruction') return 'medium';
   if (LOW_RISK_FIX_IDS.has(id)) return 'low';
   if (LOW_RISK_PREFIXES.some((p) => id.startsWith(p))) return 'low';
