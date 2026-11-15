@@ -29,10 +29,10 @@ export const QUESTION_MAX_CHARS = 160;
 
 /**
  * "Check now" draws tokens at what it costs, in the same unit as AI fixes (~2,000 tokens ≈ $0.04, so 50,000 per $1).
- * Claude Sonnet: $3 per million input tokens, $15 per million output tokens; search $0.01. Update with pricing.
+ * Claude Sonnet 5.5: $2 per million input tokens, $10 per million output tokens; search $0.01. Update with pricing.
  */
-export const TOKENS_PER_INPUT_TOKEN = 0.15;
-export const TOKENS_PER_OUTPUT_TOKEN = 0.75;
+export const TOKENS_PER_INPUT_TOKEN = 0.1;
+export const TOKENS_PER_OUTPUT_TOKEN = 0.5;
 /** Reserved per question before a manual check starts. */
 export const ESTIMATED_TOKENS_PER_QUESTION = 3_000;
 

@@ -19,15 +19,10 @@ import { users } from "@/lib/db/schema/auth/users";
 import { aiAnalysisJobs, aiRepairActions } from "@/lib/db/schema/ai/analysis";
 import type { AiRepairAction } from "@/lib/db/schema/ai/analysis";
 import { put } from "@vercel/blob";
+import { getScoreGrade } from "@/types/site-cockpit";
 
 function grade(score: number | undefined): string {
-  if (!score) return "N/A";
-  if (score >= 95) return "A+";
-  if (score >= 85) return "A";
-  if (score >= 70) return "B";
-  if (score >= 50) return "C";
-  if (score >= 30) return "D";
-  return "F";
+  return typeof score === "number" ? getScoreGrade(score) : "N/A";
 }
 
 function fenceBlock(code: string | null | undefined): string {

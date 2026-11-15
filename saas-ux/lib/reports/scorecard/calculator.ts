@@ -1,6 +1,7 @@
 // lib/reports/scorecard/calculator.ts
 // Performance Acceleration Scorecard Calculator
 
+import { getScoreGrade } from "@/types/site-cockpit";
 import type {
   PerformanceScorecardData,
   CriterionScore,
@@ -397,13 +398,8 @@ function calculateDomRendering(audits: Record<string, LighthouseAudit>): DomRend
 /**
  * Determine grade from score
  */
-function calculateGrade(score: number): 'A+' | 'A' | 'B' | 'C' | 'D' | 'F' {
-  if (score >= 95) return 'A+';
-  if (score >= 85) return 'A';
-  if (score >= 70) return 'B';
-  if (score >= 50) return 'C';
-  if (score >= 30) return 'D';
-  return 'F';
+function calculateGrade(score: number): 'A' | 'B' | 'C' | 'D' | 'F' {
+  return getScoreGrade(score);
 }
 
 /**
