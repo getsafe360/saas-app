@@ -12,7 +12,8 @@ export interface CategoryGoal {
 
 export const CATEGORY_GOALS: Record<string, CategoryGoal> = {
   seo: {
-    goalScore: 95,
+    // Every SEO check passing: stopping at 95 left fixable issues open.
+    goalScore: 100,
     maxIterations: 5,
     defaultMode: 'safe_auto',
     label: 'Optimize SEO',

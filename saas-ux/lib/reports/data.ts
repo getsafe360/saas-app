@@ -16,7 +16,10 @@ import { toAppliedChanges } from '@/lib/wordpress/applied-changes';
 import { loadChangeRuns } from '@/lib/wordpress/change-runs';
 import type { WordPressSiteSnapshot } from '@/lib/wordpress/types';
 import { loadRuns } from '@/lib/ai-visibility/store';
-import { loadScoreHistory } from '@/lib/seo/store';
+import { evaluateSeoGeo } from '@/lib/engine/seo/report';
+import { isPublicUrlResolved } from '@/lib/net/isPublicUrlResolved';
+import { crawlSite } from '@/lib/seo/crawl';
+import { loadScoreHistory, saveCrawl } from '@/lib/seo/store';
 import { buildAiSearchReport, type ReportInput, type ReportIssueInput, type ReportPeriodDays, type IssueSeverity } from './content';
 
 /** Enough history for a year of reports on a busy site. */
@@ -109,6 +112,23 @@ async function scanIssues(siteId: string, fallback: ReportIssueInput[]): Promise
   }
 }
 
+const GEO_CHECK_MAX_AGE_MS = 7 * 86_400_000;
+
+/**
+ * The GEO/SEO score history, after running the measured checks first when the newest is missing
+ * or more than a week old, so a report always has a current AI search section.
+ */
+async function freshScoreHistory(site: ReportSite, generatedAt: Date) {
+  const history = await loadScoreHistory(site.id);
+  const newest = history[0];
+  if (newest && generatedAt.getTime() - Date.parse(newest.checkedAt) < GEO_CHECK_MAX_AGE_MS) return history;
+  // DNS-checked on every hop, like the other crawls: a public-looking host may resolve to a private address.
+  const crawl = await crawlSite(site.siteUrl, { validate: isPublicUrlResolved }).catch(() => null);
+  if (!crawl || crawl.pages.length === 0) return history;
+  await saveCrawl(site.id, crawl, evaluateSeoGeo(crawl).scores);
+  return loadScoreHistory(site.id);
+}
+
 export async function collectReportInput(
   site: ReportSite,
   periodDays: ReportPeriodDays,
@@ -132,7 +152,7 @@ export async function collectReportInput(
     wordpressHealth(site.id, periodStart).catch(() => ({ health: null, problems: [] as ReportIssueInput[] })),
     readTestState(site.id).catch(() => null),
     scan ? scanIssues(site.id, topIssues) : Promise.resolve([] as ReportIssueInput[]),
-    loadScoreHistory(site.id).catch(() => []),
+    freshScoreHistory(site, generatedAt).catch(() => []),
     loadRuns(site.id).catch(() => []),
   ]);
 

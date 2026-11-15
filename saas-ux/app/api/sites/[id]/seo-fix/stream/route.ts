@@ -27,7 +27,7 @@ import { getAvailableTokens } from "@/lib/fix/tokens";
 import { aiAnalysisJobs, aiRepairActions } from "@/lib/db/schema/ai/analysis";
 import type { AiRepairAction } from "@/lib/db/schema/ai/analysis";
 import { WordPressClient } from "@/lib/wordpress/client";
-import { categoriseSnippet, normaliseHeadSnippet } from "@/lib/optimization/fixes/snippetUtils";
+import { categoriseSnippet, isPageSpecificHeadSnippet, normaliseHeadSnippet } from "@/lib/optimization/fixes/snippetUtils";
 import { totalTokensOf } from "@/lib/ai/usage";
 
 export const runtime = "nodejs";
@@ -316,6 +316,8 @@ export async function POST(
           .flatMap((f) => {
             const cat = categoriseSnippet(f.snippet!, f.section);
             if (cat !== "head") return [];
+            // Page-specific tags would be printed on every page: they stay in the fix pack.
+            if (isPageSpecificHeadSnippet(f.snippet!)) return [];
             const normalisedSnippet = normaliseHeadSnippet(f.snippet!);
             if (!normalisedSnippet) return [];
             return [{ ...f, snippet: normalisedSnippet }];

@@ -1,18 +1,8 @@
 // types/site-cockpit.ts
 // Complete TypeScript definitions for Site Cockpit API
 
-export type ScoreGrade =
-  | "A+"
-  | "A"
-  | "A-"
-  | "B+"
-  | "B"
-  | "B-"
-  | "C+"
-  | "C"
-  | "C-"
-  | "D"
-  | "F";
+/** Plain letter grades, the same everywhere: A 90–100, B 80–89, C 70–79, D 60–69, F below 60. */
+export type ScoreGrade = "A" | "B" | "C" | "D" | "F";
 export type ImpactLevel = "critical" | "high" | "medium" | "low";
 export type EffortLevel = "low" | "medium" | "high";
 export type CategoryType =
@@ -868,16 +858,11 @@ export const CATEGORY_THEMES: Record<CategoryType, CategoryTheme> = {
 };
 
 // ===== UTILITY FUNCTIONS =====
+/** A 90–100, B 80–89, C 70–79, D 60–69, F below 60. */
 export function getScoreGrade(score: number): ScoreGrade {
-  if (score >= 97) return "A+";
-  if (score >= 93) return "A";
-  if (score >= 90) return "A-";
-  if (score >= 87) return "B+";
-  if (score >= 83) return "B";
-  if (score >= 80) return "B-";
-  if (score >= 77) return "C+";
-  if (score >= 73) return "C";
-  if (score >= 70) return "C-";
+  if (score >= 90) return "A";
+  if (score >= 80) return "B";
+  if (score >= 70) return "C";
   if (score >= 60) return "D";
   return "F";
 }

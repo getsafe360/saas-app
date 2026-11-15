@@ -105,3 +105,16 @@ export function normaliseHeadSnippet(snippet: string): string | null {
 
   return s;
 }
+
+/**
+ * True for tags whose value belongs to one page: canonical, meta description, Open Graph and
+ * Twitter title, description, URL and image. The connector prints every stored snippet on every
+ * page, so these would tell search engines that every page is the one they were written for.
+ */
+export function isPageSpecificHeadSnippet(snippet: string): boolean {
+  return (
+    /<link\b[^>]*rel\s*=\s*["']?canonical/i.test(snippet) ||
+    /<meta\b[^>]*name\s*=\s*["']?description["'\s>]/i.test(snippet) ||
+    /<meta\b[^>]*(?:property|name)\s*=\s*["']?(?:og:(?:title|description|url|image)|twitter:(?:title|description|image))["'\s>]/i.test(snippet)
+  );
+}
