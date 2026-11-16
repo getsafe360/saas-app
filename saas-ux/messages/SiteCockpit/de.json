@@ -1052,6 +1052,10 @@
         "RUN_FAILED": "Claude konnte nicht antworten → Versuchen Sie es gleich noch einmal.",
         "GENERIC": "Etwas ist schiefgelaufen → Versuchen Sie es erneut."
       }
+    },
+    "seoCard": {
+      "aiSearchLink": "KI-Suche & Sichtbarkeit",
+      "aiSearchHint": "Gemessene GEO-Prüfungen, ob Claude die Website empfiehlt, und das KI-Audit"
     }
   }
 }

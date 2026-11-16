@@ -3,7 +3,7 @@
  * Plugin Name: GetSafe 360 AI
  * Plugin URI: https://www.getsafe360.ai/docs/wordpress-connector
  * Description: Website Intelligence Platform for WordPress: health, security, SEO, speed and accessibility checks, with safe one-click fixes you can undo.
- * Version: 1.13.0
+ * Version: 1.13.1
  * Author: GetSafe 360 AI
  * Author URI: https://www.getsafe360.ai
  * License: GPLv2 or later
@@ -17,7 +17,7 @@
 if (!defined('ABSPATH')) exit;
 
 class GetSafe360_AI {
-  const VERSION = '1.13.0';
+  const VERSION = '1.13.1';
   const SECURITY_HEADERS_OPTION = 'getsafe360_security_headers';
   const OPTION = 'getsafe360_connector';
   const ACTION_STATE_OPTION = 'getsafe360_action_state';
@@ -87,6 +87,29 @@ class GetSafe360_AI {
   public function load_textdomain() {
     // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- bundled translations until the language packs are complete.
     load_plugin_textdomain('getsafe-360-ai', false, dirname(plugin_basename(__FILE__)) . '/languages');
+  }
+
+  const STATUS_TRANSIENT = 'getsafe360_platform_status';
+
+  /**
+   * Whether GetSafe 360 still knows this site and its key: 'known', 'unknown' (the site was removed
+   * from the dashboard, or paired with another account or environment) or 'unreachable'. Asked at
+   * most every 10 minutes; only the site ID and the key hash the gateway already uses are sent.
+   */
+  private function platform_status($opt) {
+    if (empty($opt['site_id']) || empty($opt['site_token'])) return 'unknown';
+    $cached = get_transient(self::STATUS_TRANSIENT);
+    if (is_array($cached) && isset($cached['site'], $cached['status']) && $cached['site'] === $opt['site_id']) return $cached['status'];
+    $resp = wp_remote_post($this->api_base() . '/api/connect/status', [
+      'timeout' => 5,
+      'headers' => ['Content-Type' => 'application/json', 'X-Site-Key' => hash('sha256', $opt['site_token'])],
+      'body'    => wp_json_encode(['siteId' => $opt['site_id']]),
+    ]);
+    if (is_wp_error($resp) || wp_remote_retrieve_response_code($resp) !== 200) return 'unreachable';
+    $body = json_decode(wp_remote_retrieve_body($resp), true);
+    $status = is_array($body) && !empty($body['known']) ? 'known' : 'unknown';
+    set_transient(self::STATUS_TRANSIENT, ['site' => $opt['site_id'], 'status' => $status], 10 * MINUTE_IN_SECONDS);
+    return $status;
   }
 
   /** Base URL of the GetSafe 360 service, without a trailing slash. */
@@ -211,6 +234,7 @@ class GetSafe360_AI {
       .getsafe360-status { display: inline-block; padding: 4px 12px; border-radius: 3px; font-size: 13px; font-weight: 600; }
       .getsafe360-status.connected { background: #d4edda; color: #155724; }
       .getsafe360-status.disconnected { background: #f8d7da; color: #721c24; }
+      .getsafe360-status.unverified { background: #fff3cd; color: #856404; }
       .getsafe360-code-input { width: 250px; font-size: 24px; letter-spacing: 8px; text-align: center; padding: 12px; font-family: monospace; }
       .getsafe360-help { background: #e7f3ff; border-left: 4px solid #0073aa; padding: 12px; margin: 12px 0; }
       .getsafe360-btn-primary { background: #0073aa; color: #fff; border: none; padding: 12px 24px; font-size: 14px; border-radius: 3px; cursor: pointer; }
@@ -227,6 +251,7 @@ class GetSafe360_AI {
     // Handle disconnect
     if (isset($_POST['disconnect']) && check_admin_referer('getsafe360_disconnect')) {
       delete_option(self::OPTION);
+      delete_transient(self::STATUS_TRANSIENT);
       $this->render_notice('success', __('Disconnected', 'getsafe-360-ai'), __('Your site is no longer linked to GetSafe 360. You can reconnect anytime.', 'getsafe-360-ai'));
     }
 
@@ -283,6 +308,7 @@ class GetSafe360_AI {
         ]);
 
         if ($code === 200 && is_array($body_json) && isset($body_json['siteToken'])) {
+          delete_transient(self::STATUS_TRANSIENT);
           update_option(self::OPTION, [
             'site_id'      => sanitize_text_field($body_json['siteId']),
             'site_token'   => sanitize_text_field($body_json['siteToken']),
@@ -414,14 +440,33 @@ class GetSafe360_AI {
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
               <div>
                 <h2 style="margin: 0;"><?php esc_html_e('Connection Status', 'getsafe-360-ai'); ?></h2>
+                <?php $platform = $this->platform_status($opt); ?>
                 <p style="margin: 8px 0 0 0;">
-                  <span class="getsafe360-status connected">
-                    <span class="dashicons dashicons-yes-alt" style="margin-top: 2px;"></span>
-                    <?php esc_html_e('Connected', 'getsafe-360-ai'); ?>
-                  </span>
+                  <?php if ($platform === 'unknown'): ?>
+                    <span class="getsafe360-status disconnected">
+                      <span class="dashicons dashicons-warning" style="margin-top: 2px;"></span>
+                      <?php esc_html_e('Not recognised', 'getsafe-360-ai'); ?>
+                    </span>
+                  <?php elseif ($platform === 'unreachable'): ?>
+                    <span class="getsafe360-status unverified">
+                      <span class="dashicons dashicons-clock" style="margin-top: 2px;"></span>
+                      <?php esc_html_e('Connected (not verified just now)', 'getsafe-360-ai'); ?>
+                    </span>
+                  <?php else: ?>
+                    <span class="getsafe360-status connected">
+                      <span class="dashicons dashicons-yes-alt" style="margin-top: 2px;"></span>
+                      <?php esc_html_e('Connected', 'getsafe-360-ai'); ?>
+                    </span>
+                  <?php endif; ?>
                 </p>
               </div>
             </div>
+
+            <?php if ($platform === 'unknown'): ?>
+              <div class="notice notice-error inline" style="margin: 0 0 16px 0;">
+                <p><?php esc_html_e('GetSafe 360 AI no longer knows this site ID. The site may have been removed from your dashboard, or it was connected to another account. Disconnect below, then connect again with a new pairing code.', 'getsafe-360-ai'); ?></p>
+              </div>
+            <?php endif; ?>
 
             <table class="form-table" role="presentation">
               <tbody>
