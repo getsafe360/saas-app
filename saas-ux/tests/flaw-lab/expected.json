@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "about": "Every flaw the GetSafe 360 flaw lab seeds, the findings a scan must show for it, how it is fixed, and what must hold after the fix and after undo. lib/engine/flaw-lab.test.ts checks that every rule and fixer named here exists and that the flaw ids match gs360-flaw-lab.php.",
+  "scopes": {
+    "home": "page scan of the home page (PAGE_RULES)",
+    "crawl": "SEO & AI search crawl (SEO_GEO_RULES)",
+    "connector": "connector facts from the plugin (WORDPRESS_RULES)",
+    "headers": "security header check (SECURITY_HEADER_RULES)"
+  },
+  "automation": {
+    "auto": "a registered fixer applies, verifies and (unless permanent) can undo it",
+    "click": "fixed through a connector action the user confirms (content change)",
+    "manual": "no fixer: the finding must appear, and clear after `wp gs360-lab reset`"
+  },
+  "flaws": [
+    {
+      "id": "title-short",
+      "category": "seo",
+      "findings": [
+        { "rule": "seo-title-short", "scope": "home" },
+        { "rule": "content-title-length", "scope": "home" }
+      ],
+      "fix": { "fixerId": null, "automation": "click", "how": "SEO optimisation loop writes the page's own title (set_seo_meta)" },
+      "afterFix": "<title> is the new title; both findings pass",
+      "afterUndo": "<title> is \"Home\" again; both findings return"
+    },
+    {
+      "id": "multiple-h1",
+      "category": "seo",
+      "findings": [
+        { "rule": "seo-h1-multiple", "scope": "home" },
+        { "rule": "seo-page-h1", "scope": "crawl" }
+      ],
+      "fix": { "fixerId": "seo-single-h1", "automation": "auto", "how": "extra H1s become H2 with the theme's H1 look (set_heading_fix)" },
+      "afterFix": "exactly one <h1>; the demoted headings carry class gs360-h1 and look unchanged",
+      "afterUndo": "three <h1> again; both findings return"
+    },
+    {
+      "id": "noindex-in-sitemap",
+      "category": "seo",
+      "findings": [{ "rule": "seo-noindex-in-sitemap", "scope": "crawl" }],
+      "fix": { "fixerId": null, "automation": "manual", "how": "remove noindex or drop the page from the sitemap" },
+      "afterFix": "finding passes after reset",
+      "afterUndo": "n/a",
+      "requires": "the crawl reaches /flaw-lab-hidden/ (it is listed in the sitemap)"
+    },
+    {
+      "id": "sitemap-off",
+      "category": "seo",
+      "explicitOnly": true,
+      "findings": [
+        { "rule": "seo-xml-sitemap", "scope": "crawl" },
+        { "rule": "seo-sitemap", "scope": "connector" }
+      ],
+      "fix": { "fixerId": "wordpress-fix-sitemap", "automation": "manual", "how": "turn the sitemap back on" },
+      "afterFix": "both findings pass after reset",
+      "afterUndo": "n/a",
+      "notes": "Seed only by name and never with noindex-in-sitemap: with no sitemap that rule is not applicable."
+    },
+    {
+      "id": "ai-search-blocked",
+      "category": "geo",
+      "findings": [{ "rule": "geo-ai-search-access", "scope": "crawl" }],
+      "alsoShows": [{ "rule": "geo-ai-training-access", "scope": "crawl", "status": "pass (someBlocked, informational)" }],
+      "fix": { "fixerId": "geo-ai-search-access", "automation": "auto", "how": "named Allow groups for the AI search crawlers (set_ai_crawler_rules)" },
+      "afterFix": "robots.txt keeps the \"*\" block and adds a \"GetSafe 360 AI\" section allowing OAI-SearchBot, ChatGPT-User, Claude-SearchBot, Claude-User, PerplexityBot, Perplexity-User; seo-robots-txt still passes",
+      "afterUndo": "the GetSafe 360 section is gone; geo-ai-search-access fails again",
+      "requires": "WordPress at the domain root and no physical robots.txt file"
+    },
+    {
+      "id": "thin-content",
+      "category": "geo",
+      "findings": [{ "rule": "geo-thin-content", "scope": "crawl" }],
+      "fix": { "fixerId": null, "automation": "manual", "how": "write more on those pages" },
+      "afterFix": "finding passes after reset",
+      "afterUndo": "n/a",
+      "requires": "thin pages are more than half of the crawled inner pages; a site with many long pages may still pass"
+    },
+    {
+      "id": "lang-missing",
+      "category": "accessibility",
+      "findings": [{ "rule": "a11y-lang-missing", "scope": "home" }],
+      "fix": { "fixerId": null, "automation": "manual", "how": "theme must print language_attributes()" },
+      "afterFix": "finding passes after reset",
+      "afterUndo": "n/a"
+    },
+    {
+      "id": "images-no-alt",
+      "category": "accessibility",
+      "findings": [{ "rule": "a11y-img-alt", "scope": "home" }],
+      "fix": { "fixerId": null, "automation": "manual", "how": "add alt text in the editor" },
+      "afterFix": "finding passes after reset",
+      "afterUndo": "n/a"
+    },
+    {
+      "id": "many-scripts",
+      "category": "performance",
+      "findings": [{ "rule": "perf-script-count", "scope": "home" }],
+      "fix": { "fixerId": null, "automation": "manual", "how": "combine or drop scripts" },
+      "afterFix": "finding passes after reset",
+      "afterUndo": "n/a"
+    },
+    {
+      "id": "many-images",
+      "category": "performance",
+      "findings": [{ "rule": "perf-image-count", "scope": "home" }],
+      "fix": { "fixerId": null, "automation": "manual", "how": "fewer images or lazy loading" },
+      "afterFix": "finding passes after reset",
+      "afterUndo": "n/a"
+    },
+    {
+      "id": "large-html",
+      "category": "performance",
+      "findings": [{ "rule": "perf-html-size", "scope": "home" }],
+      "fix": { "fixerId": null, "automation": "manual", "how": "smaller page" },
+      "afterFix": "finding passes after reset",
+      "afterUndo": "n/a"
+    },
+    {
+      "id": "version-header",
+      "category": "security",
+      "findings": [{ "rule": "sec-version-disclosure", "scope": "home" }],
+      "fix": { "fixerId": null, "automation": "manual", "how": "expose_php = Off (Plesk: PHP settings)" },
+      "afterFix": "finding passes after reset",
+      "afterUndo": "n/a"
+    },
+    {
+      "id": "expired-transients",
+      "category": "stability",
+      "findings": [{ "rule": "wp-expired-transients", "scope": "connector" }],
+      "fix": { "fixerId": "wordpress-clean-transients", "automation": "auto", "how": "deletes expired transients (permanent: no undo)" },
+      "afterFix": "finding passes; Applied changes shows the run without Undo",
+      "afterUndo": "n/a (permanent)"
+    },
+    {
+      "id": "unexpected-core-file",
+      "category": "core",
+      "optIn": true,
+      "findings": [{ "rule": "red-flag-unexpected-core-files", "scope": "connector" }],
+      "fix": { "fixerId": "wordpress-quarantine-core-files", "automation": "auto", "how": "moves the file into a restore point" },
+      "afterFix": "wp-includes/gs360-flaw-lab-unexpected.php is gone; finding passes",
+      "afterUndo": "the file is back; finding returns"
+    },
+    {
+      "id": "modified-core-file",
+      "category": "core",
+      "optIn": true,
+      "findings": [{ "rule": "red-flag-core-modifications", "scope": "connector" }],
+      "fix": { "fixerId": "wordpress-restore-core-files", "automation": "auto", "how": "official copy, checked against the checksum" },
+      "afterFix": "wp-admin/includes/continents-cities.php matches the official checksum; finding passes",
+      "afterUndo": "the lab comment line is back; finding returns"
+    },
+    {
+      "id": "outdated-plugin",
+      "category": "plugins",
+      "optIn": true,
+      "findings": [{ "rule": "wp-outdated-plugins", "scope": "connector" }],
+      "fix": { "fixerId": "wordpress-update-plugins", "automation": "auto", "how": "updates Hello Dolly with a restore point" },
+      "afterFix": "Hello Dolly is current; finding passes",
+      "afterUndo": "Hello Dolly 1.6 again; finding returns"
+    }
+  ],
+  "baseline": {
+    "about": "Findings a stock WordPress shows without seeding. Check them in the first scan; if johnlaw.com already fixed one, note it in the rehearsal log.",
+    "findings": [
+      { "rule": "seo-meta-desc-missing", "scope": "home", "fixerId": null, "automation": "click" },
+      { "rule": "seo-og-missing", "scope": "home", "fixerId": "seo-social-tags", "automation": "auto" },
+      { "rule": "seo-social-tags", "scope": "crawl", "fixerId": "seo-social-tags", "automation": "auto" },
+      { "rule": "geo-llms-txt", "scope": "crawl", "fixerId": "geo-llms-txt", "automation": "auto" },
+      { "rule": "geo-organization-schema", "scope": "crawl", "fixerId": "geo-site-schema", "automation": "auto" },
+      { "rule": "geo-website-schema", "scope": "crawl", "fixerId": "geo-site-schema", "automation": "auto" },
+      { "rule": "wp-xmlrpc", "scope": "connector", "fixerId": "wordpress-disable-xmlrpc", "automation": "auto" },
+      { "rule": "wp-user-enumeration", "scope": "connector", "fixerId": "wordpress-block-user-enumeration", "automation": "auto" },
+      { "rule": "sec-hsts", "scope": "headers", "fixerId": "security-headers", "automation": "auto" },
+      { "rule": "sec-nosniff", "scope": "headers", "fixerId": "security-headers", "automation": "auto" },
+      { "rule": "sec-referrer-policy", "scope": "headers", "fixerId": "security-headers", "automation": "auto" },
+      { "rule": "sec-frame-options", "scope": "headers", "fixerId": "security-headers", "automation": "auto" },
+      { "rule": "sec-csp", "scope": "headers", "fixerId": "security-csp", "automation": "guided" },
+      { "rule": "wp-file-editing", "scope": "connector", "fixerId": "wordpress-disable-file-edit", "automation": "auto" },
+      { "rule": "wp-plugin-auto-updates", "scope": "connector", "fixerId": "wordpress-enable-plugin-auto-updates", "automation": "auto" }
+    ]
+  },
+  "notSeeded": [
+    { "rule": "wp-vulnerable-plugins", "reason": "would need a genuinely vulnerable plugin on a public site" },
+    { "rule": "wp-open-admin-registration", "reason": "anyone could register as administrator on a public site; the fix is also permanent" },
+    { "rule": "wp-debug-mode", "reason": "set in wp-config.php; seed by hand (define WP_DEBUG true) if wanted" },
+    { "rule": "wp-gzip", "reason": "server setting (Plesk / nginx), not WordPress" },
+    { "rule": "perf-no-compression", "reason": "server setting (Plesk / nginx), not WordPress" },
+    { "rule": "wp-object-cache", "reason": "depends on Redis/Memcached on the server" },
+    { "rule": "wp-revisions", "reason": "needs more than 5,000 revisions; the fix is permanent" }
+  ]
+}
