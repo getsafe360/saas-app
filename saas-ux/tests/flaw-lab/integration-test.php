@@ -45,8 +45,10 @@ check(GS360_Flaw_Lab::resolve(['performance']) === ['many-scripts', 'many-images
 check(GS360_Flaw_Lab::resolve(['sitemap-off']) === ['sitemap-off'], 'sitemap-off is seeded when named');
 
 // ---------- seed ----------
+set_transient('getsafe360_audit_scans', ['stale' => true], HOUR_IN_SECONDS);
 $result = GS360_Flaw_Lab::seed(array_merge($all, ['unexpected-core-file', 'modified-core-file']));
 check(count(array_filter($result, fn($r) => $r === 'seeded')) === 14, 'seeding reports all 14 seeded');
+check(get_transient('getsafe360_audit_scans') === false, 'seeding drops the connector\'s cached file scans');
 check(GS360_Flaw_Lab::seed(['title-short'])['title-short'] === 'already seeded', 'seeding twice is a no-op');
 check(strpos(GS360_Flaw_Lab::seed(['sitemap-off'])['sitemap-off'], 'conflicts with noindex-in-sitemap') !== false, 'sitemap-off refuses while noindex-in-sitemap is seeded');
 
@@ -80,7 +82,9 @@ check(file_exists(ABSPATH . GS360_Flaw_Lab::UNEXPECTED_FILE), 'unexpected-core-f
 check(md5_file($core_file) !== $core_hash, 'modified-core-file: the core file changed');
 
 // ---------- reset ----------
+set_transient('getsafe360_audit_scans', ['stale' => true], HOUR_IN_SECONDS);
 GS360_Flaw_Lab::reset();
+check(get_transient('getsafe360_audit_scans') === false, 'reset drops the connector\'s cached file scans');
 check(get_option(GS360_Flaw_Lab::OPTION, 'gone') === 'gone', 'reset: the lab option is gone');
 check(get_option('show_on_front') === $before['show_on_front'] && (int) get_option('page_on_front') === $before['page_on_front'], 'reset: front page settings restored');
 check(!get_posts(['post_type' => 'page', 'post_status' => 'any', 'meta_key' => GS360_Flaw_Lab::PAGE_META, 'numberposts' => 1]), 'reset: lab pages deleted');
@@ -91,6 +95,11 @@ $home = fetch($loopback . '/');
 check(preg_match('#<html[^>]*\slang=#i', $home['body']) === 1 && strpos($home['body'], 'flaw lab') === false, 'reset: the home page is clean again');
 check(empty($home['headers']['x-powered-by']), 'reset: no X-Powered-By header (the server runs with expose_php off)');
 check(strpos(robots(), "Disallow: /\n") === false, 'reset: robots.txt no longer blocks everyone');
+
+// ---------- title-short on its own gets a static front page (the title fix needs one) ----------
+GS360_Flaw_Lab::seed(['title-short']);
+check(get_option('show_on_front') === 'page' && (int) get_option('page_on_front') === GS360_Flaw_Lab::seeded()['restore']['home_page'], 'title-short alone sets the lab page as static front page');
+GS360_Flaw_Lab::reset();
 
 // ---------- sitemap-off on its own ----------
 GS360_Flaw_Lab::seed(['sitemap-off']);

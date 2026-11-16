@@ -144,6 +144,7 @@ final class GS360_Flaw_Lab {
       }
       update_option(self::OPTION, $state, false);
     }
+    self::forget_connector_scans();
     return $out;
   }
 
@@ -158,7 +159,8 @@ final class GS360_Flaw_Lab {
       }
       return true;
     }
-    if (in_array($id, ['multiple-h1', 'images-no-alt', 'many-images', 'large-html'], true)) {
+    // title-short too: the connector's title fix (set_seo_meta) needs a static front page.
+    if (in_array($id, ['title-short', 'multiple-h1', 'images-no-alt', 'many-images', 'large-html'], true)) {
       self::ensure_home_page($state);
       self::render_home_page($state, array_merge($state['flaws'], [$id]));
       return true;
@@ -244,6 +246,11 @@ final class GS360_Flaw_Lab {
     wp_update_post(['ID' => $page, 'post_content' => implode("\n", $parts)]);
   }
 
+  /** The connector caches its file scans for 12 hours; drop them so the next audit sees the seeded files. */
+  private static function forget_connector_scans() {
+    delete_transient('getsafe360_audit_scans');
+  }
+
   /** Removes every flaw: lab pages, front-page setting, files, the installed plugin and the option. */
   public static function reset() {
     $state = self::seeded();
@@ -278,6 +285,7 @@ final class GS360_Flaw_Lab {
       $out[] = 'Hello Dolly removed';
     }
     delete_option(self::OPTION);
+    self::forget_connector_scans();
     $out[] = count($state['flaws']) . ' flaw(s) cleared';
     return $out;
   }
