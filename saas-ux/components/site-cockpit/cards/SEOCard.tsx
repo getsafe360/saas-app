@@ -1,6 +1,8 @@
 // components/site-cockpit/cards/SEOCard.tsx
 import { CockpitCard } from "./CockpitCard";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, ChevronRight, Sparkles, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/navigation";
 import type { SEOData } from "@/types/site-cockpit";
 
 interface SEOCardProps {
@@ -16,9 +18,12 @@ interface SEOCardProps {
   onUnlock?: () => void;
   /** True while the SEO-GEO analysis drawer is open / streaming */
   optimizing?: boolean;
+  /** The SEO & AI search page: measured GEO checks, AI visibility tracking, the AI audit. */
+  analysisHref?: string;
 }
 
-export function SEOCard({ data, stats, onOptimize, optimizing, advisory, onUnlock, }: SEOCardProps) {
+export function SEOCard({ data, stats, onOptimize, optimizing, advisory, onUnlock, analysisHref }: SEOCardProps) {
+  const t = useTranslations("SiteCockpit.seoCard");
   const title = data.meta?.title;
   const description = data.meta?.description;
 
@@ -93,6 +98,20 @@ export function SEOCard({ data, stats, onOptimize, optimizing, advisory, onUnloc
             )}
           </div>
         </div>
+
+        {analysisHref && (
+          <Link
+            href={analysisHref}
+            className="group flex items-center gap-3 rounded-lg border border-slate-700/40 p-3 transition-colors hover:border-[var(--category-seo)]"
+          >
+            <Sparkles className="h-4 w-4 flex-shrink-0" style={{ color: "var(--category-seo)" }} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-medium text-slate-700 dark:text-slate-200">{t("aiSearchLink")}</span>
+              <span className="block text-xs text-slate-500 dark:text-slate-400">{t("aiSearchHint")}</span>
+            </span>
+            <ChevronRight className="h-4 w-4 flex-shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        )}
       </div>
     </CockpitCard>
   );

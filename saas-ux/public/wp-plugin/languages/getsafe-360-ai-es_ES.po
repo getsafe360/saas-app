@@ -145,3 +145,12 @@ msgstr "Ajustes"
 
 msgid "Pairing code filled in from GetSafe 360 AI — just click Connect."
 msgstr "Código de emparejamiento completado desde GetSafe 360 AI — solo haz clic en Conectar."
+
+msgid "Not recognised"
+msgstr "No reconocido"
+
+msgid "Connected (not verified just now)"
+msgstr "Conectado (no verificado ahora)"
+
+msgid "GetSafe 360 AI no longer knows this site ID. The site may have been removed from your dashboard, or it was connected to another account. Disconnect below, then connect again with a new pairing code."
+msgstr "GetSafe 360 AI ya no reconoce este ID de sitio. Puede que el sitio se haya eliminado de tu panel o que se conectara a otra cuenta. Desconéctalo abajo y vuelve a conectarlo con un nuevo código de emparejamiento."

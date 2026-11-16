@@ -1052,6 +1052,10 @@
         "RUN_FAILED": "Claude could not answer → Try again in a moment.",
         "GENERIC": "Something went wrong → Try again."
       }
+    },
+    "seoCard": {
+      "aiSearchLink": "AI search & visibility",
+      "aiSearchHint": "Measured GEO checks, whether Claude recommends the site, and the AI audit"
     }
   }
 }

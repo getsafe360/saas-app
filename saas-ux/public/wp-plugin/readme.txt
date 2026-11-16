@@ -4,7 +4,7 @@ Tags: security, site health, seo, performance, accessibility
 Requires at least: 5.6
 Tested up to: 7.1
 Requires PHP: 7.2
-Stable tag: 1.13.0
+Stable tag: 1.13.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -120,6 +120,9 @@ GetSafe 360 AI [Terms of Service](https://www.getsafe360.ai/terms) and [Privacy 
 
 == Changelog ==
 
+= 1.13.1 =
+* The settings page now checks with GetSafe 360 that the connection is still valid. A site removed from your dashboard, or connected to another account, shows "Not recognised" with a hint to reconnect, instead of "Connected".
+
 = 1.13.0 =
 * New: social sharing tags per page. Each page gets the Open Graph and Twitter tags it is missing, from its own title, description and image; tags from your theme or SEO plugin are kept.
 * New: one H1 per page. Later H1 headings are shown as H2s with the same look, without editing your content.
@@ -133,6 +136,9 @@ GetSafe 360 AI [Terms of Service](https://www.getsafe360.ai/terms) and [Privacy 
 * First release on WordPress.org
 
 == Upgrade Notice ==
+
+= 1.13.1 =
+Shows when a connection is no longer valid, with a hint to reconnect.
 
 = 1.13.0 =
 Social sharing tags per page and one H1 per page, both with undo.

@@ -620,6 +620,7 @@ export function SiteCockpit({
                       stats={data.summary.categoryInsights?.seo}
                       onOptimize={canFix ? () => handleOptimizeCategory("seo") : undefined}
                       optimizing={optimizingCategory === "seo"}
+                      analysisHref={siteId ? `/dashboard/sites/${siteId}/seo-analysis` : undefined}
                       onUnlock={isConnected ? undefined : scrollToConnection}
                       advisory={isConnected && !canFix}
                     />

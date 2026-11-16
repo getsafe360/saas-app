@@ -1052,6 +1052,10 @@
         "RUN_FAILED": "Claude non ha potuto rispondere → Riprova tra un attimo.",
         "GENERIC": "Qualcosa è andato storto → Riprova."
       }
+    },
+    "seoCard": {
+      "aiSearchLink": "Ricerca IA e visibilità",
+      "aiSearchHint": "Controlli GEO misurati, se Claude consiglia il sito e l'audit IA"
     }
   }
 }
