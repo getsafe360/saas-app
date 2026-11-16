@@ -26,17 +26,18 @@ manifest cannot drift from the engine.
 
 ## 2. Install the lab
 
-1. Plesk File Manager → `httpdocs/wp-content/mu-plugins/` (create the folder if missing) → upload `gs360-flaw-lab.php`.
+1. The file reaches `httpdocs/wp-content/mu-plugins/` through the johnlaw repository (below). On another test site: upload it there by hand.
 2. Edit `httpdocs/wp-config.php`, above `/* That's all, stop editing! */`:
    ```php
    define('GS360_FLAW_LAB', true);
    ```
 3. Check: `wp gs360-lab status` lists 16 flaws, none seeded; wp-admin shows a yellow "Flaw Lab is active" notice.
 
-Optional, Plesk Git (keeps the lab current without uploads): add the `getsafe360/saas-app` repository
-in Plesk → Git with a deployment path **outside** `httpdocs` (e.g. `saas-app-repo`), and this additional
-deployment action, so only the lab file reaches WordPress:
-`mkdir -p httpdocs/wp-content/mu-plugins && cp saas-app-repo/saas-ux/tests/flaw-lab/gs360-flaw-lab.php httpdocs/wp-content/mu-plugins/`
+Already set up for johnlaw.com: Plesk Git deploys the `getsafe360/johnlaw` repository into `httpdocs`
+(deploy key + webhook). `.github/workflows/sync-johnlaw.yml` copies this file and the connector plugin
+into that repository whenever they change on `main` (or on demand: Actions → Sync johnlaw.com test
+site → Run workflow), so the site always runs the current lab and connector. Never edit those files
+in `johnlaw` directly: the next sync overwrites them.
 
 ## 3. Baseline scan (nothing seeded)
 
