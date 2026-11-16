@@ -1,0 +1,70 @@
+name: Sync johnlaw.com test site
+
+# Copies the flaw lab and the connector plugin into getsafe360/johnlaw, which
+# Plesk Git deploys into johnlaw.com's httpdocs. saas-app stays the source of
+# truth: never edit these files in johnlaw directly, the next sync overwrites them.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "saas-ux/tests/flaw-lab/gs360-flaw-lab.php"
+      - "saas-ux/public/wp-plugin/getsafe-360-ai.php"
+      - "saas-ux/public/wp-plugin/uninstall.php"
+      - "saas-ux/public/wp-plugin/readme.txt"
+      - "saas-ux/public/wp-plugin/languages/**"
+      - ".github/workflows/sync-johnlaw.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-johnlaw
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: saas-app
+
+      - uses: actions/checkout@v4
+        with:
+          repository: getsafe360/johnlaw
+          token: ${{ secrets.JOHNLAW_PUSH_TOKEN }}
+          path: johnlaw
+
+      - name: Copy files
+        run: |
+          set -euo pipefail
+          SRC=saas-app/saas-ux
+          mkdir -p johnlaw/wp-content/mu-plugins johnlaw/wp-content/plugins/getsafe-360-ai
+          cp "$SRC/tests/flaw-lab/gs360-flaw-lab.php" johnlaw/wp-content/mu-plugins/
+          # --delete also removes translations that were deleted in saas-app.
+          rsync -a --delete \
+            "$SRC/public/wp-plugin/getsafe-360-ai.php" \
+            "$SRC/public/wp-plugin/uninstall.php" \
+            "$SRC/public/wp-plugin/readme.txt" \
+            "$SRC/public/wp-plugin/languages" \
+            johnlaw/wp-content/plugins/getsafe-360-ai/
+
+      - name: Commit and push if anything changed
+        working-directory: johnlaw
+        run: |
+          set -euo pipefail
+          git add -A
+          if git diff --cached --quiet; then
+            echo "johnlaw is already up to date."
+            exit 0
+          fi
+          version=$(grep -m1 -oP '^\s*\*\s*Version:\s*\K\S+' wp-content/plugins/getsafe-360-ai/getsafe-360-ai.php)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "chore: sync from saas-app ${GITHUB_SHA::8} (connector ${version})" \
+            -m "https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}"
+          git push -q origin HEAD:main
+          git log --oneline -1
