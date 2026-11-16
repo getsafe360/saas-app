@@ -37,12 +37,20 @@ PORT="${LOOPBACK_PORT:-8089}"
 # No opcache in the server: it runs in its own process, so the invalidation the
 # connector does after an update (in the wp-cli process) cannot reach it, and a
 # package unzipped with the same mtime would be served from the stale cache.
-PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=0 -d opcache.enable_cli=0 -S "127.0.0.1:$PORT" -t "$WORK/wordpress" >/dev/null 2>&1 &
+PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=0 -d opcache.enable_cli=0 -d expose_php=0 -S "127.0.0.1:$PORT" -t "$WORK/wordpress" >/dev/null 2>&1 &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null' EXIT
 for _ in $(seq 1 20); do curl -s --noproxy '*' -o /dev/null "http://127.0.0.1:$PORT/" && break; sleep 0.5; done
 GS360_LOOPBACK="http://127.0.0.1:$PORT" $WP eval-file "$HERE/plugin-updates-test.php"
 GS360_LOOPBACK="http://127.0.0.1:$PORT" $WP eval-file "$HERE/core-integrity-test.php"
+
+# The flaw lab (tests/flaw-lab): seed every flaw, check it, reset, check it is gone.
+mkdir -p wordpress/wp-content/mu-plugins
+cp "$HERE/../../flaw-lab/gs360-flaw-lab.php" wordpress/wp-content/mu-plugins/
+$WP config set GS360_FLAW_LAB true --raw --type=constant --quiet
+GS360_LOOPBACK="http://127.0.0.1:$PORT" $WP eval-file "$HERE/../../flaw-lab/integration-test.php"
+$WP config delete GS360_FLAW_LAB --type=constant --quiet
+rm wordpress/wp-content/mu-plugins/gs360-flaw-lab.php
 
 # Deleting the plugin removes everything it stored.
 $WP plugin deactivate getsafe-360-ai --quiet
